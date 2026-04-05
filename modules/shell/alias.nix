@@ -16,13 +16,8 @@
     de = "cd $HOME/Desktop";
     prj = "cd ~/Projects";
     c = "clear";
-    cls = "clear";
-    "/e" = "exit";
 
     # MODERN REPLACEMENTS
-    ls = "eza --color=always --icons --group-directories-first --header --time-style=long-iso --git";
-    ll = "eza -l --color=always --icons --group-directories-first --header --time-style=long-iso --git";
-    lsd = "eza --color=always --icons --group-directories-first --header --time-style=long-iso --git -a";
     cat = "bat";
     history = "fc -l 1";
 
@@ -70,22 +65,17 @@
     tls = "tmux ls";
     tl = "tmux list-sessions";
 
-    # UTILITIES & SEARCH
     ff = "fastfetch";
     of = "onefetch --disabled-fields description head pending version dependencies authors last-change url churn license --no-art --no-title --no-color-palette";
     vii = "trans -t vi -I";
     tt = "taskwarrior-tui";
 
-    # FZF MAGIC (Escape dấu $ để Nix không hiểu lầm là biến Nix)
     fkill = "ps -ef | fzf | awk '{print $2}' | xargs kill";
 
-    # Tìm lịch sử và copy
     hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy && echo \"Copied to clipboard: $(wl-paste)\"";
 
-    # Tìm lịch sử và thực thi luôn
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
 
-    # MISC & SCRIPTS
     translate = "sh '/home/mintori/Documents/[2] Obsidian/06_Script/Code/Bash/translate novel/translate-novel.sh'";
     kill-antigravity = "killall -9 antigravity";
     kitty = "env FREETYPE_PROPERTIES=\"autofitter:no-stem-darkening=1 cff:no-stem-darkening=1\" kitty";

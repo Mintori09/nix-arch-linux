@@ -15,13 +15,13 @@
     fd
     ripgrep
     wl-clipboard
+    opencode
 
     # CLI tools
     aichat
     btop
     bun
     chafa
-    eza
     ffmpegthumbnailer
     glow
     hexyl

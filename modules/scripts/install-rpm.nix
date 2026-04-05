@@ -1,7 +1,7 @@
 { pkgs, ... }:
 let
   script = pkgs.writeShellScriptBin "irpm" ''
-    exec ${pkgs.bun}/bin/bun run "$HOME/.config/shell/scripts/install-rpm.ts" "$@"
+    exec ${pkgs.bun}/bin/bun run "${../../scripts/install-rpm.ts}" "$@"
   '';
 in
 {

@@ -1,7 +1,7 @@
 { pkgs, ... }:
 let
   script = pkgs.writeShellScriptBin "cv" ''
-    exec ${pkgs.bun}/bin/bun run "$HOME/.config/shell/scripts/convert-file.ts" "$@"
+    exec ${pkgs.bun}/bin/bun run "${../../scripts/convert-file.ts}" "$@"
   '';
 in
 {
