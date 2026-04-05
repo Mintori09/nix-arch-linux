@@ -13,5 +13,6 @@
     ./fastfetch.nix
     ./opencode.nix
     ./git.nix
+    ./tmux.nix
   ];
 }

@@ -3,7 +3,6 @@
 {
   home.shellAliases = {
     # RELOAD CONFIG
-    # Lưu ý: Với Home Manager, thường dùng 'hms' (alias bên dưới) thay vì source thủ công
     reload = "source $HOME/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
 
