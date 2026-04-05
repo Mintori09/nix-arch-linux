@@ -1,7 +1,7 @@
 { pkgs, ... }:
 let
   script = pkgs.writeShellScriptBin "format" ''
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/format-file.ts}" "$@"
+    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/format-file.ts}" "$@"
   '';
 in
 {
