@@ -1,5 +1,6 @@
 { pkgs, ... }:
 {
+  nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
     # Archive
     atool
@@ -29,6 +30,10 @@
     nixfmt
     rust-script
     television
+    go
+    gopls
+    lazygit
+    lazydocker
 
     # Formatters & linters
     gofumpt
@@ -40,5 +45,8 @@
     sql-formatter
     stylua
     taplo
+
+    # Program
+    obsidian
   ];
 }

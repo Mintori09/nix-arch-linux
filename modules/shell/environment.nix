@@ -26,6 +26,7 @@
     FZF_COMPLETION_TRIGGER = "*";
     FZF_COMPLETION_DIR_OPTS = "--walker dir,follow";
     INTELLI_HOME = "$HOME/.local/share/intellishell";
+    XDG_DATA_DIRS = "$HOME/.nix-profile/share:/usr/share:$XDG_DATA_DIRS";
   };
 
   home.sessionPath = [

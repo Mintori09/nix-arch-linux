@@ -9,5 +9,6 @@
     ./television.nix
     ./yazi.nix
     ./zoxide.nix
+    ./direnv.nix
   ];
 }
