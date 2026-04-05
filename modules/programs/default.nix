@@ -10,5 +10,8 @@
     ./yazi.nix
     ./zoxide.nix
     ./direnv.nix
+    ./fastfetch.nix
+    ./opencode.nix
+    ./git.nix
   ];
 }

@@ -65,7 +65,6 @@
     tls = "tmux ls";
     tl = "tmux list-sessions";
 
-    ff = "fastfetch";
     of = "onefetch --disabled-fields description head pending version dependencies authors last-change url churn license --no-art --no-title --no-color-palette";
     vii = "trans -t vi -I";
     tt = "taskwarrior-tui";

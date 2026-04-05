@@ -13,6 +13,7 @@
     zstd
 
     # Core utilities
+    fastfetch
     fd
     ripgrep
     wl-clipboard
