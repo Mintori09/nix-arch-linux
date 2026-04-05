@@ -1,0 +1,12 @@
+{ ... }:
+{
+  imports = [
+    ./format.nix
+    ./which_file.nix
+    ./install-font.nix
+    ./install-rpm.nix
+    ./convert-file.nix
+    ./fzf-rg-edit.nix
+    ./fzf-preview.nix
+  ];
+}
