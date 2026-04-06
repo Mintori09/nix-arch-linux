@@ -1,6 +1,10 @@
 { pkgs, ... }:
 
 {
+  home.shellAliases = {
+    gst = "${pkgs.git}/bin/git status";
+  };
+
   programs.git = {
     enable = true;
 
