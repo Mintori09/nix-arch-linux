@@ -49,5 +49,6 @@
 
     # Program
     obsidian
+    slack
   ];
 }
