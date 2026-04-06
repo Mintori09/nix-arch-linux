@@ -4,10 +4,14 @@
   home.packages = with pkgs; [
     # Archive
     atool
-    gnutar
+    bzip2
+    gzip
+    libarchive
     pbzip2
+    p7zip
     pigz
     pxz
+    unrar
     unzip
     zip
     zstd
