@@ -8,5 +8,6 @@
     ./convert-file.nix
     ./fzf-rg-edit.nix
     ./fzf-preview.nix
+    ./extract.nix
   ];
 }
