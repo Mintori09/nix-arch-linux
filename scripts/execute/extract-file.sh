@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# Script created on Wed  3 Dec 01:20:20 +07 2025
-
 if [ $# -eq 0 ]; then
     echo "Usage: $(basename "$0") <file1> [file2 ...]"
     exit 1

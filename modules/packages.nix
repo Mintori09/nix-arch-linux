@@ -24,6 +24,7 @@
     opencode
 
     # CLI tools
+    tdf
     aichat
     btop
     bun
@@ -36,13 +37,17 @@
     rust-script
     television
     go
+    pnpm
     gopls
     lazygit
     lazydocker
+    spicetify-cli
+    brotab
 
     # Formatters & linters
     gofumpt
     hadolint
+    kdlfmt
     kdlfmt
     ruff
     shellcheck

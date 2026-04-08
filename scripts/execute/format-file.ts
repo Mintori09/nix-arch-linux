@@ -75,6 +75,7 @@ export const FORMATTER_COMMANDS: Record<
 > = {
   ".toml": (fp) => ["taplo", "format", fp],
   ".ron": (fp) => ["fmtron", "--input", fp],
+  ".kdl": (fp) => ["kdlfmt", "format", fp],
   ".rs": (fp) => ["rustfmt", fp],
   ".lua": (fp) => ["stylua", fp],
   ".py": (fp) => ["ruff", "format", fp],

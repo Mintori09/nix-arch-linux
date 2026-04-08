@@ -30,6 +30,7 @@
   };
 
   home.sessionPath = [
+    "~/.spicetify"
     "$HOME/.local/bin"
     "$HOME/.local/scripts"
     "$HOME/bin"
