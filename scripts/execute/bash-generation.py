@@ -7,106 +7,116 @@ import tty
 
 import requests
 
-# --- CONFIGURATION ---
 API_KEY = os.getenv("NANOGPT_API_KEY")
-BASE_URL = "https://nano-gpt.com/api/v1"
-MODEL_ID = "zai-org/glm-5.1"
+API_ENDPOINT = "https://nano-gpt.com/api/v1/chat/completions"
+MODEL_NAME = "zai-org/glm-5.1"
+
+SHELL_CONTEXT = os.path.basename(os.getenv("SHELL", "bash"))
+
+SYSTEM_INSTRUCTIONS = (
+    f"You are a {SHELL_CONTEXT} expert. Return ONLY the raw command. No markdown, no explanations. "
+    "IMPORTANT: Prioritize modern CLI tools over traditional ones: "
+    "use 'eza' instead of 'ls', 'fd' instead of 'find', 'rg' instead of 'grep', "
+    "'bat' instead of 'cat', 'procs' instead of 'ps', and 'dust' instead of 'du'. "
+    "Only fallback to standard POSIX tools if a modern equivalent is unavailable."
+)
+
+COLOR_GREEN = "\033[92m"
+COLOR_BLUE = "\033[94m"
+COLOR_GRAY = "\033[90m"
+COLOR_RESET = "\033[0m"
+CLEAR_LINE = "\033[K"
 
 
-def get_char():
-    """Captures a single keystroke immediately without requiring Enter."""
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
+def read_keypress():
+    file_descriptor = sys.stdin.fileno()
+    original_settings = termios.tcgetattr(file_descriptor)
     try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
+        tty.setraw(file_descriptor)
+        char = sys.stdin.read(1)
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
+        termios.tcsetattr(file_descriptor, termios.TCSADRAIN, original_settings)
+    return char
 
 
-def get_ai_command(user_prompt):
-    """Sends the request to the AI and retrieves the suggested command."""
+def fetch_command_suggestion(user_prompt):
     if not API_KEY:
         return "Error: NANOGPT_API_KEY is not set."
 
-    shell_name = os.path.basename(os.getenv("SHELL", "bash"))
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-    # Updated prompt to prioritize modern CLI tools
-    system_instructions = (
-        f"You are a {shell_name} expert. Return ONLY the raw command. No markdown, no explanations. "
-        "IMPORTANT: Prioritize modern CLI tools over traditional ones: "
-        "use 'eza' instead of 'ls', 'fd' instead of 'find', 'rg' instead of 'grep', "
-        "'bat' instead of 'cat', 'procs' instead of 'ps', and 'dust' instead of 'du'. "
-        "Only fallback to standard POSIX tools if a modern equivalent is unavailable."
-    )
-
     payload = {
-        "model": MODEL_ID,
+        "model": MODEL_NAME,
         "messages": [
-            {
-                "role": "system",
-                "content": system_instructions,
-            },
+            {"role": "system", "content": SYSTEM_INSTRUCTIONS},
             {"role": "user", "content": user_prompt},
         ],
     }
+
     try:
-        res = requests.post(
-            f"{BASE_URL}/chat/completions", headers=headers, json=payload
-        ).json()
-        return res["choices"][0]["message"]["content"].strip().replace("`", "")
+        response = requests.post(API_ENDPOINT, headers=headers, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        return result["choices"][0]["message"]["content"].strip().replace("`", "")
     except Exception:
         return "Error: Failed to connect to API."
 
 
-def edit_in_editor(cmd):
-    """Opens the default editor with a temporary file in the current directory."""
-    editor = os.environ.get("EDITOR", "nano")
-    with tempfile.NamedTemporaryFile(suffix=".sh", dir=".", delete=False) as tf:
-        tf.write(cmd.encode())
-        path = tf.name
+def modify_command_in_editor(command):
+    editor = os.environ.get("EDITOR", "nvim")
+    with tempfile.NamedTemporaryFile(suffix=".sh", dir=".", delete=False) as temp_file:
+        temp_file.write(command.encode())
+        temp_path = temp_file.name
 
-    subprocess.call([editor, path])
+    try:
+        subprocess.call([editor, temp_path])
+        with open(temp_path, "r") as f:
+            updated_command = f.read().strip()
+    finally:
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
 
-    with open(path, "r") as f:
-        new_cmd = f.read().strip()
+    return updated_command
 
-    if os.path.exists(path):
-        os.unlink(path)
-    return new_cmd
+
+def execute_shell_command(command):
+    print(f"\n{COLOR_BLUE}Executing...{COLOR_RESET}")
+    subprocess.run(command, shell=True)
+
+
+def get_initial_input():
+    if len(sys.argv) > 1:
+        return " ".join(sys.argv[1:])
+    return input("Enter request: ")
 
 
 def main():
-    user_input = (
-        " ".join(sys.argv[1:]) if len(sys.argv) > 1 else input("Enter request: ")
-    )
+    user_input = get_initial_input()
     if not user_input:
         return
 
     print("Fetching command...", end="\r")
-    command = get_ai_command(user_input)
+    current_command = fetch_command_suggestion(user_input)
 
     while True:
-        print("\033[K", end="")
-        print(f"\rCommand: \033[92m{command}\033[0m")
+        print(f"{CLEAR_LINE}\rCommand: {COLOR_GREEN}{current_command}{COLOR_RESET}")
         print(
-            "\033[90m[Enter] Run | [e] Edit | [q] Quit\033[0m",
+            f"{COLOR_GRAY}[Enter] Run | [e] Edit | [q] Quit{COLOR_RESET}",
             end="",
             flush=True,
         )
 
-        char = get_char()
+        user_choice = read_keypress()
 
-        if char in ("\r", "\n"):
-            print("\n\033[94m➜ Executing...\033[0m")
-            subprocess.run(command, shell=True)
+        if user_choice in ("\r", "\n"):
+            execute_shell_command(current_command)
             break
-        elif char.lower() == "e":
-            command = edit_in_editor(command)
+
+        elif user_choice.lower() == "e":
+            current_command = modify_command_in_editor(current_command)
             print("\r", end="")
-        elif char.lower() == "q" or char == "\x03":
+
+        elif user_choice.lower() == "q" or user_choice == "\x03":
             print("\nCancelled.")
             break
 
