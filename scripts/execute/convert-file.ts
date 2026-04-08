@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 import { $ } from "bun";
 import path from "path";
 import fs from "fs";

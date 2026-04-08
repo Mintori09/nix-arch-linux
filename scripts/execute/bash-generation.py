@@ -1,84 +1,118 @@
 import os
 import subprocess
 import sys
+import tempfile
+import termios
+import tty
 
 import requests
 
-# Get Key and Model
+# --- CONFIGURATION ---
 API_KEY = os.getenv("NANOGPT_API_KEY")
-API_URL = "https://api.nanogpt.com/v1/chat/completions"
-MODEL_ID = "qwen/qwen3-coder"
+BASE_URL = "https://nano-gpt.com/api/v1"
+MODEL_ID = "zai-org/glm-5.1"
 
 
-def get_recommendation(user_prompt, previous_cmd="None"):
+def get_char():
+    """Captures a single keystroke immediately without requiring Enter."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+
+def get_ai_command(user_prompt):
+    """Sends the request to the AI and retrieves the suggested command."""
     if not API_KEY:
-        print("\033[91mError: NANOGPT_API_KEY not set.\033[0m")
-        sys.exit(1)
+        return "Error: NANOGPT_API_KEY is not set."
 
+    shell_name = os.path.basename(os.getenv("SHELL", "bash"))
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-    # Strict instructions for the LLM
-    system_prompt = "You are a bash assistant. Return ONLY the raw bash command. No markdown, no backticks."
-    refined_prompt = f"Context: Previous command was '{previous_cmd}'. User needs: '{user_prompt}'. Provide the best bash command:"
+    # Updated prompt to prioritize modern CLI tools
+    system_instructions = (
+        f"You are a {shell_name} expert. Return ONLY the raw command. No markdown, no explanations. "
+        "IMPORTANT: Prioritize modern CLI tools over traditional ones: "
+        "use 'eza' instead of 'ls', 'fd' instead of 'find', 'rg' instead of 'grep', "
+        "'bat' instead of 'cat', 'procs' instead of 'ps', and 'dust' instead of 'du'. "
+        "Only fallback to standard POSIX tools if a modern equivalent is unavailable."
+    )
 
-    data = {
+    payload = {
         "model": MODEL_ID,
         "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": refined_prompt},
+            {
+                "role": "system",
+                "content": system_instructions,
+            },
+            {"role": "user", "content": user_prompt},
         ],
-        "temperature": 0,
     }
-
     try:
-        response = requests.post(API_URL, json=data, headers=headers)
-        response.raise_for_status()
-        # Remove any lingering markdown symbols
-        return (
-            response.json()["choices"][0]["message"]["content"].strip().replace("`", "")
-        )
-    except Exception as e:
-        return f"Error connecting to NanoGPT: {e}"
+        res = requests.post(
+            f"{BASE_URL}/chat/completions", headers=headers, json=payload
+        ).json()
+        return res["choices"][0]["message"]["content"].strip().replace("`", "")
+    except Exception:
+        return "Error: Failed to connect to API."
+
+
+def edit_in_editor(cmd):
+    """Opens the default editor with a temporary file in the current directory."""
+    editor = os.environ.get("EDITOR", "nano")
+    with tempfile.NamedTemporaryFile(suffix=".sh", dir=".", delete=False) as tf:
+        tf.write(cmd.encode())
+        path = tf.name
+
+    subprocess.call([editor, path])
+
+    with open(path, "r") as f:
+        new_cmd = f.read().strip()
+
+    if os.path.exists(path):
+        os.unlink(path)
+    return new_cmd
 
 
 def main():
-    # 1. Grab initial prompt from command line args (if any)
-    # e.g., 'python gen.py list all docker containers'
-    initial_input = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
-    current_command = "None"
+    user_input = (
+        " ".join(sys.argv[1:]) if len(sys.argv) > 1 else input("Enter request: ")
+    )
+    if not user_input:
+        return
 
-    print("\033[94m--- NanoGPT Bash Gen (Ctrl+C to quit) ---\033[0m")
+    print("Fetching command...", end="\r")
+    command = get_ai_command(user_input)
 
     while True:
-        try:
-            if initial_input:
-                user_input = initial_input
-                initial_input = None  # Use only once
-            else:
-                user_input = input("\nDescribe task (or 'run'): ").strip()
+        print("\033[K", end="")
+        print(f"\rCommand: \033[92m{command}\033[0m")
+        print(
+            "\033[90m[Enter] Run | [e] Edit | [q] Quit\033[0m",
+            end="",
+            flush=True,
+        )
 
-            if not user_input:
-                continue
+        char = get_char()
 
-            # Execution Logic
-            if user_input.lower() == "run":
-                if current_command != "None":
-                    print("\033[1;33mExecuting...\033[0m")
-                    subprocess.run(current_command, shell=True)
-                    break
-                continue
-
-            # Generation Logic
-            print(f"Requesting {MODEL_ID}...")
-            current_command = get_recommendation(user_input, current_command)
-
-            print(f"\nProposed: \033[1;32m{current_command}\033[0m")
-            print("Action: Enter a new prompt to fix it, or type 'run' to execute.")
-
-        except KeyboardInterrupt:
-            print("\n\033[91mCanceled.\033[0m")
-            sys.exit(0)
+        if char in ("\r", "\n"):
+            print("\n\033[94m➜ Executing...\033[0m")
+            subprocess.run(command, shell=True)
+            break
+        elif char.lower() == "e":
+            command = edit_in_editor(command)
+            print("\r", end="")
+        elif char.lower() == "q" or char == "\x03":
+            print("\nCancelled.")
+            break
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExited.")

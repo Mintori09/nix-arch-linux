@@ -19,6 +19,6 @@ in
 {
   programs.zsh = {
     enable = true;
-    initExtra = allFunctions;
+    initContent = allFunctions;
   };
 }

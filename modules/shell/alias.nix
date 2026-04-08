@@ -3,7 +3,7 @@
 {
   home.shellAliases = {
     # RELOAD CONFIG
-    reload = "source $HOME/.zshrc";
+    reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
 
     # NAVIGATION & SHELL BASICS
