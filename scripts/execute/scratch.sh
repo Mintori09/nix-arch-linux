@@ -28,7 +28,7 @@ get_shebang() {
         php) echo "#!/usr/bin/env php" ;;
         zsh) echo "#!/bin/zsh" ;;
         fish) echo "#!/usr/bin/env fish" ;;
-        *) echo "#!/bin/bash" ;;
+        *) echo "" ;;
     esac
 }
 
