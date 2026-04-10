@@ -17,7 +17,6 @@
     c = "clear";
 
     # MODERN REPLACEMENTS
-    cat = "bat";
     history = "fc -l 1";
 
     # CLIPBOARD (WAYLAND)
