@@ -36,11 +36,9 @@ async function convertViaPandoc(
   to?: string,
   params: string[] = [],
 ) {
-  console.log(`${COLORS.BLUE}Converting document via Pandoc...${COLORS.NC}`);
   const fromFlag = from ? ["-f", from] : [];
   const toFlag = to ? ["-t", to] : [];
-
-  await $`pandoc ${input} ${fromFlag} ${toFlag} ${params} -o ${output}`;
+  await $`pandoc "${input}" ${fromFlag} ${toFlag} ${params} -o "${output}"`;
 }
 
 async function convertViaLibreOffice(
@@ -148,7 +146,7 @@ async function run() {
         const cleanTitle = fileName.replace(/\.[^/.]+$/, "");
         await convertViaPandoc(input, output, "markdown", "epub", [
           "-M",
-          `title=${cleanTitle}`,
+          `title="${cleanTitle}"`,
           extraArgs,
         ]);
         break;
