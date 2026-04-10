@@ -3,17 +3,23 @@
 {
   home.shellAliases = {
     gst = "${pkgs.git}/bin/git status";
+    gcw = "git clone $(${pkgs.wl-clipboard}/bin/wl-paste)";
   };
 
   programs.git = {
     enable = true;
 
+    aliases = {
+      graph = "log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all";
+      s = "status -sb";
+      uncommit = "reset --soft HEAD~1";
+      unstage = "reset HEAD --";
+      amend = "commit --amend --no-edit";
+      last = "log -1 HEAD --stat";
+    };
+
     settings = {
 
-      aliases = {
-        s = "status -sb";
-        uncommit = "reset --soft HEAD~1";
-      };
       user = {
         name = "Mintori09";
         email = "mintori09@users.noreply.github.com";
@@ -52,11 +58,12 @@
       commit.gpgsign = true;
       gpg.format = "ssh";
     };
-
   };
 
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
   };
+
+  home.packages = [ pkgs.wl-clipboard ];
 }
