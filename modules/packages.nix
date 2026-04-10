@@ -43,6 +43,7 @@
     lazydocker
     spicetify-cli
     brotab
+    glow
 
     # Formatters & linters
     gofumpt

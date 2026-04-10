@@ -11,5 +11,6 @@
     ./extract.nix
     ./bash-generation.nix
     ./select-and-open-video.nix
+    ./telepush.nix
   ];
 }
