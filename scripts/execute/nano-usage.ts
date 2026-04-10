@@ -61,6 +61,7 @@ interface TokenUsage {
   remaining: number;
   resetAt: number;
   percentUsed: number;
+  limit: number;
 }
 
 interface ImageUsage {
@@ -155,6 +156,30 @@ class UsageFormatter {
     return `${days}d ${hours}h`;
   }
 
+  formatRemainingTimeMs(resetAt: number): string {
+    if (!resetAt || resetAt === 0) {
+      return "Unknown";
+    }
+
+    const now = Date.now();
+    const remainingMs = resetAt - now;
+
+    if (remainingMs <= 0) {
+      return "Resets soon";
+    }
+
+    const days = Math.floor(remainingMs / MILLISECONDS_PER_DAY);
+    const hours = Math.floor(
+      (remainingMs % MILLISECONDS_PER_DAY) / MILLISECONDS_PER_HOUR,
+    );
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    }
+
+    return `${hours}h`;
+  }
+
   formatMillions(value: number): string {
     return (value / TOKEN_SCALE).toFixed(2);
   }
@@ -245,6 +270,7 @@ class UsageReporter {
     const total = usage.used + usage.remaining;
     const status = this.statusEvaluator.evaluate(usage.percentUsed);
     const percentage = this.progressBar.calculatePercentage(usage.used, total);
+    const remainingTime = this.formatter.formatRemainingTimeMs(usage.resetAt);
 
     this.printHeader("NanoGPT Weekly Token Usage", ANSI_COLORS.cyan);
 
@@ -268,7 +294,7 @@ class UsageReporter {
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset}`,
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
 
@@ -278,6 +304,7 @@ class UsageReporter {
       usage.used,
       usage.limit,
     );
+    const remainingTime = this.formatter.formatRemainingTimeMs(usage.resetAt);
 
     this.printHeader("NanoGPT Daily Image Usage", ANSI_COLORS.magenta);
 
@@ -301,7 +328,7 @@ class UsageReporter {
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset}`,
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
 
@@ -358,6 +385,7 @@ class NanoGptUsageApp {
         remaining: data.weeklyInputTokens?.remaining ?? 0,
         resetAt: data.weeklyInputTokens?.resetAt ?? 0,
         percentUsed: data.weeklyInputTokens?.percentUsed ?? 0,
+        limit: data.limits?.weeklyInputTokens ?? 0,
       };
 
       const imageUsage: ImageUsage = {
