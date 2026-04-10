@@ -44,6 +44,9 @@
     spicetify-cli
     brotab
     glow
+    navi
+    lazyjournal
+    lazysql
 
     # Formatters & linters
     gofumpt
