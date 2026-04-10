@@ -3,6 +3,8 @@
 {
   home.shellAliases = {
     # RELOAD CONFIG
+
+    aider = "aider --model openai/moonshotai/kimi-k2.5 --watch-files";
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
 
