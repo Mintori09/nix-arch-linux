@@ -13,5 +13,6 @@
     ./select-and-open-video.nix
     ./telepush.nix
     ./scratch.nix
+    ./nano_usage.nix
   ];
 }
