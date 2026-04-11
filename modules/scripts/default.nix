@@ -14,5 +14,6 @@
     ./telepush.nix
     ./scratch.nix
     ./nano_usage.nix
+    ./sleep-cycle.nix
   ];
 }
