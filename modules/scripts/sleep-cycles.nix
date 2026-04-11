@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "nano-usage" ''
+  script = pkgs.writeShellScriptBin "sleep-cycles" ''
     exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/sleep-cycles.ts}" "$@"
   '';
 in
