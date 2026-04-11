@@ -45,6 +45,24 @@ HTTP_CODE=$?
 
 if [ $HTTP_CODE -ne 0 ]; then
     echo "Lỗi kết nối: curl thoát với mã $HTTP_CODE"
+    case $HTTP_CODE in
+        26)
+            echo "  → Lỗi đọc file: curl không thể đọc file (tên file có ký tự đặc biệt?)"
+            echo "  → Thử đổi tên file đơn giản hơn hoặc di chuyển đến thư mục khác"
+            ;;
+        6)
+            echo "  → Không thể phân giải hostname (kiểm tra kết nối mạng)"
+            ;;
+        7)
+            echo "  → Không thể kết nối đến máy chủ (kiểm tra tường lửa/proxy)"
+            ;;
+        28)
+            echo "  → Hết thời gian chờ (kết nối chậm hoặc không ổn định)"
+            ;;
+        35)
+            echo "  → Lỗi SSL/TLS (kiểm tra chứng chỉ hoặc thử lại sau)"
+            ;;
+    esac
     echo "  Phản hồi: $RESPONSE"
     exit 1
 fi
