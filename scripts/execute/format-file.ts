@@ -133,6 +133,25 @@ interface FormatResult {
   error?: unknown;
 }
 
+const stats = {
+  updated: 0,
+  unchanged: 0,
+  errors: 0,
+  skipped: 0,
+};
+
+const outputLock = { locked: false };
+
+async function withLock<T>(fn: () => Promise<T>): Promise<T> {
+  while (outputLock.locked) await Bun.sleep(1);
+  outputLock.locked = true;
+  try {
+    return await fn();
+  } finally {
+    outputLock.locked = false;
+  }
+}
+
 async function main(): Promise<void> {
   const argvFiles = argv.slice(2);
   let stdinFiles: string[] = [];
@@ -158,63 +177,33 @@ async function main(): Promise<void> {
   const maxConcurrency = Math.min(availableParallelism(), targetFiles.length);
   const totalFiles = targetFiles.length;
 
-  const results: (FormatResult | null)[] = new Array(totalFiles).fill(null);
-  let nextOutputIndex = 0;
   let completedCount = 0;
-
-  const stats = {
-    updated: 0,
-    unchanged: 0,
-    errors: 0,
-    skipped: 0,
-  };
-
-  async function outputLoop(): Promise<void> {
-    while (nextOutputIndex < totalFiles) {
-      if (results[nextOutputIndex]) {
-        const result = results[nextOutputIndex]!;
-        const filePath = targetFiles[nextOutputIndex];
-
-        if (result.status === "error") {
-          stats.errors++;
-          console.error(result.error);
-          process.stdout.write(
-            `${COLORS.red}Error${COLORS.reset}: ${filePath}\n`,
-          );
-        } else if (result.status === "updated") {
-          stats.updated++;
-          process.stdout.write(
-            `${COLORS.green}Updated${COLORS.reset} (${result.elapsed}ms): ${filePath}\n`,
-          );
-        } else if (result.status === "unchanged") {
-          stats.unchanged++;
-          process.stdout.write(
-            `${COLORS.cyan}Unchanged${COLORS.reset} (${result.elapsed}ms): ${filePath}\n`,
-          );
-        } else {
-          stats.skipped++;
-          process.stdout.write(
-            `${COLORS.yellow}Skipped${COLORS.reset}: ${filePath}\n`,
-          );
-        }
-
-        nextOutputIndex++;
-        await Bun.sleep(0);
-      } else {
-        await Bun.sleep(5);
-      }
-    }
-  }
 
   async function worker(): Promise<void> {
     let idx: number;
     while ((idx = completedCount++) < totalFiles) {
       const filePath = targetFiles[idx];
+
+      const startTime = performance.now();
+      const startFormatted = new Date().toLocaleTimeString();
+
+      await withLock(async () => {
+        process.stdout.write(
+          `${COLORS.gray}[${startFormatted}]${COLORS.reset} ${COLORS.bold}START${COLORS.reset}: ${filePath}\n`,
+        );
+      });
+
       const handle = file(filePath);
       const exists = await handle.exists();
 
       if (!exists) {
-        results[idx] = { status: "skipped", elapsed: "0" };
+        const elapsed = (performance.now() - startTime).toFixed(1);
+        await withLock(async () => {
+          stats.skipped++;
+          process.stdout.write(
+            `${COLORS.yellow}Skipped${COLORS.reset} (${elapsed}ms): ${filePath} (not found)\n`,
+          );
+        });
         continue;
       }
 
@@ -223,12 +212,17 @@ async function main(): Promise<void> {
       const externalCmd = FORMATTER_COMMANDS[ext];
 
       if (!handler && !externalCmd) {
-        results[idx] = { status: "skipped", elapsed: "0" };
+        const elapsed = (performance.now() - startTime).toFixed(1);
+        await withLock(async () => {
+          stats.skipped++;
+          process.stdout.write(
+            `${COLORS.yellow}Skipped${COLORS.reset} (${elapsed}ms): ${filePath} (no handler)\n`,
+          );
+        });
         continue;
       }
 
       if (handler) {
-        const start = performance.now();
         try {
           const content = await file(filePath).text();
           const processed = handler.preprocess
@@ -242,42 +236,72 @@ async function main(): Promise<void> {
             proseWrap: "never",
           });
 
-          const elapsed = (performance.now() - start).toFixed(1);
+          const elapsed = (performance.now() - startTime).toFixed(1);
 
           if (formatted !== content) {
             await write(filePath, formatted);
-            results[idx] = { status: "updated", elapsed };
+            await withLock(async () => {
+              stats.updated++;
+              process.stdout.write(
+                `${COLORS.green}Updated${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+              );
+            });
           } else {
-            results[idx] = { status: "unchanged", elapsed };
+            await withLock(async () => {
+              stats.unchanged++;
+              process.stdout.write(
+                `${COLORS.cyan}Unchanged${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+              );
+            });
           }
         } catch (error) {
-          const elapsed = (performance.now() - start).toFixed(1);
-          results[idx] = { status: "error", elapsed, error };
+          const elapsed = (performance.now() - startTime).toFixed(1);
+          await withLock(async () => {
+            stats.errors++;
+            console.error(error);
+            process.stdout.write(
+              `${COLORS.red}Error${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+            );
+          });
         }
       } else if (externalCmd) {
-        const start = performance.now();
         try {
           const originalContent = await file(filePath).text();
           const proc = spawn(externalCmd(filePath));
           const exitCode = await proc.exited;
 
           const finalContent = await file(filePath).text();
-          const elapsed = (performance.now() - start).toFixed(1);
+          const elapsed = (performance.now() - startTime).toFixed(1);
 
-          results[idx] = {
-            status: finalContent === originalContent ? "unchanged" : "updated",
-            elapsed,
-          };
+          const status = finalContent === originalContent ? "unchanged" : "updated";
+          await withLock(async () => {
+            if (status === "updated") {
+              stats.updated++;
+              process.stdout.write(
+                `${COLORS.green}Updated${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+              );
+            } else {
+              stats.unchanged++;
+              process.stdout.write(
+                `${COLORS.cyan}Unchanged${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+              );
+            }
+          });
         } catch (error) {
-          const elapsed = (performance.now() - start).toFixed(1);
-          results[idx] = { status: "error", elapsed, error };
+          const elapsed = (performance.now() - startTime).toFixed(1);
+          await withLock(async () => {
+            stats.errors++;
+            console.error(error);
+            process.stdout.write(
+              `${COLORS.red}Error${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
+            );
+          });
         }
       }
     }
   }
 
-  const tasks: Promise<void>[] = [outputLoop()];
-
+  const tasks: Promise<void>[] = [];
   for (let i = 0; i < maxConcurrency; i++) {
     tasks.push(worker());
   }
@@ -300,12 +324,6 @@ async function main(): Promise<void> {
   process.stdout.write(
     `  ${COLORS.yellow}${stats.skipped} skipped${COLORS.reset}\n`,
   );
-}
-
-interface FormatResult {
-  status: "updated" | "unchanged" | "skipped" | "error";
-  elapsed: string;
-  error?: unknown;
 }
 
 export function processMarkdownContent(content: string): string {
