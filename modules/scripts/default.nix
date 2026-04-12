@@ -16,5 +16,6 @@
     ./nano_usage.nix
     ./sleep-cycles.nix
     ./copy-files.nix
+    ./mpvr.nix
   ];
 }
