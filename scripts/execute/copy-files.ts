@@ -1,10 +1,12 @@
 import { existsSync, realpathSync } from "fs";
+import { basename } from "path";
 
 // Parse arguments
 const args = process.argv.slice(2);
 
 // Determine separator based on flags
 let separator = " ";
+let useBasename = false;
 
 const commaIndex = args.indexOf("-c");
 if (commaIndex !== -1) {
@@ -24,15 +26,22 @@ if (lineIndex !== -1) {
   args.splice(lineIndex, 1);
 }
 
+const basenameIndex = args.indexOf("-b");
+if (basenameIndex !== -1) {
+  useBasename = true;
+  args.splice(basenameIndex, 1);
+}
+
 // Remaining args are files
 const files = args;
 
 if (files.length === 0) {
-  console.error("Usage: bun run copy-files.ts [-c|-t|-l] <file1> [file2] ...");
+  console.error("Usage: bun run copy-files.ts [-c|-t|-l|-b] <file1> [file2] ...");
   console.error("  -c  comma separated");
   console.error("  -t  tab separated");
   console.error("  -l  line separated (one per line)");
-  console.error("  (default: space separated)");
+  console.error("  -b  copy basename only (filename/directory name only)");
+  console.error("  (default: space separated, full path)");
   process.exit(1);
 }
 
@@ -42,8 +51,10 @@ for (const file of files) {
   if (existsSync(file)) {
     // Get full absolute path
     const fullPath = realpathSync(file);
-    existingFiles.push(fullPath);
-    console.log(`✓ Found: ${fullPath}`);
+    // Use basename if flag is set, otherwise use full path
+    const displayPath = useBasename ? basename(fullPath) : fullPath;
+    existingFiles.push(displayPath);
+    console.log(`✓ Found: ${displayPath}`);
   } else {
     console.error(`✗ Not found: ${file}`);
   }
