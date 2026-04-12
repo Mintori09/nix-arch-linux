@@ -14,7 +14,8 @@
 
     extraConfig = ''
       # 🧰 Core Settings
-
+      set -gq allow-passthrough on
+      set -g visual-activity off
       set -g default-terminal "xterm-256color"
       set -ag terminal-overrides ",xterm-256color:RGB"
 
