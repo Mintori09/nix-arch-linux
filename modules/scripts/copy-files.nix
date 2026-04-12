@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "cp" ''
+  script = pkgs.writeShellScriptBin "cpath" ''
     exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/copy-files.ts}" "$@"
   '';
 in
