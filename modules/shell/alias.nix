@@ -41,7 +41,7 @@
     vim = "nvim";
     cfnv = "cd $HOME/.config/nvim && nvim";
     cfz = "cd $HOME/.config/shell && nvim $HOME/.zshrc && source $HOME/.zshrc";
-    nf = "nvim $(fzf)";
+    nf = "fzf --print0 | xargs -0 -r sh -c 'if [ -n \\\"\\$1\\\" ]; then nvim \\\"\\$1\\\"; fi' _";
 
     # IDEs
     code = "code . && exit";
