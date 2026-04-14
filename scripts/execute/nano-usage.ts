@@ -135,14 +135,21 @@ class NumberFormatter {
 }
 
 class TimeFormatter {
-  private readonly numberFormatter = new NumberFormatter();
-
   formatIsoTimestamp(timestamp: number): string {
     if (!Number.isFinite(timestamp) || timestamp <= 0) {
       return "Unknown";
     }
     const date = new Date(timestamp);
     return date.toISOString().slice(0, 16).replace("T", " ");
+  }
+
+  formatWeeklyResetTimestamp(timestamp: number): string {
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      return "Unknown";
+    }
+    const date = new Date(timestamp);
+    const dateStr = date.toISOString().slice(0, 10);
+    return `${dateStr} 07:00`;
   }
 
   formatIsoDateOnly(isoDate: string): string {
@@ -375,7 +382,7 @@ class TokenUsageReporter {
       `  ${ANSI_COLORS.bold}Daily Budget:${ANSI_COLORS.reset} ${ANSI_COLORS.magenta}${this.numberFormatter.formatWithCommas(dailyBudget)}${ANSI_COLORS.reset} tokens/day (${this.numberFormatter.formatInMillions(dailyBudget)}M)`,
     );
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatIsoTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatWeeklyResetTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
 }
@@ -420,7 +427,7 @@ class ImageUsageReporter {
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatIsoTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatWeeklyResetTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
 }
