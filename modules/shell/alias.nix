@@ -41,7 +41,6 @@
     vim = "nvim";
     cfnv = "cd $HOME/.config/nvim && nvim";
     cfz = "cd $HOME/.config/shell && nvim $HOME/.zshrc && source $HOME/.zshrc";
-    nf = "fzf --print0 | xargs -0 -r sh -c 'if [ -n \\\"\\$1\\\" ]; then nvim \\\"\\$1\\\"; fi' _";
 
     # IDEs
     code = "code . && exit";
@@ -75,8 +74,6 @@
 
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
 
-    translate = "sh '/home/mintori/Documents/[2] Obsidian/06_Script/Code/Bash/translate novel/translate-novel.sh'";
-    kill-antigravity = "killall -9 antigravity";
     kitty = "env FREETYPE_PROPERTIES=\"autofitter:no-stem-darkening=1 cff:no-stem-darkening=1\" kitty";
   };
 }

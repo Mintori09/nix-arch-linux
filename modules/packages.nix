@@ -61,7 +61,6 @@
     taplo
 
     # Program
-    obsidian
     slack
   ];
 }

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "scratch" ''
+  script = pkgs.writeShellScriptBin "temp" ''
     exec ${pkgs.bash}/bin/bash "${../../scripts/execute/scratch.sh}" "$@"
   '';
 in

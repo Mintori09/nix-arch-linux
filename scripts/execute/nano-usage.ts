@@ -14,10 +14,18 @@ const ANSI_COLORS = {
 const PROGRESS_BAR_WIDTH = 40;
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
 const MILLISECONDS_PER_HOUR = 1000 * 60 * 60;
+const MILLISECONDS_PER_MINUTE = 1000 * 60;
+const MILLISECONDS_PER_SECOND = 1000;
+
 const TOKEN_SCALE = 1_000_000;
 
-const HEALTHY_THRESHOLD = 50;
-const MODERATE_THRESHOLD = 80;
+const HEALTHY_THRESHOLD_PERCENT = 50;
+const MODERATE_THRESHOLD_PERCENT = 80;
+
+const MONDAY_7AM_HOUR = 7;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const DAYS_PER_WEEK = 7;
 
 interface UsageResponse {
   active: boolean;
@@ -78,27 +86,24 @@ interface StatusInfo {
   status: string;
 }
 
-class NanoGptUsageClient {
+class NanoGptApiClient {
   private readonly apiKey: string;
+  private readonly baseUrl = "https://nano-gpt.com/api";
 
   constructor() {
     const key = process.env.NANOGPT_API_KEY;
     if (!key) {
-      this.printError("NANOGPT_API_KEY environment variable is not set");
-      process.exit(1);
+      this.printErrorAndExit("NANOGPT_API_KEY environment variable is not set");
     }
     this.apiKey = key;
   }
 
   async fetchUsage(): Promise<UsageResponse> {
-    const response = await fetch(
-      "https://nano-gpt.com/api/subscription/v1/usage",
-      {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
+    const response = await fetch(`${this.baseUrl}/subscription/v1/usage`, {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -113,29 +118,38 @@ class NanoGptUsageClient {
     return data;
   }
 
-  private printError(message: string): void {
+  private printErrorAndExit(message: string): never {
     console.error(`${ANSI_COLORS.red}Error: ${message}${ANSI_COLORS.reset}`);
+    process.exit(1);
   }
 }
 
-class UsageFormatter {
-  formatNumber(value: number): string {
+class NumberFormatter {
+  formatWithCommas(value: number): string {
     return value.toLocaleString("en-US");
   }
 
-  formatTimestamp(timestamp: number): string {
-    if (!timestamp || timestamp === 0) {
+  formatInMillions(value: number): string {
+    return (value / TOKEN_SCALE).toFixed(2);
+  }
+}
+
+class TimeFormatter {
+  private readonly numberFormatter = new NumberFormatter();
+
+  formatIsoTimestamp(timestamp: number): string {
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
       return "Unknown";
     }
     const date = new Date(timestamp);
     return date.toISOString().slice(0, 16).replace("T", " ");
   }
 
-  formatDateOnly(isoDate: string): string {
+  formatIsoDateOnly(isoDate: string): string {
     return isoDate.split("T")[0];
   }
 
-  formatRemainingTime(periodEnd: string | undefined): string {
+  formatRemainingTimeUntil(periodEnd: string | undefined): string {
     if (!periodEnd || periodEnd === "null") {
       return "Unknown";
     }
@@ -156,8 +170,8 @@ class UsageFormatter {
     return `${days}d ${hours}h`;
   }
 
-  formatRemainingTimeMs(resetAt: number): string {
-    if (!resetAt || resetAt === 0) {
+  formatShortDurationFromNow(resetAt: number): string {
+    if (!Number.isFinite(resetAt) || resetAt <= 0) {
       return "Unknown";
     }
 
@@ -168,26 +182,82 @@ class UsageFormatter {
       return "Resets soon";
     }
 
+    if (remainingMs < MILLISECONDS_PER_MINUTE) {
+      const seconds = Math.ceil(remainingMs / MILLISECONDS_PER_SECOND);
+      return seconds <= 5 ? "now" : `${seconds}s`;
+    }
+
+    if (remainingMs < MILLISECONDS_PER_HOUR) {
+      const minutes = Math.ceil(remainingMs / MILLISECONDS_PER_MINUTE);
+      return `${minutes}m`;
+    }
+
     const days = Math.floor(remainingMs / MILLISECONDS_PER_DAY);
     const hours = Math.floor(
       (remainingMs % MILLISECONDS_PER_DAY) / MILLISECONDS_PER_HOUR,
     );
+    const minutes = Math.floor(
+      (remainingMs % MILLISECONDS_PER_HOUR) / MILLISECONDS_PER_MINUTE,
+    );
 
     if (days > 0) {
-      return `${days}d ${hours}h`;
+      return minutes > 0
+        ? `${days}d ${hours}h ${minutes}m`
+        : `${days}d ${hours}h`;
     }
 
-    return `${hours}h`;
-  }
-
-  formatMillions(value: number): string {
-    return (value / TOKEN_SCALE).toFixed(2);
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   }
 }
 
-class StatusEvaluator {
+class WeeklyResetCalculator {
+  calculateDaysUntilNextMonday7AM(): number {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+
+    const currentMinutes =
+      daysSinceMonday * HOURS_PER_DAY * MINUTES_PER_HOUR +
+      hour * MINUTES_PER_HOUR +
+      minute;
+    const targetMinutes = MONDAY_7AM_HOUR * MINUTES_PER_HOUR;
+
+    let minutesUntil: number;
+
+    if (currentMinutes < targetMinutes) {
+      minutesUntil = targetMinutes - currentMinutes;
+    } else {
+      minutesUntil =
+        DAYS_PER_WEEK * HOURS_PER_DAY * MINUTES_PER_HOUR -
+        currentMinutes +
+        targetMinutes;
+    }
+
+    return minutesUntil / (HOURS_PER_DAY * MINUTES_PER_HOUR);
+  }
+}
+
+class DailyBudgetCalculator {
+  private readonly weeklyResetCalculator = new WeeklyResetCalculator();
+
+  calculateDailyBudget(remainingTokens: number): number {
+    const remainingDays =
+      this.weeklyResetCalculator.calculateDaysUntilNextMonday7AM();
+
+    if (remainingDays <= 0) {
+      return 0;
+    }
+
+    return Math.floor(remainingTokens / remainingDays);
+  }
+}
+
+class UsageStatusEvaluator {
   evaluate(percentUsed: number): StatusInfo {
-    if (percentUsed < HEALTHY_THRESHOLD) {
+    if (percentUsed < HEALTHY_THRESHOLD_PERCENT) {
       return {
         barColor: ANSI_COLORS.green,
         statusColor: ANSI_COLORS.green,
@@ -195,7 +265,7 @@ class StatusEvaluator {
       };
     }
 
-    if (percentUsed < MODERATE_THRESHOLD) {
+    if (percentUsed < MODERATE_THRESHOLD_PERCENT) {
       return {
         barColor: ANSI_COLORS.yellow,
         statusColor: ANSI_COLORS.yellow,
@@ -212,11 +282,7 @@ class StatusEvaluator {
 }
 
 class ProgressBarRenderer {
-  private readonly width: number;
-
-  constructor(width: number) {
-    this.width = width;
-  }
+  constructor(private readonly width: number) {}
 
   render(used: number, total: number, color: string): string {
     if (total === 0) {
@@ -243,36 +309,48 @@ class ProgressBarRenderer {
   }
 }
 
-class UsageReporter {
-  private readonly formatter: UsageFormatter;
-  private readonly statusEvaluator: StatusEvaluator;
-  private readonly progressBar: ProgressBarRenderer;
+class BoxRenderer {
+  private readonly width = 38;
 
-  constructor() {
-    this.formatter = new UsageFormatter();
-    this.statusEvaluator = new StatusEvaluator();
-    this.progressBar = new ProgressBarRenderer(PROGRESS_BAR_WIDTH);
-  }
+  render(title: string, color: string): void {
+    const line = "─".repeat(this.width);
+    const paddingLeft = Math.floor((this.width - title.length) / 2);
+    const paddingRight = Math.ceil((this.width - title.length) / 2);
 
-  printHeader(title: string, color: string): void {
-    const line = "─".repeat(38);
     console.log("");
     console.log(`${ANSI_COLORS.bold}${color}╭${line}╮${ANSI_COLORS.reset}`);
     console.log(
-      `${ANSI_COLORS.bold}${color}│${" ".repeat(Math.floor((38 - title.length) / 2))}${title}${" ".repeat(
-        Math.ceil((38 - title.length) / 2),
-      )}│${ANSI_COLORS.reset}`,
+      `${ANSI_COLORS.bold}${color}│${" ".repeat(paddingLeft)}${title}${" ".repeat(paddingRight)}│${ANSI_COLORS.reset}`,
     );
     console.log(`${ANSI_COLORS.bold}${color}╰${line}╯${ANSI_COLORS.reset}`);
   }
+}
 
-  printTokenUsage(usage: TokenUsage): void {
+class TokenUsageReporter {
+  private readonly boxRenderer = new BoxRenderer();
+  private readonly statusEvaluator = new UsageStatusEvaluator();
+  private readonly progressBarRenderer = new ProgressBarRenderer(
+    PROGRESS_BAR_WIDTH,
+  );
+  private readonly numberFormatter = new NumberFormatter();
+  private readonly timeFormatter = new TimeFormatter();
+  private readonly dailyBudgetCalculator = new DailyBudgetCalculator();
+
+  report(usage: TokenUsage): void {
     const total = usage.used + usage.remaining;
     const status = this.statusEvaluator.evaluate(usage.percentUsed);
-    const percentage = this.progressBar.calculatePercentage(usage.used, total);
-    const remainingTime = this.formatter.formatRemainingTimeMs(usage.resetAt);
+    const percentage = this.progressBarRenderer.calculatePercentage(
+      usage.used,
+      total,
+    );
+    const remainingTime = this.timeFormatter.formatShortDurationFromNow(
+      usage.resetAt,
+    );
+    const dailyBudget = this.dailyBudgetCalculator.calculateDailyBudget(
+      usage.remaining,
+    );
 
-    this.printHeader("NanoGPT Weekly Token Usage", ANSI_COLORS.cyan);
+    this.boxRenderer.render("NanoGPT Weekly Token Usage", ANSI_COLORS.cyan);
 
     console.log("");
     console.log(
@@ -280,33 +358,47 @@ class UsageReporter {
     );
     console.log("");
     console.log(
-      `  ${this.progressBar.render(usage.used, total, status.barColor)} ${ANSI_COLORS.bold}${percentage}%${ANSI_COLORS.reset}`,
+      `  ${this.progressBarRenderer.render(usage.used, total, status.barColor)} ${ANSI_COLORS.bold}${percentage}%${ANSI_COLORS.reset}`,
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Used:${ANSI_COLORS.reset}      ${ANSI_COLORS.yellow}${this.formatter.formatNumber(usage.used)}${ANSI_COLORS.reset} tokens (${this.formatter.formatMillions(usage.used)}M)`,
+      `  ${ANSI_COLORS.bold}Used:${ANSI_COLORS.reset}      ${ANSI_COLORS.yellow}${this.numberFormatter.formatWithCommas(usage.used)}${ANSI_COLORS.reset} tokens (${this.numberFormatter.formatInMillions(usage.used)}M)`,
     );
     console.log(
-      `  ${ANSI_COLORS.bold}Total:${ANSI_COLORS.reset}     ${ANSI_COLORS.cyan}${this.formatter.formatNumber(total)}${ANSI_COLORS.reset} tokens (${this.formatter.formatMillions(total)}M)`,
+      `  ${ANSI_COLORS.bold}Total:${ANSI_COLORS.reset}     ${ANSI_COLORS.cyan}${this.numberFormatter.formatWithCommas(total)}${ANSI_COLORS.reset} tokens (${this.numberFormatter.formatInMillions(total)}M)`,
     );
     console.log(
-      `  ${ANSI_COLORS.bold}Remaining:${ANSI_COLORS.reset} ${ANSI_COLORS.green}${this.formatter.formatNumber(usage.remaining)}${ANSI_COLORS.reset} tokens (${this.formatter.formatMillions(usage.remaining)}M)`,
+      `  ${ANSI_COLORS.bold}Remaining:${ANSI_COLORS.reset} ${ANSI_COLORS.green}${this.numberFormatter.formatWithCommas(usage.remaining)}${ANSI_COLORS.reset} tokens (${this.numberFormatter.formatInMillions(usage.remaining)}M)`,
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
+      `  ${ANSI_COLORS.bold}Daily Budget:${ANSI_COLORS.reset} ${ANSI_COLORS.magenta}${this.numberFormatter.formatWithCommas(dailyBudget)}${ANSI_COLORS.reset} tokens/day (${this.numberFormatter.formatInMillions(dailyBudget)}M)`,
+    );
+    console.log(
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatIsoTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
+}
 
-  printImageUsage(usage: ImageUsage): void {
+class ImageUsageReporter {
+  private readonly boxRenderer = new BoxRenderer();
+  private readonly statusEvaluator = new UsageStatusEvaluator();
+  private readonly progressBarRenderer = new ProgressBarRenderer(
+    PROGRESS_BAR_WIDTH,
+  );
+  private readonly timeFormatter = new TimeFormatter();
+
+  report(usage: ImageUsage): void {
     const status = this.statusEvaluator.evaluate(usage.percentUsed);
-    const percentage = this.progressBar.calculatePercentage(
+    const percentage = this.progressBarRenderer.calculatePercentage(
       usage.used,
       usage.limit,
     );
-    const remainingTime = this.formatter.formatRemainingTimeMs(usage.resetAt);
+    const remainingTime = this.timeFormatter.formatShortDurationFromNow(
+      usage.resetAt,
+    );
 
-    this.printHeader("NanoGPT Daily Image Usage", ANSI_COLORS.magenta);
+    this.boxRenderer.render("NanoGPT Daily Image Usage", ANSI_COLORS.magenta);
 
     console.log("");
     console.log(
@@ -314,7 +406,7 @@ class UsageReporter {
     );
     console.log("");
     console.log(
-      `  ${this.progressBar.render(usage.used, usage.limit, status.barColor)} ${ANSI_COLORS.bold}${percentage}%${ANSI_COLORS.reset}`,
+      `  ${this.progressBarRenderer.render(usage.used, usage.limit, status.barColor)} ${ANSI_COLORS.bold}${percentage}%${ANSI_COLORS.reset}`,
     );
     console.log("");
     console.log(
@@ -328,16 +420,21 @@ class UsageReporter {
     );
     console.log("");
     console.log(
-      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
+      `  ${ANSI_COLORS.bold}Resets:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatIsoTimestamp(usage.resetAt)}${ANSI_COLORS.reset} (${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset})`,
     );
   }
+}
 
-  printSubscriptionDetails(
+class SubscriptionReporter {
+  private readonly boxRenderer = new BoxRenderer();
+  private readonly timeFormatter = new TimeFormatter();
+
+  report(
     state: string,
     periodEnd: string | undefined,
     remainingTime: string,
   ): void {
-    this.printHeader("Subscription Details", ANSI_COLORS.cyan);
+    this.boxRenderer.render("Subscription Details", ANSI_COLORS.cyan);
 
     console.log("");
 
@@ -354,7 +451,7 @@ class UsageReporter {
 
     if (periodEnd && periodEnd !== "null") {
       console.log(
-        `  ${ANSI_COLORS.bold}Period End:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.formatter.formatDateOnly(periodEnd)}${ANSI_COLORS.reset}`,
+        `  ${ANSI_COLORS.bold}Period End:${ANSI_COLORS.reset} ${ANSI_COLORS.blue}${this.timeFormatter.formatIsoDateOnly(periodEnd)}${ANSI_COLORS.reset}`,
       );
       console.log(
         `  ${ANSI_COLORS.bold}Time Remaining:${ANSI_COLORS.reset} ${ANSI_COLORS.magenta}${remainingTime}${ANSI_COLORS.reset}`,
@@ -366,43 +463,25 @@ class UsageReporter {
 }
 
 class NanoGptUsageApp {
-  private readonly client: NanoGptUsageClient;
-  private readonly reporter: UsageReporter;
-  private readonly formatter: UsageFormatter;
-
-  constructor() {
-    this.client = new NanoGptUsageClient();
-    this.reporter = new UsageReporter();
-    this.formatter = new UsageFormatter();
-  }
+  private readonly apiClient = new NanoGptApiClient();
+  private readonly tokenReporter = new TokenUsageReporter();
+  private readonly imageReporter = new ImageUsageReporter();
+  private readonly subscriptionReporter = new SubscriptionReporter();
+  private readonly timeFormatter = new TimeFormatter();
 
   async run(): Promise<void> {
     try {
-      const data = await this.client.fetchUsage();
+      const data = await this.apiClient.fetchUsage();
 
-      const tokenUsage: TokenUsage = {
-        used: data.weeklyInputTokens?.used ?? 0,
-        remaining: data.weeklyInputTokens?.remaining ?? 0,
-        resetAt: data.weeklyInputTokens?.resetAt ?? 0,
-        percentUsed: data.weeklyInputTokens?.percentUsed ?? 0,
-        limit: data.limits?.weeklyInputTokens ?? 0,
-      };
-
-      const imageUsage: ImageUsage = {
-        used: data.dailyImages?.used ?? 0,
-        remaining: data.dailyImages?.remaining ?? 0,
-        resetAt: data.dailyImages?.resetAt ?? 0,
-        percentUsed: data.dailyImages?.percentUsed ?? 0,
-        limit: data.limits?.dailyImages ?? 100,
-      };
-
-      const remainingTime = this.formatter.formatRemainingTime(
+      const tokenUsage = this.extractTokenUsage(data);
+      const imageUsage = this.extractImageUsage(data);
+      const remainingTime = this.timeFormatter.formatRemainingTimeUntil(
         data.period?.currentPeriodEnd,
       );
 
-      this.reporter.printTokenUsage(tokenUsage);
-      this.reporter.printImageUsage(imageUsage);
-      this.reporter.printSubscriptionDetails(
+      this.tokenReporter.report(tokenUsage);
+      this.imageReporter.report(imageUsage);
+      this.subscriptionReporter.report(
         data.state,
         data.period?.currentPeriodEnd,
         remainingTime,
@@ -412,6 +491,26 @@ class NanoGptUsageApp {
       console.error(`${ANSI_COLORS.red}Error: ${message}${ANSI_COLORS.reset}`);
       process.exit(1);
     }
+  }
+
+  private extractTokenUsage(data: UsageResponse): TokenUsage {
+    return {
+      used: data.weeklyInputTokens?.used ?? 0,
+      remaining: data.weeklyInputTokens?.remaining ?? 0,
+      resetAt: data.weeklyInputTokens?.resetAt ?? 0,
+      percentUsed: data.weeklyInputTokens?.percentUsed ?? 0,
+      limit: data.limits?.weeklyInputTokens ?? 0,
+    };
+  }
+
+  private extractImageUsage(data: UsageResponse): ImageUsage {
+    return {
+      used: data.dailyImages?.used ?? 0,
+      remaining: data.dailyImages?.remaining ?? 0,
+      resetAt: data.dailyImages?.resetAt ?? 0,
+      percentUsed: data.dailyImages?.percentUsed ?? 0,
+      limit: data.limits?.dailyImages ?? 100,
+    };
   }
 }
 
