@@ -9,7 +9,7 @@ from pathlib import Path
 
 import requests
 
-CACHE_FILE = Path.home() / ".local/.cmd_ai_cache.jsonl"
+CACHE_FILE = Path.home() / ".config/home-manager/.cmd_ai_cache.json"
 API_KEY = os.getenv("NANOGPT_API_KEY")
 API_ENDPOINT = "https://nano-gpt.com/api/v1/chat/completions"
 FALLBACK_MODELS = [
@@ -32,21 +32,22 @@ CLEAR_LINE = "\033[K"
 def save_to_cache(prompt, command):
     if not command or "Error" in command:
         return
+
     entries = []
     if CACHE_FILE.exists():
         with open(CACHE_FILE, "r") as f:
-            for line in f:
-                try:
-                    data = json.loads(line)
-                    if data["command"] != command:
-                        entries.append(line)
-                except:
-                    continue
+            try:
+                entries = json.load(f)
+            except json.JSONDecodeError:
+                entries = []
+
+    # Remove existing entry with same command to avoid duplicates
+    entries = [e for e in entries if e.get("command") != command]
+
+    entries.append({"prompt": prompt, "command": command})
 
     with open(CACHE_FILE, "w") as f:
-        for e in entries:
-            f.write(e)
-        f.write(json.dumps({"prompt": prompt, "command": command}) + "\n")
+        json.dump(entries, f, indent=2)
 
 
 def search_with_fzf():
@@ -54,10 +55,31 @@ def search_with_fzf():
         return None
 
     with open(CACHE_FILE, "r") as f:
-        lines = [json.loads(l) for l in f.readlines()]
+        try:
+            lines = json.load(f)
+        except json.JSONDecodeError:
+            return None
+
+    # Filter out entries that don't have the required keys
+    valid_entries = [
+        item
+        for item in lines
+        if isinstance(item, dict) and item.get("prompt") and item.get("command")
+    ]
+
+    if not valid_entries:
+        return None
 
     formatted_input = "\n".join(
-        [f"{item['prompt']} \t {item['command']}" for item in reversed(lines)]
+        [f"{item['prompt']} \t {item['command']}" for item in reversed(valid_entries)]
+    )
+
+    # Python command to delete an entry from JSON cache
+    delete_cmd = (
+        f"python3 -c \"import json; f='{CACHE_FILE}'; "
+        f"data=json.load(open(f)); "
+        f"cmd='{2}'; "
+        f"json.dump([x for x in data if x.get('command')!=cmd], open(f,'w'))\""
     )
 
     fzf_cmd = [
@@ -74,11 +96,7 @@ def search_with_fzf():
         "--preview-window",
         "bottom:3:wrap",
         "--bind",
-        "ctrl-x:execute(sed -i '||{2}||d' "
-        + str(CACHE_FILE)
-        + ")+reload(cat "
-        + str(CACHE_FILE)
-        + ")",
+        f"ctrl-x:execute({delete_cmd})+reload(cat {CACHE_FILE})",
     ]
 
     try:
