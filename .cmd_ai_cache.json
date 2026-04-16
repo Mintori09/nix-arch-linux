@@ -1,0 +1,122 @@
+[
+  {
+    "description": "Merge all markdown files in current directory with trailing newline",
+    "command": "for f in *.md; do [ -f \"$f\" ] && cat \"$f\" && printf '\\n'; done > merged.md"
+  },
+  {
+    "description": "Remove lines starting with '# chapter_' from all markdown files",
+    "command": "sed -i '/^# chapter_/d' -- *.md 2>/dev/null || sed -i.bak '/^# chapter_/d' -- *.md"
+  },
+  {
+    "description": "Get current directory name",
+    "command": "basename \"$PWD\""
+  },
+  {
+    "description": "Start Docker Compose services",
+    "command": "docker compose up"
+  },
+  {
+    "description": "Inspect Docker container by name",
+    "command": "docker inspect notify-bot-dut-notify-bot-dut"
+  },
+  {
+    "description": "Inspect Docker container by ID",
+    "command": "docker inspect 4633eb269f25"
+  },
+  {
+    "description": "Display ARP table for local network devices",
+    "command": "arp -a"
+  },
+  {
+    "description": "Update specific package using pnpm",
+    "command": "pnpm update 9router"
+  },
+  {
+    "description": "Rename chapter files to 3-digit zero-padded format",
+    "command": "for f in chapter-*.md; do [ -f \"$f\" ] || continue; n=${f#chapter-}; n=${n%.md}; [ ${#n} -lt 3 ] && printf -v nn '%03d' \"$n\" && mv -i -- \"$f\" \"chapter-${nn}.md\"; done"
+  },
+  {
+    "description": "Merge 5 random markdown files into demo.txt",
+    "command": "shuf -zn 5 -- *.md | xargs -0 cat -- > demo.txt"
+  },
+  {
+    "description": "Merge 10 random markdown files into demo.txt",
+    "command": "shuf -zn 10 -- *.md | xargs -0 cat -- > demo.txt"
+  },
+  {
+    "description": "Query Gemini API (requires API_KEY env var)",
+    "command": "curl -s \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}\" -H \"Content-Type: application/json\" -d '{\"contents\":[{\"parts\":[{\"text\":\"how are you\"}]}]}'"
+  },
+  {
+    "description": "Show diff between current branch and remote main",
+    "command": "git diff origin/main"
+  },
+  {
+    "description": "Switch to feature branch",
+    "command": "git checkout feature/product-backlog"
+  },
+  {
+    "description": "Delete remote branch",
+    "command": "git push origin --delete claude-init"
+  },
+  {
+    "description": "Find markdown files containing blockquote lines",
+    "command": "grep -l '^>' -- *.md 2>/dev/null"
+  },
+  {
+    "description": "Preview removal of blockquote lines (dry run)",
+    "command": "grep -n '^>' -- *.md 2>/dev/null"
+  },
+  {
+    "description": "Remove all blockquote lines from markdown files",
+    "command": "sed -i.bak '/^>/d' -- *.md"
+  },
+  {
+    "description": "Check file type of EPUB",
+    "command": "file -- \"Shut Up, Young Lady, Obediently Hand Over The Money And Don't Confess.epub\""
+  },
+  {
+    "description": "Display system information",
+    "command": "uname -a"
+  },
+  {
+    "description": "Show changes from last commit",
+    "command": "git diff HEAD~1 HEAD"
+  },
+  {
+    "description": "List all GitHub repositories (max 4000)",
+    "command": "gh repo list --limit 4000"
+  },
+  {
+    "description": "List repositories with collaborators",
+    "command": "gh repo list --limit 4000 --json nameWithOwner,collaborators --jq '.[] | select(.collaborators | length > 0) | \"\\(.nameWithOwner): \\(.collaborators | map(.login) | join(\", \"))\"'"
+  },
+  {
+    "prompt": "merge random 10 markdown files in current folder to demo.txt",
+    "command": "cat $(ls *.md | shuf -n 10) > demo.txt"
+  },
+  {
+    "prompt": "create new branch name tri/tao_moi_dang_ky",
+    "command": "git checkout -b tri/tao_moi_dang_ky"
+  },
+  {
+    "prompt": "get current date follow form year_month_day",
+    "command": "date +%Y_%m_%d"
+  },
+  {
+    "prompt": "use fd show all file vtt",
+    "command": "fd -e vtt"
+  },
+  {
+    "prompt": "show all branch in github remote",
+    "command": "git branch -r"
+  },
+  {
+    "prompt": "in to branch origin/ngoc/apartment_search",
+    "command": "git checkout -b origin/ngoc/apartment_search"
+  },
+  {
+    "prompt": "switch to branch origin/feature/faculty-module",
+    "command": "git checkout origin/feature/faculty-module"
+  }
+]
