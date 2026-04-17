@@ -1,5 +1,5 @@
 {
-  description = "Cấu hình Home Manager của tôi";
+  description = "My home manager configuration!";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -11,14 +11,12 @@
   };
 
   outputs =
-    {
-      nixpkgs,
-      home-manager,
-      ...
-    }:
+    { nixpkgs, home-manager, ... }:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = import nixpkgs {
+        inherit system;
+      };
     in
     {
       homeConfigurations."mintori" = home-manager.lib.homeManagerConfiguration {
