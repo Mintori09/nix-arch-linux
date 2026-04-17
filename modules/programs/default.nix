@@ -15,5 +15,6 @@
     ./tmux.nix
     ./helix.nix
     ./opencode
+    ./yt-dlp.nix
   ];
 }
