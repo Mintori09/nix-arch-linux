@@ -11,8 +11,9 @@
     ./zoxide.nix
     ./direnv.nix
     ./fastfetch.nix
-    ./opencode.nix
     ./git.nix
     ./tmux.nix
+    ./helix.nix
+    ./opencode
   ];
 }

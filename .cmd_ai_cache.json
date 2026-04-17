@@ -118,5 +118,17 @@
   {
     "prompt": "switch to branch origin/feature/faculty-module",
     "command": "git checkout origin/feature/faculty-module"
+  },
+  {
+    "prompt": "merge all file in current folder to one file use for loop",
+    "command": "for f in *; do cat \"$f\" >> merged; done"
+  },
+  {
+    "prompt": "delete first heading 1 in all file markdown in current folder dry run",
+    "command": "grep -rnH \"^# \" --include=\"*.md\" . | head -1"
+  },
+  {
+    "prompt": "delete first line in all file markdown in current folder",
+    "command": "sed -i '1d' *.md"
   }
 ]

@@ -38,7 +38,16 @@ async function convertViaPandoc(
 ) {
   const fromFlag = from ? ["-f", from] : [];
   const toFlag = to ? ["-t", to] : [];
-  await $`pandoc "${input}" ${fromFlag} ${toFlag} ${params} -o "${output}"`;
+  const args = [
+    "pandoc",
+    input,
+    ...fromFlag,
+    ...toFlag,
+    ...params,
+    "-o",
+    output,
+  ];
+  await $`${args}`.quiet();
 }
 
 async function convertViaLibreOffice(
@@ -82,7 +91,6 @@ async function run() {
     );
     process.exit(1);
   }
-  const extraArgs = args.join(" ");
 
   const inExt = path.extname(input).slice(1).toLowerCase();
   const outExt = path.extname(output).slice(1).toLowerCase();
@@ -144,11 +152,13 @@ async function run() {
       case "md:epub":
         const fileName = output.split("/").pop() || output;
         const cleanTitle = fileName.replace(/\.[^/.]+$/, "");
-        await convertViaPandoc(input, output, "markdown", "epub", [
+
+        const epubParams = [
           "-M",
-          `title="${cleanTitle}"`,
-          extraArgs,
-        ]);
+          `title:${cleanTitle}`, // Bun will escape the string automatically
+          ...args,
+        ];
+        await convertViaPandoc(input, output, "markdown", "epub", epubParams);
         break;
 
       // Office
