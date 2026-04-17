@@ -1,25 +1,56 @@
 # nix-arch-linux
 
+A declarative configuration for Arch Linux using Nix Flakes and Home Manager.
+
+## Features
+
+- **Declarative Package Management**: Uses `home.packages` and Nix flakes for reproducible software environments.
+- **Shell Configuration**: Zsh configuration with Powerlevel10k theme (`p10k.zsh`).
+- **Custom Scripts**: A collection of utility scripts for file conversion, formatting, and system tasks.
+
+## Scripts
+
+Located in `scripts/execute/`:
+
+- **convert-file.ts**: Converts files between formats using tools like FFmpeg, ImageMagick, Pandoc, LibreOffice, and Yq.
+- **format-file.ts**: Formats source code and files using Prettier and external formatters.
+- **install-font.ts**: Downloads and installs fonts, refreshing the font cache.
+- **install-rpm.ts**: Extracts and installs RPM packages on non-RPM distros (like Arch).
+- **which_file.ts**: Locates commands, checking for executables, symlinks, and zsh functions.
+- **fzf-preview.sh**: Preview script for `fzf` supporting images, PDFs, videos, and more.
+- **fzf-rg-edit.sh**: Integrates `ripgrep` with `fzf` for searching and editing files.
+
+## Programs
+
+Located in `modules/programs/`:
+
+- **yt-dlp**: Configured for downloading video/audio with specific format, metadata, and subtitle settings. Includes a `download-music` alias.
+
+## Usage
+
+### Applying Configuration
+
+To apply the Home Manager configuration:
+
+```bash
+hms
 ```
-.
-├── flake.lock
-├── flake.nix
-├── home.nix
-├── modules
-│   ├── default.nix
-│   ├── packages.nix
-│   ├── programs
-│   ├── scripts
-│   ├── shell
-│   └── shell.nix
-├── p10k.zsh
-├── README.md
-└── scripts
-    ├── convert-file.ts
-    ├── format-file.ts
-    ├── fzf-preview.sh
-    ├── fzf-rg-edit.sh
-    ├── install-font.ts
-    ├── install-rpm.ts
-    └── which_file.ts
+
+### Downloading Media
+
+Download video (uses config defaults):
+
+```bash
+yt-dlp <url>
 ```
+
+Download music (MP3 format):
+
+```bash
+download-music <url>
+```
+
+## Prerequisites
+
+- Nix with Flakes enabled.
+- Home Manager installed in standalone mode.
