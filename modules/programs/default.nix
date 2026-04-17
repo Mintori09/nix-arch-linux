@@ -16,5 +16,6 @@
     ./helix.nix
     ./opencode
     ./yt-dlp.nix
+    ./neovim.nix
   ];
 }

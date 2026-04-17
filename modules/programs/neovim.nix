@@ -3,7 +3,6 @@
 {
   programs.neovim = {
     enable = true;
-    defaultEditor = true;
     viAlias = true;
     vimAlias = true;
 
@@ -28,14 +27,16 @@
       nodejs_22
       typescript-language-server
       vtsls
-      nodePackages.prettier
-      nodePackages.eslint
+      prettier
+      eslint
 
-      (python3.withPackages (ps: with ps; [
-        black
-        isort
-        pyflakes
-      ]))
+      (python3.withPackages (
+        ps: with ps; [
+          black
+          isort
+          pyflakes
+        ]
+      ))
       pyright
       ruff
 
@@ -53,6 +54,5 @@
       pandoc
       marksman
     ];
-
   };
 }
