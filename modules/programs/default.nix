@@ -13,7 +13,7 @@
     ./fastfetch.nix
     ./git.nix
     ./tmux.nix
-    ./helix.nix
+    ./helix
     ./opencode
     ./yt-dlp.nix
     ./neovim.nix
