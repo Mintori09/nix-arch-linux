@@ -1,4 +1,4 @@
 nf() {
-    local file=$(fzf)
-    [ -n "$file" ] && nvim "$file"
+	local file=$(fzf)
+	[ -n "$file" ] && nvim "$file"
 }
