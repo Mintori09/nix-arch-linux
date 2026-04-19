@@ -273,7 +273,8 @@ async function main(): Promise<void> {
           const finalContent = await file(filePath).text();
           const elapsed = (performance.now() - startTime).toFixed(1);
 
-          const status = finalContent === originalContent ? "unchanged" : "updated";
+          const status =
+            finalContent === originalContent ? "unchanged" : "updated";
           await withLock(async () => {
             if (status === "updated") {
               stats.updated++;
