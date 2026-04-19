@@ -63,7 +63,7 @@ in
       "--bind 'ctrl-a:select-all'"
       "--bind 'ctrl-y:execute-silent(echo {+} | wl-copy)'"
       "--bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
-      "--preview '$HOME/.config/shell/scripts/fzf-preview.sh {}'"
+      "--preview 'preview {}'"
     ];
   };
 }
