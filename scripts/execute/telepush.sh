@@ -5,35 +5,35 @@ CHAT_ID=${TELEGRAM_GROUP_NOVEL_BOT}
 FILE=$1
 
 if [[ -z "$TOKEN" ]]; then
-    echo "Lỗi: Biến môi trường TELEGRAM_TOKEN_NOVEL_BOT chưa được thiết lập!"
-    exit 1
+	echo "Lỗi: Biến môi trường TELEGRAM_TOKEN_NOVEL_BOT chưa được thiết lập!"
+	exit 1
 fi
 
 if [[ -z "$CHAT_ID" ]]; then
-    echo "Lỗi: Biến môi trường TELEGRAM_GROUP_NOVEL_BOT chưa được thiết lập!"
-    exit 1
+	echo "Lỗi: Biến môi trường TELEGRAM_GROUP_NOVEL_BOT chưa được thiết lập!"
+	exit 1
 fi
 
 if [[ -z "$FILE" ]]; then
-    echo "Lỗi: Thiếu đường dẫn file. Cách dùng: $0 <file>"
-    exit 1
+	echo "Lỗi: Thiếu đường dẫn file. Cách dùng: $0 <file>"
+	exit 1
 fi
 
 if [[ ! -f "$FILE" ]]; then
-    echo "Lỗi: File '$FILE' không tồn tại!"
-    echo "  Đường dẫn tuyệt đối: $(readlink -f "$FILE" 2>/dev/null || echo 'Không thể xác định')"
-    echo "  Thư mục hiện tại: $(pwd)"
-    exit 1
+	echo "Lỗi: File '$FILE' không tồn tại!"
+	echo "  Đường dẫn tuyệt đối: $(readlink -f "$FILE" 2>/dev/null || echo 'Không thể xác định')"
+	echo "  Thư mục hiện tại: $(pwd)"
+	exit 1
 fi
 
 FILE_SIZE=$(stat -c%s "$FILE")
 MAX_SIZE=$((50 * 1024 * 1024))
 
 if [ "$FILE_SIZE" -gt "$MAX_SIZE" ]; then
-    echo "Cảnh báo: File lớn hơn 50MB. Vui lòng dùng 'telegram-upload' thay thế."
-    echo "  Kích thước file: $FILE_SIZE bytes ($(numfmt --to=iec-i $FILE_SIZE))"
-    echo "  Giới hạn tối đa: $MAX_SIZE bytes (50 MiB)"
-    exit 1
+	echo "Cảnh báo: File lớn hơn 50MB. Vui lòng dùng 'telegram-upload' thay thế."
+	echo "  Kích thước file: $FILE_SIZE bytes ($(numfmt --to=iec-i $FILE_SIZE))"
+	echo "  Giới hạn tối đa: $MAX_SIZE bytes (50 MiB)"
+	exit 1
 fi
 
 echo "Đang đẩy file: $(basename "$FILE")..."
@@ -44,50 +44,50 @@ RESPONSE=$(curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TOKEN/send
 HTTP_CODE=$?
 
 if [ $HTTP_CODE -ne 0 ]; then
-    echo "Lỗi kết nối: curl thoát với mã $HTTP_CODE"
-    case $HTTP_CODE in
-        26)
-            echo "  → Lỗi đọc file: curl không thể đọc file (tên file có ký tự đặc biệt?)"
-            echo "  → Thử đổi tên file đơn giản hơn hoặc di chuyển đến thư mục khác"
-            ;;
-        6)
-            echo "  → Không thể phân giải hostname (kiểm tra kết nối mạng)"
-            ;;
-        7)
-            echo "  → Không thể kết nối đến máy chủ (kiểm tra tường lửa/proxy)"
-            ;;
-        28)
-            echo "  → Hết thời gian chờ (kết nối chậm hoặc không ổn định)"
-            ;;
-        35)
-            echo "  → Lỗi SSL/TLS (kiểm tra chứng chỉ hoặc thử lại sau)"
-            ;;
-    esac
-    echo "  Phản hồi: $RESPONSE"
-    exit 1
+	echo "Lỗi kết nối: curl thoát với mã $HTTP_CODE"
+	case $HTTP_CODE in
+	26)
+		echo "  → Lỗi đọc file: curl không thể đọc file (tên file có ký tự đặc biệt?)"
+		echo "  → Thử đổi tên file đơn giản hơn hoặc di chuyển đến thư mục khác"
+		;;
+	6)
+		echo "  → Không thể phân giải hostname (kiểm tra kết nối mạng)"
+		;;
+	7)
+		echo "  → Không thể kết nối đến máy chủ (kiểm tra tường lửa/proxy)"
+		;;
+	28)
+		echo "  → Hết thời gian chờ (kết nối chậm hoặc không ổn định)"
+		;;
+	35)
+		echo "  → Lỗi SSL/TLS (kiểm tra chứng chỉ hoặc thử lại sau)"
+		;;
+	esac
+	echo "  Phản hồi: $RESPONSE"
+	exit 1
 fi
 
 if [[ $RESPONSE == *"\"ok\":true"* ]]; then
-    echo "Thành công! Kiểm tra điện thoại của bạn."
+	echo "Thành công! Kiểm tra điện thoại của bạn."
 else
-    echo "Thất bại khi gửi file đến Telegram."
-    echo "  Mã phản hồi HTTP: $HTTP_CODE"
-    echo "  Chi tiết lỗi từ API: $RESPONSE"
-    
-    # Phân tích lỗi phổ biến
-    if [[ $RESPONSE == *"\"error_code\":400"* ]]; then
-        echo "  → Lỗi 400: Yêu cầu không hợp lệ (chat ID sai, file không hợp lệ, v.v.)"
-    elif [[ $RESPONSE == *"\"error_code\":401"* ]]; then
-        echo "  → Lỗi 401: Token bot không hợp lệ hoặc đã bị thu hồi"
-    elif [[ $RESPONSE == *"\"error_code\":403"* ]]; then
-        echo "  → Lỗi 403: Bot không có quyền gửi tin nhắn đến chat này"
-    elif [[ $RESPONSE == *"\"error_code\":413"* ]]; then
-        echo "  → Lỗi 413: File quá lớn (giới hạn thực tế của Telegram)"
-    elif [[ $RESPONSE == *"\"error_code\":429"* ]]; then
-        echo "  → Lỗi 429: Gửi quá nhiều yêu cầu, vui lòng đợi"
-    elif [[ $RESPONSE == *"\"error_code\":500"* ]] || [[ $RESPONSE == *"\"error_code\":502"* ]]; then
-        echo "  → Lỗi máy chủ Telegram, vui lòng thử lại sau"
-    fi
-    
-    exit 1
+	echo "Thất bại khi gửi file đến Telegram."
+	echo "  Mã phản hồi HTTP: $HTTP_CODE"
+	echo "  Chi tiết lỗi từ API: $RESPONSE"
+
+	# Phân tích lỗi phổ biến
+	if [[ $RESPONSE == *"\"error_code\":400"* ]]; then
+		echo "  → Lỗi 400: Yêu cầu không hợp lệ (chat ID sai, file không hợp lệ, v.v.)"
+	elif [[ $RESPONSE == *"\"error_code\":401"* ]]; then
+		echo "  → Lỗi 401: Token bot không hợp lệ hoặc đã bị thu hồi"
+	elif [[ $RESPONSE == *"\"error_code\":403"* ]]; then
+		echo "  → Lỗi 403: Bot không có quyền gửi tin nhắn đến chat này"
+	elif [[ $RESPONSE == *"\"error_code\":413"* ]]; then
+		echo "  → Lỗi 413: File quá lớn (giới hạn thực tế của Telegram)"
+	elif [[ $RESPONSE == *"\"error_code\":429"* ]]; then
+		echo "  → Lỗi 429: Gửi quá nhiều yêu cầu, vui lòng đợi"
+	elif [[ $RESPONSE == *"\"error_code\":500"* ]] || [[ $RESPONSE == *"\"error_code\":502"* ]]; then
+		echo "  → Lỗi máy chủ Telegram, vui lòng thử lại sau"
+	fi
+
+	exit 1
 fi
