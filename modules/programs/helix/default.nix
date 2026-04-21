@@ -1,4 +1,8 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  ...
+}:
 let
   configFile = "helix/config.toml";
   toTOML = (pkgs.formats.toml { }).generate;
@@ -153,16 +157,31 @@ in
       };
 
       keys.normal = {
-        G = "goto_file_end";
+        G = [
+          "normal_mode"
+          "goto_file_end"
+        ];
 
         # Neovim-style keybindings
         x = "delete_selection"; # Delete character/selection (Neovim 'x')
         p = "paste_clipboard_after"; # Paste from clipboard after (Neovim 'p')
         P = "paste_clipboard_before"; # Paste from clipboard before (Neovim 'P')
-        V = "select_line_above"; # Select line (Neovim 'V')
+        V = [
+          "extend_to_line_bounds"
+          "select_mode"
+        ]; # Select current line and enter select mode (Neovim 'V')
         v = "select_mode"; # Enter select mode (Neovim 'v')
         A = "goto_line_end"; # Append at end of line (Neovim 'A')
         I = "goto_line_start"; # Insert at start of line (Neovim 'I')
+        y = [ "yank_main_selection_to_clipboard" ];
+        Y = [
+          "select_all"
+          "yank_main_selection_to_clipboard"
+        ]; # Copy all text to clipboard
+
+        # Tab navigation
+        H = "goto_previous_buffer"; # Move to left tab
+        L = "goto_next_buffer"; # Move to right tab
 
         A-j = [
           "extend_to_line_bounds"
@@ -207,7 +226,20 @@ in
           W = ":set whitespace.render none";
         };
       };
+
+      keys.select = {
+        G = "extend_to_file_end";
+        y = [
+          "yank_main_selection_to_clipboard"
+          "normal_mode"
+        ];
+        x = [
+          "yank_main_selection_to_clipboard"
+          "delete_selection"
+        ];
+      };
     };
+
     force = true;
   };
   xdg.configFile."helix/languages.toml" = {

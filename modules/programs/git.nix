@@ -12,11 +12,17 @@
     settings = {
 
       alias = {
+        # Display a pretty commit graph with abbreviated hashes, relative dates, and branch decorations
         graph = "log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all";
+        # Short status output with branch info
         s = "status -sb";
+        # Undo the last commit while keeping changes staged
         uncommit = "reset --soft HEAD~1";
+        # Remove files from staging area (unstage) while keeping changes in working directory
         unstage = "reset HEAD --";
+        # Amend the last commit without changing the message
         amend = "commit --amend --no-edit";
+        # Show detailed stats for the last commit
         last = "log -1 HEAD --stat";
       };
 

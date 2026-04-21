@@ -17,5 +17,7 @@
     ./opencode
     ./yt-dlp.nix
     ./neovim.nix
+    ./mpv.nix
+    ./kitty.nix
   ];
 }

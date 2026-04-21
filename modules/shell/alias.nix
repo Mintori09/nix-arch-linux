@@ -74,6 +74,5 @@
 
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
 
-    kitty = "env FREETYPE_PROPERTIES=\"autofitter:no-stem-darkening=1 cff:no-stem-darkening=1\" kitty";
   };
 }
