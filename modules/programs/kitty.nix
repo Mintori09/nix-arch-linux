@@ -7,7 +7,13 @@
 {
   programs.kitty = {
     enable = true;
-    package = config.lib.nixGL.wrap pkgs.kitty;
+    package = pkgs.writeShellScriptBin "kitty" ''
+      exec env \
+        FREETYPE_PROPERTIES="autofitter:no-stem-darkening=1 cff:no-stem-darkening=1" \
+        nixGL \
+        ${pkgs.kitty}/bin/kitty \
+        "$@"
+    '';
 
     settings = {
       # Font
@@ -21,7 +27,6 @@
       shell = "zsh";
 
       # Cursor
-      cursor_trail = 80;
       cursor = "#b25424";
       cursor_text_color = "#24242e";
       cursor_shape = "block";
