@@ -17,5 +17,6 @@
     ./sleep-cycles.nix
     ./copy-files.nix
     ./mpvr.nix
+    # ./qutebrowser.nix
   ];
 }
