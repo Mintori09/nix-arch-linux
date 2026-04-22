@@ -1,2 +1,4 @@
 secrets.json
 .aider*
+.playwright-mcp
+.codex

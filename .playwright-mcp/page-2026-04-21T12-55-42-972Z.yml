@@ -1,0 +1,563 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - link "Novel Updates" [ref=e7] [cursor=pointer]:
+        - /url: https://www.novelupdates.com/
+        - generic [ref=e8]: Novel Updates
+      - generic:
+        - link "Register" [ref=e10] [cursor=pointer]:
+          - /url: /register-nu/
+        - link "Login" [ref=e12] [cursor=pointer]:
+          - /url: /login/
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 
+          - generic [ref=e15]: 
+        - generic "Guest Menu"
+        - generic "Search" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: 
+        - text:   
+      - text:         
+    - generic [ref=e20]:
+      - generic [ref=e23]:
+        - heading "Series Finder" [level=3] [ref=e24]
+        - generic [ref=e27]:
+          - definition [ref=e28]:
+            - link "Home" [ref=e29] [cursor=pointer]:
+              - /url: //www.novelupdates.com/
+            - text: ">"
+          - definition [ref=e30]: Series Finder
+        - generic [ref=e31]:
+          - generic [ref=e32]: 
+          - generic [ref=e33]:
+            - text: "["
+            - link "Hide Filters" [ref=e34] [cursor=pointer]:
+              - /url: "#"
+            - text: "]"
+        - generic [ref=e36]:
+          - generic [ref=e37]: Current Filters - None
+          - generic [ref=e38]:
+            - text: Novel Type
+            - generic [ref=e39] [cursor=pointer]: 
+          - generic [ref=e40]:
+            - list [ref=e44]:
+              - listitem [ref=e45]:
+                - link " Light Novel" [ref=e46] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e47]: 
+                  - text: Light Novel
+            - list [ref=e51]:
+              - listitem [ref=e52]:
+                - link " Published Novel" [ref=e53] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e54]: 
+                  - text: Published Novel
+            - list [ref=e58]:
+              - listitem [ref=e59]:
+                - link " Web Novel" [ref=e60] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e61]: 
+                  - text: Web Novel
+          - generic [ref=e62]:
+            - text: Language
+            - generic [ref=e63] [cursor=pointer]: 
+          - generic [ref=e64]:
+            - list [ref=e68]:
+              - listitem [ref=e69]:
+                - link " Chinese" [ref=e70] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e71]: 
+                  - text: Chinese
+              - listitem [ref=e72]:
+                - link " Filipino" [ref=e73] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e74]: 
+                  - text: Filipino
+              - listitem [ref=e75]:
+                - link " Indonesian" [ref=e76] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e77]: 
+                  - text: Indonesian
+            - list [ref=e81]:
+              - listitem [ref=e82]:
+                - link " Japanese" [ref=e83] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e84]: 
+                  - text: Japanese
+              - listitem [ref=e85]:
+                - link " Khmer" [ref=e86] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e87]: 
+                  - text: Khmer
+              - listitem [ref=e88]:
+                - link " Korean" [ref=e89] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e90]: 
+                  - text: Korean
+            - list [ref=e94]:
+              - listitem [ref=e95]:
+                - link " Malaysian" [ref=e96] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e97]: 
+                  - text: Malaysian
+              - listitem [ref=e98]:
+                - link " Thai" [ref=e99] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e100]: 
+                  - text: Thai
+              - listitem [ref=e101]:
+                - link " Vietnamese" [ref=e102] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e103]: 
+                  - text: Vietnamese
+          - generic [ref=e104]:
+            - text: Chapters [
+            - combobox [ref=e105]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+            - generic [ref=e106] [cursor=pointer]: 
+          - textbox [ref=e107]
+          - generic [ref=e108]:
+            - text: Release Frequency [
+            - combobox [ref=e109]:
+              - option "min"
+              - option "max" [selected]
+            - text: "]"
+            - generic [ref=e110] [cursor=pointer]: 
+          - textbox [ref=e111]
+          - generic [ref=e112]:
+            - text: Reviews [
+            - combobox [ref=e113]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+          - textbox [ref=e114]
+          - generic [ref=e115]:
+            - text: Rating [
+            - combobox [ref=e116]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+            - generic [ref=e117] [cursor=pointer]: 
+          - textbox [ref=e118]
+          - generic [ref=e119]:
+            - text: Number of Ratings [
+            - combobox [ref=e120]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+            - generic [ref=e121] [cursor=pointer]: 
+          - textbox [ref=e122]
+          - generic [ref=e123]:
+            - text: Readers [
+            - combobox [ref=e124]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+            - generic [ref=e125] [cursor=pointer]: 
+          - textbox [ref=e126]
+          - generic [ref=e127]:
+            - text: First Release Date [
+            - combobox [ref=e128]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+          - paragraph [ref=e129]:
+            - textbox [ref=e130]
+          - generic [ref=e131]:
+            - text: Last Release Date [
+            - combobox [ref=e132]:
+              - option "min" [selected]
+              - option "max"
+            - text: "]"
+            - generic [ref=e133] [cursor=pointer]: 
+          - paragraph [ref=e134]:
+            - textbox [ref=e135]
+          - generic [ref=e136]:
+            - text: Genre [
+            - combobox [ref=e137]:
+              - option "AND" [selected]
+              - option "OR"
+            - text: "]"
+            - generic [ref=e138] [cursor=pointer]: 
+          - generic [ref=e139]: Click once to include genre. Click the same genre twice to exclude.
+          - generic [ref=e140]:
+            - list [ref=e144]:
+              - listitem [ref=e145]:
+                - link " Action" [ref=e146] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e147]: 
+                  - text: Action
+              - listitem [ref=e148]:
+                - link " Adult" [ref=e149] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e150]: 
+                  - text: Adult
+              - listitem [ref=e151]:
+                - link " Adventure" [ref=e152] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e153]: 
+                  - text: Adventure
+              - listitem [ref=e154]:
+                - link " Comedy" [ref=e155] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e156]: 
+                  - text: Comedy
+              - listitem [ref=e157]:
+                - link " Drama" [ref=e158] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e159]: 
+                  - text: Drama
+              - listitem [ref=e160]:
+                - link " Ecchi" [ref=e161] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e162]: 
+                  - text: Ecchi
+              - listitem [ref=e163]:
+                - link " Fantasy" [ref=e164] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e165]: 
+                  - text: Fantasy
+              - listitem [ref=e166]:
+                - link " Gender Bender" [ref=e167] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e168]: 
+                  - text: Gender Bender
+              - listitem [ref=e169]:
+                - link " Harem" [ref=e170] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e171]: 
+                  - text: Harem
+            - list [ref=e175]:
+              - listitem [ref=e176]:
+                - link " Historical" [ref=e177] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e178]: 
+                  - text: Historical
+              - listitem [ref=e179]:
+                - link " Horror" [ref=e180] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e181]: 
+                  - text: Horror
+              - listitem [ref=e182]:
+                - link " Josei" [ref=e183] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e184]: 
+                  - text: Josei
+              - listitem [ref=e185]:
+                - link " Martial Arts" [ref=e186] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e187]: 
+                  - text: Martial Arts
+              - listitem [ref=e188]:
+                - link " Mature" [ref=e189] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e190]: 
+                  - text: Mature
+              - listitem [ref=e191]:
+                - link " Mecha" [ref=e192] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e193]: 
+                  - text: Mecha
+              - listitem [ref=e194]:
+                - link " Mystery" [ref=e195] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e196]: 
+                  - text: Mystery
+              - listitem [ref=e197]:
+                - link " Psychological" [ref=e198] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e199]: 
+                  - text: Psychological
+              - listitem [ref=e200]:
+                - link " Romance" [ref=e201] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e202]: 
+                  - text: Romance
+            - list [ref=e206]:
+              - listitem [ref=e207]:
+                - link " School Life" [ref=e208] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e209]: 
+                  - text: School Life
+              - listitem [ref=e210]:
+                - link " Sci-fi" [ref=e211] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e212]: 
+                  - text: Sci-fi
+              - listitem [ref=e213]:
+                - link " Seinen" [ref=e214] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e215]: 
+                  - text: Seinen
+              - listitem [ref=e216]:
+                - link " Shoujo" [ref=e217] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e218]: 
+                  - text: Shoujo
+              - listitem [ref=e219]:
+                - link " Shoujo Ai" [ref=e220] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e221]: 
+                  - text: Shoujo Ai
+              - listitem [ref=e222]:
+                - link " Shounen" [ref=e223] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e224]: 
+                  - text: Shounen
+              - listitem [ref=e225]:
+                - link " Shounen Ai" [ref=e226] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e227]: 
+                  - text: Shounen Ai
+              - listitem [ref=e228]:
+                - link " Slice of Life" [ref=e229] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e230]: 
+                  - text: Slice of Life
+              - listitem [ref=e231]:
+                - link " Smut" [ref=e232] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e233]: 
+                  - text: Smut
+            - list [ref=e237]:
+              - listitem [ref=e238]:
+                - link " Sports" [ref=e239] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e240]: 
+                  - text: Sports
+              - listitem [ref=e241]:
+                - link " Supernatural" [ref=e242] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e243]: 
+                  - text: Supernatural
+              - listitem [ref=e244]:
+                - link " Tragedy" [ref=e245] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e246]: 
+                  - text: Tragedy
+              - listitem [ref=e247]:
+                - link " Wuxia" [ref=e248] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e249]: 
+                  - text: Wuxia
+              - listitem [ref=e250]:
+                - link " Xianxia" [ref=e251] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e252]: 
+                  - text: Xianxia
+              - listitem [ref=e253]:
+                - link " Xuanhuan" [ref=e254] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e255]: 
+                  - text: Xuanhuan
+              - listitem [ref=e256]:
+                - link " Yaoi" [ref=e257] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e258]: 
+                  - text: Yaoi
+              - listitem [ref=e259]:
+                - link " Yuri" [ref=e260] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - generic [ref=e261]: 
+                  - text: Yuri
+          - generic [ref=e262]:
+            - generic [ref=e263]:
+              - text: Tags [
+              - combobox [ref=e264]:
+                - option "AND"
+                - option "OR" [selected]
+              - text: "]"
+              - generic [ref=e265] [cursor=pointer]: 
+            - generic [ref=e267]:
+              - generic [ref=e271]:
+                - list [ref=e272]:
+                  - listitem [ref=e273]:
+                    - textbox [ref=e274]: Include...
+                - generic [ref=e275]:
+                  - list
+              - generic [ref=e279]:
+                - list [ref=e280]:
+                  - listitem [ref=e281]:
+                    - textbox [ref=e282]: Exclude...
+                - generic [ref=e283]:
+                  - list
+            - generic [ref=e285]:
+              - text: Reading Lists [
+              - combobox [ref=e286]:
+                - option "Exclude" [selected]
+                - option "Include"
+              - text: "]"
+              - generic [ref=e287] [cursor=pointer]: 
+            - text: You must be logged in to use this option.
+            - generic [ref=e290]: Story Status (Translation)
+            - generic [ref=e292]:
+              - generic [ref=e294] [cursor=pointer]: All
+              - generic [ref=e297]:
+                - textbox [ref=e299]
+                - list
+            - generic [ref=e301]:
+              - text: Group [
+              - combobox [ref=e302]:
+                - option "Include" [selected]
+                - option "Exclude"
+              - text: "]"
+            - textbox "Type to search group database" [ref=e304]
+            - generic [ref=e307]:
+              - text: Original Publisher [
+              - combobox [ref=e308]:
+                - option "Include" [selected]
+                - option "Exclude"
+              - text: "]"
+            - textbox "Type to search original publishers" [ref=e310]
+            - generic [ref=e313]:
+              - text: English Publisher [
+              - combobox [ref=e314]:
+                - option "Include" [selected]
+                - option "Exclude"
+              - text: "]"
+            - textbox "Type to search english publishers" [ref=e316]
+            - generic [ref=e319]:
+              - text: Series Contains
+              - generic [ref=e320] [cursor=pointer]: 
+            - textbox "Series contains..." [ref=e321]
+            - generic [ref=e323]:
+              - text: Sort Results By...
+              - generic [ref=e324] [cursor=pointer]: 
+            - generic [ref=e326]:
+              - generic [ref=e330]:
+                - generic [ref=e332] [cursor=pointer]: Last Updated
+                - generic [ref=e335]:
+                  - textbox [ref=e337]
+                  - list
+              - generic [ref=e341]:
+                - generic [ref=e343] [cursor=pointer]: Descending
+                - generic [ref=e346]:
+                  - textbox [ref=e348]
+                  - list
+            - link "Clear Filters" [ref=e350] [cursor=pointer]:
+              - /url: //www.novelupdates.com/series-finder/
+          - button "Apply Filters" [ref=e351] [cursor=pointer]
+      - generic [ref=e353]:
+        - generic [ref=e354]:
+          - heading "Novel Updates" [level=3] [ref=e355]
+          - list [ref=e357]:
+            - listitem [ref=e358]:
+              - link "Forum" [ref=e359] [cursor=pointer]:
+                - /url: https://www.novelupdatesforum.com/
+            - listitem [ref=e360]:
+              - link "Random Novel" [ref=e361] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/random-novel/
+            - listitem [ref=e362]:
+              - link "Series Finder" [ref=e363] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-finder/
+            - listitem [ref=e364]:
+              - link "Series Listing" [ref=e365] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/novelslisting/
+            - listitem [ref=e366]:
+              - link "Series Ranking" [ref=e367] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-ranking/
+            - listitem [ref=e368]:
+              - link "Latest Series" [ref=e369] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/latest-series/
+            - listitem [ref=e370]:
+              - link "Rec Lists" [ref=e371] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/recommendation-lists/
+        - generic [ref=e372]:
+          - heading "User Tools" [level=3] [ref=e373]
+          - list [ref=e375]:
+            - listitem [ref=e376]:
+              - link "Reading List" [ref=e377] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/reading-list/
+            - listitem [ref=e378]:
+              - link "Release Filtering" [ref=e379] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/release-filtering/
+            - listitem [ref=e380]:
+              - link "Series Filtering" [ref=e381] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-filtering/
+        - generic [ref=e382]:
+          - generic [ref=e383]:
+            - link [ref=e385] [cursor=pointer]:
+              - /url: https://www.scribblehub.com/series/1308433/a-crazy-genius-in-a-magical-world/
+              - img [ref=e386]
+            - generic [ref=e387]:
+              - link "A Crazy Genius in a Magical..." [ref=e389] [cursor=pointer]:
+                - /url: https://www.scribblehub.com/series/1308433/a-crazy-genius-in-a-magical-world/
+              - generic [ref=e390]:
+                - generic [ref=e391]: 
+                - generic [ref=e392]: 
+                - generic [ref=e393]: 
+                - generic [ref=e394]: 
+                - generic [ref=e395]: 
+          - generic [ref=e396]:
+            - link [ref=e398] [cursor=pointer]:
+              - /url: https://www.scribblehub.com/series/2116126/the-day-i-reincarnated-in-another-world-and-became-the-darkness-lord/
+              - img [ref=e399]
+            - generic [ref=e400]:
+              - link "The Day I Reincarnated In Another..." [ref=e402] [cursor=pointer]:
+                - /url: https://www.scribblehub.com/series/2116126/the-day-i-reincarnated-in-another-world-and-became-the-darkness-lord/
+              - generic [ref=e403]:
+                - generic [ref=e404]: 
+                - generic [ref=e405]: 
+                - generic [ref=e406]: 
+                - generic [ref=e407]: 
+                - generic [ref=e408]: 
+          - generic [ref=e409]:
+            - link [ref=e411] [cursor=pointer]:
+              - /url: https://www.scribblehub.com/series/1254117/prestige-grinding--i-can-reset-my-level/
+              - img [ref=e412]
+            - generic [ref=e413]:
+              - 'link "Prestige Grinding : I Can Reset..." [ref=e415] [cursor=pointer]':
+                - /url: https://www.scribblehub.com/series/1254117/prestige-grinding--i-can-reset-my-level/
+              - generic [ref=e416]:
+                - generic [ref=e417]: 
+                - generic [ref=e418]: 
+                - generic [ref=e419]: 
+                - generic [ref=e420]: 
+                - generic [ref=e421]: 
+        - heading "Latest Series" [level=3] [ref=e422]
+        - list [ref=e423]:
+          - generic [ref=e424]:
+            - listitem [ref=e425]:
+              - link "Cut the Nonsense—The Villain Goes All-Out" [ref=e428] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/cut-the-nonsense-the-villain-goes-all-out/
+            - listitem [ref=e429]:
+              - link "An “Evil Female” Who Can Read Minds? Five Beast Husbands Beg for My Favor" [ref=e432] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/an-evil-female-who-can-read-minds-five-beast-husbands-beg-for-my-favor/
+            - listitem [ref=e433]:
+              - link "The Duke’s Little Darling Wife" [ref=e436] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/the-dukes-little-darling-wife/
+            - listitem [ref=e437]:
+              - 'link "Slow Transmigration Across the Multiverse: A Lone Mage in Apocalypse Worlds" [ref=e440] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/slow-transmigration-across-the-multiverse-a-lone-mage-in-apocalypse-worlds/
+            - listitem [ref=e441]:
+              - link "I Can Even Get Recommended to a Monster Vocational Academy?" [ref=e444] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/i-can-even-get-recommended-to-a-monster-vocational-academy/
+            - listitem [ref=e445]:
+              - link "Spirit-Taming Cultivation—But How Are You Controlling an Aircraft Carrier?!" [ref=e448] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/spirit-taming-cultivation-but-how-are-you-controlling-an-aircraft-carrier/
+            - listitem [ref=e449]:
+              - 'link "Entertainment 1999: My Younger Sister Is a Fairy" [ref=e452] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/entertainment-1999-my-younger-sister-is-a-fairy/
+            - listitem [ref=e453]:
+              - link "Just About to Take the College Entrance Exam, and a Divorce Comeback System Arrives" [ref=e456] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/just-about-to-take-the-college-entrance-exam-and-a-divorce-comeback-system-arrives/
+            - listitem [ref=e457]:
+              - link "After the Player Was Reborn" [ref=e460] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/after-the-player-was-reborn/
+            - listitem [ref=e461]:
+              - 'link "Mysterious Revival: Weighing the Living World Starting from S-Class" [ref=e464] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/mysterious-revival-weighing-the-living-world-starting-from-s-class/
+  - generic [ref=e468]:
+    - text: "|"
+    - link "Privacy Policy" [ref=e469] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/privacy-policy/
+    - text: "|"
+    - link "Terms of Service" [ref=e470] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/terms-of-service/
+    - text: "|"
+    - link "Contact Us" [ref=e471] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/contact-us/
+  - link "" [ref=e472] [cursor=pointer]:
+    - /url: "#"
+    - generic [ref=e473]: 

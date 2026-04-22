@@ -8,6 +8,6 @@
 {
   programs.mpv = {
     enable = true;
-    package = config.lib.nixGL.wrapOffload pkgs.mpv;
+    package = config.lib.nixGL.wrap pkgs.mpv;
   };
 }
