@@ -1,0 +1,272 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic:
+      - button "bỏ qua nội dung chính":
+        - generic: bỏ qua nội dung chính
+    - generic [ref=e7]:
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - link [ref=e11] [cursor=pointer]:
+              - /url: /
+              - img [ref=e12]
+            - generic [ref=e15]: Đăng nhập
+          - link "Bạn cần giúp đỡ?" [ref=e17] [cursor=pointer]:
+            - /url: https://help.shopee.vn/vn/s
+      - generic [ref=e22]:
+        - generic [ref=e24]:
+          - generic [ref=e26]: Đăng nhập
+          - generic [ref=e27]:
+            - generic: Đăng nhập với mã QR
+            - link [ref=e28] [cursor=pointer]:
+              - /url: /buyer/login/qr?next=https%3A%2F%2Fshopee.vn%2FGi%25C3%25A0y-C%25E1%25BA%25A7u-L%25C3%25B4ng-cat.11035478.11035531.11035537
+              - img [ref=e29]
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - textbox "Email/Số điện thoại/Tên đăng nhập" [ref=e39]
+            - generic [ref=e42]:
+              - textbox "Mật khẩu" [ref=e43]
+              - button [ref=e44] [cursor=pointer]:
+                - img [ref=e45]
+            - button "Đăng nhập" [disabled] [ref=e48]
+          - generic [ref=e50]:
+            - generic [ref=e53]: hoặc
+            - generic [ref=e55]:
+              - button "Facebook" [disabled] [ref=e56]:
+                - generic [ref=e59]: Facebook
+              - button "Google" [ref=e60] [cursor=pointer]:
+                - generic [ref=e63]: Google
+          - generic [ref=e65]:
+            - text: Bằng việc đăng nhập, bạn đồng ý với
+            - link "Điều khoản dịch vụ" [ref=e66] [cursor=pointer]:
+              - /url: https://help.shopee.vn/portal/article/77243
+            - text: "&"
+            - link "Chính sách bảo mật" [ref=e67] [cursor=pointer]:
+              - /url: https://help.shopee.vn/portal/article/77244
+            - text: của Shopee
+        - generic [ref=e69]:
+          - text: Bạn mới biết đến Shopee?
+          - link "Đăng ký" [ref=e70] [cursor=pointer]:
+            - /url: /buyer/signup?fu_tracking_id=702785eaafb-a697-49ed-967f-6043c85c1494&next=https%3A%2F%2Fshopee.vn%2FGi%25C3%25A0y-C%25E1%25BA%25A7u-L%25C3%25B4ng-cat.11035478.11035531.11035537
+      - contentinfo [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - generic [ref=e75]:
+                - generic [ref=e76]: DỊCH VỤ KHÁCH HÀNG
+                - list [ref=e77]:
+                  - listitem [ref=e78]:
+                    - link "Trung Tâm Trợ Giúp Shopee" [ref=e79] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal
+                      - generic [ref=e80]: Trung Tâm Trợ Giúp Shopee
+                  - listitem [ref=e81]:
+                    - link "Shopee Blog" [ref=e82] [cursor=pointer]:
+                      - /url: https://shopee.vn/blog/
+                      - generic [ref=e83]: Shopee Blog
+                  - listitem [ref=e84]:
+                    - link "Shopee Mall" [ref=e85] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79090-[Th%C3%A0nh-vi%C3%AAn-m%E1%BB%9Bi]-Shopee-Mall-l%C3%A0-g%C3%AC?previousPage=search%20recommendation%20bar
+                      - generic [ref=e86]: Shopee Mall
+                  - listitem [ref=e87]:
+                    - link "Hướng Dẫn Mua Hàng/Đặt Hàng" [ref=e88] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79180-[Th%c3%a0nh-vi%c3%aan-m%e1%bb%9bi]-L%c3%a0m-sao-%c4%91%e1%bb%83-mua-h%c3%a0ng-%2F-%c4%91%e1%ba%b7t-h%c3%a0ng-tr%c3%aan-%e1%bb%a9ng-d%e1%bb%a5ng-Shopee%3F
+                      - generic [ref=e89]: Hướng Dẫn Mua Hàng/Đặt Hàng
+                  - listitem [ref=e90]:
+                    - link "Hướng Dẫn Bán Hàng" [ref=e91] [cursor=pointer]:
+                      - /url: https://banhang.shopee.vn/edu/article/13243/ban-hang-online-bat-dau-tu-dau
+                      - generic [ref=e92]: Hướng Dẫn Bán Hàng
+                  - listitem [ref=e93]:
+                    - link "Ví ShopeePay" [ref=e94] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/category/59-Thanh-To%C3%A1n/708-V%C3%AD-ShopeePay?page=1
+                      - generic [ref=e95]: Ví ShopeePay
+                  - listitem [ref=e96]:
+                    - link "Shopee Xu" [ref=e97] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79144-[Shopee-Xu]-C%c3%a1c-c%c3%a2u-h%e1%bb%8fi-th%c6%b0%e1%bb%9dng-g%e1%ba%b7p
+                      - generic [ref=e98]: Shopee Xu
+                  - listitem [ref=e99]:
+                    - link "Đơn Hàng" [ref=e100] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/category/60-%C4%90%C6%A1n-H%C3%A0ng-V%E1%BA%ADn-Chuy%E1%BB%83n/703-%C4%90%C6%A1n-h%C3%A0ng?page=1
+                      - generic [ref=e101]: Đơn Hàng
+                  - listitem [ref=e102]:
+                    - link "Trả Hàng/Hoàn Tiền" [ref=e103] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79258-Tr%e1%ba%a3-h%c3%a0ng%2FHo%c3%a0n-ti%e1%bb%81n]-C%e1%ba%a9m-nang-Tr%e1%ba%a3-h%c3%a0ng-ho%c3%a0n-ti%e1%bb%81n
+                      - generic [ref=e104]: Trả Hàng/Hoàn Tiền
+                  - listitem [ref=e105]:
+                    - link "Liên Hệ Shopee" [ref=e106] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79191-%5BD%E1%BB%8Bch-v%E1%BB%A5%5D-L%C3%A0m-sao-%C4%91%E1%BB%83-li%C3%AAn-h%E1%BB%87-Ch%C4%83m-s%C3%B3c-Kh%C3%A1ch-h%C3%A0ng
+                      - generic [ref=e107]: Liên Hệ Shopee
+                  - listitem [ref=e108]:
+                    - link "Chính Sách Bảo Hành" [ref=e109] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/79046-[Quy-%c4%91%e1%bb%8bnh]-Ch%c3%adnh-s%c3%a1ch-b%e1%ba%a3o-h%c3%a0nh-cho-s%e1%ba%a3n-ph%e1%ba%a9m-mua-t%e1%ba%a1i-Shopee
+                      - generic [ref=e110]: Chính Sách Bảo Hành
+              - generic [ref=e111]:
+                - generic [ref=e112]: SHOPEE VIỆT NAM
+                - list [ref=e113]:
+                  - listitem [ref=e114]:
+                    - link "Về Shopee" [ref=e115] [cursor=pointer]:
+                      - /url: https://careers.shopee.vn/about
+                      - generic [ref=e116]: Về Shopee
+                  - listitem [ref=e117]:
+                    - link "Tuyển Dụng" [ref=e118] [cursor=pointer]:
+                      - /url: https://careers.shopee.vn/jobs
+                      - generic [ref=e119]: Tuyển Dụng
+                  - listitem [ref=e120]:
+                    - link "Điều Khoản Shopee" [ref=e121] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/77242
+                      - generic [ref=e122]: Điều Khoản Shopee
+                  - listitem [ref=e123]:
+                    - link "Chính Sách Bảo Mật" [ref=e124] [cursor=pointer]:
+                      - /url: https://help.shopee.vn/portal/article/77244
+                      - generic [ref=e125]: Chính Sách Bảo Mật
+                  - listitem [ref=e126]:
+                    - link "Shopee Mall" [ref=e127] [cursor=pointer]:
+                      - /url: https://shopee.vn/mall/
+                      - generic [ref=e128]: Shopee Mall
+                  - listitem [ref=e129]:
+                    - link "Kênh Người Bán" [ref=e130] [cursor=pointer]:
+                      - /url: https://banhang.shopee.vn/
+                      - generic [ref=e131]: Kênh Người Bán
+                  - listitem [ref=e132]:
+                    - link "Flash Sale" [ref=e133] [cursor=pointer]:
+                      - /url: https://shopee.vn/flash_sale/
+                      - generic [ref=e134]: Flash Sale
+                  - listitem [ref=e135]:
+                    - link "Tiếp Thị Liên Kết" [ref=e136] [cursor=pointer]:
+                      - /url: https://shopee.vn/affiliate/
+                      - generic [ref=e137]: Tiếp Thị Liên Kết
+                  - listitem [ref=e138]:
+                    - link "Liên Hệ Truyền Thông" [ref=e139] [cursor=pointer]:
+                      - /url: mailto:media.vn%40shopee.com
+                      - generic [ref=e140]: Liên Hệ Truyền Thông
+              - generic [ref=e141]:
+                - generic [ref=e142]: THANH TOÁN
+                - list [ref=e143]:
+                  - listitem [ref=e144]:
+                    - img "logo" [ref=e146]
+                  - listitem [ref=e147]:
+                    - img "logo" [ref=e149]
+                  - listitem [ref=e150]:
+                    - img "logo" [ref=e152]
+                  - listitem [ref=e153]:
+                    - img "logo" [ref=e155]
+                  - listitem [ref=e156]:
+                    - img "logo" [ref=e158]
+                  - listitem [ref=e159]:
+                    - img "logo" [ref=e161]
+                  - listitem [ref=e162]:
+                    - img "logo" [ref=e164]
+                  - listitem [ref=e165]:
+                    - img "logo" [ref=e167]
+                  - listitem [ref=e168]:
+                    - img "logo" [ref=e170]
+                - generic [ref=e171]: ĐƠN VỊ VẬN CHUYỂN
+                - list [ref=e172]:
+                  - listitem [ref=e173]:
+                    - img "logo" [ref=e175]
+                  - listitem [ref=e176]:
+                    - img "logo" [ref=e178]
+                  - listitem [ref=e179]:
+                    - img "logo" [ref=e181]
+                  - listitem [ref=e182]:
+                    - img "logo" [ref=e184]
+                  - listitem [ref=e185]:
+                    - img "logo" [ref=e187]
+                  - listitem [ref=e188]:
+                    - img "logo" [ref=e190]
+                  - listitem [ref=e191]:
+                    - img "logo" [ref=e193]
+                  - listitem [ref=e194]:
+                    - img "logo" [ref=e196]
+                  - listitem [ref=e197]:
+                    - img "logo" [ref=e199]
+              - generic [ref=e200]:
+                - generic [ref=e201]: THEO DÕI SHOPEE
+                - list [ref=e202]:
+                  - listitem [ref=e203]:
+                    - link "Facebook" [ref=e204] [cursor=pointer]:
+                      - /url: https://www.facebook.com/ShopeeVN
+                      - img [ref=e205]
+                      - generic [ref=e206]: Facebook
+                  - listitem [ref=e207]:
+                    - link "Instagram" [ref=e208] [cursor=pointer]:
+                      - /url: https://instagram.com/Shopee_VN
+                      - img [ref=e209]
+                      - generic [ref=e210]: Instagram
+                  - listitem [ref=e211]:
+                    - link "LinkedIn" [ref=e212] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/shopee
+                      - img [ref=e213]
+                      - generic [ref=e214]: LinkedIn
+              - generic [ref=e215]:
+                - generic [ref=e216]: TẢI ỨNG DỤNG SHOPEE
+                - generic [ref=e217]:
+                  - link "download_qr_code" [ref=e218] [cursor=pointer]:
+                    - /url: https://shopee.vn/web
+                    - img "download_qr_code" [ref=e219]
+                  - generic [ref=e220]:
+                    - link "app" [ref=e221] [cursor=pointer]:
+                      - /url: https://shopee.vn/web
+                      - img "app" [ref=e222]
+                    - link "app" [ref=e223] [cursor=pointer]:
+                      - /url: https://shopee.vn/web
+                      - img "app" [ref=e224]
+                    - link "app" [ref=e225] [cursor=pointer]:
+                      - /url: https://shopee.vn/web
+                      - img "app" [ref=e226]
+            - generic [ref=e227]:
+              - generic [ref=e228]: © 2026 Shopee. Tất cả các quyền được bảo lưu.
+              - generic [ref=e229]:
+                - generic [ref=e230]: "Quốc gia & Khu vực:"
+                - link "Argentina" [ref=e232] [cursor=pointer]:
+                  - /url: https://shopee.com.ar
+                - link "Singapore" [ref=e234] [cursor=pointer]:
+                  - /url: https://shopee.sg
+                - link "Indonesia" [ref=e236] [cursor=pointer]:
+                  - /url: https://shopee.co.id
+                - link "Thái Lan" [ref=e238] [cursor=pointer]:
+                  - /url: https://shopee.co.th
+                - link "Malaysia" [ref=e240] [cursor=pointer]:
+                  - /url: https://shopee.com.my
+                - link "Việt Nam" [ref=e242] [cursor=pointer]:
+                  - /url: https://shopee.vn
+                - link "Philippines" [ref=e244] [cursor=pointer]:
+                  - /url: https://shopee.ph
+                - link "Brazil" [ref=e246] [cursor=pointer]:
+                  - /url: https://shopee.com.br
+                - link "México" [ref=e248] [cursor=pointer]:
+                  - /url: https://shopee.com.mx
+                - link "Đài Loan" [ref=e250] [cursor=pointer]:
+                  - /url: https://shopee.tw
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - link "Chính sách bảo mật" [ref=e255] [cursor=pointer]:
+                - /url: https://help.shopee.vn/portal/article/77244
+              - link "Quy chế hoạt động" [ref=e257] [cursor=pointer]:
+                - /url: https://help.shopee.vn/portal/article/77245
+              - link "Chính sách vận chuyển" [ref=e259] [cursor=pointer]:
+                - /url: https://help.shopee.vn/portal/article/77250
+              - link "CHÍNH SÁCH TRẢ HÀNG VÀ HOÀN TIỀN" [ref=e261] [cursor=pointer]:
+                - /url: https://help.shopee.vn/portal/article/77251
+            - generic [ref=e262]:
+              - link [ref=e263] [cursor=pointer]:
+                - /url: http://online.gov.vn/Home/WebDetails/18367
+              - link [ref=e265] [cursor=pointer]:
+                - /url: http://online.gov.vn/Home/AppDetails/29
+              - link [ref=e267] [cursor=pointer]:
+                - /url: https://shopee.vn/docs/170
+            - generic [ref=e269]: Công ty TNHH Shopee
+            - generic [ref=e270]: "Địa chỉ: Tầng 4-5-6, Tòa nhà Capital Place, số 29 đường Liễu Giai, Phường Ngọc Hà, Thành phố Hà Nội, Việt Nam"
+            - generic [ref=e271]: "Chăm sóc khách hàng: Gọi tổng đài Shopee (miễn phí) hoặc Trò chuyện với Shopee ngay trên Trung tâm trợ giúp"
+            - generic [ref=e272]: "Chịu Trách Nhiệm Quản Lý Nội Dung: Nguyễn Bùi Anh Tuấn"
+            - generic [ref=e273]: "Mã số doanh nghiệp: 0106773786 do Sở Kế hoạch và Đầu tư TP Hà Nội cấp lần đầu ngày 10/02/2015"
+            - generic [ref=e274]: © 2015 - Bản quyền thuộc về Công ty TNHH Shopee
+  - dialog [ref=e276]:
+    - generic [ref=e277]:
+      - img "Worldmap" [ref=e279]
+      - generic [ref=e280]: Chọn ngôn ngữ của bạn
+      - generic [ref=e281]:
+        - button "Tiếng Việt" [ref=e283] [cursor=pointer]
+        - button "English" [ref=e285] [cursor=pointer]
+        - button "ខ្មែរ" [ref=e287] [cursor=pointer]
+  - generic:
+    - img

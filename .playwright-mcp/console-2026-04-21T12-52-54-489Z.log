@@ -1,0 +1,4 @@
+[      14ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ https://ubt.tracking.shopee.vn/v4/event_batch:0
+[      15ms] [ERROR] [APMS] Exception caught but got ignored, not sent to APMS {js_error_type: custom, js_error_level: error, js_error_name: TypeError, js_error_message: Failed to fetch, js_error_stack: at https://deo.shopeemobile.com/shopee/shopee-pcma…/amd/@shopee/tracking-core@5682527.min.js:1:26126} @ https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/entry-modules.0e48ae7de7b4bcfe.2023.js:3
+[      19ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ https://ubt.tracking.shopee.vn/v4/event_batch:0
+[    3402ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ https://ogads-pa.clients6.google.com/$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/GetAsyncData:0

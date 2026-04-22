@@ -1,0 +1,408 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - link "Skip to main content" [ref=e2] [cursor=pointer]
+      - link "Accessibility help" [ref=e3] [cursor=pointer]:
+        - /url: https://support.google.com/websearch/answer/181196?hl=en-VN
+      - link "Accessibility feedback" [ref=e4] [cursor=pointer]
+  - generic [ref=e9]:
+    - search [ref=e10]:
+      - generic [ref=e12]:
+        - link "Go to Google Home" [ref=e14] [cursor=pointer]:
+          - /url: https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQPAgJ
+          - img [ref=e15]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - combobox "Search" [ref=e26]: site:shopee.vn giày cầu lông shopee site:shopee.vn giày cầu lông shopee
+            - generic [ref=e27]:
+              - button "Clear" [ref=e29] [cursor=pointer]:
+                - img [ref=e31]
+              - generic [ref=e34]:
+                - button "Search by voice" [ref=e35] [cursor=pointer]:
+                  - img [ref=e36]
+                - button "Search by image" [ref=e38] [cursor=pointer]:
+                  - img [ref=e39]
+          - button "Search" [ref=e41] [cursor=pointer]:
+            - img [ref=e44]
+    - generic [ref=e46]:
+      - button "Settings" [ref=e48] [cursor=pointer]:
+        - img [ref=e51]
+      - generic [ref=e54]:
+        - button "Google apps" [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+        - link "Sign in" [ref=e61] [cursor=pointer]:
+          - /url: https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=https://www.google.com/search%3Fq%3Dsite%253Ashopee.vn%2Bgi%25C3%25A0y%2Bc%25E1%25BA%25A7u%2Bl%25C3%25B4ng%2Bshopee%26sei%3DJnPnadLCJc6Dp84PjtSyQQ&ec=futura_srp_og_si_72236_p
+  - generic [ref=e63]:
+    - navigation [ref=e69]:
+      - generic [ref=e75]:
+        - list [ref=e76]:
+          - listitem [ref=e77]:
+            - link "AI Mode" [ref=e80] [cursor=pointer]:
+              - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&udm=50&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&aep=1&ntc=1&sa=X&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ2J8OegQIDhAI
+              - generic [ref=e83]: AI Mode
+          - listitem [ref=e84]:
+            - link "All" [disabled] [ref=e85]:
+              - generic [ref=e87]: All
+          - listitem [ref=e88]:
+            - link "Shopping" [ref=e89] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=28&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&ved=1t:220175&ictx=111
+              - generic [ref=e91]: Shopping
+          - listitem [ref=e92]:
+            - link "Images" [ref=e93] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=2&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sa=X&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQtKgLegQIExAB
+              - generic [ref=e95]: Images
+          - listitem [ref=e96]:
+            - link "Short videos" [ref=e97] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=39&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sa=X&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQs6gLegQIEhAB
+              - generic [ref=e99]: Short videos
+          - listitem [ref=e100]:
+            - link "Videos" [ref=e101] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=7&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sa=X&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQtKgLegQIERAB
+              - generic [ref=e103]: Videos
+          - listitem [ref=e104]:
+            - link "News" [ref=e105] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&tbm=nws&source=lnms&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7N7ichJoHtISusgmLxg0ZDh-KGB9xAhdGeTFmyGruSSfrAHxGrCvXMA45WiZKVE2xB3FkFeuSXA7tUqpLjUn8NcqLcetRB5ImpPaBlGeExl3dD2uA3s3ytG9EweHSsPjs8r_vvaw&sa=X&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ0pQJegQIEBAB
+              - generic [ref=e107]: News
+          - listitem [ref=e108]:
+            - button "More filters" [ref=e109] [cursor=pointer]:
+              - generic "More filters" [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: More
+                  - img [ref=e114]
+        - button "Tools" [ref=e117] [cursor=pointer]:
+          - generic [ref=e119]:
+            - generic [ref=e120]: Tools
+            - img [ref=e122]
+    - heading "Search Results" [level=1] [ref=e124]
+    - main [ref=e130]:
+      - generic [ref=e134]:
+        - generic [ref=e137]:
+          - heading "Kết quả trên web" [level=2] [ref=e138]
+          - generic [ref=e139]:
+            - generic [ref=e142]:
+              - link "Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại Shopee https://shopee.vn › list › giày cầu lô..." [ref=e144] [cursor=pointer]:
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+                - heading "Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại" [level=3] [ref=e145]
+                - generic [ref=e150]:
+                  - generic [ref=e152]: Shopee
+                  - generic [ref=e154]: https://shopee.vn › list › giày cầu lô...
+              - generic [ref=e155]:
+                - generic [ref=e156]: ·
+                - link "Translate this page" [ref=e157] [cursor=pointer]:
+                  - /url: https://translate.google.com/translate?u=https://shopee.vn/list/gi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng&hl=en&sl=vi&tl=en&client=search
+              - button "About this result" [ref=e158] [cursor=pointer]:
+                - img [ref=e161]
+            - generic [ref=e165]:
+              - text: Mua online
+              - emphasis [ref=e166]: giày cầu lông
+              - text: chất lượng, mới nhất, giảm tới 50% tại
+              - emphasis [ref=e167]: Shopee
+              - text: Việt Nam. Khuyến mãi tháng 04. Miễn phí vận chuyển. Mua ngay!
+            - link "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e170] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+              - img "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e172]
+            - generic [ref=e176]:
+              - img "Rated 4.5 out of 5," [ref=e178]:
+                - text: "4.5"
+                - img [ref=e179]
+              - generic [ref=e182]:
+                - text: store rating (
+                - link "507 user reviews" [ref=e183] [cursor=pointer]:
+                  - /url: https://www.google.com/m/storepages?q=shopee.vn&c=VN&hl=en-VN
+                  - text: "507"
+                - text: )
+        - generic [ref=e187]:
+          - generic [ref=e190]:
+            - link "Giày Cầu Lông giá tốt | Thể Thao & Du Lịch Tháng 4, 2026 Shopee https://shopee.vn › Giày-Cầu-Lông-..." [ref=e192] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-cat.11035478.11035531.11035537
+              - heading "Giày Cầu Lông giá tốt | Thể Thao & Du Lịch Tháng 4, 2026" [level=3] [ref=e193]
+              - generic [ref=e198]:
+                - generic [ref=e200]: Shopee
+                - generic [ref=e202]: https://shopee.vn › Giày-Cầu-Lông-...
+            - generic [ref=e203]:
+              - generic [ref=e204]: ·
+              - link "Translate this page" [ref=e205] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-C%25E1%25BA%25A7u-L%25C3%25B4ng-cat.11035478.11035531.11035537&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e206] [cursor=pointer]:
+              - img [ref=e209]
+          - generic [ref=e212]:
+            - generic [ref=e213]:
+              - text: "[Có sẵn] [Ảnh thật]"
+              - emphasis [ref=e214]: Giày cầu lông Asia tập luyện, thi đấu, rẻ, bền, thông dụng với một số môn thể thao khác
+              - text: . 179.000₫. Đã bán 915. [HOT]Giày ASIA đánh bóng ...
+            - link "Read more" [ref=e215] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-cat.11035478.11035531.11035537#:~:text=%5BC%C3%B3%20s%E1%BA%B5n%5D%20%5B%E1%BA%A2nh%20th%E1%BA%ADt%5D%20Gi%C3%A0y,s%E1%BB%91%20m%C3%B4n%20th%E1%BB%83%20thao%20kh%C3%A1c
+          - link "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e218] [cursor=pointer]:
+            - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-cat.11035478.11035531.11035537
+            - img "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e220]
+        - generic [ref=e224]:
+          - heading "Images" [level=2] [ref=e228]
+          - generic [ref=e232]:
+            - generic [ref=e236] [cursor=pointer]:
+              - link "Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ... Shopee":
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+              - button "Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ..." [ref=e238]:
+                - img "Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ..." [ref=e240]
+              - generic [ref=e242]:
+                - generic [ref=e244]: Giày cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ...
+                - generic [ref=e245]:
+                  - generic [ref=e252]: Shopee
+                  - button "About this result" [ref=e255]:
+                    - img [ref=e258]
+            - generic [ref=e263] [cursor=pointer]:
+              - link "giày cầu lông comfort - Giá Tốt, Sale Tháng 04, Freeship 0Đ ... Shopee":
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/comfort
+              - button "giày cầu lông comfort - Giá Tốt, Sale Tháng 04, Freeship 0Đ ..." [ref=e265]:
+                - img "giày cầu lông comfort - Giá Tốt, Sale Tháng 04, Freeship 0Đ ..." [ref=e267]
+              - generic [ref=e269]:
+                - generic [ref=e271]: giày cầu lông comfort - Giá Tốt, Sale Tháng 04, Freeship 0Đ ...
+                - generic [ref=e272]:
+                  - generic [ref=e279]: Shopee
+                  - button "About this result" [ref=e282]:
+                    - img [ref=e285]
+            - generic [ref=e290] [cursor=pointer]:
+              - link "Giày Asia, Giày Cầu Lông Thể Thao Cao Cấp Nam Nữ Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-Asia-Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-Th%E1%BB%83-Thao-Cao-C%E1%BA%A5p-Nam-N%E1%BB%AF-i.162160612.23334074942
+              - button "Giày Asia, Giày Cầu Lông Thể Thao Cao Cấp Nam Nữ" [ref=e292]:
+                - img "Giày Asia, Giày Cầu Lông Thể Thao Cao Cấp Nam Nữ" [ref=e294]
+              - generic [ref=e296]:
+                - generic [ref=e298]: Giày Asia, Giày Cầu Lông Thể Thao Cao Cấp Nam Nữ
+                - generic [ref=e299]:
+                  - generic [ref=e306]: Shopee
+                  - button "About this result" [ref=e309]:
+                    - img [ref=e312]
+            - generic [ref=e317] [cursor=pointer]:
+              - link "Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ... Shopee":
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/lining
+              - button "Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ..." [ref=e319]:
+                - img "Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ..." [ref=e321]
+              - generic [ref=e323]:
+                - generic [ref=e325]: Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại ...
+                - generic [ref=e326]:
+                  - generic [ref=e333]: Shopee
+                  - button "About this result" [ref=e336]:
+                    - img [ref=e339]
+            - generic [ref=e344] [cursor=pointer]:
+              - link "Giày cầu lông FLOGA Yonex Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-FLOGA-Yonex-i.1171813709.48604680560
+              - button "Giày cầu lông FLOGA Yonex" [ref=e346]:
+                - img "Giày cầu lông FLOGA Yonex" [ref=e348]
+              - generic [ref=e350]:
+                - generic [ref=e352]: Giày cầu lông FLOGA Yonex
+                - generic [ref=e353]:
+                  - generic [ref=e360]: Shopee
+                  - button "About this result" [ref=e363]:
+                    - img [ref=e366]
+            - generic [ref=e371] [cursor=pointer]:
+              - link "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay | Shopee Việt Nam Shopee":
+                - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+              - button "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay | Shopee Việt Nam" [ref=e373]:
+                - img "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay | Shopee Việt Nam" [ref=e375]
+              - generic [ref=e377]:
+                - generic [ref=e379]: giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay | Shopee Việt Nam
+                - generic [ref=e380]:
+                  - generic [ref=e387]: Shopee
+                  - button "About this result" [ref=e390]:
+                    - img [ref=e393]
+          - button "Show more images" [ref=e396] [cursor=pointer]:
+            - separator [ref=e397]
+            - generic [ref=e398]:
+              - generic [ref=e399]: Show more images
+              - img [ref=e401]
+        - generic [ref=e405]:
+          - heading "Kết quả trên web" [level=2] [ref=e406]
+          - generic [ref=e407]:
+            - generic [ref=e410]:
+              - link "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay Shopee https://shopee.vn › search › keywor..." [ref=e412] [cursor=pointer]:
+                - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+                - heading "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay" [level=3] [ref=e413]
+                - generic [ref=e418]:
+                  - generic [ref=e420]: Shopee
+                  - generic [ref=e422]: https://shopee.vn › search › keywor...
+              - generic [ref=e423]:
+                - generic [ref=e424]: ·
+                - link "Translate this page" [ref=e425] [cursor=pointer]:
+                  - /url: https://translate.google.com/translate?u=https://shopee.vn/search?keyword%3Dgi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng&hl=en&sl=vi&tl=en&client=search
+              - button "About this result" [ref=e426] [cursor=pointer]:
+                - img [ref=e429]
+            - generic [ref=e432]:
+              - generic [ref=e433]:
+                - emphasis [ref=e434]: Giày cầu lông, giày pickleball Kawasaki B3324 và C32023 ,C32014 chính hãng
+                - text: ", hỗ · Giày Cầu Lông/Pickleball Thể Thao Unisex Li-Ning ZJ 2.0 P-AYZU019 · Giày Cầu ..."
+              - link "Read more" [ref=e435] [cursor=pointer]:
+                - /url: https://shopee.vn/search?keyword=gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng#:~:text=Gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng%2C%20gi%C3%A0y%20pickleball&text=Gi%C3%A0y%20C%E1%BA%A7u%20L%C3%B4ng%2FPickleball%20Th%E1%BB%83%20Thao&text=Gi%C3%A0y%20C%E1%BA%A7u%20L%C3%B4ng%2FPickleball%20Nam%20Th%E1%BB%83
+            - link "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e438] [cursor=pointer]:
+              - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+              - img "site:shopee.vn giày cầu lông shopee from shopee.vn" [ref=e440]
+            - img "Rated 4.9 out of 5, (87) user reviews" [ref=e445]:
+              - text: "4.9"
+              - img [ref=e446]
+              - text: (87)
+        - generic [ref=e452]:
+          - generic [ref=e455]:
+            - link "Giày đánh cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại Shopee https://shopee.vn › list › giày đánh ..." [ref=e457] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20%C4%91%C3%A1nh%20c%E1%BA%A7u%20l%C3%B4ng
+              - heading "Giày đánh cầu lông - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại" [level=3] [ref=e458]
+              - generic [ref=e463]:
+                - generic [ref=e465]: Shopee
+                - generic [ref=e467]: https://shopee.vn › list › giày đánh ...
+            - generic [ref=e468]:
+              - generic [ref=e469]: ·
+              - link "Translate this page" [ref=e470] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/list/gi%25C3%25A0y%2520%25C4%2591%25C3%25A1nh%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e471] [cursor=pointer]:
+              - img [ref=e474]
+          - generic [ref=e477]:
+            - generic [ref=e478]:
+              - emphasis [ref=e479]: Giày Cầu Lông Mizuno WAVE CLAW NEO 3 (NEW
+              - text: ) - Nhanh hơn, êm hơn, trợ lực bật nhảy phù hợp lối đánh tốc độ và linh hoạt. 2.830.000₫. -12%. voucher-icon.
+            - link "Read more" [ref=e480] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20%C4%91%C3%A1nh%20c%E1%BA%A7u%20l%C3%B4ng#:~:text=Gi%C3%A0y%20C%E1%BA%A7u%20L%C3%B4ng%20Mizuno%20WAVE,%2D12%25
+        - generic [ref=e484]:
+          - generic [ref=e487]:
+            - link "Giày cầu lông nam - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại Shopee https://shopee.vn › giày cầu lông" [ref=e489] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/nam
+              - heading "Giày cầu lông nam - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại" [level=3] [ref=e490]
+              - generic [ref=e495]:
+                - generic [ref=e497]: Shopee
+                - generic [ref=e499]: https://shopee.vn › giày cầu lông
+            - generic [ref=e500]:
+              - generic [ref=e501]: ·
+              - link "Translate this page" [ref=e502] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/list/gi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng/nam&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e503] [cursor=pointer]:
+              - img [ref=e506]
+          - generic [ref=e510]:
+            - text: Mua online
+            - emphasis [ref=e511]: giày cầu lông
+            - text: nam chất lượng, mới nhất, giảm tới 50% tại
+            - emphasis [ref=e512]: Shopee
+            - text: Việt Nam. Khuyến mãi tháng 04. Miễn phí vận chuyển. Mua ngay!
+        - generic [ref=e516]:
+          - generic [ref=e519]:
+            - link "giày chơi cầu lông giá tốt Tháng 4, 2026 | Mua ngay Shopee https://shopee.vn › search › keywor..." [ref=e521] [cursor=pointer]:
+              - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20ch%C6%A1i%20c%E1%BA%A7u%20l%C3%B4ng
+              - heading "giày chơi cầu lông giá tốt Tháng 4, 2026 | Mua ngay" [level=3] [ref=e522]
+              - generic [ref=e527]:
+                - generic [ref=e529]: Shopee
+                - generic [ref=e531]: https://shopee.vn › search › keywor...
+            - generic [ref=e532]:
+              - generic [ref=e533]: ·
+              - link "Translate this page" [ref=e534] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/search?keyword%3Dgi%25C3%25A0y%2520ch%25C6%25A1i%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e535] [cursor=pointer]:
+              - img [ref=e538]
+          - generic [ref=e542]:
+            - emphasis [ref=e543]: Mua giày chơi cầu lông giao tận nơi Voucher Shopee giảm đến 50
+            - text: "%. Miễn phí vận chuyển và đổi trả dễ dàng. Thanh toán bảo mật. Đặt mua ngay!"
+        - generic [ref=e547]:
+          - generic [ref=e550]:
+            - link "Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại Shopee https://shopee.vn › giày cầu lông" [ref=e552] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/lining
+              - heading "Giầy cầu lông lining - Giá Tốt, Miễn Phí Vận Chuyển, Đủ Loại" [level=3] [ref=e553]
+              - generic [ref=e558]:
+                - generic [ref=e560]: Shopee
+                - generic [ref=e562]: https://shopee.vn › giày cầu lông
+            - generic [ref=e563]:
+              - generic [ref=e564]: ·
+              - link "Translate this page" [ref=e565] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/list/gi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng/lining&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e566] [cursor=pointer]:
+              - img [ref=e569]
+          - generic [ref=e573]:
+            - emphasis [ref=e574]: Mua online giầy cầu lông lining chất lượng
+            - text: ", Voucher Shopee Live giảm tới 50% tại Shopee. Khuyến mãi tháng 04. Miễn phí vận chuyển. Mua ngay!"
+        - generic [ref=e578]:
+          - generic [ref=e581]:
+            - link "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay Thể Thao & ... Shopee https://shopee.vn › search › keywor..." [ref=e583] [cursor=pointer]:
+              - /url: https://shopee.vn/search?category=11035478&keyword=gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng
+              - heading "giày cầu lông giá tốt Tháng 4, 2026 | Mua ngay Thể Thao & ..." [level=3] [ref=e584]
+              - generic [ref=e589]:
+                - generic [ref=e591]: Shopee
+                - generic [ref=e593]: https://shopee.vn › search › keywor...
+            - generic [ref=e594]:
+              - generic [ref=e595]: ·
+              - link "Translate this page" [ref=e596] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/search?category%3D11035478%26keyword%3Dgi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e597] [cursor=pointer]:
+              - img [ref=e600]
+          - generic [ref=e603]:
+            - generic [ref=e604]:
+              - emphasis [ref=e605]: Giày Cầu Lông
+              - text: Chí Phèo CP005 Bền Bỉ, Thoáng Khí, Thoải Mái Cho Mọi Hoạt Động Thể Thao CP-005. 206.688₫. -6%. voucher ...
+            - link "Read more" [ref=e606] [cursor=pointer]:
+              - /url: https://shopee.vn/search?category=11035478&keyword=gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng#:~:text=Gi%C3%A0y%20C%E1%BA%A7u%20L%C3%B4ng%20Ch%C3%AD%20Ph%C3%A8o,%2D6%25
+        - generic [ref=e610]:
+          - generic [ref=e613]:
+            - link "Giày cầu lông bs 530 tím Decathlon PERFLY mã 8626349 Shopee https://shopee.vn › Giày-cầu-lông-b..." [ref=e615] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-bs-530-t%C3%ADm-Decathlon-PERFLY-m%C3%A3-8626349-i.272527398.18487497575
+              - heading "Giày cầu lông bs 530 tím Decathlon PERFLY mã 8626349" [level=3] [ref=e616]
+              - generic [ref=e621]:
+                - generic [ref=e623]: Shopee
+                - generic [ref=e625]: https://shopee.vn › Giày-cầu-lông-b...
+            - generic [ref=e626]:
+              - generic [ref=e627]: ·
+              - link "Translate this page" [ref=e628] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-bs-530-t%25C3%25ADm-Decathlon-PERFLY-m%25C3%25A3-8626349-i.272527398.18487497575&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e629] [cursor=pointer]:
+              - img [ref=e632]
+          - generic [ref=e636]:
+            - emphasis [ref=e637]: Giày cầu lông - BS 530 tím
+            - text: . Kết hợp giữa độ thoáng khí và khả năng giảm chấn, phù hợp với người chơi cấp độ trung bình muốn tập luyện trên sân tập.
+      - navigation [ref=e640]:
+        - heading "Page navigation" [level=1] [ref=e641]
+        - text: "1"
+        - link "Page 2" [ref=e644] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=10&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAE
+          - text: "2"
+        - link "Page 3" [ref=e646] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=20&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAG
+          - text: "3"
+        - link "Page 4" [ref=e648] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=30&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAI
+          - text: "4"
+        - link "Page 5" [ref=e650] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=40&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAK
+          - text: "5"
+        - link "Page 6" [ref=e652] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=50&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAM
+          - text: "6"
+        - link "Page 7" [ref=e654] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=60&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAO
+          - text: "7"
+        - link "Page 8" [ref=e656] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=70&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAQ
+          - text: "8"
+        - link "Page 9" [ref=e658] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=80&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAS
+          - text: "9"
+        - link "Page 10" [ref=e660] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=90&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8tMDegQIOxAU
+          - text: "10"
+        - heading "Next" [level=2] [ref=e662]:
+          - link "Next" [ref=e663] [cursor=pointer]:
+            - /url: /search?q=site:shopee.vn+gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+shopee&sca_esv=09173728c48945df&ei=J3PnacSyAfrhwN4PqIS-4QU&start=10&sa=N&sstk=Af77f_fQqNLvr1yExKVtMddybiwEDNs18nhtmv6f1D9ohtCY1Zupv_4finAvdX6b9GrzXFHF-_qi4aBalbjRCr8xrJtCbz4R4cEzQg&ved=2ahUKEwiE4tim_v6TAxX6MNAFHSiCL1wQ8NMDegQIOxAW
+            - generic [ref=e665]: Next
+      - navigation
+    - contentinfo [ref=e666]:
+      - heading "Footer links" [level=1] [ref=e667]
+      - generic [ref=e671]:
+        - generic [ref=e673]:
+          - text: Vietnam
+          - generic [ref=e675]:
+            - button "Hòa Minh, Da Nang - From your IP address" [ref=e677] [cursor=pointer]:
+              - generic [ref=e678]: Hòa Minh, Da Nang
+              - generic [ref=e680]:
+                - text: "-"
+                - generic [ref=e681]: From your IP address
+            - text: "-"
+            - button "Update location" [ref=e683] [cursor=pointer]: Update location
+        - generic [ref=e686]:
+          - link "Help" [ref=e687] [cursor=pointer]:
+            - /url: https://support.google.com/websearch/?p=ws_results_help&hl=en-VN&fg=1
+          - link "Send feedback" [ref=e688] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e689] [cursor=pointer]:
+            - /url: https://policies.google.com/privacy?hl=en-VN&fg=1
+          - link "Terms" [ref=e690] [cursor=pointer]:
+            - /url: https://policies.google.com/terms?hl=en-VN&fg=1

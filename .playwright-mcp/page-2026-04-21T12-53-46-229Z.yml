@@ -1,0 +1,459 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - link "Skip to main content" [ref=e2] [cursor=pointer]
+      - link "Accessibility help" [ref=e3] [cursor=pointer]:
+        - /url: https://support.google.com/websearch/answer/181196?hl=en-VN
+      - link "Accessibility feedback" [ref=e4] [cursor=pointer]
+  - generic [ref=e9]:
+    - search [ref=e10]:
+      - generic [ref=e12]:
+        - link "Go to Google Home" [ref=e14] [cursor=pointer]:
+          - /url: https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQPAgJ
+          - img [ref=e15]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - combobox "Search" [ref=e26]: site:shopee.vn "giày cầu lông yonex" site:shopee.vn "giày cầu lông yonex"
+            - generic [ref=e27]:
+              - button "Clear" [ref=e29] [cursor=pointer]:
+                - img [ref=e31]
+              - generic [ref=e34]:
+                - button "Search by voice" [ref=e35] [cursor=pointer]:
+                  - img [ref=e36]
+                - button "Search by image" [ref=e38] [cursor=pointer]:
+                  - img [ref=e39]
+          - button "Search" [ref=e41] [cursor=pointer]:
+            - img [ref=e44]
+    - generic [ref=e46]:
+      - button "Settings" [ref=e48] [cursor=pointer]:
+        - img [ref=e51]
+      - generic [ref=e54]:
+        - button "Google apps" [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+        - link "Sign in" [ref=e61] [cursor=pointer]:
+          - /url: https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=https://www.google.com/search%3Fq%3Dsite%253Ashopee.vn%2B%2522gi%25C3%25A0y%2Bc%25E1%25BA%25A7u%2Bl%25C3%25B4ng%2Byonex%2522&ec=futura_srp_og_si_72236_p
+  - generic [ref=e63]:
+    - navigation [ref=e69]:
+      - generic [ref=e75]:
+        - list [ref=e76]:
+          - listitem [ref=e77]:
+            - link "AI Mode" [ref=e80] [cursor=pointer]:
+              - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&udm=50&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&aep=1&ntc=1&sa=X&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ2J8OegQIDhAI
+              - generic [ref=e83]: AI Mode
+          - listitem [ref=e84]:
+            - link "All" [disabled] [ref=e85]:
+              - generic [ref=e87]: All
+          - listitem [ref=e88]:
+            - link "Shopping" [ref=e89] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=28&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&ved=1t:220175&ictx=111
+              - generic [ref=e91]: Shopping
+          - listitem [ref=e92]:
+            - link "Images" [ref=e93] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=2&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sa=X&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQtKgLegQIEhAB
+              - generic [ref=e95]: Images
+          - listitem [ref=e96]:
+            - link "Short videos" [ref=e97] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=39&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sa=X&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQs6gLegQIEBAB
+              - generic [ref=e99]: Short videos
+          - listitem [ref=e100]:
+            - link "News" [ref=e101] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&tbm=nws&source=lnms&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&sa=X&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ0pQJegQIERAB
+              - generic [ref=e103]: News
+          - listitem [ref=e104]:
+            - link "Videos" [ref=e105] [cursor=pointer]:
+              - /url: /search?sca_esv=09173728c48945df&udm=7&fbs=ADc_l-aN0CWEZBOHjofHoaMMDiKp9lEhFAN_4ain3HSNQWw-mMGVXS0bCMe2eDZOQ2MOTwnFUBJ2uyTXGY7FrnjAwa7NbqGSvKTFCgwxdLUW6hMhL8PXuonaBZbmk3lran6YWE08Qo3Jwy3V7aw2tlT3nF5H0Ethw96XS9XDu3cHMiEcjwcoyD3DeItUuAtjFSbb8hCRoUmssJZ2cRUTVtvaP1xB5zHL1Q&q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sa=X&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQtKgLegQIExAB
+              - generic [ref=e107]: Videos
+          - listitem [ref=e108]:
+            - button "More filters" [ref=e109] [cursor=pointer]:
+              - generic "More filters" [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: More
+                  - img [ref=e114]
+        - button "Tools" [ref=e117] [cursor=pointer]:
+          - generic [ref=e119]:
+            - generic [ref=e120]: Tools
+            - img [ref=e122]
+    - heading "Search Results" [level=1] [ref=e124]
+    - main [ref=e130]:
+      - generic [ref=e134]:
+        - generic [ref=e137]:
+          - heading "Kết quả trên web" [level=2] [ref=e138]
+          - generic [ref=e139]:
+            - generic [ref=e142]:
+              - link "giày cầu lông yonex - Giá Tốt, Sale Tháng 04, Freeship 0Đ Shopee https://shopee.vn › giày cầu lông" [ref=e144] [cursor=pointer]:
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/yonex
+                - heading "giày cầu lông yonex - Giá Tốt, Sale Tháng 04, Freeship 0Đ" [level=3] [ref=e145]
+                - generic [ref=e150]:
+                  - generic [ref=e152]: Shopee
+                  - generic [ref=e154]: https://shopee.vn › giày cầu lông
+              - generic [ref=e155]:
+                - generic [ref=e156]: ·
+                - link "Translate this page" [ref=e157] [cursor=pointer]:
+                  - /url: https://translate.google.com/translate?u=https://shopee.vn/list/gi%25C3%25A0y%2520c%25E1%25BA%25A7u%2520l%25C3%25B4ng/yonex&hl=en&sl=vi&tl=en&client=search
+              - button "About this result" [ref=e158] [cursor=pointer]:
+                - img [ref=e161]
+            - generic [ref=e164]:
+              - generic [ref=e165]:
+                - text: Giày thể thao cầu lông YONEX nam nữ, đế đàn hồi, chơi được sân ·
+                - emphasis [ref=e166]: Giày cầu lông Yonex
+                - text: 65Z3 chuyên nghiệp, chống trơn trượt tốt ·
+                - emphasis [ref=e167]: Giày cầu lông Yonex
+                - text: Court Flow ...
+              - link "Read more" [ref=e168] [cursor=pointer]:
+                - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/yonex#:~:text=Gi%C3%A0y%20th%E1%BB%83%20thao%20c%E1%BA%A7u%20l%C3%B4ng&text=Gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng%20Yonex%2065Z3&text=Gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng%20Yonex%20Court
+            - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e171] [cursor=pointer]:
+              - /url: https://shopee.vn/list/gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng/yonex
+              - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e173]
+            - generic [ref=e177]:
+              - img "Rated 4.5 out of 5," [ref=e179]:
+                - text: "4.5"
+                - img [ref=e180]
+              - generic [ref=e183]:
+                - text: store rating (
+                - link "507 user reviews" [ref=e184] [cursor=pointer]:
+                  - /url: https://www.google.com/m/storepages?q=shopee.vn&c=VN&hl=en-VN
+                  - text: "507"
+                - text: )
+        - generic [ref=e188]:
+          - generic [ref=e191]:
+            - link "giày yonex giá tốt Tháng 4, 2026 | Mua ngay - Shopee Shopee https://shopee.vn › search" [ref=e193] [cursor=pointer]:
+              - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20yonex
+              - heading "giày yonex giá tốt Tháng 4, 2026 | Mua ngay - Shopee" [level=3] [ref=e194]
+              - generic [ref=e199]:
+                - generic [ref=e201]: Shopee
+                - generic [ref=e203]: https://shopee.vn › search
+            - generic [ref=e204]:
+              - generic [ref=e205]: ·
+              - link "Translate this page" [ref=e206] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/search?keyword%3Dgi%25C3%25A0y%2520yonex&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e207] [cursor=pointer]:
+              - img [ref=e210]
+          - generic [ref=e213]:
+            - generic [ref=e214]:
+              - text: "[40 Màu] Dây"
+              - emphasis [ref=e215]: Giày Cầu Lông YONEX
+              - text: Oval 6mm Chất Liệu Cao Cấp, · Lót giày thể thao Yonex thoáng khí, chất liệu đàn hồi chống sốc bảo vệ.
+            - link "Read more" [ref=e216] [cursor=pointer]:
+              - /url: https://shopee.vn/search?keyword=gi%C3%A0y+yonex#:~:text=%5B40%20M%C3%A0u%5D%20D%C3%A2y%20Gi%C3%A0y%20C%E1%BA%A7u&text=L%C3%B3t%20gi%C3%A0y%20th%E1%BB%83%20thao%20Yonex
+          - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e219] [cursor=pointer]:
+            - /url: https://shopee.vn/search?keyword=gi%C3%A0y%20yonex
+            - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e221]
+          - img "Rated 4.8 out of 5, (95) user reviews" [ref=e226]:
+            - text: "4.8"
+            - img [ref=e227]
+            - text: (95)
+        - generic [ref=e233]:
+          - heading "Images" [level=2] [ref=e237]
+          - generic [ref=e241]:
+            - generic [ref=e245] [cursor=pointer]:
+              - link "Giày cầu lông Yonex 65Z3 cao cấp , chống trơn trượt , chính hãng Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-65Z3-cao-c%E1%BA%A5p-ch%E1%BB%91ng-tr%C6%A1n-tr%C6%B0%E1%BB%A3t-ch%C3%ADnh-h%C3%A3ng-i.1103873156.25186603786
+              - button "Giày cầu lông Yonex 65Z3 cao cấp , chống trơn trượt , chính hãng" [ref=e247]:
+                - img "Giày cầu lông Yonex 65Z3 cao cấp , chống trơn trượt , chính hãng" [ref=e249]
+              - generic [ref=e251]:
+                - generic [ref=e253]: Giày cầu lông Yonex 65Z3 cao cấp , chống trơn trượt , chính hãng
+                - generic [ref=e254]:
+                  - generic [ref=e261]: Shopee
+                  - button "About this result" [ref=e264]:
+                    - img [ref=e267]
+            - generic [ref=e272] [cursor=pointer]:
+              - link "Giày cầu lông Yonex SHB220CR màu trắng xám, trắng xanh, trắng hồng chống trơn trượt tốt, thoáng khí. Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-SHB220CR-m%C3%A0u-tr%E1%BA%AFng-x%C3%A1m-tr%E1%BA%AFng-xanh-tr%E1%BA%AFng-h%E1%BB%93ng-ch%E1%BB%91ng-tr%C6%A1n-tr%C6%B0%E1%BB%A3t-t%E1%BB%91t-tho%C3%A1ng-kh%C3%AD.-i.138568532.27606281354
+              - button "Giày cầu lông Yonex SHB220CR màu trắng xám, trắng xanh, trắng hồng chống trơn trượt tốt, thoáng khí." [ref=e274]:
+                - img "Giày cầu lông Yonex SHB220CR màu trắng xám, trắng xanh, trắng hồng chống trơn trượt tốt, thoáng khí." [ref=e276]
+              - generic [ref=e278]:
+                - generic [ref=e280]: Giày cầu lông Yonex SHB220CR màu trắng xám, trắng xanh, trắng hồng chống trơn trượt tốt, thoáng khí.
+                - generic [ref=e281]:
+                  - generic [ref=e288]: Shopee
+                  - button "About this result" [ref=e291]:
+                    - img [ref=e294]
+            - generic [ref=e299] [cursor=pointer]:
+              - link "HOT XIÊU GIẢM GIÁ Giày cầu lông Yonex chuyên nghiệp uy tín . :)) Shopee":
+                - /url: https://shopee.vn/HOT-XI%C3%8AU-GI%E1%BA%A2M-GI%C3%81-Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-chuy%C3%AAn-nghi%E1%BB%87p-uy-t%C3%ADn-.-))-i.289528027.7146699841
+              - button "HOT XIÊU GIẢM GIÁ Giày cầu lông Yonex chuyên nghiệp uy tín . :))" [ref=e301]:
+                - img "HOT XIÊU GIẢM GIÁ Giày cầu lông Yonex chuyên nghiệp uy tín . :))" [ref=e303]
+              - generic [ref=e305]:
+                - generic [ref=e307]: HOT XIÊU GIẢM GIÁ Giày cầu lông Yonex chuyên nghiệp uy tín . :))
+                - generic [ref=e308]:
+                  - generic [ref=e315]: Shopee
+                  - button "About this result" [ref=e318]:
+                    - img [ref=e321]
+            - generic [ref=e326] [cursor=pointer]:
+              - link "Giày Cầu Lông Yonex SHB 65Z3 Wide -Trắng Cam Chuyên Nghiệp Trợ Lực Êm Ái Đủ Size Dành Cho Cả Nam Và Nữ Tặng Kèm Vớ Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-Yonex-SHB-65Z3-Wide-Tr%E1%BA%AFng-Cam-Chuy%C3%AAn-Nghi%E1%BB%87p-Tr%E1%BB%A3-L%E1%BB%B1c-%C3%8Am-%C3%81i-%C4%90%E1%BB%A7-Size-D%C3%A0nh-Cho-C%E1%BA%A3-Nam-V%C3%A0-N%E1%BB%AF-T%E1%BA%B7ng-K%C3%A8m-V%E1%BB%9B-i.890284426.26252463471
+              - button "Giày Cầu Lông Yonex SHB 65Z3 Wide -Trắng Cam Chuyên Nghiệp Trợ Lực Êm Ái Đủ Size Dành Cho Cả Nam Và Nữ Tặng Kèm Vớ" [ref=e328]:
+                - img "Giày Cầu Lông Yonex SHB 65Z3 Wide -Trắng Cam Chuyên Nghiệp Trợ Lực Êm Ái Đủ Size Dành Cho Cả Nam Và Nữ Tặng Kèm Vớ" [ref=e330]
+              - generic [ref=e332]:
+                - generic [ref=e334]: Giày Cầu Lông Yonex SHB 65Z3 Wide -Trắng Cam Chuyên Nghiệp Trợ Lực Êm Ái Đủ Size Dành Cho Cả Nam Và Nữ Tặng Kèm Vớ
+                - generic [ref=e335]:
+                  - generic [ref=e342]: Shopee
+                  - button "About this result" [ref=e345]:
+                    - img [ref=e348]
+            - generic [ref=e353] [cursor=pointer]:
+              - link "Giày cầu lông YONEX dành cho nam, nữ , đế đàn hồi, chơi được sân bê tông,chống lật cổ chân Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-YONEX-d%C3%A0nh-cho-nam-n%E1%BB%AF-%C4%91%E1%BA%BF-%C4%91%C3%A0n-h%E1%BB%93i-ch%C6%A1i-%C4%91%C6%B0%E1%BB%A3c-s%C3%A2n-b%C3%AA-t%C3%B4ng-ch%E1%BB%91ng-l%E1%BA%ADt-c%E1%BB%95-ch%C3%A2n-i.254582066.18704401815
+              - button "Giày cầu lông YONEX dành cho nam, nữ , đế đàn hồi, chơi được sân bê tông,chống lật cổ chân" [ref=e355]:
+                - img "Giày cầu lông YONEX dành cho nam, nữ , đế đàn hồi, chơi được sân bê tông,chống lật cổ chân" [ref=e357]
+              - generic [ref=e359]:
+                - generic [ref=e361]: Giày cầu lông YONEX dành cho nam, nữ , đế đàn hồi, chơi được sân bê tông,chống lật cổ chân
+                - generic [ref=e362]:
+                  - generic [ref=e369]: Shopee
+                  - button "About this result" [ref=e372]:
+                    - img [ref=e375]
+            - generic [ref=e380] [cursor=pointer]:
+              - link "Giày cầu lông Yonex 65Z3 màu đen dành cho cả nam và nữ mẫu mới Shopee":
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-65Z3-m%C3%A0u-%C4%91en-d%C3%A0nh-cho-c%E1%BA%A3-nam-v%C3%A0-n%E1%BB%AF-m%E1%BA%ABu-m%E1%BB%9Bi-i.1241605232.25326218541
+              - button "Giày cầu lông Yonex 65Z3 màu đen dành cho cả nam và nữ mẫu mới" [ref=e382]:
+                - img "Giày cầu lông Yonex 65Z3 màu đen dành cho cả nam và nữ mẫu mới" [ref=e384]
+              - generic [ref=e386]:
+                - generic [ref=e388]: Giày cầu lông Yonex 65Z3 màu đen dành cho cả nam và nữ mẫu mới
+                - generic [ref=e389]:
+                  - generic [ref=e396]: Shopee
+                  - button "About this result" [ref=e399]:
+                    - img [ref=e402]
+          - button "Show more images" [ref=e405] [cursor=pointer]:
+            - separator [ref=e406]
+            - generic [ref=e407]:
+              - generic [ref=e408]: Show more images
+              - img [ref=e410]
+        - generic [ref=e414]:
+          - heading "Kết quả trên web" [level=2] [ref=e415]
+          - generic [ref=e416]:
+            - generic [ref=e419]:
+              - link "Giày cầu lông Yonex Power Cushion 65Z4 White Shopee https://shopee.vn › Giày-cầu-lông-..." [ref=e421] [cursor=pointer]:
+                - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-Power-Cushion-65Z4-White-H%C3%A0ng-Ch%C3%ADnh-H%C3%A3ng-i.1290904364.28475369464?extraParams=%7B%22display_model_id%22%3A400643253874%2C%22model_selection_logic%22%3A3%7D
+                - heading "Giày cầu lông Yonex Power Cushion 65Z4 White" [level=3] [ref=e422]
+                - generic [ref=e427]:
+                  - generic [ref=e429]: Shopee
+                  - generic [ref=e431]: https://shopee.vn › Giày-cầu-lông-...
+              - generic [ref=e432]:
+                - generic [ref=e433]: ·
+                - link "Translate this page" [ref=e434] [cursor=pointer]:
+                  - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-Yonex-Power-Cushion-65Z4-White-H%25C3%25A0ng-Ch%25C3%25ADnh-H%25C3%25A3ng-i.1290904364.28475369464?extraParams%3D%257B%2522display_model_id%2522%253A400643253874%252C%2522model_selection_logic%2522%253A3%257D&hl=en&sl=vi&tl=en&client=search
+              - button "About this result" [ref=e435] [cursor=pointer]:
+                - img [ref=e438]
+            - generic [ref=e442]:
+              - emphasis [ref=e443]: Giày cầu lông Yonex
+              - text: Power Cushion 65 Z4 White là sự kết hợp hoàn hảo giữa công nghệ tiên tiến, thiết kế hiện đại và hiệu suất tối ưu. Đây là người bạn đồng hành ...
+        - generic [ref=e447]:
+          - generic [ref=e450]:
+            - link "Giày cầu lông Yonex cao cấp chuyên nghiệp 65Z3 cho cả ... Shopee https://shopee.vn › Giày-cầu-lông-..." [ref=e452] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-cao-c%E1%BA%A5p-chuy%C3%AAn-nghi%E1%BB%87p-65Z3-cho-c%E1%BA%A3-nam-v%C3%A0-n%E1%BB%AF-i.128878502.25520439947
+              - heading "Giày cầu lông Yonex cao cấp chuyên nghiệp 65Z3 cho cả ..." [level=3] [ref=e453]
+              - generic [ref=e458]:
+                - generic [ref=e460]: Shopee
+                - generic [ref=e462]: https://shopee.vn › Giày-cầu-lông-...
+            - generic [ref=e463]:
+              - generic [ref=e464]: ·
+              - link "Translate this page" [ref=e465] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-Yonex-cao-c%25E1%25BA%25A5p-chuy%25C3%25AAn-nghi%25E1%25BB%2587p-65Z3-cho-c%25E1%25BA%25A3-nam-v%25C3%25A0-n%25E1%25BB%25AF-i.128878502.25520439947&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e466] [cursor=pointer]:
+              - img [ref=e469]
+          - generic [ref=e472]:
+            - generic [ref=e473]:
+              - emphasis [ref=e474]: Giày cầu lông Yonex
+              - text: cao cấp chuyên nghiệp 65Z3 cho cả nam và nữ ... Tặng Voucher 15.000₫ nếu đơn giao sau thời gian trên.
+            - link "Read more" [ref=e475] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-cao-c%E1%BA%A5p-chuy%C3%AAn-nghi%E1%BB%87p-65Z3-cho-c%E1%BA%A3-nam-v%C3%A0-n%E1%BB%AF-i.128878502.25520439947#:~:text=Gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng%20Yonex%20cao,cho%20c%E1%BA%A3%20nam%20v%C3%A0%20n%E1%BB%AF&text=T%E1%BA%B7ng%20Voucher%2015.000%E2%82%AB%20n%E1%BA%BFu%20%C4%91%C6%A1n,giao%20sau%20th%E1%BB%9Di%20gian%20tr%C3%AAn.
+          - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e478] [cursor=pointer]:
+            - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-cao-c%E1%BA%A5p-chuy%C3%AAn-nghi%E1%BB%87p-65Z3-cho-c%E1%BA%A3-nam-v%C3%A0-n%E1%BB%AF-i.128878502.25520439947
+            - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e480]
+          - generic [ref=e482]:
+            - generic [ref=e483]: ₫690,000
+            - text: ·
+            - generic [ref=e484]: In stock
+            - text: ·
+            - img "Rated 4.6 out of 5, (7) user reviews" [ref=e490]:
+              - text: "4.6"
+              - img [ref=e491]
+              - text: (7)
+        - generic [ref=e497]:
+          - generic [ref=e500]:
+            - link "Túi đựng giày cầu lông Yonex - chống nước không lo ẩm ướt Shopee https://shopee.vn › Túi-đựng-giày-c..." [ref=e502] [cursor=pointer]:
+              - /url: https://shopee.vn/T%C3%BAi-%C4%91%E1%BB%B1ng-gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-ch%E1%BB%91ng-n%C6%B0%E1%BB%9Bc-kh%C3%B4ng-lo-%E1%BA%A9m-%C6%B0%E1%BB%9Bt-i.81689935.24231228442
+              - heading "Túi đựng giày cầu lông Yonex - chống nước không lo ẩm ướt" [level=3] [ref=e503]
+              - generic [ref=e508]:
+                - generic [ref=e510]: Shopee
+                - generic [ref=e512]: https://shopee.vn › Túi-đựng-giày-c...
+            - generic [ref=e513]:
+              - generic [ref=e514]: ·
+              - link "Translate this page" [ref=e515] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/T%25C3%25BAi-%25C4%2591%25E1%25BB%25B1ng-gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-Yonex-ch%25E1%25BB%2591ng-n%25C6%25B0%25E1%25BB%259Bc-kh%25C3%25B4ng-lo-%25E1%25BA%25A9m-%25C6%25B0%25E1%25BB%259Bt-i.81689935.24231228442&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e516] [cursor=pointer]:
+              - img [ref=e519]
+          - generic [ref=e523]:
+            - text: Mua Túi đựng
+            - emphasis [ref=e524]: giày cầu lông Yonex
+            - text: "- chống nước không lo ẩm ướt giá tốt. Mua hàng qua mạng uy tín, tiện lợi. Shopee đảm bảo nhận hàng, hoặc được hoàn lại tiền ..."
+          - link "site:shopee.vn \"giày cầu lông yonex\" images from shopee.vn" [ref=e526] [cursor=pointer]:
+            - /url: https://shopee.vn/T%C3%BAi-%C4%91%E1%BB%B1ng-gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-ch%E1%BB%91ng-n%C6%B0%E1%BB%9Bc-kh%C3%B4ng-lo-%E1%BA%A9m-%C6%B0%E1%BB%9Bt-i.81689935.24231228442
+          - generic [ref=e541]:
+            - generic [ref=e542]: ₫37,000
+            - text: ·
+            - generic [ref=e543]: In stock
+            - text: ·
+            - img "Rated 4.9 out of 5, (177) user reviews" [ref=e547]:
+              - text: "4.9"
+              - img [ref=e548]
+              - text: (177)
+        - generic [ref=e554]:
+          - generic [ref=e557]:
+            - link "Giày cầu lông Yonex dành cho nam và nữ, giảm xóc nhẹ ... Shopee https://shopee.vn › Giày-cầu-lông-..." [ref=e559] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-d%C3%A0nh-cho-nam-v%C3%A0-n%E1%BB%AF-gi%E1%BA%A3m-x%C3%B3c-nh%E1%BA%B9-gi%C3%A0y-th%E1%BB%83-thao-tho%E1%BA%A3i-m%C3%A1i-v%C3%A0-tho%C3%A1ng-kh%C3%AD-t%E1%BA%ADp-th%E1%BB%83-d%E1%BB%A5c-ngo%C3%A0i-tr%E1%BB%9Di-xu-h%C6%B0%E1%BB%9Bng-gi%C3%A0y-th%E1%BB%83-thao-%C4%91i%E1%BB%81n-kinh-i.162195499.25173030383
+              - heading "Giày cầu lông Yonex dành cho nam và nữ, giảm xóc nhẹ ..." [level=3] [ref=e560]
+              - generic [ref=e565]:
+                - generic [ref=e567]: Shopee
+                - generic [ref=e569]: https://shopee.vn › Giày-cầu-lông-...
+            - generic [ref=e570]:
+              - generic [ref=e571]: ·
+              - link "Translate this page" [ref=e572] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-Yonex-d%25C3%25A0nh-cho-nam-v%25C3%25A0-n%25E1%25BB%25AF-gi%25E1%25BA%25A3m-x%25C3%25B3c-nh%25E1%25BA%25B9-gi%25C3%25A0y-th%25E1%25BB%2583-thao-tho%25E1%25BA%25A3i-m%25C3%25A1i-v%25C3%25A0-tho%25C3%25A1ng-kh%25C3%25AD-t%25E1%25BA%25ADp-th%25E1%25BB%2583-d%25E1%25BB%25A5c-ngo%25C3%25A0i-tr%25E1%25BB%259Di-xu-h%25C6%25B0%25E1%25BB%259Bng-gi%25C3%25A0y-th%25E1%25BB%2583-thao-%25C4%2591i%25E1%25BB%2581n-kinh-i.162195499.25173030383&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e573] [cursor=pointer]:
+              - img [ref=e576]
+          - generic [ref=e579]:
+            - generic [ref=e580]:
+              - emphasis [ref=e581]: Giày cầu lông Yonex
+              - text: dành cho nam và nữ, giảm xóc nhẹ, giày thể thao thoải mái và thoáng khí, tập thể dục ngoài trời, xu hướng giày thể thao điền kinh.
+            - link "Read more" [ref=e582] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-d%C3%A0nh-cho-nam-v%C3%A0-n%E1%BB%AF-gi%E1%BA%A3m-x%C3%B3c-nh%E1%BA%B9-gi%C3%A0y-th%E1%BB%83-thao-tho%E1%BA%A3i-m%C3%A1i-v%C3%A0-tho%C3%A1ng-kh%C3%AD-t%E1%BA%ADp-th%E1%BB%83-d%E1%BB%A5c-ngo%C3%A0i-tr%E1%BB%9Di-xu-h%C6%B0%E1%BB%9Bng-gi%C3%A0y-th%E1%BB%83-thao-%C4%91i%E1%BB%81n-kinh-i.162195499.25173030383#:~:text=Gi%C3%A0y%20c%E1%BA%A7u%20l%C3%B4ng%20Yonex%20d%C3%A0nh,gi%C3%A0y%20th%E1%BB%83%20thao%20%C4%91i%E1%BB%81n%20kinh
+          - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e585] [cursor=pointer]:
+            - /url: https://shopee.vn/Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-d%C3%A0nh-cho-nam-v%C3%A0-n%E1%BB%AF-gi%E1%BA%A3m-x%C3%B3c-nh%E1%BA%B9-gi%C3%A0y-th%E1%BB%83-thao-tho%E1%BA%A3i-m%C3%A1i-v%C3%A0-tho%C3%A1ng-kh%C3%AD-t%E1%BA%ADp-th%E1%BB%83-d%E1%BB%A5c-ngo%C3%A0i-tr%E1%BB%9Di-xu-h%C6%B0%E1%BB%9Bng-gi%C3%A0y-th%E1%BB%83-thao-%C4%91i%E1%BB%81n-kinh-i.162195499.25173030383
+            - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e587]
+        - generic [ref=e591]:
+          - generic [ref=e594]:
+            - link "Giày Cầu Lông Yonex Hy ultra Chính Hãng, Êm, Nhẹ, Bền ... Shopee https://shopee.vn › Giày-Cầu-Lông-..." [ref=e596] [cursor=pointer]:
+              - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-Yonex-Hy-ultra-Ch%C3%ADnh-H%C3%A3ng-%C3%8Am-Nh%E1%BA%B9-B%E1%BB%81n-Ch%E1%BB%91ng-L%E1%BA%ADt-Gi%C3%A1-T%E1%BB%91t-i.1221475710.27983630699
+              - heading "Giày Cầu Lông Yonex Hy ultra Chính Hãng, Êm, Nhẹ, Bền ..." [level=3] [ref=e597]
+              - generic [ref=e602]:
+                - generic [ref=e604]: Shopee
+                - generic [ref=e606]: https://shopee.vn › Giày-Cầu-Lông-...
+            - generic [ref=e607]:
+              - generic [ref=e608]: ·
+              - link "Translate this page" [ref=e609] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/Gi%25C3%25A0y-C%25E1%25BA%25A7u-L%25C3%25B4ng-Yonex-Hy-ultra-Ch%25C3%25ADnh-H%25C3%25A3ng-%25C3%258Am-Nh%25E1%25BA%25B9-B%25E1%25BB%2581n-Ch%25E1%25BB%2591ng-L%25E1%25BA%25ADt-Gi%25C3%25A1-T%25E1%25BB%2591t-i.1221475710.27983630699&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e610] [cursor=pointer]:
+              - img [ref=e613]
+          - generic [ref=e617]:
+            - text: Mua
+            - emphasis [ref=e618]: Giày Cầu Lông Yonex
+            - text: Hy ultra Chính Hãng, Êm, Nhẹ, Bền, Chống Lật Giá Tốt giá tốt. Mua hàng qua mạng uy tín, tiện lợi. Shopee đảm bảo nhận hàng, ...
+          - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e621] [cursor=pointer]:
+            - /url: https://shopee.vn/Gi%C3%A0y-C%E1%BA%A7u-L%C3%B4ng-Yonex-Hy-ultra-Ch%C3%ADnh-H%C3%A3ng-%C3%8Am-Nh%E1%BA%B9-B%E1%BB%81n-Ch%E1%BB%91ng-L%E1%BA%ADt-Gi%C3%A1-T%E1%BB%91t-i.1221475710.27983630699
+            - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e623]
+          - generic [ref=e625]:
+            - generic [ref=e626]: ₫645,000
+            - text: ·
+            - generic [ref=e627]: In stock
+            - text: ·
+            - img "Rated 4.8 out of 5, (42) user reviews" [ref=e633]:
+              - text: "4.8"
+              - img [ref=e634]
+              - text: (42)
+        - generic [ref=e640]:
+          - generic [ref=e643]:
+            - link "Giày Cầu Lông HL, Cửa hàng trực tuyến Shopee https://shopee.vn › giay_cau_long_hl" [ref=e645] [cursor=pointer]:
+              - /url: https://shopee.vn/giay_cau_long_hl
+              - heading "Giày Cầu Lông HL, Cửa hàng trực tuyến" [level=3] [ref=e646]
+              - generic [ref=e651]:
+                - generic [ref=e653]: Shopee
+                - generic [ref=e655]: https://shopee.vn › giay_cau_long_hl
+            - generic [ref=e656]:
+              - generic [ref=e657]: ·
+              - link "Translate this page" [ref=e658] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/giay_cau_long_hl&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e659] [cursor=pointer]:
+              - img [ref=e662]
+          - generic [ref=e665]:
+            - generic [ref=e666]:
+              - text: ( MẪU MỚI NHẤT 2025 )
+              - emphasis [ref=e667]: Giày Cầu Lông Yonex
+              - text: 65Z4 Unisex Chất Lượng Cao, Chống Trơn Trượt. Rẻ Vô Địch.
+            - link "Read more" [ref=e668] [cursor=pointer]:
+              - /url: https://shopee.vn/giay_cau_long_hl#:~:text=(%20M%E1%BA%AAU%20M%E1%BB%9AI%20NH%E1%BA%A4T%202025,R%E1%BA%BB%20V%C3%B4%20%C4%90%E1%BB%8Bch
+          - link "site:shopee.vn \"giày cầu lông yonex\" images from shopee.vn" [ref=e670] [cursor=pointer]:
+            - /url: https://shopee.vn/giay_cau_long_hl
+          - img "Rated 4.9 out of 5, (743) user reviews" [ref=e688]:
+            - text: "4.9"
+            - img [ref=e689]
+            - text: (743)
+        - generic [ref=e695]:
+          - generic [ref=e698]:
+            - link "【Giày Chính Hãng】 Giày cầu lông Yonex Match 2 new ... Shopee https://shopee.vn › 【Giày-Chính-H..." [ref=e700] [cursor=pointer]:
+              - /url: https://shopee.vn/%E3%80%90Gi%C3%A0y-Ch%C3%ADnh-H%C3%A3ng%E3%80%91-Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-Match-2-new-2025-si%C3%AAu-ph%E1%BA%A9m-gi%C3%A0y-Yonex-gi%C3%A1-r%E1%BA%BB-v%E1%BB%9Bi-nhi%E1%BB%81u-c%C3%B4ng-ngh%C3%AA-i.430507539.41819780241
+              - heading "【Giày Chính Hãng】 Giày cầu lông Yonex Match 2 new ..." [level=3] [ref=e701]
+              - generic [ref=e706]:
+                - generic [ref=e708]: Shopee
+                - generic [ref=e710]: https://shopee.vn › 【Giày-Chính-H...
+            - generic [ref=e711]:
+              - generic [ref=e712]: ·
+              - link "Translate this page" [ref=e713] [cursor=pointer]:
+                - /url: https://translate.google.com/translate?u=https://shopee.vn/%25E3%2580%2590Gi%25C3%25A0y-Ch%25C3%25ADnh-H%25C3%25A3ng%25E3%2580%2591-Gi%25C3%25A0y-c%25E1%25BA%25A7u-l%25C3%25B4ng-Yonex-Match-2-new-2025-si%25C3%25AAu-ph%25E1%25BA%25A9m-gi%25C3%25A0y-Yonex-gi%25C3%25A1-r%25E1%25BA%25BB-v%25E1%25BB%259Bi-nhi%25E1%25BB%2581u-c%25C3%25B4ng-ngh%25C3%25AA-i.430507539.41819780241&hl=en&sl=vi&tl=en&client=search
+            - button "About this result" [ref=e714] [cursor=pointer]:
+              - img [ref=e717]
+          - generic [ref=e720]:
+            - generic [ref=e721]:
+              - text: "- TRU SHAPE: Công nghệ này giúp"
+              - emphasis [ref=e722]: giày cầu lông Yonex
+              - text: Mach 2 có độ bền và độ dẻo cao hơn, cùng với đó là tăng khả năng chống trượt khi tiếp xúc với sàn đấu.
+            - link "Read more" [ref=e723] [cursor=pointer]:
+              - /url: https://shopee.vn/%E3%80%90Gi%C3%A0y-Ch%C3%ADnh-H%C3%A3ng%E3%80%91-Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-Match-2-new-2025-si%C3%AAu-ph%E1%BA%A9m-gi%C3%A0y-Yonex-gi%C3%A1-r%E1%BA%BB-v%E1%BB%9Bi-nhi%E1%BB%81u-c%C3%B4ng-ngh%C3%AA-i.430507539.41819780241#:~:text=%2D%20TRU%20SHAPE%3A%20C%C3%B4ng%20ngh%E1%BB%87,ti%E1%BA%BFp%20x%C3%BAc%20v%E1%BB%9Bi%20s%C3%A0n%20%C4%91%E1%BA%A5u.
+          - link "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e726] [cursor=pointer]:
+            - /url: https://shopee.vn/%E3%80%90Gi%C3%A0y-Ch%C3%ADnh-H%C3%A3ng%E3%80%91-Gi%C3%A0y-c%E1%BA%A7u-l%C3%B4ng-Yonex-Match-2-new-2025-si%C3%AAu-ph%E1%BA%A9m-gi%C3%A0y-Yonex-gi%C3%A1-r%E1%BA%BB-v%E1%BB%9Bi-nhi%E1%BB%81u-c%C3%B4ng-ngh%C3%AA-i.430507539.41819780241
+            - img "site:shopee.vn \"giày cầu lông yonex\" from shopee.vn" [ref=e728]
+      - navigation [ref=e731]:
+        - heading "Page navigation" [level=1] [ref=e732]
+        - text: "1"
+        - link "Page 2" [ref=e735] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=10&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAE
+          - text: "2"
+        - link "Page 3" [ref=e737] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=20&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAG
+          - text: "3"
+        - link "Page 4" [ref=e739] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=30&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAI
+          - text: "4"
+        - link "Page 5" [ref=e741] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=40&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAK
+          - text: "5"
+        - link "Page 6" [ref=e743] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=50&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAM
+          - text: "6"
+        - link "Page 7" [ref=e745] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=60&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAO
+          - text: "7"
+        - link "Page 8" [ref=e747] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=70&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAQ
+          - text: "8"
+        - link "Page 9" [ref=e749] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=80&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAS
+          - text: "9"
+        - link "Page 10" [ref=e751] [cursor=pointer]:
+          - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=90&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8tMDegQINxAU
+          - text: "10"
+        - heading "Next" [level=2] [ref=e753]:
+          - link "Next" [ref=e754] [cursor=pointer]:
+            - /url: /search?q=site:shopee.vn+%22gi%C3%A0y+c%E1%BA%A7u+l%C3%B4ng+yonex%22&sca_esv=09173728c48945df&ei=VXPnaYv_Dpvgp84P1K_IiQs&start=10&sa=N&sstk=Af77f_dWE77OUZa4qsNImQ1XkdLQSPs753si6_qKwC7DAN532DVdxHqaCr2yrHYwWiMrpa8F4jYOU3JWnH4Hlk8ps2hzZDj8DgvreA&ved=2ahUKEwjL_d28_v6TAxUb8MkDHdQXMrEQ8NMDegQINxAW
+            - generic [ref=e756]: Next
+      - navigation
+    - contentinfo [ref=e757]:
+      - heading "Footer links" [level=1] [ref=e758]
+      - generic [ref=e762]:
+        - generic [ref=e764]:
+          - text: Vietnam
+          - generic [ref=e766]:
+            - button "Hòa Minh, Liên Chiểu, Da Nang - Based on your past activity" [ref=e768] [cursor=pointer]:
+              - generic [ref=e769]: Hòa Minh, Liên Chiểu, Da Nang
+              - generic [ref=e771]:
+                - text: "-"
+                - generic [ref=e772]: Based on your past activity
+            - text: "-"
+            - button "Update location" [ref=e774] [cursor=pointer]: Update location
+        - generic [ref=e777]:
+          - link "Help" [ref=e778] [cursor=pointer]:
+            - /url: https://support.google.com/websearch/?p=ws_results_help&hl=en-VN&fg=1
+          - link "Send feedback" [ref=e779] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e780] [cursor=pointer]:
+            - /url: https://policies.google.com/privacy?hl=en-VN&fg=1
+          - link "Terms" [ref=e781] [cursor=pointer]:
+            - /url: https://policies.google.com/terms?hl=en-VN&fg=1

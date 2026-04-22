@@ -1,0 +1,777 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - link "Novel Updates" [ref=e7] [cursor=pointer]:
+        - /url: https://www.novelupdates.com/
+        - generic [ref=e8]: Novel Updates
+      - generic:
+        - link "Register" [ref=e10] [cursor=pointer]:
+          - /url: /register-nu/
+        - link "Login" [ref=e12] [cursor=pointer]:
+          - /url: /login/
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 
+          - generic [ref=e15]: 
+        - generic "Guest Menu"
+        - generic "Search" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: 
+        - text:   
+      - text:         
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e23]: Advertisements
+        - link "Scribble Hub - Original Novels" [ref=e26] [cursor=pointer]:
+          - /url: https://www.scribblehub.com/
+        - text: Tuesday, April 21, 2026
+        - table [ref=e27]:
+          - rowgroup [ref=e28]:
+            - row "Title Release Group" [ref=e29]:
+              - columnheader "Title" [ref=e30] [cursor=pointer]
+              - columnheader "Release" [ref=e31] [cursor=pointer]
+              - columnheader "Group" [ref=e32] [cursor=pointer]
+          - rowgroup [ref=e33]:
+            - row "I Became The Chief Of A Primitive Village c934 Divine Dao Library" [ref=e34]:
+              - cell "I Became The Chief Of A Primitive Village" [ref=e35]:
+                - link "I Became The Chief Of A Primitive Village" [ref=e36] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/i-became-the-chief-of-a-primitive-village/
+              - cell "c934" [ref=e37]
+              - cell "Divine Dao Library" [ref=e38]:
+                - link "Divine Dao Library" [ref=e39] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/divine-dao-library/
+            - row "The Ugly Man’s Big Transformation v2c105 Futile Devices Scans" [ref=e40]:
+              - cell "The Ugly Man’s Big Transformation" [ref=e41]:
+                - link "The Ugly Man’s Big Transformation" [ref=e42] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-ugly-mans-big-transformation/
+              - cell "v2c105" [ref=e43]
+              - cell "Futile Devices Scans" [ref=e44]:
+                - link "Futile Devices Scans" [ref=e45] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/futile-devices-scans/
+            - row "After Losing My Memory, I Went After My Archenemy c37 Lovelyblossoms" [ref=e46]:
+              - cell "After Losing My Memory, I Went After My Archenemy" [ref=e47]:
+                - link "After Losing My Memory, I Went After My Archenemy" [ref=e48] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/after-losing-my-memory-i-went-after-my-archenemy/
+              - cell "c37" [ref=e49]
+              - cell "Lovelyblossoms" [ref=e50]:
+                - link "Lovelyblossoms" [ref=e51] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lovelyblossoms/
+            - row "When You Forget Me c18 Lullobox" [ref=e52]:
+              - cell "When You Forget Me" [ref=e53]:
+                - link "When You Forget Me" [ref=e54] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/when-you-forget-me/
+              - cell "c18" [ref=e55]
+              - cell "Lullobox" [ref=e56]:
+                - link "Lullobox" [ref=e57] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lullobox/
+            - row "Zombie Apocalypse, I Died Right at the Start c367 Lightnovelasia" [ref=e58]:
+              - cell "Zombie Apocalypse, I Died Right at the Start" [ref=e59]:
+                - link "Zombie Apocalypse, I Died Right at the Start" [ref=e60] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/zombie-apocalypse-i-died-right-at-the-start/
+              - cell "c367" [ref=e61]
+              - cell "Lightnovelasia" [ref=e62]:
+                - link "Lightnovelasia" [ref=e63] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lightnovelasia/
+            - row "A Mayfly’s Morning Birth, Evening Death;... c196 Lightnovelasia" [ref=e64]:
+              - cell "A Mayfly’s Morning Birth, Evening Death;..." [ref=e65]:
+                - link "A Mayfly’s Morning Birth, Evening Death;..." [ref=e66] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/a-mayflys-morning-birth-evening-death-today-i-finally-know-what-an-immortal-is/
+              - cell "c196" [ref=e67]
+              - cell "Lightnovelasia" [ref=e68]:
+                - link "Lightnovelasia" [ref=e69] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lightnovelasia/
+            - row "Don’t Come Over Here! c27 MochiStar Cafe" [ref=e70]:
+              - cell "Don’t Come Over Here!" [ref=e71]:
+                - link "Don’t Come Over Here!" [ref=e72] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/dont-come-over-here/
+              - cell "c27" [ref=e73]
+              - cell "MochiStar Cafe" [ref=e74]:
+                - link "MochiStar Cafe" [ref=e75] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/mochistar-cafe/
+            - row "The School Beauty from the Next Class Insisted I... c55 Lovelyblossoms" [ref=e76]:
+              - cell "The School Beauty from the Next Class Insisted I..." [ref=e77]:
+                - link "The School Beauty from the Next Class Insisted I..." [ref=e78] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-school-beauty-from-the-next-class-insisted-i-confess/
+              - cell "c55" [ref=e79]
+              - cell "Lovelyblossoms" [ref=e80]:
+                - link "Lovelyblossoms" [ref=e81] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lovelyblossoms/
+            - row "The School Beauty from the Next Class Insisted I... c54 Lovelyblossoms" [ref=e82]:
+              - cell "The School Beauty from the Next Class Insisted I..." [ref=e83]:
+                - link "The School Beauty from the Next Class Insisted I..." [ref=e84] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-school-beauty-from-the-next-class-insisted-i-confess/
+              - cell "c54" [ref=e85]
+              - cell "Lovelyblossoms" [ref=e86]:
+                - link "Lovelyblossoms" [ref=e87] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lovelyblossoms/
+            - row "The Ugly Man’s Big Transformation v2c104 Futile Devices Scans" [ref=e88]:
+              - cell "The Ugly Man’s Big Transformation" [ref=e89]:
+                - link "The Ugly Man’s Big Transformation" [ref=e90] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-ugly-mans-big-transformation/
+              - cell "v2c104" [ref=e91]
+              - cell "Futile Devices Scans" [ref=e92]:
+                - link "Futile Devices Scans" [ref=e93] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/futile-devices-scans/
+            - row "God Didn’t Even Stop Me from Doing... c90 Chrysanthemum Garden" [ref=e94]:
+              - cell "God Didn’t Even Stop Me from Doing..." [ref=e95]:
+                - link "God Didn’t Even Stop Me from Doing..." [ref=e96] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/god-didnt-even-stop-me-from-doing-infrastructure/
+              - cell "c90" [ref=e97]
+              - cell "Chrysanthemum Garden" [ref=e98]:
+                - link "Chrysanthemum Garden" [ref=e99] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/chrysanthemum-garden/
+            - row "Romance for You c18 Lullobox" [ref=e100]:
+              - cell "Romance for You" [ref=e101]:
+                - link "Romance for You" [ref=e102] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/romance-for-you/
+              - cell "c18" [ref=e103]
+              - cell "Lullobox" [ref=e104]:
+                - link "Lullobox" [ref=e105] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lullobox/
+            - row "Thrilled by Madness c17 Lullobox" [ref=e106]:
+              - cell "Thrilled by Madness" [ref=e107]:
+                - link "Thrilled by Madness" [ref=e108] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/thrilled-by-madness/
+              - cell "c17" [ref=e109]
+              - cell "Lullobox" [ref=e110]:
+                - link "Lullobox" [ref=e111] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/lullobox/
+            - row "The Contract Wife Is Told There Is No Love, but... c32 novelscarnival" [ref=e112]:
+              - cell "The Contract Wife Is Told There Is No Love, but..." [ref=e113]:
+                - link "The Contract Wife Is Told There Is No Love, but..." [ref=e114] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-contract-wife-is-told-there-is-no-love-but-she-is-so-busy-admiring-her-children-that-her-husband-treats-her-like-air/
+              - cell "c32" [ref=e115]
+              - cell "novelscarnival" [ref=e116]:
+                - link "novelscarnival" [ref=e117] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Garden Tamer of the Corrosive World c26 novelscarnival" [ref=e118]:
+              - cell "Garden Tamer of the Corrosive World" [ref=e119]:
+                - link "Garden Tamer of the Corrosive World" [ref=e120] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/garden-tamer-of-the-corrosive-world/
+              - cell "c26" [ref=e121]
+              - cell "novelscarnival" [ref=e122]:
+                - link "novelscarnival" [ref=e123] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "It’s Been Three Years Since Our Happy Marriage,... c30 novelscarnival" [ref=e124]:
+              - cell "It’s Been Three Years Since Our Happy Marriage,..." [ref=e125]:
+                - link "It’s Been Three Years Since Our Happy Marriage,..." [ref=e126] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/its-been-three-years-since-our-happy-marriage-so-ill-leave-you-with-the-divorce-papers/
+              - cell "c30" [ref=e127]
+              - cell "novelscarnival" [ref=e128]:
+                - link "novelscarnival" [ref=e129] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Formerly, The Fallen Daughter of the Duke c30 novelscarnival" [ref=e130]:
+              - cell "Formerly, The Fallen Daughter of the Duke" [ref=e131]:
+                - link "Formerly, The Fallen Daughter of the Duke" [ref=e132] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/formerly-the-fallen-daughter-of-the-duke/
+              - cell "c30" [ref=e133]
+              - cell "novelscarnival" [ref=e134]:
+                - link "novelscarnival" [ref=e135] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "My Engagement Was Cancelled So I Will Stop... c32 novelscarnival" [ref=e136]:
+              - cell "My Engagement Was Cancelled So I Will Stop..." [ref=e137]:
+                - link "My Engagement Was Cancelled So I Will Stop..." [ref=e138] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/my-engagement-was-cancelled-so-i-will-stop-pretending-to-be-a-fool/
+              - cell "c32" [ref=e139]
+              - cell "novelscarnival" [ref=e140]:
+                - link "novelscarnival" [ref=e141] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "I Was Reincarnated as a Villainess, so I Became a... c29 novelscarnival" [ref=e142]:
+              - cell "I Was Reincarnated as a Villainess, so I Became a..." [ref=e143]:
+                - link "I Was Reincarnated as a Villainess, so I Became a..." [ref=e144] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/i-was-reincarnated-as-a-villainess-so-i-became-a-shut-in-neet/
+              - cell "c29" [ref=e145]
+              - cell "novelscarnival" [ref=e146]:
+                - link "novelscarnival" [ref=e147] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Somehow, The Villainess Who Regressed in Time... c30 novelscarnival" [ref=e148]:
+              - cell "Somehow, The Villainess Who Regressed in Time..." [ref=e149]:
+                - link "Somehow, The Villainess Who Regressed in Time..." [ref=e150] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/somehow-the-villainess-who-regressed-in-time-lost-her-magic-power-so-she-turned-into-a-secluded-maiden/
+              - cell "c30" [ref=e151]
+              - cell "novelscarnival" [ref=e152]:
+                - link "novelscarnival" [ref=e153] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "A Boy Raised by Gods, Will Be the Strongest c26 novelscarnival" [ref=e154]:
+              - cell "A Boy Raised by Gods, Will Be the Strongest" [ref=e155]:
+                - link "A Boy Raised by Gods, Will Be the Strongest" [ref=e156] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/a-boy-raised-by-gods-will-be-the-strongest/
+              - cell "c26" [ref=e157]
+              - cell "novelscarnival" [ref=e158]:
+                - link "novelscarnival" [ref=e159] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "The Reincarnated Receptionist’s Guild... c24 novelscarnival" [ref=e160]:
+              - cell "The Reincarnated Receptionist’s Guild..." [ref=e161]:
+                - link "The Reincarnated Receptionist’s Guild..." [ref=e162] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-reincarnated-receptionists-guild-journal/
+              - cell "c24" [ref=e163]
+              - cell "novelscarnival" [ref=e164]:
+                - link "novelscarnival" [ref=e165] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "The Returnee from Another World with Infinite... c20 novelscarnival" [ref=e166]:
+              - cell "The Returnee from Another World with Infinite..." [ref=e167]:
+                - link "The Returnee from Another World with Infinite..." [ref=e168] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-returnee-from-another-world-with-infinite-magical-power/
+              - cell "c20" [ref=e169]
+              - cell "novelscarnival" [ref=e170]:
+                - link "novelscarnival" [ref=e171] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "My Handsome Brothers Are Crazy About Me!? ~My... c19 novelscarnival" [ref=e172]:
+              - cell "My Handsome Brothers Are Crazy About Me!? ~My..." [ref=e173]:
+                - link "My Handsome Brothers Are Crazy About Me!? ~My..." [ref=e174] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/my-handsome-brothers-are-crazy-about-me-my-childhood-friends-became-family/
+              - cell "c19" [ref=e175]
+              - cell "novelscarnival" [ref=e176]:
+                - link "novelscarnival" [ref=e177] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "My Engagement Was Broken Off, so I Decided to Do... c20 novelscarnival" [ref=e178]:
+              - cell "My Engagement Was Broken Off, so I Decided to Do..." [ref=e179]:
+                - link "My Engagement Was Broken Off, so I Decided to Do..." [ref=e180] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/my-engagement-was-broken-off-so-i-decided-to-do-as-i-please/
+              - cell "c20" [ref=e181]
+              - cell "novelscarnival" [ref=e182]:
+                - link "novelscarnival" [ref=e183] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "The Story of One Thousand and One Meals c14 novelscarnival" [ref=e184]:
+              - cell "The Story of One Thousand and One Meals" [ref=e185]:
+                - link "The Story of One Thousand and One Meals" [ref=e186] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-story-of-one-thousand-and-one-meals/
+              - cell "c14" [ref=e187]
+              - cell "novelscarnival" [ref=e188]:
+                - link "novelscarnival" [ref=e189] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "There’s Only One Way for a Reincarnated... c9 novelscarnival" [ref=e190]:
+              - cell "There’s Only One Way for a Reincarnated..." [ref=e191]:
+                - link "There’s Only One Way for a Reincarnated..." [ref=e192] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/theres-only-one-way-for-a-reincarnated-lady-to-be-adored-by-his-majesty-the-king/
+              - cell "c9" [ref=e193]
+              - cell "novelscarnival" [ref=e194]:
+                - link "novelscarnival" [ref=e195] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "The Villainess Will Not Lose c10 novelscarnival" [ref=e196]:
+              - cell "The Villainess Will Not Lose" [ref=e197]:
+                - link "The Villainess Will Not Lose" [ref=e198] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-villainess-will-not-lose/
+              - cell "c10" [ref=e199]
+              - cell "novelscarnival" [ref=e200]:
+                - link "novelscarnival" [ref=e201] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Kuma Kuma Kuma Bear c8 novelscarnival" [ref=e202]:
+              - cell "Kuma Kuma Kuma Bear" [ref=e203]:
+                - link "Kuma Kuma Kuma Bear" [ref=e204] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/kuma-kuma-kuma-bear/
+              - cell "c8" [ref=e205]
+              - cell "novelscarnival" [ref=e206]:
+                - link "novelscarnival" [ref=e207] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - 'row "Edo Princess Reincarnation: Fixing the Roof First c4 novelscarnival" [ref=e208]':
+              - 'cell "Edo Princess Reincarnation: Fixing the Roof First" [ref=e209]':
+                - 'link "Edo Princess Reincarnation: Fixing the Roof First" [ref=e210] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/edo-princess-reincarnation-fixing-the-roof-first/
+              - cell "c4" [ref=e211]
+              - cell "novelscarnival" [ref=e212]:
+                - link "novelscarnival" [ref=e213] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "How I, Who Was Betrayed by My Husband Three... c6 novelscarnival" [ref=e214]:
+              - cell "How I, Who Was Betrayed by My Husband Three..." [ref=e215]:
+                - link "How I, Who Was Betrayed by My Husband Three..." [ref=e216] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/how-i-who-was-betrayed-by-my-husband-three-times-chose-divorce-for-the-fourth-time/
+              - cell "c6" [ref=e217]
+              - cell "novelscarnival" [ref=e218]:
+                - link "novelscarnival" [ref=e219] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Middle-Aged Explorer’s Earth Magic Success c6 novelscarnival" [ref=e220]:
+              - cell "Middle-Aged Explorer’s Earth Magic Success" [ref=e221]:
+                - link "Middle-Aged Explorer’s Earth Magic Success" [ref=e222] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/middle-aged-explorers-earth-magic-success/
+              - cell "c6" [ref=e223]
+              - cell "novelscarnival" [ref=e224]:
+                - link "novelscarnival" [ref=e225] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "D Genesis Dungeon has been around for 3 Years c5 novelscarnival" [ref=e226]:
+              - cell "D Genesis Dungeon has been around for 3 Years" [ref=e227]:
+                - link "D Genesis Dungeon has been around for 3 Years" [ref=e228] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/d-genesis-dungeon-has-been-around-for-3-years/
+              - cell "c5" [ref=e229]
+              - cell "novelscarnival" [ref=e230]:
+                - link "novelscarnival" [ref=e231] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/novelscarnival/
+            - row "Naruto Birdcage c72 decakranovel" [ref=e232]:
+              - cell "Naruto Birdcage" [ref=e233]:
+                - link "Naruto Birdcage" [ref=e234] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/naruto-birdcage/
+              - cell "c72" [ref=e235]
+              - cell "decakranovel" [ref=e236]:
+                - link "decakranovel" [ref=e237] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - row "Naruto Birdcage c71 decakranovel" [ref=e238]:
+              - cell "Naruto Birdcage" [ref=e239]:
+                - link "Naruto Birdcage" [ref=e240] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/naruto-birdcage/
+              - cell "c71" [ref=e241]
+              - cell "decakranovel" [ref=e242]:
+                - link "decakranovel" [ref=e243] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - row "Fairy Tail Destiny c72 decakranovel" [ref=e244]:
+              - cell "Fairy Tail Destiny" [ref=e245]:
+                - link "Fairy Tail Destiny" [ref=e246] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/fairy-tail-destiny/
+              - cell "c72" [ref=e247]
+              - cell "decakranovel" [ref=e248]:
+                - link "decakranovel" [ref=e249] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - row "Fairy Tail Destiny c71 decakranovel" [ref=e250]:
+              - cell "Fairy Tail Destiny" [ref=e251]:
+                - link "Fairy Tail Destiny" [ref=e252] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/fairy-tail-destiny/
+              - cell "c71" [ref=e253]
+              - cell "decakranovel" [ref=e254]:
+                - link "decakranovel" [ref=e255] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - 'row "Genshin Impact: I’m Just a Mortal c130 decakranovel" [ref=e256]':
+              - 'cell "Genshin Impact: I’m Just a Mortal" [ref=e257]':
+                - 'link "Genshin Impact: I’m Just a Mortal" [ref=e258] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/genshin-impact-im-just-a-mortal/
+              - cell "c130" [ref=e259]
+              - cell "decakranovel" [ref=e260]:
+                - link "decakranovel" [ref=e261] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - 'row "Genshin Impact: I’m Just a Mortal c129 decakranovel" [ref=e262]':
+              - 'cell "Genshin Impact: I’m Just a Mortal" [ref=e263]':
+                - 'link "Genshin Impact: I’m Just a Mortal" [ref=e264] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/genshin-impact-im-just-a-mortal/
+              - cell "c129" [ref=e265]
+              - cell "decakranovel" [ref=e266]:
+                - link "decakranovel" [ref=e267] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/decakranovel/
+            - row "Today Again, I’m Being Held by a Girl I... c64 Tzaritza’s TL" [ref=e268]:
+              - cell "Today Again, I’m Being Held by a Girl I..." [ref=e269]:
+                - link "Today Again, I’m Being Held by a Girl I..." [ref=e270] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/today-again-im-being-held-by-a-girl-i-dont-know-for-100-yen-the-room-where-im-held-for-100-yen/
+              - cell "c64" [ref=e271]
+              - cell "Tzaritza’s TL" [ref=e272]:
+                - link "Tzaritza’s TL" [ref=e273] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/tzaritzas-tl/
+        - generic [ref=e275]: Advertisements
+        - text: Tuesday, April 21, 2026
+        - table [ref=e277]:
+          - rowgroup [ref=e278]:
+            - row "Title Release Group" [ref=e279]:
+              - columnheader "Title" [ref=e280] [cursor=pointer]
+              - columnheader "Release" [ref=e281] [cursor=pointer]
+              - columnheader "Group" [ref=e282] [cursor=pointer]
+          - rowgroup [ref=e283]:
+            - 'row "Flowers in Both Arms, Swords in Both Hands: When... c115 Curspe" [ref=e284]':
+              - 'cell "Flowers in Both Arms, Swords in Both Hands: When..." [ref=e285]':
+                - 'link "Flowers in Both Arms, Swords in Both Hands: When..." [ref=e286] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/flowers-in-both-arms-swords-in-both-hands-when-i-fell-seriously-in-love-with-the-heroines-of-a-mecha-game-my-whole-world-changed/
+              - cell "c115" [ref=e287]
+              - cell "Curspe" [ref=e288]:
+                - link "Curspe" [ref=e289] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/curspe/
+            - 'row "Flowers in Both Arms, Swords in Both Hands: When... c114 Curspe" [ref=e290]':
+              - 'cell "Flowers in Both Arms, Swords in Both Hands: When..." [ref=e291]':
+                - 'link "Flowers in Both Arms, Swords in Both Hands: When..." [ref=e292] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/flowers-in-both-arms-swords-in-both-hands-when-i-fell-seriously-in-love-with-the-heroines-of-a-mecha-game-my-whole-world-changed/
+              - cell "c114" [ref=e293]
+              - cell "Curspe" [ref=e294]:
+                - link "Curspe" [ref=e295] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/curspe/
+            - row "That Guy’s Training Becomes a Buff c57 Dreamy Translations" [ref=e296]:
+              - cell "That Guy’s Training Becomes a Buff" [ref=e297]:
+                - link "That Guy’s Training Becomes a Buff" [ref=e298] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/that-guys-training-becomes-a-buff/
+              - cell "c57" [ref=e299]
+              - cell "Dreamy Translations" [ref=e300]:
+                - link "Dreamy Translations" [ref=e301] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/dreamy-translations/
+            - row "Hero Girl’s War c99 Dreamy Translations" [ref=e302]:
+              - cell "Hero Girl’s War" [ref=e303]:
+                - link "Hero Girl’s War" [ref=e304] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/hero-girls-war/
+              - cell "c99" [ref=e305]
+              - cell "Dreamy Translations" [ref=e306]:
+                - link "Dreamy Translations" [ref=e307] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/dreamy-translations/
+            - row "The Abandoned Young Master Cultivates Immortality c377 Chrysanthemum Garden" [ref=e308]:
+              - cell "The Abandoned Young Master Cultivates Immortality" [ref=e309]:
+                - link "The Abandoned Young Master Cultivates Immortality" [ref=e310] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-abandoned-young-master-cultivates-immortality/
+              - cell "c377" [ref=e311]
+              - cell "Chrysanthemum Garden" [ref=e312]:
+                - link "Chrysanthemum Garden" [ref=e313] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/chrysanthemum-garden/
+            - row "Overturn the Entertainment Circle c265 Assibuntulu’" [ref=e314]:
+              - cell "Overturn the Entertainment Circle" [ref=e315]:
+                - link "Overturn the Entertainment Circle" [ref=e316] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/overturn-the-entertainment-circle/
+              - cell "c265" [ref=e317]
+              - cell "Assibuntulu’" [ref=e318]:
+                - link "Assibuntulu’" [ref=e319] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/assibuntulu/
+            - row "Apocalypse Travels to the 1980s Tibetan Region,... c45 mboognovel" [ref=e320]:
+              - cell "Apocalypse Travels to the 1980s Tibetan Region,..." [ref=e321]:
+                - link "Apocalypse Travels to the 1980s Tibetan Region,..." [ref=e322] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/apocalypse-travels-to-the-1980s-tibetan-region-running-into-a-top-level-bloodbath/
+              - cell "c45" [ref=e323]
+              - cell "mboognovel" [ref=e324]:
+                - link "mboognovel" [ref=e325] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/mboognovel/
+            - row "The Neat and Pretty Girl at My New School Is a... c117 Ninja Cross Translation" [ref=e326]:
+              - cell "The Neat and Pretty Girl at My New School Is a..." [ref=e327]:
+                - link "The Neat and Pretty Girl at My New School Is a..." [ref=e328] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/a-neat-and-pretty-girl-at-the-transfer-destination-was-a-childhood-friend-who-used-to-think-that-she-was-a-boy-and-played-with-her/
+              - cell "c117" [ref=e329]
+              - cell "Ninja Cross Translation" [ref=e330]:
+                - link "Ninja Cross Translation" [ref=e331] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/ninja-cross-translation/
+            - row "Slimes Have the Potential to Be the Strongest ~... c132 Emilia Translations" [ref=e332]:
+              - cell "Slimes Have the Potential to Be the Strongest ~..." [ref=e333]:
+                - link "Slimes Have the Potential to Be the Strongest ~..." [ref=e334] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/slimes-have-the-potential-to-be-the-strongest-in-my-second-life-ill-face-slimes-head-on/
+              - cell "c132" [ref=e335]
+              - cell "Emilia Translations" [ref=e336]:
+                - link "Emilia Translations" [ref=e337] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "Slimes Have the Potential to Be the Strongest ~... c131 Emilia Translations" [ref=e338]:
+              - cell "Slimes Have the Potential to Be the Strongest ~..." [ref=e339]:
+                - link "Slimes Have the Potential to Be the Strongest ~..." [ref=e340] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/slimes-have-the-potential-to-be-the-strongest-in-my-second-life-ill-face-slimes-head-on/
+              - cell "c131" [ref=e341]
+              - cell "Emilia Translations" [ref=e342]:
+                - link "Emilia Translations" [ref=e343] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "Bahamut Goes Into Space c140 Emilia Translations" [ref=e344]:
+              - cell "Bahamut Goes Into Space" [ref=e345]:
+                - link "Bahamut Goes Into Space" [ref=e346] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/bahamut-goes-into-space/
+              - cell "c140" [ref=e347]
+              - cell "Emilia Translations" [ref=e348]:
+                - link "Emilia Translations" [ref=e349] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "Bahamut Goes Into Space c139 Emilia Translations" [ref=e350]:
+              - cell "Bahamut Goes Into Space" [ref=e351]:
+                - link "Bahamut Goes Into Space" [ref=e352] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/bahamut-goes-into-space/
+              - cell "c139" [ref=e353]
+              - cell "Emilia Translations" [ref=e354]:
+                - link "Emilia Translations" [ref=e355] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "Idol Hides His Military Service c193 ReadRift" [ref=e356]:
+              - cell "Idol Hides His Military Service" [ref=e357]:
+                - link "Idol Hides His Military Service" [ref=e358] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/idol-hides-his-military-service/
+              - cell "c193" [ref=e359]
+              - cell "ReadRift" [ref=e360]:
+                - link "ReadRift" [ref=e361] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/readrift/
+            - row "Our Hotel Is Open for Business as Usual c6 azurechronicles" [ref=e362]:
+              - cell "Our Hotel Is Open for Business as Usual" [ref=e363]:
+                - link "Our Hotel Is Open for Business as Usual" [ref=e364] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/our-hotel-is-open-for-business-as-usual/
+              - cell "c6" [ref=e365]
+              - cell "azurechronicles" [ref=e366]:
+                - link "azurechronicles" [ref=e367] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/azurechronicles/
+            - row "Miku ~The Devourer~ c168 Emilia Translations" [ref=e368]:
+              - cell "Miku ~The Devourer~" [ref=e369]:
+                - link "Miku ~The Devourer~" [ref=e370] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/miku-the-devourer/
+              - cell "c168" [ref=e371]
+              - cell "Emilia Translations" [ref=e372]:
+                - link "Emilia Translations" [ref=e373] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "Miku ~The Devourer~ c167 Emilia Translations" [ref=e374]:
+              - cell "Miku ~The Devourer~" [ref=e375]:
+                - link "Miku ~The Devourer~" [ref=e376] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/miku-the-devourer/
+              - cell "c167" [ref=e377]
+              - cell "Emilia Translations" [ref=e378]:
+                - link "Emilia Translations" [ref=e379] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "We’ll Take In the Unwanted Villainess in... c257 Emilia Translations" [ref=e380]:
+              - cell "We’ll Take In the Unwanted Villainess in..." [ref=e381]:
+                - link "We’ll Take In the Unwanted Villainess in..." [ref=e382] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/well-take-in-the-unwanted-villainess-in-our-country-banishing-talented-young-ladies-is-a-foolish-move-itll-destroy-the-country-right/
+              - cell "c257" [ref=e383]
+              - cell "Emilia Translations" [ref=e384]:
+                - link "Emilia Translations" [ref=e385] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "We’ll Take In the Unwanted Villainess in... c256 Emilia Translations" [ref=e386]:
+              - cell "We’ll Take In the Unwanted Villainess in..." [ref=e387]:
+                - link "We’ll Take In the Unwanted Villainess in..." [ref=e388] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/well-take-in-the-unwanted-villainess-in-our-country-banishing-talented-young-ladies-is-a-foolish-move-itll-destroy-the-country-right/
+              - cell "c256" [ref=e389]
+              - cell "Emilia Translations" [ref=e390]:
+                - link "Emilia Translations" [ref=e391] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "The Wise Man Knows It All! c290 Emilia Translations" [ref=e392]:
+              - cell "The Wise Man Knows It All!" [ref=e393]:
+                - link "The Wise Man Knows It All!" [ref=e394] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-wise-man-knows-it-all/
+              - cell "c290" [ref=e395]
+              - cell "Emilia Translations" [ref=e396]:
+                - link "Emilia Translations" [ref=e397] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "The Wise Man Knows It All! c289 Emilia Translations" [ref=e398]:
+              - cell "The Wise Man Knows It All!" [ref=e399]:
+                - link "The Wise Man Knows It All!" [ref=e400] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/the-wise-man-knows-it-all/
+              - cell "c289" [ref=e401]
+              - cell "Emilia Translations" [ref=e402]:
+                - link "Emilia Translations" [ref=e403] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "It Was So Hard to Bring About an Industrial... c350 Emilia Translations" [ref=e404]:
+              - cell "It Was So Hard to Bring About an Industrial..." [ref=e405]:
+                - link "It Was So Hard to Bring About an Industrial..." [ref=e406] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/it-was-so-hard-to-bring-about-an-industrial-revolution-from-manufacturing-in-another-world/
+              - cell "c350" [ref=e407]
+              - cell "Emilia Translations" [ref=e408]:
+                - link "Emilia Translations" [ref=e409] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "It Was So Hard to Bring About an Industrial... c349 Emilia Translations" [ref=e410]:
+              - cell "It Was So Hard to Bring About an Industrial..." [ref=e411]:
+                - link "It Was So Hard to Bring About an Industrial..." [ref=e412] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/it-was-so-hard-to-bring-about-an-industrial-revolution-from-manufacturing-in-another-world/
+              - cell "c349" [ref=e413]
+              - cell "Emilia Translations" [ref=e414]:
+                - link "Emilia Translations" [ref=e415] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/emilia-translations/
+            - row "I Was Supposed to Be the Villainess, Now... c78 Fenrir Realm" [ref=e416]:
+              - cell "I Was Supposed to Be the Villainess, Now..." [ref=e417]:
+                - link "I Was Supposed to Be the Villainess, Now..." [ref=e418] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/i-was-supposed-to-be-the-villainess-now-youre-telling-me-im-the-female-lead/
+              - cell "c78" [ref=e419]
+              - cell "Fenrir Realm" [ref=e420]:
+                - link "Fenrir Realm" [ref=e421] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/fenrir-realm/
+            - 'row "Character Absorption: Earth-Authority Level Hunter c26 ReadRift" [ref=e422]':
+              - 'cell "Character Absorption: Earth-Authority Level Hunter" [ref=e423]':
+                - 'link "Character Absorption: Earth-Authority Level Hunter" [ref=e424] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/character-absorption-earth-authority-level-hunter/
+              - cell "c26" [ref=e425]
+              - cell "ReadRift" [ref=e426]:
+                - link "ReadRift" [ref=e427] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/readrift/
+            - 'row "Character Absorption: Earth-Authority Level Hunter c25 ReadRift" [ref=e428]':
+              - 'cell "Character Absorption: Earth-Authority Level Hunter" [ref=e429]':
+                - 'link "Character Absorption: Earth-Authority Level Hunter" [ref=e430] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/character-absorption-earth-authority-level-hunter/
+              - cell "c25" [ref=e431]
+              - cell "ReadRift" [ref=e432]:
+                - link "ReadRift" [ref=e433] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/readrift/
+            - row "The Neat and Pretty Girl at My New School Is a... c116 Ninja Cross Translation" [ref=e434]:
+              - cell "The Neat and Pretty Girl at My New School Is a..." [ref=e435]:
+                - link "The Neat and Pretty Girl at My New School Is a..." [ref=e436] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/a-neat-and-pretty-girl-at-the-transfer-destination-was-a-childhood-friend-who-used-to-think-that-she-was-a-boy-and-played-with-her/
+              - cell "c116" [ref=e437]
+              - cell "Ninja Cross Translation" [ref=e438]:
+                - link "Ninja Cross Translation" [ref=e439] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/ninja-cross-translation/
+            - row "To Another World with an AI c54 Dreamy Translations" [ref=e440]:
+              - cell "To Another World with an AI" [ref=e441]:
+                - link "To Another World with an AI" [ref=e442] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/to-another-world-with-an-ai/
+              - cell "c54" [ref=e443]
+              - cell "Dreamy Translations" [ref=e444]:
+                - link "Dreamy Translations" [ref=e445] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/dreamy-translations/
+            - row "My Secret-Filled Wife is Actually One of the... v3c22 SHMTrans" [ref=e446]:
+              - cell "My Secret-Filled Wife is Actually One of the..." [ref=e447]:
+                - link "My Secret-Filled Wife is Actually One of the..." [ref=e448] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/my-secret-filled-wife-is-actually-one-of-the-continents-strongest-dragon-slayer/
+              - cell "v3c22" [ref=e449]
+              - cell "SHMTrans" [ref=e450]:
+                - link "SHMTrans" [ref=e451] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/shmtrans/
+            - row "Someone in My Heart c210 Chrysanthemum Garden" [ref=e452]:
+              - cell "Someone in My Heart" [ref=e453]:
+                - link "Someone in My Heart" [ref=e454] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/someone-in-my-heart/
+              - cell "c210" [ref=e455]
+              - cell "Chrysanthemum Garden" [ref=e456]:
+                - link "Chrysanthemum Garden" [ref=e457] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/chrysanthemum-garden/
+            - row "Transmigrated Into a Farming Family as a... c166 Bcat00" [ref=e458]:
+              - cell "Transmigrated Into a Farming Family as a..." [ref=e459]:
+                - link "Transmigrated Into a Farming Family as a..." [ref=e460] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/transmigrated-into-a-farming-family-as-a-stepsister-my-big-shot-older-brothers-dote-on-me-a-bit/
+              - cell "c166" [ref=e461]
+              - cell "Bcat00" [ref=e462]:
+                - link "Bcat00" [ref=e463] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "After Retiring From the Entertainment Industry,... c166 Bcat00" [ref=e464]:
+              - cell "After Retiring From the Entertainment Industry,..." [ref=e465]:
+                - link "After Retiring From the Entertainment Industry,..." [ref=e466] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/after-retiring-from-the-entertainment-industry-the-big-shot-became-famous-all-over-the-world/
+              - cell "c166" [ref=e467]
+              - cell "Bcat00" [ref=e468]:
+                - link "Bcat00" [ref=e469] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - 'row "Universal Chat Group: The Real Heiress Makes... c169 Bcat00" [ref=e470]':
+              - 'cell "Universal Chat Group: The Real Heiress Makes..." [ref=e471]':
+                - 'link "Universal Chat Group: The Real Heiress Makes..." [ref=e472] [cursor=pointer]':
+                  - /url: https://www.novelupdates.com/series/universal-chat-group-the-real-heiress-makes-billions-and-becomes-a-sensation/
+              - cell "c169" [ref=e473]
+              - cell "Bcat00" [ref=e474]:
+                - link "Bcat00" [ref=e475] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "After Giving Birth, the Entire Mansion Was Buried... c163 Bcat00" [ref=e476]:
+              - cell "After Giving Birth, the Entire Mansion Was Buried..." [ref=e477]:
+                - link "After Giving Birth, the Entire Mansion Was Buried..." [ref=e478] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/after-giving-birth-the-entire-mansion-was-buried-with-me/
+              - cell "c163" [ref=e479]
+              - cell "Bcat00" [ref=e480]:
+                - link "Bcat00" [ref=e481] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "I Woke Up and Became a Max-Level Big Shot c171 Bcat00" [ref=e482]:
+              - cell "I Woke Up and Became a Max-Level Big Shot" [ref=e483]:
+                - link "I Woke Up and Became a Max-Level Big Shot" [ref=e484] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/i-woke-up-and-became-a-max-level-big-shot/
+              - cell "c171" [ref=e485]
+              - cell "Bcat00" [ref=e486]:
+                - link "Bcat00" [ref=e487] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "Going on a Rampage Starting with Empresses in the... c175 Bcat00" [ref=e488]:
+              - cell "Going on a Rampage Starting with Empresses in the..." [ref=e489]:
+                - link "Going on a Rampage Starting with Empresses in the..." [ref=e490] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/going-on-a-rampage-starting-with-empresses-in-the-palace/
+              - cell "c175" [ref=e491]
+              - cell "Bcat00" [ref=e492]:
+                - link "Bcat00" [ref=e493] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "After Sharing Dreams With Her, the Buddha’s... c191 Bcat00" [ref=e494]:
+              - cell "After Sharing Dreams With Her, the Buddha’s..." [ref=e495]:
+                - link "After Sharing Dreams With Her, the Buddha’s..." [ref=e496] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/after-sharing-dreams-with-her-the-buddhas-chosen-developed-mortal-desires/
+              - cell "c191" [ref=e497]
+              - cell "Bcat00" [ref=e498]:
+                - link "Bcat00" [ref=e499] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/bcat00/
+            - row "Global Dungeons? I’m the Final BOSS! c67 iNoveltranslation" [ref=e500]:
+              - cell "Global Dungeons? I’m the Final BOSS!" [ref=e501]:
+                - link "Global Dungeons? I’m the Final BOSS!" [ref=e502] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/global-dungeons-im-the-final-boss/
+              - cell "c67" [ref=e503]
+              - cell "iNoveltranslation" [ref=e504]:
+                - link "iNoveltranslation" [ref=e505] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/inoveltranslation/
+            - row "Do You Understand The Value Of A Boy... c129 Ckanda Writes" [ref=e506]:
+              - cell "Do You Understand The Value Of A Boy..." [ref=e507]:
+                - link "Do You Understand The Value Of A Boy..." [ref=e508] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/do-you-understand-the-value-of-a-boy-groups-ace/
+              - cell "c129" [ref=e509]
+              - cell "Ckanda Writes" [ref=e510]:
+                - link "Ckanda Writes" [ref=e511] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/ckanda-writes/
+            - row "Game of the World Tree c763 Nihilaine TL" [ref=e512]:
+              - cell "Game of the World Tree" [ref=e513]:
+                - link "Game of the World Tree" [ref=e514] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/game-of-the-world-tree/
+              - cell "c763" [ref=e515]
+              - cell "Nihilaine TL" [ref=e516]:
+                - link "Nihilaine TL" [ref=e517] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/nihilaine-tl/
+            - row "After Rebirth, I Was Forced to Become the Mafia... c597 akkNovel" [ref=e518]:
+              - cell "After Rebirth, I Was Forced to Become the Mafia..." [ref=e519]:
+                - link "After Rebirth, I Was Forced to Become the Mafia..." [ref=e520] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/series/after-rebirth-i-was-forced-to-become-the-mafia-princess/
+              - cell "c597" [ref=e521]
+              - cell "akkNovel" [ref=e522]:
+                - link "akkNovel" [ref=e523] [cursor=pointer]:
+                  - /url: https://www.novelupdates.com/group/akknovel/
+        - generic [ref=e524]:
+          - emphasis [ref=e525]: "1"
+          - link "2" [ref=e526] [cursor=pointer]:
+            - /url: ./?pg=2
+          - link "3" [ref=e527] [cursor=pointer]:
+            - /url: ./?pg=3
+          - generic [ref=e528] [cursor=pointer]: …
+          - link "1000" [ref=e529] [cursor=pointer]:
+            - /url: ./?pg=1000
+          - link "→" [ref=e530] [cursor=pointer]:
+            - /url: ./?pg=2
+      - generic [ref=e531]:
+        - generic [ref=e532]:
+          - heading "Novel Updates" [level=3] [ref=e533]
+          - list [ref=e535]:
+            - listitem [ref=e536]:
+              - link "Forum" [ref=e537] [cursor=pointer]:
+                - /url: https://www.novelupdatesforum.com/
+            - listitem [ref=e538]:
+              - link "Random Novel" [ref=e539] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/random-novel/
+            - listitem [ref=e540]:
+              - link "Series Finder" [ref=e541] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-finder/
+            - listitem [ref=e542]:
+              - link "Series Listing" [ref=e543] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/novelslisting/
+            - listitem [ref=e544]:
+              - link "Series Ranking" [ref=e545] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-ranking/
+            - listitem [ref=e546]:
+              - link "Latest Series" [ref=e547] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/latest-series/
+            - listitem [ref=e548]:
+              - link "Rec Lists" [ref=e549] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/recommendation-lists/
+        - generic [ref=e551]: Advertisements
+        - generic [ref=e554]:
+          - heading "User Tools" [level=3] [ref=e555]
+          - list [ref=e557]:
+            - listitem [ref=e558]:
+              - link "Reading List" [ref=e559] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/reading-list/
+            - listitem [ref=e560]:
+              - link "Release Filtering" [ref=e561] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/release-filtering/
+            - listitem [ref=e562]:
+              - link "Series Filtering" [ref=e563] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series-filtering/
+        - generic [ref=e565]: Advertisements
+        - heading "Latest Series" [level=3] [ref=e568]
+        - list [ref=e569]:
+          - generic [ref=e570]:
+            - listitem [ref=e571]:
+              - link "Cut the Nonsense—The Villain Goes All-Out" [ref=e574] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/cut-the-nonsense-the-villain-goes-all-out/
+            - listitem [ref=e575]:
+              - link "An “Evil Female” Who Can Read Minds? Five Beast Husbands Beg for My Favor" [ref=e578] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/an-evil-female-who-can-read-minds-five-beast-husbands-beg-for-my-favor/
+            - listitem [ref=e579]:
+              - link "The Duke’s Little Darling Wife" [ref=e582] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/the-dukes-little-darling-wife/
+            - listitem [ref=e583]:
+              - 'link "Slow Transmigration Across the Multiverse: A Lone Mage in Apocalypse Worlds" [ref=e586] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/slow-transmigration-across-the-multiverse-a-lone-mage-in-apocalypse-worlds/
+            - listitem [ref=e587]:
+              - link "I Can Even Get Recommended to a Monster Vocational Academy?" [ref=e590] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/i-can-even-get-recommended-to-a-monster-vocational-academy/
+            - listitem [ref=e591]:
+              - link "Spirit-Taming Cultivation—But How Are You Controlling an Aircraft Carrier?!" [ref=e594] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/spirit-taming-cultivation-but-how-are-you-controlling-an-aircraft-carrier/
+            - listitem [ref=e595]:
+              - 'link "Entertainment 1999: My Younger Sister Is a Fairy" [ref=e598] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/entertainment-1999-my-younger-sister-is-a-fairy/
+            - listitem [ref=e599]:
+              - link "Just About to Take the College Entrance Exam, and a Divorce Comeback System Arrives" [ref=e602] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/just-about-to-take-the-college-entrance-exam-and-a-divorce-comeback-system-arrives/
+            - listitem [ref=e603]:
+              - link "After the Player Was Reborn" [ref=e606] [cursor=pointer]:
+                - /url: https://www.novelupdates.com/series/after-the-player-was-reborn/
+            - listitem [ref=e607]:
+              - 'link "Mysterious Revival: Weighing the Living World Starting from S-Class" [ref=e610] [cursor=pointer]':
+                - /url: https://www.novelupdates.com/series/mysterious-revival-weighing-the-living-world-starting-from-s-class/
+  - generic [ref=e614]:
+    - text: "|"
+    - link "Privacy Policy" [ref=e615] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/privacy-policy/
+    - text: "|"
+    - link "Terms of Service" [ref=e616] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/terms-of-service/
+    - text: "|"
+    - link "Contact Us" [ref=e617] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/contact-us/
+  - link "" [ref=e618] [cursor=pointer]:
+    - /url: "#"
+    - generic [ref=e619]: 

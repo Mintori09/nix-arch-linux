@@ -19,5 +19,7 @@
     ./neovim.nix
     ./mpv.nix
     ./kitty.nix
+    ./pinta.nix
+    ./hoppscotch.nix
   ];
 }

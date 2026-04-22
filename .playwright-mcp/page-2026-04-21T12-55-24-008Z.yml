@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - link "Novel Updates" [ref=e7] [cursor=pointer]:
+        - /url: https://www.novelupdates.com/
+        - generic [ref=e8]: Novel Updates
+      - generic:
+        - link "Register" [ref=e10] [cursor=pointer]:
+          - /url: /register-nu/
+        - link "Login" [ref=e12] [cursor=pointer]:
+          - /url: /login/
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: 
+          - generic [ref=e15]: 
+        - generic "Guest Menu"
+        - generic "Search" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: 
+        - text:   
+      - text:         
+    - generic [ref=e22]:
+      - generic [ref=e23]: 
+      - heading "Error 404 - page not found" [level=1] [ref=e24]
+      - paragraph [ref=e25]: Ohh... You have requested the page that is no longer there.
+      - paragraph
+  - generic [ref=e29]:
+    - text: "|"
+    - link "Privacy Policy" [ref=e30] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/privacy-policy/
+    - text: "|"
+    - link "Terms of Service" [ref=e31] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/terms-of-service/
+    - text: "|"
+    - link "Contact Us" [ref=e32] [cursor=pointer]:
+      - /url: https://www.novelupdates.com/contact-us/
+  - link "" [ref=e33] [cursor=pointer]:
+    - /url: "#"
+    - generic [ref=e34]: 
