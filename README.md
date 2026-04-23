@@ -8,6 +8,14 @@ A declarative configuration for Arch Linux using Nix Flakes and Home Manager.
 - **Shell Configuration**: Zsh configuration with Powerlevel10k theme (`p10k.zsh`).
 - **Custom Scripts**: A collection of utility scripts for file conversion, formatting, and system tasks.
 
+## Refactor Safety
+
+Before structural cleanup, use the docs in `docs/refactor/`:
+
+- `module-map.md` for module ownership
+- `parity-checklist.md` for behavior-preserving validation
+- `dead-code-candidates.md` for evidence-backed deletions
+
 ## Scripts
 
 Located in `scripts/execute/`:

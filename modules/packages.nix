@@ -43,7 +43,6 @@
     lazydocker
     spicetify-cli
     brotab
-    glow
     navi
     lazyjournal
     lazysql
@@ -52,7 +51,6 @@
     # Formatters & linters
     gofumpt
     hadolint
-    kdlfmt
     kdlfmt
     ruff
     shellcheck

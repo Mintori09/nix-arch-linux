@@ -1,7 +1,7 @@
 { pkgs, config, ... }:
 
 let
-  secretPath = "${config.home.homeDirectory}/.config/home-manager/modules/secrets.json";
+  secretPath = "${config.home.homeDirectory}/.config/home-manager/secrets.json";
 in
 {
   programs.bash = {

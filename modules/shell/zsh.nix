@@ -1,4 +1,7 @@
 { pkgs, lib, ... }:
+let
+  c = import ./_constants.nix;
+in
 
 {
   programs.zsh = {
@@ -79,7 +82,7 @@
         export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
         export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#838ba7'
         export KEYTIMEOUT=1
-        export FZF_COMPLETION_TRIGGER='**'
+        export FZF_COMPLETION_TRIGGER='${c.fzfCompletionTrigger}'
 
         # History
         setopt appendhistory sharehistory
@@ -102,8 +105,8 @@
         function zvm_after_init() {
           zsh-vi-yank-to-clipboard() {
             zvm_yank
-            if command -v wl-copy > /dev/null; then
-              printf "%s" "$CUTBUFFER" | wl-copy
+            if command -v ${c.clipCopy} > /dev/null; then
+              printf "%s" "$CUTBUFFER" | ${c.clipCopy}
             fi
           }
 

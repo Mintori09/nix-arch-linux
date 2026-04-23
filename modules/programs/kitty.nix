@@ -1,19 +1,17 @@
 {
-  config,
   pkgs,
-  lib,
   ...
 }:
+let
+  wrapped = import ./_nixgl-wrappers.nix { inherit pkgs; };
+in
 {
   programs.kitty = {
     enable = true;
-    package = pkgs.writeShellScriptBin "kitty" ''
-      exec env \
-        FREETYPE_PROPERTIES="autofitter:no-stem-darkening=1 cff:no-stem-darkening=1" \
-        nixGL \
-        ${pkgs.kitty}/bin/kitty \
-        "$@"
-    '';
+    package = wrapped.mkWrappedBinary {
+      name = "kitty";
+      package = pkgs.kitty;
+    };
 
     settings = {
       # Font

@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "cv" ''
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/convert-file.ts}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "cv";
+    runtime = "${pkgs.bun}/bin/bun";
+    entry = "${../../scripts/execute/convert-file.ts}";
+  };
 }

@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "cpath" ''
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/copy-files.ts}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "cpath";
+    runtime = "${pkgs.bun}/bin/bun";
+    entry = "${../../scripts/execute/copy-files.ts}";
+  };
 }

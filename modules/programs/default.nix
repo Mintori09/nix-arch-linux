@@ -17,9 +17,11 @@
     ./opencode
     ./yt-dlp.nix
     ./neovim.nix
-    ./mpv.nix
     ./kitty.nix
     ./pinta.nix
-    ./hoppscotch.nix
+    ./alacritty.nix
+    ./qutebrowser.nix
+    ./packages.nix
+    ./zed
   ];
 }

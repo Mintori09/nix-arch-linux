@@ -4,8 +4,10 @@ import { file, write, argv, spawn } from "bun";
 import { parse, stringify } from "yaml";
 import { availableParallelism } from "os";
 import { extname } from "path";
+import { pathToFileURL } from "url";
 
 const EXIT_FAILURE = 1;
+export const PRETTIER_ENTRYPOINT_ENV = "FORMAT_PRETTIER_ENTRYPOINT";
 export const CODE_BLOCK_DELIMITER = /(^`{3,}[\s\S]*?^`{3,})/gm;
 export const MARKDOWN_SPECIAL_STRUCTURE =
   /^(#|>|\||\d+\.|\s*(?!--|-{2,})[\*\-+]\s+)/;
@@ -229,7 +231,7 @@ async function main(): Promise<void> {
             ? handler.preprocess(content)
             : content;
 
-          const prettier = await import("prettier");
+          const prettier = await import(resolvePrettierModuleSpecifier());
           const formatted = await prettier.format(processed, {
             parser: handler.parser,
             plugins: handler.plugins,
@@ -422,6 +424,13 @@ export function shouldAddSpacing(
 
 export function isCodeBlock(segment: string): boolean {
   return /^`{3,}/.test(segment);
+}
+
+export function resolvePrettierModuleSpecifier(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const entrypoint = env[PRETTIER_ENTRYPOINT_ENV];
+  return entrypoint ? pathToFileURL(entrypoint).href : "prettier";
 }
 
 if (import.meta.main) {

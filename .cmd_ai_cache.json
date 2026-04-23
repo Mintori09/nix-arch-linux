@@ -134,5 +134,13 @@
   {
     "prompt": "use yt-dlp get all video of one tiktok channel",
     "command": "yt-dlp \"https://www.tiktok.com/@USERNAME\" --playlist-end infinite"
+  },
+  {
+    "prompt": "remove first line of all file markdowns in current directory ",
+    "command": "for f in *.md; do [ -f \"$f\" ] && sed -i '1d' \"$f\"; done"
+  },
+  {
+    "prompt": "convert first line in all markdown files in current folder to heading 1",
+    "command": "for f in *.md; do sed -i '1{ s/^#* *//; s/^/# /; }' \"$f\"; done"
   }
 ]
