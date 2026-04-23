@@ -10,6 +10,11 @@
     };
 
     nixgl.url = "github:nix-community/nixGL";
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -17,6 +22,7 @@
       nixpkgs,
       home-manager,
       nixgl,
+      spicetify-nix,
       ...
     }:
     let
@@ -27,13 +33,19 @@
 
         config.allowUnfree = true;
       };
+      spicePkgs = spicetify-nix.legacyPackages.${system};
     in
     {
       homeConfigurations."mintori" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [ ./home.nix ];
+        modules = [
+          ./home.nix
+          spicetify-nix.homeManagerModules.spicetify
+        ];
 
-        extraSpecialArgs = { inherit nixgl; };
+        extraSpecialArgs = {
+          inherit nixgl spicetify-nix spicePkgs;
+        };
       };
     };
 }

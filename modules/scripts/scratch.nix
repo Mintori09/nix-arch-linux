@@ -1,17 +1,17 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "temp" ''
-    export PATH="${
-      pkgs.lib.makeBinPath [
-        pkgs.bash
-        pkgs.magika
-        pkgs.jq
-        pkgs.coreutils
-      ]
-    }:$PATH"
-    exec ${pkgs.bash}/bin/bash "${../../scripts/execute/scratch.sh}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "temp";
+    runtime = "${pkgs.bash}/bin/bash";
+    entry = "${../../scripts/execute/scratch.sh}";
+    extraPathPackages = [
+      pkgs.bash
+      pkgs.magika
+      pkgs.jq
+      pkgs.coreutils
+    ];
+  };
 }

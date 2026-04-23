@@ -1,0 +1,40 @@
+{
+  disabled = [
+    "amazon-bedrock"
+    "anthropic"
+    "azure-openai"
+    "azure-cognitive-services"
+    "baseten"
+    "cerebras"
+    "cloudflare-ai-gateway"
+    "cortecs"
+    "deepseek"
+    "deep-infra"
+    "github-copilot"
+    "groq"
+    "hugging-face"
+    "helicone"
+    "llama.cpp"
+    "io-net"
+    "lmstudio"
+    "moonshot-ai"
+    "nebius-token-factory"
+    "ollama"
+    "ollama-cloud"
+    "openai"
+    "sap-ai-core"
+    "ovhcloud-ai-endpoints"
+    "together-ai"
+    "venice-ai"
+    "xai"
+    "zai"
+    "zenmux"
+    "google"
+  ];
+
+  enabled = [
+    "openrouter"
+    "opencode"
+    "nano-gpt"
+  ];
+}

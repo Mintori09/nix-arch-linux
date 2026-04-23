@@ -2,6 +2,8 @@
 let
   languages = import ./_languages.nix { inherit pkgs; };
   skills = import ./_skills.nix { inherit pkgs; };
+  providers = import ./_providers.nix;
+  mcp = import ./_mcp.nix;
 
   inherit (pkgs) opencode;
 
@@ -60,63 +62,9 @@ in
       # plugin = [""];
       autoupdate = false;
       share = "disabled";
-      disabled_providers = [
-        "amazon-bedrock"
-        "anthropic"
-        "azure-openai"
-        "azure-cognitive-services"
-        "baseten"
-        "cerebras"
-        "cloudflare-ai-gateway"
-        "cortecs"
-        "deepseek"
-        "deep-infra"
-        "github-copilot"
-        "groq"
-        "hugging-face"
-        "helicone"
-        "llama.cpp"
-        "io-net"
-        "lmstudio"
-        "moonshot-ai"
-        "nebius-token-factory"
-        "ollama"
-        "ollama-cloud"
-        "openai"
-        "sap-ai-core"
-        "ovhcloud-ai-endpoints"
-        "together-ai"
-        "venice-ai"
-        "xai"
-        "zai"
-        "zenmux"
-        "google"
-      ];
-      enabled_providers = [
-        "openrouter"
-        "opencode"
-        "nano-gpt"
-      ];
-      mcp = {
-        gh_grep = {
-          type = "remote";
-          url = "https://mcp.grep.app/";
-          enabled = true;
-          timeout = 10000;
-        };
-        deepwiki = {
-          type = "remote";
-          url = "https://mcp.deepwiki.com/mcp";
-          enabled = true;
-          timeout = 10000;
-        };
-        context7 = {
-          type = "remote";
-          url = "https://mcp.context7.com/mcp";
-          enabled = true;
-          timeout = 10000;
-        };
-      };
+      disabled_providers = providers.disabled;
+      enabled_providers = providers.enabled;
+      mcp = mcp;
       inherit (languages) formatter lsp;
     };
     "opencode/skill".source = skills.skillsSource + "/skill";

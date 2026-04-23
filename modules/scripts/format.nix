@@ -1,6 +1,7 @@
 { pkgs, ... }:
 let
   inherit (pkgs) lib;
+  helpers = import ./_helpers.nix { inherit pkgs; };
 
   fmtron = pkgs.rustPlatform.buildRustPackage {
     pname = "fmtron";
@@ -31,6 +32,7 @@ let
 
   formatterPackages = [
     pkgs.bun
+    pkgs.prettier
     pkgs.taplo
     fmtron
     pkgs.kdlfmt
@@ -53,11 +55,17 @@ let
   ++ optionalPkg "dockfmt"
   ++ optionalNestedPkg "phpPackages" "php-cs-fixer";
 
-  script = pkgs.writeShellScriptBin "format" ''
-    export PATH="${lib.makeBinPath formatterPackages}:$PATH"
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/format-file.ts}" "$@"
-  '';
 in
 {
-  home.packages = [ script ] ++ formatterPackages;
+  home.packages =
+    helpers.mkScriptPackage {
+      name = "format";
+      runtime = "${pkgs.bun}/bin/bun";
+      entry = "${../../scripts/execute/format-file.ts}";
+      extraPathPackages = formatterPackages;
+      extraEnv = ''
+        export FORMAT_PRETTIER_ENTRYPOINT="${pkgs.prettier}/lib/node_modules/prettier/index.mjs"
+      '';
+    }
+    ++ formatterPackages;
 }

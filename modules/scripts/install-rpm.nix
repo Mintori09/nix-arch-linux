@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "irpm" ''
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/install-rpm.ts}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "irpm";
+    runtime = "${pkgs.bun}/bin/bun";
+    entry = "${../../scripts/execute/install-rpm.ts}";
+  };
 }

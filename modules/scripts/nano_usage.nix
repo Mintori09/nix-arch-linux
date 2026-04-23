@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "nano-usage" ''
-    exec ${pkgs.bun}/bin/bun run "${../../scripts/execute/nano-usage.ts}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "nano-usage";
+    runtime = "${pkgs.bun}/bin/bun";
+    entry = "${../../scripts/execute/nano-usage.ts}";
+  };
 }

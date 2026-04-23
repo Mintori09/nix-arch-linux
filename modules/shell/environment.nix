@@ -1,4 +1,7 @@
 { ... }:
+let
+  c = import ./_constants.nix;
+in
 {
   home.sessionVariables = {
     LANG = "en_GB.UTF-8";
@@ -8,11 +11,11 @@
     VISUAL = "zeditor";
     TERMINAL = "kitty";
     BROWSER = "zen-browser";
-    CLIPCOPY = "wl-copy";
-    CLIPPASTE = "wl-paste";
+    CLIPCOPY = c.clipCopy;
+    CLIPPASTE = c.clipPaste;
     JAVA_HOME = "/usr/lib/jvm/java-25-openjdk";
     ANDROID_HOME = "$HOME/Android/Sdk";
-    PNPM_HOME = "$HOME/.local/share/pnpm";
+    PNPM_HOME = c.pnpmHome;
     OLLAMA_HOST = "127.0.0.1";
     GTK_USE_PORTAL = "1";
     ZVM_SYSTEM_CLIPBOARD_ENABLED = "1";
@@ -23,24 +26,22 @@
     QT_QPA_PLATFORM = "wayland";
     QT_QPA_PLATFORMTHEME = "qt6ct";
     FZF_TMUX_OPTS = "-p 90%";
-    FZF_COMPLETION_TRIGGER = "*";
+    FZF_COMPLETION_TRIGGER = c.fzfCompletionTrigger;
     FZF_COMPLETION_DIR_OPTS = "--walker dir,follow";
-    INTELLI_HOME = "$HOME/.local/share/intellishell";
+    INTELLI_HOME = c.intelliHome;
   };
 
   home.sessionPath = [
-    "~/.spicetify"
+    c.spicetifyPath
     "$HOME/.local/bin"
     "$HOME/.local/scripts"
     "$HOME/bin"
     "$HOME/.luarocks/bin"
-    "$HOME/.spicetify"
     "$HOME/.config/composer/vendor/bin"
     "$HOME/.cargo/bin"
     "$HOME/.npm/bin"
     "$HOME/.pnpm/bin"
     "$GOBIN"
-    "$HOME/.pnpm/bin"
     "$HOME/flutter/bin"
     "$HOME/development/flutter/bin"
     "$JAVA_HOME/bin"

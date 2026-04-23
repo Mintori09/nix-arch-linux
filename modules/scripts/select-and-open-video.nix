@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  script = pkgs.writeShellScriptBin "vd" ''
-    exec ${pkgs.bash}/bin/bash "${../../scripts/execute/select-and-open-video.sh}" "$@"
-  '';
+  helpers = import ./_helpers.nix { inherit pkgs; };
 in
 {
-  home.packages = [ script ];
+  home.packages = helpers.mkScriptPackage {
+    name = "vd";
+    runtime = "${pkgs.bash}/bin/bash";
+    entry = "${../../scripts/execute/select-and-open-video.sh}";
+  };
 }

@@ -1,4 +1,7 @@
 { pkgs, ... }:
+let
+  c = import ./_constants.nix;
+in
 
 {
   home.shellAliases = {
@@ -22,9 +25,9 @@
     history = "fc -l 1";
 
     # CLIPBOARD (WAYLAND)
-    copy = "wl-copy -n";
-    pwdc = "pwd | tr -d '\\n' | wl-copy";
-    paste = "wl-paste";
+    copy = "${c.clipCopy} -n";
+    pwdc = "pwd | tr -d '\\n' | ${c.clipCopy}";
+    paste = c.clipPaste;
     gcl = "qdbus org.kde.klipper /klipper org.kde.klipper.klipper.clearClipboardContents";
 
     # SYSTEM CONTROL
