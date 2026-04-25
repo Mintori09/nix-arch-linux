@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	askexec "github.com/mintori/home-manager/tools/ask/internal/exec"
 	"github.com/mintori/home-manager/tools/ask/internal/provider"
 )
 
@@ -21,12 +23,25 @@ func (s stubProvider) GenerateCommand(context.Context, string, provider.Options)
 }
 
 type stubExecutor struct {
+	results  []askexec.Result
 	commands []string
 }
 
 func (s *stubExecutor) Run(_ context.Context, command string) error {
 	s.commands = append(s.commands, command)
 	return nil
+}
+
+func (s *stubExecutor) Execute(_ context.Context, params askexec.Params) (askexec.Result, error) {
+	if params.Stdout != nil {
+		_, _ = fmt.Fprintln(params.Stdout, params.Command)
+	}
+	if len(s.results) > 0 {
+		result := s.results[0]
+		s.results = s.results[1:]
+		return result, nil
+	}
+	return askexec.Result{}, nil
 }
 
 func TestRunGenerateCommandAndSaveHistory(t *testing.T) {
@@ -61,6 +76,80 @@ func TestRunGenerateCommandAndSaveHistory(t *testing.T) {
 	path := filepath.Join(dir, ".local", "state", "ask", "history.json")
 	if _, err := os.Stat(path); err != nil {
 		t.Fatalf("history file missing: %v", err)
+	}
+}
+
+func TestRunSavesEditedCommandToHistory(t *testing.T) {
+	dir := t.TempDir()
+	exec := &stubExecutor{
+		results: []askexec.Result{{
+			FinalCommand: "pwd",
+			Executed:     true,
+		}},
+	}
+
+	err := run(context.Background(), []string{"show cwd"}, Dependencies{
+		NewProvider: func(string) (commandGenerator, error) {
+			return stubProvider{command: "ls -la"}, nil
+		},
+		Executor:    exec,
+		Stdout:      &bytes.Buffer{},
+		Stderr:      &bytes.Buffer{},
+		Stdin:       strings.NewReader(""),
+		Interactive: true,
+		HomeDir:     dir,
+		Env: func(key string) string {
+			if key == "NANOGPT_API_KEY" {
+				return "secret"
+			}
+			return ""
+		},
+	})
+	if err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".local", "state", "ask", "history.json"))
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if !strings.Contains(string(data), "\"pwd\"") || strings.Contains(string(data), "\"ls -la\"") {
+		t.Fatalf("history = %s", string(data))
+	}
+}
+
+func TestRunDoesNotSaveHistoryWhenQuit(t *testing.T) {
+	dir := t.TempDir()
+	exec := &stubExecutor{
+		results: []askexec.Result{{
+			FinalCommand: "ls -la",
+			Executed:     false,
+		}},
+	}
+
+	err := run(context.Background(), []string{"list files"}, Dependencies{
+		NewProvider: func(string) (commandGenerator, error) {
+			return stubProvider{command: "ls -la"}, nil
+		},
+		Executor:    exec,
+		Stdout:      &bytes.Buffer{},
+		Stderr:      &bytes.Buffer{},
+		Stdin:       strings.NewReader(""),
+		Interactive: true,
+		HomeDir:     dir,
+		Env: func(key string) string {
+			if key == "NANOGPT_API_KEY" {
+				return "secret"
+			}
+			return ""
+		},
+	})
+	if err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, ".local", "state", "ask", "history.json")); !os.IsNotExist(err) {
+		t.Fatalf("history file exists, err = %v", err)
 	}
 }
 
