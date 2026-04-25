@@ -58,6 +58,15 @@
     sql-formatter
     stylua
     taplo
+    nodejs_22
+    pnpm
+    yarn
+    node-gyp
+
+    python3
+    gcc
+    gnumake
+    pkg-config
 
     # Program
     slack

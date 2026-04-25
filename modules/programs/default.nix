@@ -9,6 +9,7 @@
     ./television.nix
     ./yazi.nix
     ./zoxide.nix
+    ./java.nix
     ./direnv.nix
     ./fastfetch.nix
     ./git.nix
@@ -23,5 +24,6 @@
     ./qutebrowser.nix
     ./packages.nix
     ./zed
+    ./obs.nix
   ];
 }

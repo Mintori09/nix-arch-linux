@@ -83,6 +83,7 @@ in
     };
     keybindings = {
       "ctrl+v" = "paste_from_clipboard";
+      "ctrl+f3" = "next_tab";
     };
     extraConfig = ''
       text_composition_strategy 2.0 0
