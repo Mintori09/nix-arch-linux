@@ -129,11 +129,8 @@ const COLORS = {
   reset: "\x1b[0m",
 };
 
-interface FormatResult {
-  status: "updated" | "unchanged" | "skipped" | "error";
-  elapsed: string;
-  error?: unknown;
-}
+const SPINNER_FRAMES = ["-", "\\", "|", "/"];
+const SPINNER_INTERVAL_MS = 80;
 
 const stats = {
   updated: 0,
@@ -152,6 +149,69 @@ async function withLock<T>(fn: () => Promise<T>): Promise<T> {
   } finally {
     outputLock.locked = false;
   }
+}
+
+export function formatElapsedDuration(elapsedMs: number): string {
+  if (elapsedMs < 1000) {
+    return `${elapsedMs.toFixed(1)}ms`;
+  }
+
+  return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
+
+export function buildSpinnerLabel(
+  activeFiles: string[],
+  completedFiles: number,
+  totalFiles: number,
+): string {
+  const currentCount =
+    activeFiles.length > 0
+      ? Math.min(totalFiles, completedFiles + 1)
+      : completedFiles;
+
+  if (activeFiles.length === 0) {
+    return `${currentCount}/${totalFiles} formatting`;
+  }
+
+  const visibleFiles = activeFiles.slice(0, 2);
+  const hiddenCount = activeFiles.length - visibleFiles.length;
+  const fileSummary =
+    hiddenCount > 0
+      ? `${visibleFiles.join(", ")} +${hiddenCount}`
+      : visibleFiles.join(", ");
+
+  return `${currentCount}/${totalFiles} formatting: ${fileSummary}`;
+}
+
+export function renderSpinnerFrame(
+  frameIndex: number,
+  activeFiles: string[],
+  completedFiles: number,
+  totalFiles: number,
+): string {
+  const frame = SPINNER_FRAMES[frameIndex % SPINNER_FRAMES.length];
+  const label = buildSpinnerLabel(activeFiles, completedFiles, totalFiles);
+
+  return `\r\x1b[2K${COLORS.gray}${frame}${COLORS.reset} ${label}`;
+}
+
+export function renderResultLine(
+  status: "Updated" | "Unchanged" | "Skipped" | "Error",
+  elapsed: string,
+  filePath: string,
+  detail?: string,
+): string {
+  const color =
+    status === "Updated"
+      ? COLORS.green
+      : status === "Unchanged"
+        ? COLORS.cyan
+        : status === "Skipped"
+          ? COLORS.yellow
+          : COLORS.red;
+  const suffix = detail ? ` (${detail})` : "";
+
+  return `${color}${status}${COLORS.reset} (${elapsed}): ${filePath}${suffix}`;
 }
 
 async function main(): Promise<void> {
@@ -178,34 +238,73 @@ async function main(): Promise<void> {
   const overallStart = performance.now();
   const maxConcurrency = Math.min(availableParallelism(), targetFiles.length);
   const totalFiles = targetFiles.length;
+  const activeFiles = new Set<string>();
+  const spinnerEnabled = process.stdout.isTTY;
+  let spinnerFrameIndex = 0;
+  let spinnerTimer: ReturnType<typeof setInterval> | undefined;
 
-  let completedCount = 0;
+  let nextFileIndex = 0;
+  let completedFiles = 0;
+
+  function renderSpinner(): void {
+    if (!spinnerEnabled || activeFiles.size === 0) {
+      return;
+    }
+
+    process.stdout.write(
+      renderSpinnerFrame(
+        spinnerFrameIndex,
+        Array.from(activeFiles),
+        completedFiles,
+        totalFiles,
+      ),
+    );
+    spinnerFrameIndex += 1;
+  }
+
+  function clearSpinnerLine(): void {
+    if (!spinnerEnabled) {
+      return;
+    }
+
+    process.stdout.write("\r\x1b[2K");
+  }
+
+  async function logResult(message: string): Promise<void> {
+    await withLock(async () => {
+      clearSpinnerLine();
+      process.stdout.write(`${message}\n`);
+      renderSpinner();
+    });
+  }
+
+  if (spinnerEnabled) {
+    spinnerTimer = setInterval(() => {
+      void withLock(async () => {
+        renderSpinner();
+      });
+    }, SPINNER_INTERVAL_MS);
+  }
 
   async function worker(): Promise<void> {
     let idx: number;
-    while ((idx = completedCount++) < totalFiles) {
+    while ((idx = nextFileIndex++) < totalFiles) {
       const filePath = targetFiles[idx];
-
-      const startTime = performance.now();
-      const startFormatted = new Date().toLocaleTimeString();
-
+      activeFiles.add(filePath);
       await withLock(async () => {
-        process.stdout.write(
-          `${COLORS.gray}[${startFormatted}]${COLORS.reset} ${COLORS.bold}START${COLORS.reset}: ${filePath}\n`,
-        );
+        renderSpinner();
       });
 
+      const startTime = performance.now();
       const handle = file(filePath);
       const exists = await handle.exists();
 
       if (!exists) {
-        const elapsed = (performance.now() - startTime).toFixed(1);
-        await withLock(async () => {
-          stats.skipped++;
-          process.stdout.write(
-            `${COLORS.yellow}Skipped${COLORS.reset} (${elapsed}ms): ${filePath} (not found)\n`,
-          );
-        });
+        const elapsed = formatElapsedDuration(performance.now() - startTime);
+        activeFiles.delete(filePath);
+        stats.skipped++;
+        completedFiles++;
+        await logResult(renderResultLine("Skipped", elapsed, filePath, "not found"));
         continue;
       }
 
@@ -214,13 +313,13 @@ async function main(): Promise<void> {
       const externalCmd = FORMATTER_COMMANDS[ext];
 
       if (!handler && !externalCmd) {
-        const elapsed = (performance.now() - startTime).toFixed(1);
-        await withLock(async () => {
-          stats.skipped++;
-          process.stdout.write(
-            `${COLORS.yellow}Skipped${COLORS.reset} (${elapsed}ms): ${filePath} (no handler)\n`,
-          );
-        });
+        const elapsed = formatElapsedDuration(performance.now() - startTime);
+        activeFiles.delete(filePath);
+        stats.skipped++;
+        completedFiles++;
+        await logResult(
+          renderResultLine("Skipped", elapsed, filePath, "no handler"),
+        );
         continue;
       }
 
@@ -238,32 +337,28 @@ async function main(): Promise<void> {
             proseWrap: "never",
           });
 
-          const elapsed = (performance.now() - startTime).toFixed(1);
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          completedFiles++;
 
           if (formatted !== content) {
             await write(filePath, formatted);
-            await withLock(async () => {
-              stats.updated++;
-              process.stdout.write(
-                `${COLORS.green}Updated${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-              );
-            });
+            stats.updated++;
+            await logResult(renderResultLine("Updated", elapsed, filePath));
           } else {
-            await withLock(async () => {
-              stats.unchanged++;
-              process.stdout.write(
-                `${COLORS.cyan}Unchanged${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-              );
-            });
+            stats.unchanged++;
+            await logResult(renderResultLine("Unchanged", elapsed, filePath));
           }
         } catch (error) {
-          const elapsed = (performance.now() - startTime).toFixed(1);
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          stats.errors++;
+          completedFiles++;
           await withLock(async () => {
-            stats.errors++;
+            clearSpinnerLine();
             console.error(error);
-            process.stdout.write(
-              `${COLORS.red}Error${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-            );
+            process.stdout.write(`${renderResultLine("Error", elapsed, filePath)}\n`);
+            renderSpinner();
           });
         }
       } else if (externalCmd) {
@@ -271,33 +366,32 @@ async function main(): Promise<void> {
           const originalContent = await file(filePath).text();
           const proc = spawn(externalCmd(filePath));
           const exitCode = await proc.exited;
+          void exitCode;
 
           const finalContent = await file(filePath).text();
-          const elapsed = (performance.now() - startTime).toFixed(1);
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          completedFiles++;
 
           const status =
             finalContent === originalContent ? "unchanged" : "updated";
-          await withLock(async () => {
-            if (status === "updated") {
-              stats.updated++;
-              process.stdout.write(
-                `${COLORS.green}Updated${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-              );
-            } else {
-              stats.unchanged++;
-              process.stdout.write(
-                `${COLORS.cyan}Unchanged${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-              );
-            }
-          });
+          if (status === "updated") {
+            stats.updated++;
+            await logResult(renderResultLine("Updated", elapsed, filePath));
+          } else {
+            stats.unchanged++;
+            await logResult(renderResultLine("Unchanged", elapsed, filePath));
+          }
         } catch (error) {
-          const elapsed = (performance.now() - startTime).toFixed(1);
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          stats.errors++;
+          completedFiles++;
           await withLock(async () => {
-            stats.errors++;
+            clearSpinnerLine();
             console.error(error);
-            process.stdout.write(
-              `${COLORS.red}Error${COLORS.reset} (${elapsed}ms): ${filePath}\n`,
-            );
+            process.stdout.write(`${renderResultLine("Error", elapsed, filePath)}\n`);
+            renderSpinner();
           });
         }
       }
@@ -311,9 +405,17 @@ async function main(): Promise<void> {
 
   await Promise.all(tasks);
 
-  const totalElapsed = (performance.now() - overallStart).toFixed(1);
+  if (spinnerTimer) {
+    clearInterval(spinnerTimer);
+  }
+
+  await withLock(async () => {
+    clearSpinnerLine();
+  });
+
+  const totalElapsed = formatElapsedDuration(performance.now() - overallStart);
   process.stdout.write(
-    `\n${COLORS.bold}Summary${COLORS.reset} (total: ${totalElapsed}ms):\n`,
+    `\n${COLORS.bold}Summary${COLORS.reset} (total: ${totalElapsed}):\n`,
   );
   process.stdout.write(
     `  ${COLORS.green}${stats.updated} updated${COLORS.reset}\n`,
