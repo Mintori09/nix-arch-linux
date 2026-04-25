@@ -20,11 +20,12 @@ type commandGenerator = provider.Generator
 
 type Dependencies struct {
 	NewProvider func(string) (commandGenerator, error)
-	Executor    askexec.Runner
+	Executor    askexec.Executor
 	Stdout      io.Writer
 	Stderr      io.Writer
 	Stdin       io.Reader
 	Interactive bool
+	IsTTYOutput bool
 	HomeDir     string
 	Env         func(string) string
 }
@@ -39,15 +40,12 @@ func main() {
 				return nil, fmt.Errorf("unsupported provider %q", name)
 			}
 		},
-		Executor: askexec.ShellRunner{
-			Shell:  firstNonEmpty(os.Getenv("SHELL"), "/bin/sh"),
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-		},
+		Executor:    askexec.DefaultExecutor{},
 		Stdout:      os.Stdout,
 		Stderr:      os.Stderr,
 		Stdin:       os.Stdin,
 		Interactive: isInteractive(),
+		IsTTYOutput: isTTY(os.Stdout),
 		HomeDir:     firstNonEmpty(os.Getenv("HOME"), "."),
 		Env:         os.Getenv,
 	}
@@ -95,25 +93,42 @@ func run(ctx context.Context, args []string, deps Dependencies) error {
 		return err
 	}
 
-	if err := askexec.Execute(ctx, askexec.Params{
+	result, err := deps.Executor.Execute(ctx, askexec.Params{
 		Command:     command,
 		PrintOnly:   cfg.PrintOnly,
 		Interactive: deps.Interactive,
 		Stdin:       deps.Stdin,
 		Stdout:      deps.Stdout,
-		Runner:      deps.Executor,
-	}); err != nil {
+		IsTTYOutput: deps.IsTTYOutput,
+		Runner: askexec.ShellRunner{
+			Shell:  firstNonEmpty(deps.Env("SHELL"), "/bin/sh"),
+			Stdout: deps.Stdout,
+			Stderr: deps.Stderr,
+		},
+		Editor: askexec.ShellEditor{
+			Command: deps.Env("EDITOR"),
+			Stdin:   deps.Stdin,
+			Stdout:  deps.Stdout,
+			Stderr:  deps.Stderr,
+		},
+	})
+	if err != nil {
 		return err
 	}
 
-	if cfg.NoCache {
+	if cfg.NoCache || (!cfg.PrintOnly && !result.Executed) {
 		return nil
 	}
 
+	finalCommand := command
+	if result.FinalCommand != "" {
+		finalCommand = result.FinalCommand
+	}
+
 	return store.Save(history.Entry{
-		ID:        makeID(cfg.Prompt, command),
+		ID:        makeID(cfg.Prompt, finalCommand),
 		Prompt:    cfg.Prompt,
-		Command:   command,
+		Command:   finalCommand,
 		Provider:  cfg.Provider,
 		Model:     cfg.Model,
 		Timestamp: time.Now().UTC(),
@@ -161,7 +176,11 @@ func firstNonEmpty(values ...string) string {
 }
 
 func isInteractive() bool {
-	info, err := os.Stdin.Stat()
+	return isTTY(os.Stdin)
+}
+
+func isTTY(file *os.File) bool {
+	info, err := file.Stat()
 	if err != nil {
 		return false
 	}

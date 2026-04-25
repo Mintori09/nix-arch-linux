@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   buildSpinnerLabel,
+  formatWithPrettierInSubprocess,
   formatElapsedDuration,
   PRETTIER_ENTRYPOINT_ENV,
   renderResultLine,
@@ -68,5 +69,16 @@ describe("terminal output helpers", () => {
     expect(renderResultLine("Updated", "12.3ms", "a.ts")).not.toContain(
       "START",
     );
+  });
+});
+
+describe("formatWithPrettierInSubprocess", () => {
+  test("formats markdown in a subprocess so the caller can stay responsive", async () => {
+    const formatted = await formatWithPrettierInSubprocess({
+      content: "alpha\nbeta\n",
+      parser: "markdown",
+    });
+
+    expect(formatted).toBe("alpha\n\nbeta\n");
   });
 });

@@ -7,6 +7,7 @@ import { extname } from "path";
 import { pathToFileURL } from "url";
 
 const EXIT_FAILURE = 1;
+const PRETTIER_WORKER_ARG = "--prettier-worker";
 export const PRETTIER_ENTRYPOINT_ENV = "FORMAT_PRETTIER_ENTRYPOINT";
 export const CODE_BLOCK_DELIMITER = /(^`{3,}[\s\S]*?^`{3,})/gm;
 export const MARKDOWN_SPECIAL_STRUCTURE =
@@ -140,6 +141,28 @@ const stats = {
 };
 
 const outputLock = { locked: false };
+let prettierModulePromise: Promise<PrettierModule> | undefined;
+
+interface PrettierWorkerResult {
+  status: "updated" | "unchanged";
+}
+
+interface FormatWithPrettierInSubprocessOptions {
+  content: string;
+  parser: string;
+  plugins?: string[];
+}
+
+interface PrettierModule {
+  format(
+    content: string,
+    options: {
+      parser: string;
+      plugins?: string[];
+      proseWrap: "never";
+    },
+  ): Promise<string>;
+}
 
 async function withLock<T>(fn: () => Promise<T>): Promise<T> {
   while (outputLock.locked) await Bun.sleep(1);
@@ -214,7 +237,96 @@ export function renderResultLine(
   return `${color}${status}${COLORS.reset} (${elapsed}): ${filePath}${suffix}`;
 }
 
+async function getPrettierModule(): Promise<PrettierModule> {
+  prettierModulePromise ??= import(
+    resolvePrettierModuleSpecifier()
+  ) as Promise<PrettierModule>;
+  return prettierModulePromise;
+}
+
+export function isPrettierWorkerMode(args: string[] = argv): boolean {
+  return args.includes(PRETTIER_WORKER_ARG);
+}
+
+async function runPrettierWorker(filePath: string): Promise<PrettierWorkerResult> {
+  const ext = extname(filePath).toLowerCase();
+  const handler = FILE_HANDLERS[ext];
+
+  if (!handler) {
+    throw new Error(`No Prettier handler for ${filePath}`);
+  }
+
+  const originalContent = await file(filePath).text();
+  const processed = handler.preprocess
+    ? handler.preprocess(originalContent)
+    : originalContent;
+
+  const prettier = await getPrettierModule();
+  const formatted = await prettier.format(processed, {
+    parser: handler.parser,
+    plugins: handler.plugins,
+    proseWrap: "never",
+  });
+
+  if (formatted !== originalContent) {
+    await write(filePath, formatted);
+    return { status: "updated" };
+  }
+
+  return { status: "unchanged" };
+}
+
+async function runPrettierWorkerCli(args: string[] = argv): Promise<void> {
+  const workerIndex = args.indexOf(PRETTIER_WORKER_ARG);
+  const filePath = args[workerIndex + 1];
+
+  if (!filePath) {
+    throw new Error("Missing file path for Prettier worker");
+  }
+
+  const result = await runPrettierWorker(filePath);
+  process.stdout.write(JSON.stringify(result));
+}
+
+async function formatFileWithPrettierInSubprocess(
+  filePath: string,
+): Promise<PrettierWorkerResult> {
+  const proc = Bun.spawn([process.execPath, import.meta.path, PRETTIER_WORKER_ARG, filePath], {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+
+  if (exitCode !== 0) {
+    throw new Error(stderr.trim() || `Prettier worker exited with code ${exitCode}`);
+  }
+
+  return JSON.parse(stdout) as PrettierWorkerResult;
+}
+
+export async function formatWithPrettierInSubprocess(
+  options: FormatWithPrettierInSubprocessOptions,
+): Promise<string> {
+  const extension = options.parser === "markdown" ? ".md" : ".txt";
+  const tempFilePath = `/tmp/format-file-${process.pid}-${Date.now()}${extension}`;
+  await write(tempFilePath, options.content);
+  const result = await formatFileWithPrettierInSubprocess(tempFilePath);
+  void result;
+  return file(tempFilePath).text();
+}
+
 async function main(): Promise<void> {
+  if (isPrettierWorkerMode()) {
+    await runPrettierWorkerCli();
+    return;
+  }
+
   const argvFiles = argv.slice(2);
   let stdinFiles: string[] = [];
 
@@ -325,24 +437,12 @@ async function main(): Promise<void> {
 
       if (handler) {
         try {
-          const content = await file(filePath).text();
-          const processed = handler.preprocess
-            ? handler.preprocess(content)
-            : content;
-
-          const prettier = await import(resolvePrettierModuleSpecifier());
-          const formatted = await prettier.format(processed, {
-            parser: handler.parser,
-            plugins: handler.plugins,
-            proseWrap: "never",
-          });
-
+          const result = await formatFileWithPrettierInSubprocess(filePath);
           const elapsed = formatElapsedDuration(performance.now() - startTime);
           activeFiles.delete(filePath);
           completedFiles++;
 
-          if (formatted !== content) {
-            await write(filePath, formatted);
+          if (result.status === "updated") {
             stats.updated++;
             await logResult(renderResultLine("Updated", elapsed, filePath));
           } else {

@@ -49,11 +49,11 @@ func (c *Client) GenerateCommand(ctx context.Context, prompt string, options pro
 		Messages: []requestMessage{
 			{
 				Role:    "system",
-				Content: "Return only the shell command.",
+				Content: buildSystemPrompt(),
 			},
 			{
 				Role:    "user",
-				Content: prompt,
+				Content: buildUserPrompt(prompt),
 			},
 		},
 	})
@@ -106,4 +106,20 @@ func (c *Client) GenerateCommand(ctx context.Context, prompt string, options pro
 	}
 
 	return command, nil
+}
+
+func buildSystemPrompt() string {
+	return strings.Join([]string{
+		"You are a shell expert.",
+		"Return only a runnable shell command or shell script snippet.",
+		"no markdown.",
+		"no prose.",
+		"no explanations.",
+		"Prefer common tools over personal aliases.",
+		"Keep it minimal and directly executable.",
+	}, " ")
+}
+
+func buildUserPrompt(prompt string) string {
+	return fmt.Sprintf("User request:\n%s\n\nReturn only the runnable shell output.", prompt)
 }
