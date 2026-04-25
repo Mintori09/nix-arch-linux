@@ -7,12 +7,17 @@ const COLORS = {
   GREEN: "\x1b[32m",
   YELLOW: "\x1b[33m",
   BLUE: "\x1b[34m",
+  GRAY: "\x1b[90m",
   NC: "\x1b[0m",
 };
+
+const SPINNER_FRAMES = ["-", "\\", "|", "/"];
+const SPINNER_INTERVAL_MS = 80;
 
 type ConvertContext = {
   dryRun: boolean;
   passthroughArgs: string[];
+  route: string;
 };
 
 type Converter = (
@@ -60,6 +65,57 @@ function ensureOutputDir(output: string) {
   }
 }
 
+export function buildSpinnerLabel(route: string): string {
+  const [inputExt, outputExt] = route.split(":");
+  return `Converting ${inputExt} -> ${outputExt}...`;
+}
+
+export function renderSpinnerFrame(frameIndex: number, label: string): string {
+  const frame = SPINNER_FRAMES[frameIndex % SPINNER_FRAMES.length];
+  return `\r\x1b[2K${COLORS.GRAY}${frame}${COLORS.NC} ${label}`;
+}
+
+export function clearSpinnerLine(): string {
+  return "\r\x1b[2K";
+}
+
+export function shouldEnableSpinner(options: {
+  dryRun: boolean;
+  isTTY?: boolean;
+}): boolean {
+  return !options.dryRun && options.isTTY === true;
+}
+
+function writeClearSpinnerLine() {
+  process.stdout.write(clearSpinnerLine());
+}
+
+async function withSpinner<T>(
+  context: ConvertContext,
+  task: () => Promise<T>,
+): Promise<T> {
+  if (!shouldEnableSpinner({ dryRun: context.dryRun, isTTY: process.stdout.isTTY })) {
+    return await task();
+  }
+
+  const label = buildSpinnerLabel(context.route);
+  let spinnerFrameIndex = 0;
+  const render = () => {
+    process.stdout.write(renderSpinnerFrame(spinnerFrameIndex, label));
+    spinnerFrameIndex += 1;
+  };
+
+  render();
+  const spinnerTimer = setInterval(render, SPINNER_INTERVAL_MS);
+
+  try {
+    return await task();
+  } finally {
+    clearInterval(spinnerTimer);
+    writeClearSpinnerLine();
+  }
+}
+
 async function runCommand(
   parts: string[],
   options: { dryRun: boolean; captureStdout?: boolean } = { dryRun: false },
@@ -99,7 +155,6 @@ async function convertViaFFmpeg(
   context: ConvertContext,
   args: string[] = [],
 ) {
-  console.log(`${COLORS.BLUE}Encoding with FFmpeg...${COLORS.NC}`);
   await runCommand(["ffmpeg", "-y", "-i", input, ...args, output], {
     dryRun: context.dryRun,
   });
@@ -111,7 +166,6 @@ async function convertViaImageMagick(
   context: ConvertContext,
   extraArgs: string[] = [],
 ) {
-  console.log(`${COLORS.BLUE}Converting image...${COLORS.NC}`);
   await runCommand(["magick", ...extraArgs, input, output], {
     dryRun: context.dryRun,
   });
@@ -145,9 +199,6 @@ async function convertViaLibreOffice(
   context: ConvertContext,
   outExt: string,
 ) {
-  console.log(
-    `${COLORS.BLUE}Converting Office format via LibreOffice...${COLORS.NC}`,
-  );
   const outDir = path.dirname(output);
   await runCommand(
     ["soffice", "--headless", "--convert-to", outExt, input, "--outdir", outDir],
@@ -174,7 +225,6 @@ async function convertViaYq(
   inputFormat: string,
   outputFormat: string,
 ) {
-  console.log(`${COLORS.BLUE}Converting data format via yq...${COLORS.NC}`);
   const text = await runCommand(
     ["yq", "-p", inputFormat, "-o", outputFormat, ".", input],
     {
@@ -418,7 +468,7 @@ async function run() {
   const inExt = path.extname(input).slice(1).toLowerCase();
   const outExt = path.extname(output).slice(1).toLowerCase();
   const route = `${inExt}:${outExt}`;
-  const context: ConvertContext = { dryRun, passthroughArgs };
+  const context: ConvertContext = { dryRun, passthroughArgs, route };
   const converter = ROUTE_HANDLERS[route];
 
   if (!converter) {
@@ -428,7 +478,7 @@ async function run() {
 
   try {
     ensureOutputDir(output);
-    await converter(input, output, context);
+    await withSpinner(context, () => converter(input, output, context));
 
     console.log(
       `\n${COLORS.GREEN}Conversion successful:${COLORS.NC} ${output}${dryRun ? " (dry-run)" : ""}`,
@@ -446,4 +496,6 @@ async function run() {
   }
 }
 
-run();
+if (import.meta.main) {
+  await run();
+}
