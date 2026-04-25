@@ -22,6 +22,7 @@
     ripgrep
     wl-clipboard
     opencode
+    wails
 
     # CLI tools
     tdf
@@ -47,6 +48,7 @@
     lazyjournal
     lazysql
     helix
+    devenv
 
     # Formatters & linters
     gofumpt
