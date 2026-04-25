@@ -142,5 +142,9 @@
   {
     "prompt": "convert first line in all markdown files in current folder to heading 1",
     "command": "for f in *.md; do sed -i '1{ s/^#* *//; s/^/# /; }' \"$f\"; done"
+  },
+  {
+    "prompt": "20260421.Animated Short\uff1a \uff02Is This Game Even Playable\uff1f\uff02 \uff5c Honkai\uff1a Star Rail.mkv how many fps in this video",
+    "command": "ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1 \"20260421.Animated Short\uff1a \uff02Is This Game Even Playable\uff1f\uff02 \uff5c Honkai\uff1a Star Rail.mkv\""
   }
 ]

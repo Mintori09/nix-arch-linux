@@ -13,7 +13,6 @@ in
     BROWSER = "zen-browser";
     CLIPCOPY = c.clipCopy;
     CLIPPASTE = c.clipPaste;
-    JAVA_HOME = "/usr/lib/jvm/java-25-openjdk";
     ANDROID_HOME = "$HOME/Android/Sdk";
     PNPM_HOME = c.pnpmHome;
     OLLAMA_HOST = "127.0.0.1";
