@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   buildSpinnerLabel,
+  formatFileWithPrettier,
   formatWithPrettierInSubprocess,
   formatElapsedDuration,
   PRETTIER_ENTRYPOINT_ENV,
@@ -9,6 +10,9 @@ import {
   renderSpinnerFrame,
   resolvePrettierModuleSpecifier,
 } from "./format-file";
+import { mkdtemp, readFile, rm } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
 
 describe("resolvePrettierModuleSpecifier", () => {
   test("falls back to bare prettier import without an injected entrypoint", () => {
@@ -80,5 +84,27 @@ describe("formatWithPrettierInSubprocess", () => {
     });
 
     expect(formatted).toBe("alpha\n\nbeta\n");
+  });
+});
+
+describe("formatFileWithPrettier", () => {
+  test("formats a markdown file in place and reports unchanged on the second run", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "format-file-test-"));
+    const filePath = join(tempDir, "sample.md");
+
+    try {
+      await Bun.write(filePath, "alpha\nbeta\n");
+
+      await expect(formatFileWithPrettier(filePath)).resolves.toEqual({
+        status: "updated",
+      });
+      await expect(readFile(filePath, "utf8")).resolves.toBe("alpha\n\nbeta\n");
+
+      await expect(formatFileWithPrettier(filePath)).resolves.toEqual({
+        status: "unchanged",
+      });
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 });

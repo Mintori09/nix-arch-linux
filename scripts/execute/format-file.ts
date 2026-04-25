@@ -248,7 +248,9 @@ export function isPrettierWorkerMode(args: string[] = argv): boolean {
   return args.includes(PRETTIER_WORKER_ARG);
 }
 
-async function runPrettierWorker(filePath: string): Promise<PrettierWorkerResult> {
+export async function formatFileWithPrettier(
+  filePath: string,
+): Promise<PrettierWorkerResult> {
   const ext = extname(filePath).toLowerCase();
   const handler = FILE_HANDLERS[ext];
 
@@ -284,7 +286,7 @@ async function runPrettierWorkerCli(args: string[] = argv): Promise<void> {
     throw new Error("Missing file path for Prettier worker");
   }
 
-  const result = await runPrettierWorker(filePath);
+  const result = await formatFileWithPrettier(filePath);
   process.stdout.write(JSON.stringify(result));
 }
 
@@ -437,7 +439,7 @@ async function main(): Promise<void> {
 
       if (handler) {
         try {
-          const result = await formatFileWithPrettierInSubprocess(filePath);
+          const result = await formatFileWithPrettier(filePath);
           const elapsed = formatElapsedDuration(performance.now() - startTime);
           activeFiles.delete(filePath);
           completedFiles++;
