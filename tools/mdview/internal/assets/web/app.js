@@ -20,6 +20,7 @@ const state = {
   autosaveTimer: null,
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
+  expandedFolders: new Set(),
 };
 
 const elements = {
@@ -348,6 +349,26 @@ function setStatus(label) {
   elements.status.textContent = label;
 }
 
+async function renderMermaid() {
+  const mermaid = window.mermaid;
+  if (!mermaid) return;
+
+  try {
+    mermaid.initialize({ startOnLoad: false });
+    for (const code of elements.preview.querySelectorAll("pre > code")) {
+      const pre = code.parentElement;
+      if (!pre.classList.contains("language-mermaid") && !pre.classList.contains("lang-mermaid")) {
+        continue;
+      }
+      const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+      const { svg } = await mermaid.render(id, code.textContent);
+      pre.replaceWith(parseHTML(svg));
+    }
+  } catch (e) {
+    console.error("Mermaid render error:", e);
+  }
+}
+
 async function renderPreview(content) {
   const payload = await api("/api/render", {
     method: "POST",
@@ -357,6 +378,7 @@ async function renderPreview(content) {
   autoResizeEditor();
   rewritePreviewLinks();
   renderOutline();
+  await renderMermaid();
 }
 
 function rewritePreviewLinks() {
@@ -421,22 +443,87 @@ function renderOutline() {
 
 function renderFileList() {
   elements.fileList.innerHTML = "";
-  for (const file of state.files) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "file-link";
-    button.textContent = file.path;
-    button.addEventListener("click", async () => {
-      const doc = await api(`/api/open?path=${encodeURIComponent(file.path)}`);
-      loadDocument(doc);
-      if (isMobileViewport()) {
-        transitionLayout(() => {
-          closePanels();
-        });
+
+  const buildTree = (entries, parentPath = "") => {
+    const tree = {};
+    for (const entry of entries) {
+      const parent = entry.path.includes("/") ? entry.path.slice(0, entry.path.lastIndexOf("/") + 1) : "";
+      if (parent === parentPath) {
+        if (!tree[parentPath]) tree[parentPath] = [];
+        tree[parentPath].push(entry);
       }
+    }
+    return tree;
+  };
+
+  const render = (entries, parentPath = "", depth = 0) => {
+    const children = entries.filter(e => {
+      const parent = e.path.includes("/") ? e.path.slice(0, e.path.lastIndexOf("/") + 1) : "";
+      return parent === parentPath;
     });
-    elements.fileList.appendChild(button);
-  }
+
+    const dirs = children.filter(c => c.type === "directory").sort((a, b) => a.name.localeCompare(b.name));
+    const files = children.filter(c => c.type === "file").sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const dir of dirs) {
+      const folderPath = dir.path;
+      const isExpanded = state.expandedFolders.has(folderPath);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "tree-folder";
+      wrapper.style.setProperty("--depth", depth);
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "file-link folder-toggle";
+      button.innerHTML = `<span class="icon">📁</span><span class="name">${dir.name}</span>`;
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (state.expandedFolders.has(folderPath)) {
+          state.expandedFolders.delete(folderPath);
+        } else {
+          state.expandedFolders.add(folderPath);
+        }
+        renderFileList();
+      });
+
+      wrapper.appendChild(button);
+
+      if (isExpanded) {
+        const childContainer = document.createElement("div");
+        childContainer.className = "folder-children";
+        childContainer.appendChild(render(state.files, folderPath, depth + 1));
+        wrapper.appendChild(childContainer);
+      }
+
+      elements.fileList.appendChild(wrapper);
+    }
+
+    for (const file of files) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "tree-file";
+      wrapper.style.setProperty("--depth", depth);
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "file-link";
+      button.innerHTML = `<span class="icon">📄</span><span class="name">${file.name}</span>`;
+      button.addEventListener("click", async () => {
+        const doc = await api(`/api/open?path=${encodeURIComponent(file.path)}`);
+        loadDocument(doc);
+        if (isMobileViewport()) {
+          transitionLayout(() => {
+            closePanels();
+          });
+        }
+      });
+
+      wrapper.appendChild(button);
+      elements.fileList.appendChild(wrapper);
+    }
+  };
+
+  render(state.files);
 }
 
 function syncLayout(fromContext = state.currentContext) {
