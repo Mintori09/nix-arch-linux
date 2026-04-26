@@ -26,6 +26,7 @@
 
     # CLI tools
     tdf
+    dust
     aichat
     btop
     bun
