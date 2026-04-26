@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mdview</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="toolbar" id="toolbar">
+        <div class="toolbar__left">
+          <button id="toggle-sidebar" type="button">Sidebar</button>
+          <button id="toggle-outline" type="button">Outline</button>
+          <button id="toggle-edit" type="button">Edit</button>
+          <button id="toggle-reader" type="button">Reader</button>
+        </div>
+        <div class="toolbar__center">
+          <strong id="doc-name">Untitled</strong>
+          <span id="doc-meta"></span>
+        </div>
+        <div class="toolbar__right">
+          <button id="open-search" type="button">Search</button>
+          <button id="toggle-settings" type="button">Theme</button>
+          <button id="print-page" type="button">Print</button>
+          <span id="status-pill">Temporary</span>
+        </div>
+      </header>
+
+      <div class="chrome">
+        <aside class="sidebar hidden" id="file-sidebar">
+          <div class="panel-title">Files</div>
+          <div id="file-list" class="panel-scroll"></div>
+        </aside>
+
+        <main class="workspace" id="workspace">
+          <section class="editor-pane hidden" id="editor-pane">
+            <textarea id="editor" spellcheck="false"></textarea>
+          </section>
+          <section class="preview-pane" id="preview-pane">
+            <article class="preview prose" id="preview"></article>
+          </section>
+        </main>
+
+        <aside class="sidebar hidden" id="outline-sidebar">
+          <div class="panel-title">Outline</div>
+          <div id="outline-list" class="panel-scroll"></div>
+        </aside>
+      </div>
+
+      <section class="drawer hidden" id="settings-drawer">
+        <h2>Reading Settings</h2>
+        <label
+          >Theme
+          <select id="theme-select">
+            <option value="warm">Warm Paper</option>
+            <option value="minimal">Minimal Light</option>
+            <option value="dark">Dark</option>
+            <option value="paper">Sepia Reading</option>
+          </select>
+        </label>
+        <label
+          >Appearance
+          <select id="appearance-select">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <label
+          >Font family
+          <select id="font-family-select">
+            <option value="serif">Serif</option>
+            <option value="sans-serif">Sans</option>
+            <option value="monospace">Mono</option>
+          </select>
+        </label>
+        <label
+          >Content width
+          <input id="width-input" type="range" min="560" max="980" step="10" />
+        </label>
+        <label
+          >Font size
+          <input id="font-size-input" type="range" min="14" max="24" step="1" />
+        </label>
+        <label
+          >Line height
+          <input
+            id="line-height-input"
+            type="range"
+            min="1.4"
+            max="2.2"
+            step="0.1"
+          />
+        </label>
+      </section>
+
+      <section class="drawer hidden" id="search-drawer">
+        <h2>Search</h2>
+        <div class="search-controls">
+          <input
+            id="search-query"
+            type="search"
+            placeholder="Search in file or workspace"
+          />
+          <select id="search-scope">
+            <option value="file">Current file</option>
+            <option value="workspace">Workspace</option>
+          </select>
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </section>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
