@@ -4,3 +4,6 @@ secrets.json
 .codex
 result
 .cmd*
+eval.json
+tools/mdview/mdview
+tools/ask/ask
