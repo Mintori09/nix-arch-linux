@@ -7,7 +7,7 @@
 
       src = ../../tools/mdview;
 
-      vendorHash = null;
+      vendorHash = "sha256-D1Dvd38893S9ZuZNmx8AQoJQvIppRUzhCh2ckoXTk4Q=";
 
       subPackages = [ "cmd/mdview" ];
 
