@@ -16,6 +16,12 @@ Before structural cleanup, use the docs in `docs/refactor/`:
 - `parity-checklist.md` for behavior-preserving validation
 - `dead-code-candidates.md` for evidence-backed deletions
 
+## Tools
+
+Located in `tools/mdview/`:
+
+- **mdview**: Go-based CLI markdown viewer/editor with an embedded web frontend. Supports live preview, editing with write token protection, multiple themes (warm, minimal, dark, paper), and Mermaid diagram rendering.
+
 ## Scripts
 
 Located in `scripts/execute/`:
