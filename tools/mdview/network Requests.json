@@ -1,0 +1,4 @@
+[GET] http://127.0.0.1:40001/ => [200] OK
+[GET] http://127.0.0.1:40001/styles.css => [200] OK
+[GET] http://127.0.0.1:40001/app.js => [200] OK
+[GET] http://127.0.0.1:40001/app-state.js => [200] OK

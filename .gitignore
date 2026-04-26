@@ -7,3 +7,6 @@ result
 eval.json
 tools/mdview/mdview
 tools/ask/ask
+tools/mdview/network*.json
+tools/mdview/network Requests.json
+tools/mdview/vendor/

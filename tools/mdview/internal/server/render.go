@@ -8,11 +8,21 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	renderhtml "github.com/yuin/goldmark/renderer/html"
+
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
 func renderMarkdown(content string) string {
 	markdown := goldmark.New(
-		goldmark.WithExtensions(extension.GFM, extension.DefinitionList, extension.Footnote, extension.Table),
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.DefinitionList,
+			extension.Footnote,
+			extension.Table,
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("monokai"),
+			),
+		),
 		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
 		goldmark.WithRendererOptions(renderhtml.WithUnsafe()),
 	)
