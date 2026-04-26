@@ -37,7 +37,8 @@ type FileEntry struct {
 }
 
 func ListMarkdownFiles(root string) ([]FileEntry, error) {
-	var files []FileEntry
+	var entries []FileEntry
+	dirs := make(map[string]bool)
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -55,20 +56,38 @@ func ListMarkdownFiles(root string) ([]FileEntry, error) {
 			return fmt.Errorf("get relative path: %w", err)
 		}
 
-		files = append(files, FileEntry{
+		entries = append(entries, FileEntry{
 			Path: filepath.ToSlash(relative),
 			Name: d.Name(),
 			Type: "file",
 		})
+
+		dir := filepath.Dir(relative)
+		for dir != "." && dir != "" {
+			dirs[dir] = true
+			dir = filepath.Dir(dir)
+		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Path < files[j].Path
+	for dir := range dirs {
+		entries = append(entries, FileEntry{
+			Path: dir + "/",
+			Name: filepath.Base(dir),
+			Type: "directory",
+		})
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		a, b := entries[i], entries[j]
+		if a.Type != b.Type {
+			return a.Type == "directory"
+		}
+		return a.Path < b.Path
 	})
 
-	return files, nil
+	return entries, nil
 }

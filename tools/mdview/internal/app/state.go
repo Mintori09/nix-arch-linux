@@ -37,8 +37,16 @@ func BuildSession(_ context.Context, opts BuildOptions) (*session.App, error) {
 			return nil, fmt.Errorf("list folder markdown files: %w", err)
 		}
 
-		if len(files) > 0 {
-			doc, err := loadFileDocument(filepath.Join(opts.Input.Path, filepath.FromSlash(files[0].Path)), opts.Input.Path)
+		var firstFile string
+		for _, f := range files {
+			if f.Type == "file" {
+				firstFile = f.Path
+				break
+			}
+		}
+
+		if firstFile != "" {
+			doc, err := loadFileDocument(filepath.Join(opts.Input.Path, filepath.FromSlash(firstFile)), opts.Input.Path)
 			if err != nil {
 				return nil, err
 			}

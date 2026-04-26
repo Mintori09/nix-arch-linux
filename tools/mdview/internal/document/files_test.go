@@ -32,14 +32,18 @@ func TestListMarkdownFilesReturnsSortedRelativePaths(t *testing.T) {
 		t.Fatalf("ListMarkdownFiles returned error: %v", err)
 	}
 
-	want := []string{"a.md", "nested/b.md"}
+	want := []FileEntry{
+		{Path: "nested/", Name: "nested", Type: "directory"},
+		{Path: "a.md", Name: "a.md", Type: "file"},
+		{Path: "nested/b.md", Name: "b.md", Type: "file"},
+	}
 	if len(files) != len(want) {
-		t.Fatalf("expected %d files, got %d (%v)", len(want), len(files), files)
+		t.Fatalf("expected %d entries, got %d (%v)", len(want), len(files), files)
 	}
 
 	for i, item := range want {
-		if files[i].Path != item {
-			t.Fatalf("expected file %d to be %q, got %q", i, item, files[i].Path)
+		if files[i].Path != item.Path || files[i].Type != item.Type {
+			t.Fatalf("expected entry %d to be %+v, got %+v", i, item, files[i])
 		}
 	}
 }
