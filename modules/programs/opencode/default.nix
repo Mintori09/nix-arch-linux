@@ -59,7 +59,7 @@ in
   xdg.configFile = {
     "${configFile}".text = builtins.toJSON {
       "$schema" = "https://opencode.ai/config.json";
-      # plugin = [""];
+      "plugin" = [ "superpowers@git+https://github.com/obra/superpowers.git" ];
       autoupdate = false;
       share = "disabled";
       disabled_providers = providers.disabled;

@@ -5,7 +5,7 @@ import (
 	"io/fs"
 )
 
-//go:embed web/*
+//go:embed web
 var raw embed.FS
 
 func FS() fs.FS {

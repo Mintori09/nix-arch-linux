@@ -19,7 +19,6 @@
     "lmstudio"
     "moonshot-ai"
     "nebius-token-factory"
-    "ollama"
     "ollama-cloud"
     "openai"
     "sap-ai-core"
@@ -34,6 +33,7 @@
 
   enabled = [
     "openrouter"
+    "ollama"
     "opencode"
     "nano-gpt"
   ];

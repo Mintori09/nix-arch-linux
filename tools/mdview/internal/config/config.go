@@ -16,7 +16,14 @@ type Config struct {
 	Appearance         string `toml:"appearance" json:"appearance"`
 	ContentWidth       int    `toml:"content_width" json:"content_width"`
 	FontSize           int    `toml:"font_size" json:"font_size"`
-	LineHeight         string `toml:"line_height" json:"line_height"`
+	LineHeight         string `toml:"line_height,omitempty" json:"line_height,omitempty"`
+	BodyLineHeight     string `toml:"body_line_height" json:"body_line_height"`
+	ParagraphSpacing   string `toml:"paragraph_spacing" json:"paragraph_spacing"`
+	CodeFontSize       int    `toml:"code_font_size" json:"code_font_size"`
+	CodeLineHeight     string `toml:"code_line_height" json:"code_line_height"`
+	EditorFont         string `toml:"editor_font" json:"editor_font"`
+	EditorFontSize     int    `toml:"editor_font_size" json:"editor_font_size"`
+	EditorLineHeight   string `toml:"editor_line_height" json:"editor_line_height"`
 	FontFamily         string `toml:"font_family" json:"font_family"`
 	CustomCSS          string `toml:"custom_css" json:"custom_css"`
 	AssetsDir          string `toml:"assets_dir" json:"assets_dir"`
@@ -24,7 +31,6 @@ type Config struct {
 	AllowRawHTML       bool   `toml:"allow_raw_html" json:"allow_raw_html"`
 	LocalOnly          bool   `toml:"local_only" json:"local_only"`
 	DefaultEditMode    bool   `toml:"default_edit_mode" json:"default_edit_mode"`
-	DefaultReaderMode  bool   `toml:"default_reader_mode" json:"default_reader_mode"`
 	DefaultSidebarOpen bool   `toml:"default_sidebar_open" json:"default_sidebar_open"`
 	DefaultOutlineOpen bool   `toml:"default_outline_open" json:"default_outline_open"`
 }
@@ -37,7 +43,13 @@ func Default() Config {
 		Appearance:         "system",
 		ContentWidth:       760,
 		FontSize:           17,
-		LineHeight:         "1.8",
+		BodyLineHeight:     "1.8",
+		ParagraphSpacing:   "0.85",
+		CodeFontSize:       14,
+		CodeLineHeight:     "1.6",
+		EditorFont:         "monospace",
+		EditorFontSize:     15,
+		EditorLineHeight:   "1.7",
 		FontFamily:         "serif",
 		CustomCSS:          "~/.config/mdview/custom.css",
 		AssetsDir:          "attachments",
@@ -52,7 +64,6 @@ type Manager struct {
 }
 
 func (m Manager) Load(_ context.Context) (Config, error) {
-	cfg := Default()
 	path, err := m.path()
 	if err != nil {
 		return Config{}, err
@@ -61,16 +72,17 @@ func (m Manager) Load(_ context.Context) (Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return cfg, nil
+			return Default(), nil
 		}
 		return Config{}, fmt.Errorf("read config: %w", err)
 	}
 
+	var cfg Config
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, fmt.Errorf("decode config: %w", err)
 	}
 
-	return cfg, nil
+	return normalize(cfg), nil
 }
 
 func (m Manager) Save(_ context.Context, cfg Config) error {
@@ -82,6 +94,9 @@ func (m Manager) Save(_ context.Context, cfg Config) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("create config directory: %w", err)
 	}
+
+	cfg = normalize(cfg)
+	cfg.LineHeight = ""
 
 	data, err := toml.Marshal(cfg)
 	if err != nil {
@@ -106,4 +121,65 @@ func (m Manager) path() (string, error) {
 	}
 
 	return filepath.Join(root, "mdview", "config.toml"), nil
+}
+
+func normalize(cfg Config) Config {
+	defaults := Default()
+
+	if cfg.Browser == "" {
+		cfg.Browser = defaults.Browser
+	}
+	if cfg.FallbackBrowser == "" {
+		cfg.FallbackBrowser = defaults.FallbackBrowser
+	}
+	if cfg.Theme == "" {
+		cfg.Theme = defaults.Theme
+	}
+	if cfg.Appearance == "" {
+		cfg.Appearance = defaults.Appearance
+	}
+	if cfg.ContentWidth == 0 {
+		cfg.ContentWidth = defaults.ContentWidth
+	}
+	if cfg.FontSize == 0 {
+		cfg.FontSize = defaults.FontSize
+	}
+	if cfg.BodyLineHeight == "" {
+		if cfg.LineHeight != "" {
+			cfg.BodyLineHeight = cfg.LineHeight
+		} else {
+			cfg.BodyLineHeight = defaults.BodyLineHeight
+		}
+	}
+	if cfg.ParagraphSpacing == "" {
+		cfg.ParagraphSpacing = defaults.ParagraphSpacing
+	}
+	if cfg.CodeFontSize == 0 {
+		cfg.CodeFontSize = defaults.CodeFontSize
+	}
+	if cfg.CodeLineHeight == "" {
+		cfg.CodeLineHeight = defaults.CodeLineHeight
+	}
+	if cfg.EditorFont == "" {
+		cfg.EditorFont = defaults.EditorFont
+	}
+	if cfg.EditorFontSize == 0 {
+		cfg.EditorFontSize = defaults.EditorFontSize
+	}
+	if cfg.EditorLineHeight == "" {
+		cfg.EditorLineHeight = defaults.EditorLineHeight
+	}
+	if cfg.FontFamily == "" {
+		cfg.FontFamily = defaults.FontFamily
+	}
+	if cfg.CustomCSS == "" {
+		cfg.CustomCSS = defaults.CustomCSS
+	}
+	if cfg.AssetsDir == "" {
+		cfg.AssetsDir = defaults.AssetsDir
+	}
+	if cfg.AutosaveDebounceMS == 0 {
+		cfg.AutosaveDebounceMS = defaults.AutosaveDebounceMS
+	}
+	return cfg
 }

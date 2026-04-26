@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/mintori/home-manager/tools/mdview/internal/assets"
 	"github.com/mintori/home-manager/tools/mdview/internal/browser"
@@ -24,7 +25,7 @@ import (
 	"github.com/mintori/home-manager/tools/mdview/internal/server"
 )
 
-const Version = "0.1.0"
+const Version = "0.1.1"
 
 type Runtime struct {
 	ConfigManager config.Manager
@@ -39,10 +40,10 @@ type CLIOptions struct {
 	FontSize   int
 	NoSidebar  bool
 	Edit       bool
-	Reader     bool
 	Port       int
 	NoToken    bool
 	Version    bool
+	Help       bool
 	Path       string
 }
 
@@ -53,6 +54,22 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 	}
 	if opts.Version {
 		fmt.Println(Version)
+		return nil
+	}
+	if opts.Help {
+		fmt.Println("Usage: mdview [options] [file]")
+		fmt.Println("\nOptions:")
+		fmt.Println("  -browser string    browser command")
+		fmt.Println("  -theme string      theme name (warm, minimal, dark, paper)")
+		fmt.Println("  -appearance string appearance (light, dark, system)")
+		fmt.Println("  -width int         content width in pixels")
+		fmt.Println("  -font-size int     font size")
+		fmt.Println("  -no-sidebar       start with sidebar hidden")
+		fmt.Println("  -edit              start in edit mode")
+		fmt.Println("  -port int          listen on specific port")
+		fmt.Println("  -no-token          disable write token protection")
+		fmt.Println("  -version           print version")
+		fmt.Println("  -help, -h         show help")
 		return nil
 	}
 
@@ -113,6 +130,12 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 	}()
 
 	targetURL := buildURL(listener.Addr().String(), token, opts)
+	readyCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	if err := waitForServerReady(readyCtx, targetURL); err != nil {
+		_ = httpServer.Shutdown(context.Background())
+		return err
+	}
 	if err := browser.Open(cfg.Browser, cfg.FallbackBrowser, targetURL); err != nil {
 		return err
 	}
@@ -136,10 +159,11 @@ func ParseCLI(args []string) (CLIOptions, error) {
 	fs.IntVar(&opts.FontSize, "font-size", 0, "font size")
 	fs.BoolVar(&opts.NoSidebar, "no-sidebar", false, "start with sidebar hidden")
 	fs.BoolVar(&opts.Edit, "edit", false, "start in edit mode")
-	fs.BoolVar(&opts.Reader, "reader", false, "start in reader mode")
 	fs.IntVar(&opts.Port, "port", 0, "listen on a specific port")
 	fs.BoolVar(&opts.NoToken, "no-token", false, "disable write token protection")
 	fs.BoolVar(&opts.Version, "version", false, "print version")
+	fs.BoolVar(&opts.Help, "h", false, "show help")
+	fs.BoolVar(&opts.Help, "help", false, "show help")
 
 	if err := fs.Parse(args); err != nil {
 		return CLIOptions{}, err
@@ -179,9 +203,6 @@ func buildURL(addr, token string, opts CLIOptions) string {
 	if opts.Edit {
 		values.Set("mode", "edit")
 	}
-	if opts.Reader {
-		values.Set("mode", "reader")
-	}
 	if opts.NoSidebar {
 		values.Set("sidebar", "0")
 	}
@@ -201,6 +222,33 @@ func randomToken() (string, error) {
 		return "", fmt.Errorf("read random bytes: %w", err)
 	}
 	return hex.EncodeToString(buf), nil
+}
+
+func waitForServerReady(ctx context.Context, targetURL string) error {
+	client := &http.Client{Timeout: 150 * time.Millisecond}
+	ticker := time.NewTicker(25 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, targetURL, nil)
+		if err != nil {
+			return fmt.Errorf("build readiness request: %w", err)
+		}
+
+		resp, err := client.Do(req)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return nil
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("wait for local server ready: %w", ctx.Err())
+		case <-ticker.C:
+		}
+	}
 }
 
 type wlClipboard struct{}

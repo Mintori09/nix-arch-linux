@@ -324,7 +324,19 @@ func mergeConfig(current, next config.Config) config.Config {
 		merged.FontSize = next.FontSize
 	}
 	if next.LineHeight != "" {
-		merged.LineHeight = next.LineHeight
+		merged.BodyLineHeight = next.LineHeight
+	}
+	if next.BodyLineHeight != "" {
+		merged.BodyLineHeight = next.BodyLineHeight
+	}
+	if next.ParagraphSpacing != "" {
+		merged.ParagraphSpacing = next.ParagraphSpacing
+	}
+	if next.CodeFontSize != 0 {
+		merged.CodeFontSize = next.CodeFontSize
+	}
+	if next.CodeLineHeight != "" {
+		merged.CodeLineHeight = next.CodeLineHeight
 	}
 	if next.FontFamily != "" {
 		merged.FontFamily = next.FontFamily
