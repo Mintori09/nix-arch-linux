@@ -10,12 +10,17 @@ import {
   getEditorContentForSaving,
   getWysiwygInitialContent,
 } from "./app-wysiwyg.js";
+import {
+  getDocumentSyncState,
+  mergeDocumentVersions,
+} from "./document-sync.js";
 
 import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
 import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
+const DOCUMENT_POLL_MS = 1500;
 
 const state = {
   config: null,
@@ -34,6 +39,13 @@ const state = {
   outlineHeadings: [],
   activeHeadingId: null,
   headingObserver: null,
+  documentPollTimer: null,
+  documentPollInFlight: false,
+  lastSyncedContent: "",
+  lastSyncedRevision: "",
+  acknowledgedRemoteRevision: "",
+  pendingRemoteDocument: null,
+  conflictActive: false,
 };
 
 let tiptapEditor = null;
@@ -72,6 +84,9 @@ const elements = {
   searchQuery: document.getElementById("search-query"),
   searchScope: document.getElementById("search-scope"),
   searchResults: document.getElementById("search-results"),
+  syncActions: document.getElementById("sync-actions"),
+  reloadDisk: document.getElementById("reload-disk"),
+  keepLocal: document.getElementById("keep-local"),
 };
 
 document.getElementById("toggle-sidebar").addEventListener("click", () => {
@@ -158,6 +173,12 @@ elements.editorLineHeight.addEventListener("input", saveSettings);
 
 elements.searchQuery.addEventListener("input", runSearch);
 elements.searchScope.addEventListener("change", runSearch);
+elements.reloadDisk?.addEventListener("click", () => {
+  resolveExternalConflictByReload().catch(console.error);
+});
+elements.keepLocal?.addEventListener("click", () => {
+  resolveExternalConflictByKeepingLocal();
+});
 window.addEventListener("resize", () => {
   transitionLayout(() => {}, state.currentContext);
 });
@@ -237,6 +258,7 @@ async function init() {
   initSidebarResize();
   initOutlineResize();
   initViewModeToggle();
+  startDocumentPolling();
 }
 
 function bindSettings(config) {
@@ -292,12 +314,14 @@ function applyConfig() {
   );
 }
 
-async function loadDocument(doc) {
+async function loadDocument(doc, options = {}) {
   state.document = doc;
   elements.docName.textContent = doc.name || "Untitled";
   elements.docMeta.textContent =
     doc.path || (doc.temporary ? "Temporary document" : "");
-  elements.editor.textContent = doc.content || "";
+  if (state.viewMode !== "wysiwyg" || !tiptapEditor) {
+    elements.editor.textContent = doc.content || "";
+  }
   elements.editor.placeholder = doc.temporary
     ? "Paste Markdown here or open a file."
     : "";
@@ -311,10 +335,18 @@ async function loadDocument(doc) {
       }),
     );
   }
+  syncDocumentMarkers(doc, options);
   updateStatusFromDocument();
+  if (options.statusLabel) {
+    setStatus(options.statusLabel);
+  }
 }
 
 function updateStatusFromDocument() {
+  if (state.conflictActive) {
+    setStatus("Conflict");
+    return;
+  }
   if (state.document.read_only) {
     setStatus("Read-only");
     return;
@@ -328,6 +360,29 @@ function updateStatusFromDocument() {
 
 function setStatus(label) {
   elements.status.textContent = label;
+}
+
+function syncDocumentMarkers(doc, options = {}) {
+  const clearAcknowledgedRemote = options.clearAcknowledgedRemote !== false;
+  const clearPendingRemote = options.clearPendingRemote !== false;
+
+  state.lastSyncedContent = doc.content || "";
+  state.lastSyncedRevision = doc.revision_id || "";
+  state.document.revision_id = doc.revision_id || "";
+  state.document.last_modified = doc.last_modified || "";
+
+  if (clearAcknowledgedRemote) {
+    state.acknowledgedRemoteRevision = "";
+  }
+  if (clearPendingRemote) {
+    state.pendingRemoteDocument = null;
+    state.conflictActive = false;
+    toggleSyncActions(false);
+  }
+}
+
+function toggleSyncActions(visible) {
+  elements.syncActions?.classList.toggle("hidden", !visible);
 }
 
 function parseHTML(htmlString) {
@@ -743,10 +798,22 @@ function scheduleAutosave() {
   state.autosaveTimer = setTimeout(async () => {
     try {
       setStatus("Saving...");
-      await api("/api/document", {
+      const saved = await api("/api/document", {
         method: "PUT",
         body: JSON.stringify({ content: getCurrentDocumentContent() }),
       });
+      syncDocumentMarkers(
+        {
+          ...state.document,
+          content: getCurrentDocumentContent(),
+          revision_id: saved.revision_id || "",
+          last_modified: saved.last_modified || "",
+        },
+        {
+          clearAcknowledgedRemote: true,
+          clearPendingRemote: true,
+        },
+      );
       setStatus("Saved");
     } catch (error) {
       console.error(error);
@@ -1117,6 +1184,140 @@ function initViewModeToggle() {
   }
 
   updateViewModeButtons();
+}
+
+function startDocumentPolling() {
+  stopDocumentPolling();
+  state.documentPollTimer = window.setInterval(() => {
+    pollDocumentStatus().catch((error) => {
+      console.error("document poll failed:", error);
+    });
+  }, DOCUMENT_POLL_MS);
+}
+
+function stopDocumentPolling() {
+  if (state.documentPollTimer) {
+    window.clearInterval(state.documentPollTimer);
+    state.documentPollTimer = null;
+  }
+}
+
+async function pollDocumentStatus() {
+  if (state.documentPollInFlight || !state.document) {
+    return;
+  }
+
+  state.documentPollInFlight = true;
+  try {
+    const status = await api("/api/document/status");
+    await handleDocumentStatus(status);
+  } finally {
+    state.documentPollInFlight = false;
+  }
+}
+
+async function handleDocumentStatus(status) {
+  if (!status?.tracked || !status.revision_id || !status.changed) {
+    return;
+  }
+
+  if (
+    status.revision_id === state.lastSyncedRevision ||
+    status.revision_id === state.acknowledgedRemoteRevision
+  ) {
+    return;
+  }
+
+  const remoteDocument = {
+    ...state.document,
+    content: status.content || "",
+    revision_id: status.revision_id,
+    last_modified: status.last_modified || "",
+    read_only: Boolean(status.read_only),
+  };
+  const currentContent = getCurrentDocumentContent();
+  const syncState = getDocumentSyncState({
+    lastSyncedContent: state.lastSyncedContent,
+    currentContent,
+  });
+
+  if (!syncState.hasUnsavedLocalChanges) {
+    await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
+    return;
+  }
+
+  const merge = mergeDocumentVersions({
+    base: state.lastSyncedContent,
+    local: currentContent,
+    remote: remoteDocument.content,
+  });
+
+  if (merge.status === "unchanged" || merge.status === "remote") {
+    await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
+    return;
+  }
+
+  if (merge.status === "merged") {
+    syncDocumentMarkers(remoteDocument, {
+      clearAcknowledgedRemote: false,
+      clearPendingRemote: true,
+    });
+    state.acknowledgedRemoteRevision = remoteDocument.revision_id || "";
+    await replaceDocumentContent(merge.content);
+    state.document.content = merge.content;
+    setStatus("Merged");
+    scheduleAutosave();
+    return;
+  }
+
+  state.pendingRemoteDocument = remoteDocument;
+  state.conflictActive = true;
+  state.acknowledgedRemoteRevision = remoteDocument.revision_id || "";
+  toggleSyncActions(true);
+  setStatus("Conflict");
+}
+
+async function replaceDocumentContent(content) {
+  state.document.content = content;
+  if (state.viewMode !== "wysiwyg" || !tiptapEditor) {
+    elements.editor.textContent = content;
+  }
+  await renderPreview(content);
+
+  if (state.viewMode === "wysiwyg" && tiptapEditor) {
+    tiptapEditor.commands.setContent(
+      getWysiwygInitialContent({
+        markdown: content,
+        renderedHTML: elements.preview.innerHTML,
+      }),
+      false,
+    );
+  }
+
+  autoResizeEditor();
+}
+
+async function resolveExternalConflictByReload() {
+  if (!state.pendingRemoteDocument) {
+    return;
+  }
+
+  await loadDocument(state.pendingRemoteDocument, {
+    statusLabel: "Reloaded",
+    clearAcknowledgedRemote: true,
+    clearPendingRemote: true,
+  });
+}
+
+function resolveExternalConflictByKeepingLocal() {
+  if (!state.pendingRemoteDocument) {
+    return;
+  }
+
+  state.pendingRemoteDocument = null;
+  state.conflictActive = false;
+  toggleSyncActions(false);
+  setStatus("Unsaved");
 }
 
 function updateViewModeButtons() {

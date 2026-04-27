@@ -178,6 +178,16 @@ body {
   font-size: 0.82rem;
 }
 
+.sync-actions {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.sync-actions.hidden {
+  display: none;
+}
+
 .chrome {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
