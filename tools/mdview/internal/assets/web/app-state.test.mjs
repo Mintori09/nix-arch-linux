@@ -13,11 +13,10 @@ import {
 test('applyInitialUIState prefers query params over config defaults', () => {
   const state = applyInitialUIState({
     query: {
-      mode: 'edit',
+      mode: 'wysiwyg',
       sidebar: '0',
     },
     config: {
-      default_edit_mode: false,
       default_sidebar_open: true,
       default_outline_open: true,
     },
@@ -28,17 +27,16 @@ test('applyInitialUIState prefers query params over config defaults', () => {
   });
 
   assert.deepEqual(state, {
-    viewMode: 'edit',
+    viewMode: 'wysiwyg',
     sidebarOpen: false,
     outlineOpen: true,
   });
 });
 
-test('applyInitialUIState enables edit mode for empty temporary documents when no explicit mode is requested', () => {
+test('applyInitialUIState enables wysiwyg mode for empty temporary documents when no explicit mode is requested', () => {
   const state = applyInitialUIState({
     query: {},
     config: {
-      default_edit_mode: false,
       default_sidebar_open: false,
       default_outline_open: false,
     },
@@ -48,7 +46,7 @@ test('applyInitialUIState enables edit mode for empty temporary documents when n
     },
   });
 
-  assert.equal(state.viewMode, 'edit');
+  assert.equal(state.viewMode, 'wysiwyg');
 });
 
 test('applyInitialUIState preserves explicit wysiwyg mode', () => {
@@ -57,7 +55,6 @@ test('applyInitialUIState preserves explicit wysiwyg mode', () => {
       mode: 'wysiwyg',
     },
     config: {
-      default_edit_mode: false,
       default_sidebar_open: false,
       default_outline_open: false,
     },
@@ -70,17 +67,31 @@ test('applyInitialUIState preserves explicit wysiwyg mode', () => {
   assert.equal(state.viewMode, 'wysiwyg');
 });
 
-test('getLayoutContext distinguishes preview, edit, and wysiwyg layouts', () => {
-  assert.equal(
-    getLayoutContext({ viewMode: 'edit', isStacked: false }),
-    'edit-split-desktop',
-  );
-  assert.equal(
-    getLayoutContext({ viewMode: 'edit', isStacked: true }),
-    'edit-split-stacked',
-  );
+test('applyInitialUIState falls back to preview for unsupported modes', () => {
+  const state = applyInitialUIState({
+    query: {
+      mode: 'edit',
+    },
+    config: {
+      default_sidebar_open: false,
+      default_outline_open: false,
+    },
+    document: {
+      temporary: false,
+      content: '# note',
+    },
+  });
+
+  assert.equal(state.viewMode, 'preview');
+});
+
+test('getLayoutContext distinguishes preview and wysiwyg layouts', () => {
   assert.equal(
     getLayoutContext({ viewMode: 'preview', isStacked: false }),
+    'preview-only',
+  );
+  assert.equal(
+    getLayoutContext({ viewMode: 'preview', isStacked: true }),
     'preview-only',
   );
   assert.equal(
@@ -92,12 +103,12 @@ test('getLayoutContext distinguishes preview, edit, and wysiwyg layouts', () => 
 test('saveScrollSnapshot stores exact values and normalized ratios by context', () => {
   const snapshots = createEmptyScrollSnapshots();
 
-  saveScrollSnapshot(snapshots, 'edit-split-desktop', {
+  saveScrollSnapshot(snapshots, 'preview-only', {
     pageY: 320,
     pageMax: 800,
   });
 
-  assert.deepEqual(snapshots['edit-split-desktop'], {
+  assert.deepEqual(snapshots['preview-only'], {
     pageY: 320,
     pageRatio: 0.4,
   });
@@ -105,14 +116,14 @@ test('saveScrollSnapshot stores exact values and normalized ratios by context', 
 
 test('restoreScrollTargets reuses exact snapshot inside same context', () => {
   const snapshots = createEmptyScrollSnapshots();
-  saveScrollSnapshot(snapshots, 'edit-split-desktop', {
+  saveScrollSnapshot(snapshots, 'preview-only', {
     pageY: 250,
     pageMax: 500,
   });
 
   const target = restoreScrollTargets({
-    fromContext: 'preview-only',
-    toContext: 'edit-split-desktop',
+    fromContext: 'wysiwyg-only',
+    toContext: 'preview-only',
     snapshots,
     current: {
       pageMax: 700,
@@ -126,14 +137,14 @@ test('restoreScrollTargets reuses exact snapshot inside same context', () => {
 
 test('restoreScrollTargets maps page scroll by ratio when entering a new context', () => {
   const snapshots = createEmptyScrollSnapshots();
-  saveScrollSnapshot(snapshots, 'edit-split-stacked', {
+  saveScrollSnapshot(snapshots, 'preview-only', {
     pageY: 450,
     pageMax: 900,
   });
 
   const target = restoreScrollTargets({
-    fromContext: 'edit-split-stacked',
-    toContext: 'edit-split-desktop',
+    fromContext: 'preview-only',
+    toContext: 'wysiwyg-only',
     snapshots,
     current: {
       pageMax: 200,
@@ -153,7 +164,7 @@ test('restoreScrollTargets keeps a dedicated snapshot for wysiwyg mode', () => {
   });
 
   const target = restoreScrollTargets({
-    fromContext: 'edit-split-desktop',
+    fromContext: 'preview-only',
     toContext: 'wysiwyg-only',
     snapshots,
     current: {

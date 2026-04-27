@@ -39,7 +39,6 @@ type CLIOptions struct {
 	Width      int
 	FontSize   int
 	NoSidebar  bool
-	Edit       bool
 	Port       int
 	NoToken    bool
 	Version    bool
@@ -65,7 +64,6 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 		fmt.Println("  -width int         content width in pixels")
 		fmt.Println("  -font-size int     font size")
 		fmt.Println("  -no-sidebar       start with sidebar hidden")
-		fmt.Println("  -edit              start in edit mode")
 		fmt.Println("  -port int          listen on specific port")
 		fmt.Println("  -no-token          disable write token protection")
 		fmt.Println("  -version           print version")
@@ -158,7 +156,6 @@ func ParseCLI(args []string) (CLIOptions, error) {
 	fs.IntVar(&opts.Width, "width", 0, "content width")
 	fs.IntVar(&opts.FontSize, "font-size", 0, "font size")
 	fs.BoolVar(&opts.NoSidebar, "no-sidebar", false, "start with sidebar hidden")
-	fs.BoolVar(&opts.Edit, "edit", false, "start in edit mode")
 	fs.IntVar(&opts.Port, "port", 0, "listen on a specific port")
 	fs.BoolVar(&opts.NoToken, "no-token", false, "disable write token protection")
 	fs.BoolVar(&opts.Version, "version", false, "print version")
@@ -199,9 +196,6 @@ func buildURL(addr, token string, opts CLIOptions) string {
 	values := url.Values{}
 	if token != "" {
 		values.Set("token", token)
-	}
-	if opts.Edit {
-		values.Set("mode", "edit")
 	}
 	if opts.NoSidebar {
 		values.Set("sidebar", "0")

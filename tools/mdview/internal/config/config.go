@@ -30,7 +30,6 @@ type Config struct {
 	AutosaveDebounceMS int    `toml:"autosave_debounce_ms" json:"autosave_debounce_ms"`
 	AllowRawHTML       bool   `toml:"allow_raw_html" json:"allow_raw_html"`
 	LocalOnly          bool   `toml:"local_only" json:"local_only"`
-	DefaultEditMode    bool   `toml:"default_edit_mode" json:"default_edit_mode"`
 	DefaultSidebarOpen bool   `toml:"default_sidebar_open" json:"default_sidebar_open"`
 	DefaultOutlineOpen bool   `toml:"default_outline_open" json:"default_outline_open"`
 }

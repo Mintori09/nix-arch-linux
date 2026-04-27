@@ -4,9 +4,42 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 )
+
+func TestParseCLIDoesNotAcceptEditFlag(t *testing.T) {
+	t.Parallel()
+
+	_, err := ParseCLI([]string{"-edit"})
+	if err == nil {
+		t.Fatal("expected -edit flag to be rejected")
+	}
+}
+
+func TestBuildURLDoesNotEmitModeEdit(t *testing.T) {
+	t.Parallel()
+
+	raw := buildURL("127.0.0.1:9999", "token123", CLIOptions{
+		NoSidebar: true,
+	})
+
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		t.Fatalf("parse url: %v", err)
+	}
+
+	if got := parsed.Query().Get("mode"); got != "" {
+		t.Fatalf("expected no mode query param, got %q", got)
+	}
+	if got := parsed.Query().Get("token"); got != "token123" {
+		t.Fatalf("expected token query param, got %q", got)
+	}
+	if got := parsed.Query().Get("sidebar"); got != "0" {
+		t.Fatalf("expected sidebar query param, got %q", got)
+	}
+}
 
 func TestWaitForServerReadyReturnsNilWhenServerResponds(t *testing.T) {
 	t.Parallel()
