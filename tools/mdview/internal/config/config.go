@@ -10,28 +10,38 @@ import (
 )
 
 type Config struct {
-	Browser            string `toml:"browser" json:"browser"`
-	FallbackBrowser    string `toml:"fallback_browser" json:"fallback_browser"`
-	Theme              string `toml:"theme" json:"theme"`
-	Appearance         string `toml:"appearance" json:"appearance"`
-	ContentWidth       int    `toml:"content_width" json:"content_width"`
-	FontSize           int    `toml:"font_size" json:"font_size"`
-	LineHeight         string `toml:"line_height,omitempty" json:"line_height,omitempty"`
-	BodyLineHeight     string `toml:"body_line_height" json:"body_line_height"`
-	ParagraphSpacing   string `toml:"paragraph_spacing" json:"paragraph_spacing"`
-	CodeFontSize       int    `toml:"code_font_size" json:"code_font_size"`
-	CodeLineHeight     string `toml:"code_line_height" json:"code_line_height"`
-	EditorFont         string `toml:"editor_font" json:"editor_font"`
-	EditorFontSize     int    `toml:"editor_font_size" json:"editor_font_size"`
-	EditorLineHeight   string `toml:"editor_line_height" json:"editor_line_height"`
-	FontFamily         string `toml:"font_family" json:"font_family"`
-	CustomCSS          string `toml:"custom_css" json:"custom_css"`
-	AssetsDir          string `toml:"assets_dir" json:"assets_dir"`
-	AutosaveDebounceMS int    `toml:"autosave_debounce_ms" json:"autosave_debounce_ms"`
-	AllowRawHTML       bool   `toml:"allow_raw_html" json:"allow_raw_html"`
-	LocalOnly          bool   `toml:"local_only" json:"local_only"`
-	DefaultSidebarOpen bool   `toml:"default_sidebar_open" json:"default_sidebar_open"`
-	DefaultOutlineOpen bool   `toml:"default_outline_open" json:"default_outline_open"`
+	Browser            string   `toml:"browser" json:"browser"`
+	FallbackBrowser    string   `toml:"fallback_browser" json:"fallback_browser"`
+	Theme              string   `toml:"theme" json:"theme"`
+	Appearance         string   `toml:"appearance" json:"appearance"`
+	ContentWidth       int      `toml:"content_width" json:"content_width"`
+	FontSize           int      `toml:"font_size" json:"font_size"`
+	LineHeight         string   `toml:"line_height,omitempty" json:"line_height,omitempty"`
+	BodyLineHeight     string   `toml:"body_line_height" json:"body_line_height"`
+	ParagraphSpacing   string   `toml:"paragraph_spacing" json:"paragraph_spacing"`
+	CodeFontSize       int      `toml:"code_font_size" json:"code_font_size"`
+	CodeLineHeight     string   `toml:"code_line_height" json:"code_line_height"`
+	EditorFont         string   `toml:"editor_font" json:"editor_font"`
+	EditorFontSize     int      `toml:"editor_font_size" json:"editor_font_size"`
+	EditorLineHeight   string   `toml:"editor_line_height" json:"editor_line_height"`
+	FontFamily         string   `toml:"font_family" json:"font_family"`
+	CustomCSS          string   `toml:"custom_css" json:"custom_css"`
+	AssetsDir          string   `toml:"assets_dir" json:"assets_dir"`
+	AutosaveDebounceMS int      `toml:"autosave_debounce_ms" json:"autosave_debounce_ms"`
+	AllowRawHTML       bool     `toml:"allow_raw_html" json:"allow_raw_html"`
+	LocalOnly          bool     `toml:"local_only" json:"local_only"`
+	DefaultSidebarOpen bool     `toml:"default_sidebar_open" json:"default_sidebar_open"`
+	DefaultOutlineOpen bool     `toml:"default_outline_open" json:"default_outline_open"`
+	WorkspaceRoots     []string `toml:"workspace_roots" json:"workspace_roots"`
+	SpeechLanguage     string   `toml:"speech_language" json:"speech_language"`
+	SpeechVoice        string   `toml:"speech_voice" json:"speech_voice"`
+	SpeechRate         float64  `toml:"speech_rate" json:"speech_rate"`
+	SpeechAutoNext     *bool    `toml:"speech_auto_next" json:"speech_auto_next"`
+	TTSProvider        string   `toml:"tts_provider" json:"tts_provider"`
+	TTSLanguage        string   `toml:"tts_language" json:"tts_language"`
+	TTSVoice           string   `toml:"tts_voice" json:"tts_voice"`
+	TTSSpeed           float64  `toml:"tts_speed" json:"tts_speed"`
+	TTSAutoNext        *bool    `toml:"tts_auto_next" json:"tts_auto_next"`
 }
 
 func Default() Config {
@@ -55,6 +65,15 @@ func Default() Config {
 		AutosaveDebounceMS: 700,
 		AllowRawHTML:       false,
 		LocalOnly:          true,
+		SpeechLanguage:     "vi-VN",
+		SpeechVoice:        "",
+		SpeechRate:         1.0,
+		SpeechAutoNext:     boolPtr(true),
+		TTSProvider:        "google",
+		TTSLanguage:        "vi-VN",
+		TTSVoice:           "vi-VN-Wavenet-A",
+		TTSSpeed:           1.0,
+		TTSAutoNext:        boolPtr(true),
 	}
 }
 
@@ -180,5 +199,74 @@ func normalize(cfg Config) Config {
 	if cfg.AutosaveDebounceMS == 0 {
 		cfg.AutosaveDebounceMS = defaults.AutosaveDebounceMS
 	}
+	if cfg.SpeechLanguage == "" {
+		cfg.SpeechLanguage = defaults.SpeechLanguage
+	}
+	if cfg.SpeechRate == 0 {
+		cfg.SpeechRate = defaults.SpeechRate
+	}
+	if cfg.SpeechAutoNext == nil {
+		cfg.SpeechAutoNext = defaults.SpeechAutoNext
+	}
+	if cfg.TTSProvider == "" {
+		cfg.TTSProvider = defaults.TTSProvider
+	}
+	if cfg.TTSLanguage == "" {
+		if cfg.SpeechLanguage != "" {
+			cfg.TTSLanguage = cfg.SpeechLanguage
+		} else {
+			cfg.TTSLanguage = defaults.TTSLanguage
+		}
+	}
+	if cfg.TTSVoice == "" {
+		if cfg.SpeechVoice != "" {
+			cfg.TTSVoice = cfg.SpeechVoice
+		} else {
+			cfg.TTSVoice = defaults.TTSVoice
+		}
+	}
+	if cfg.TTSSpeed == 0 {
+		if cfg.SpeechRate != 0 {
+			cfg.TTSSpeed = cfg.SpeechRate
+		} else {
+			cfg.TTSSpeed = defaults.TTSSpeed
+		}
+	}
+	if cfg.TTSAutoNext == nil {
+		if cfg.SpeechAutoNext != nil {
+			cfg.TTSAutoNext = cfg.SpeechAutoNext
+		} else {
+			cfg.TTSAutoNext = defaults.TTSAutoNext
+		}
+	}
+	cfg.WorkspaceRoots = normalizeWorkspaceRoots(cfg.WorkspaceRoots)
 	return cfg
+}
+
+func boolPtr(value bool) *bool {
+	return &value
+}
+
+func normalizeWorkspaceRoots(roots []string) []string {
+	if len(roots) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]struct{}, len(roots))
+	normalized := make([]string, 0, len(roots))
+	for _, root := range roots {
+		root = filepath.Clean(root)
+		if root == "" || root == "." {
+			continue
+		}
+		if _, ok := seen[root]; ok {
+			continue
+		}
+		seen[root] = struct{}{}
+		normalized = append(normalized, root)
+	}
+	if len(normalized) == 0 {
+		return nil
+	}
+	return normalized
 }

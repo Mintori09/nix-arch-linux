@@ -21,7 +21,7 @@
         </div>
         <div class="toolbar__right">
           <button id="open-search" type="button">Search</button>
-          <button id="toggle-settings" type="button">Theme</button>
+          <button id="toggle-settings" type="button">Settings</button>
           <button id="print-page" type="button">Print</button>
           <span id="status-pill">Temporary</span>
           <div id="sync-actions" class="sync-actions hidden">
@@ -33,7 +33,21 @@
 
       <div class="chrome">
         <aside class="sidebar hidden" id="file-sidebar">
-          <div class="panel-title">Files</div>
+          <div class="panel-title panel-title--workspace">
+            <span>Workspace</span>
+            <button id="add-workspace-root" type="button">Add folder</button>
+          </div>
+          <form id="workspace-root-form" class="workspace-root-form hidden">
+            <input
+              id="workspace-root-input"
+              type="text"
+              placeholder="/absolute/path/to/folder"
+            />
+            <div class="workspace-root-form__actions">
+              <button id="workspace-root-submit" type="submit">Add</button>
+              <button id="workspace-root-cancel" type="button">Cancel</button>
+            </div>
+          </form>
           <div id="file-list" class="panel-scroll"></div>
         </aside>
 
@@ -52,109 +66,160 @@
         </aside>
       </div>
 
-      <section class="drawer hidden" id="settings-drawer">
-        <h2>Reading Settings</h2>
-        <label
-          >Theme
-          <select id="theme-select">
-            <option value="warm">Warm Paper</option>
-            <option value="minimal">Minimal Light</option>
-            <option value="dark">Dark</option>
-            <option value="paper">Sepia Reading</option>
-          </select>
-        </label>
-        <label
-          >Appearance
-          <select id="appearance-select">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-        <label
-          >Font family
-          <select id="font-family-select">
-            <option value="serif">Serif</option>
-            <option value="sans-serif">Sans</option>
-            <option value="monospace">Mono</option>
-          </select>
-        </label>
-        <label
-          >Content width
-          <input id="width-input" type="range" min="560" max="980" step="10" />
-        </label>
-        <label
-          >Font size
-          <input id="font-size-input" type="range" min="14" max="24" step="1" />
-        </label>
-        <label
-          >Body line height
-          <input
-            id="body-line-height-input"
-            type="range"
-            min="1.4"
-            max="2.2"
-            step="0.1"
-          />
-        </label>
-        <label
-          >Paragraph spacing
-          <input
-            id="paragraph-spacing-input"
-            type="range"
-            min="0.4"
-            max="1.6"
-            step="0.1"
-          />
-        </label>
-        <label
-          >Code font size
-          <input
-            id="code-font-size-input"
-            type="range"
-            min="12"
-            max="18"
-            step="1"
-          />
-        </label>
-        <label
-          >Code line height
-          <input
-            id="code-line-height-input"
-            type="range"
-            min="1.2"
-            max="2.0"
-            step="0.1"
-          />
-        </label>
-        <label
-          >Editor font
-          <select id="editor-font-select">
-            <option value="monospace">Mono</option>
-            <option value="serif">Serif</option>
-            <option value="sans-serif">Sans</option>
-          </select>
-        </label>
-        <label
-          >Editor font size
-          <input
-            id="editor-font-size-input"
-            type="range"
-            min="12"
-            max="20"
-            step="1"
-          />
-        </label>
-        <label
-          >Editor line height
-          <input
-            id="editor-line-height-input"
-            type="range"
-            min="1.2"
-            max="2.0"
-            step="0.1"
-          />
-        </label>
+      <section class="settings-panel hidden" id="settings-drawer">
+        <div class="settings-panel__header">
+          <h2>Settings</h2>
+          <button id="close-settings" type="button">Close</button>
+        </div>
+        <div class="settings-tabs">
+          <button id="settings-tab-theme" type="button" class="settings-tab active">Theme</button>
+          <button id="settings-tab-reading" type="button" class="settings-tab">Reading</button>
+        </div>
+        <div id="settings-theme-panel" class="settings-section">
+          <label
+            >Theme
+            <select id="theme-select">
+              <option value="warm">Warm Paper</option>
+              <option value="minimal">Minimal Light</option>
+              <option value="dark">Dark</option>
+              <option value="paper">Sepia Reading</option>
+            </select>
+          </label>
+          <label
+            >Appearance
+            <select id="appearance-select">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+          <label
+            >Font family
+            <select id="font-family-select">
+              <option value="serif">Serif</option>
+              <option value="sans-serif">Sans</option>
+              <option value="monospace">Mono</option>
+            </select>
+          </label>
+          <label
+            >Content width
+            <input id="width-input" type="range" min="560" max="980" step="10" />
+          </label>
+          <label
+            >Font size
+            <input id="font-size-input" type="range" min="14" max="24" step="1" />
+          </label>
+          <label
+            >Body line height
+            <input
+              id="body-line-height-input"
+              type="range"
+              min="1.4"
+              max="2.2"
+              step="0.1"
+            />
+          </label>
+          <label
+            >Paragraph spacing
+            <input
+              id="paragraph-spacing-input"
+              type="range"
+              min="0.4"
+              max="1.6"
+              step="0.1"
+            />
+          </label>
+          <label
+            >Code font size
+            <input
+              id="code-font-size-input"
+              type="range"
+              min="12"
+              max="18"
+              step="1"
+            />
+          </label>
+          <label
+            >Code line height
+            <input
+              id="code-line-height-input"
+              type="range"
+              min="1.2"
+              max="2.0"
+              step="0.1"
+            />
+          </label>
+          <label
+            >Editor font
+            <select id="editor-font-select">
+              <option value="monospace">Mono</option>
+              <option value="serif">Serif</option>
+              <option value="sans-serif">Sans</option>
+            </select>
+          </label>
+          <label
+            >Editor font size
+            <input
+              id="editor-font-size-input"
+              type="range"
+              min="12"
+              max="20"
+              step="1"
+            />
+          </label>
+          <label
+            >Editor line height
+            <input
+              id="editor-line-height-input"
+              type="range"
+              min="1.2"
+              max="2.0"
+              step="0.1"
+            />
+          </label>
+        </div>
+        <div id="settings-reading-panel" class="settings-section hidden">
+          <label
+            >Provider
+            <select id="tts-provider-select">
+              <option value="google">Google Cloud TTS</option>
+              <option value="browser">Browser (Web Speech API)</option>
+            </select>
+          </label>
+          <label
+            >Reading language
+            <select id="speech-language-select">
+              <option value="vi-VN">Vietnamese</option>
+              <option value="en-US">English (US)</option>
+            </select>
+          </label>
+          <label
+            >Voice
+            <select id="speech-voice-select"></select>
+          </label>
+          <label
+            >Reading speed
+            <input id="speech-rate-input" type="range" min="0.5" max="2" step="0.1" />
+          </label>
+          <label class="drawer-checkbox"
+            ><input id="speech-auto-next-input" type="checkbox" />
+            Auto play next file
+          </label>
+          <p class="settings-note">Google Cloud TTS requires <code>MDVIEW_GOOGLE_TTS_API_KEY</code>. Browser TTS works without configuration.</p>
+        </div>
+      </section>
+
+      <section id="reader-popup" class="reader-popup hidden">
+        <div class="reader-popup__meta">
+          <strong id="reader-popup-title">Reader</strong>
+          <span id="speech-status" class="speech-status">Idle</span>
+        </div>
+        <div class="reader-popup__controls">
+          <button id="btn-speech-prev" type="button">Prev</button>
+          <button id="btn-speech-play" type="button">Play</button>
+          <button id="btn-speech-next" type="button">Next</button>
+          <button id="btn-speech-stop" type="button">Stop</button>
+        </div>
       </section>
 
       <section class="drawer hidden" id="search-drawer">

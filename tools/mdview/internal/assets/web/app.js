@@ -7,25 +7,42 @@ import {
   saveScrollSnapshot,
 } from "./app-state.js";
 import {
-  getEditorContentForSaving,
-  getWysiwygInitialContent,
-} from "./app-wysiwyg.js";
+  getOutlineHeadingElements,
+  getOutlineScrollContainer,
+} from "./outline.js";
 import {
   getDocumentSyncState,
   mergeDocumentVersions,
 } from "./document-sync.js";
+import {
+  buildWorkspaceTree,
+  findAdjacentWorkspaceFile,
+  flattenWorkspaceFiles,
+  isActiveWorkspaceFile,
+} from "./workspace-tree.js";
+import {
+  toSpeechText,
+} from "./speech.js";
+import {
+  getDefaultSettingsTab,
+  getGoogleVoicesForLanguage,
+  getBrowserVoicesForLanguage,
+  getReaderPopupVisibility,
+} from "./reader-ui.js";
 
 import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
+import TaskItem from "https://esm.sh/@tiptap/extension-task-item@2.11.5";
+import TaskList from "https://esm.sh/@tiptap/extension-task-list@2.11.5";
 import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
+import { Markdown } from "https://esm.sh/@tiptap/markdown@3";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
 const DOCUMENT_POLL_MS = 1500;
-
 const state = {
   config: null,
   document: null,
-  files: [],
+  workspaceRoots: [],
   viewMode: "preview",
   sidebarOpen: false,
   outlineOpen: false,
@@ -39,6 +56,8 @@ const state = {
   outlineHeadings: [],
   activeHeadingId: null,
   headingObserver: null,
+  headingScrollTarget: null,
+  headingScrollHandler: null,
   documentPollTimer: null,
   documentPollInFlight: false,
   lastSyncedContent: "",
@@ -46,9 +65,17 @@ const state = {
   acknowledgedRemoteRevision: "",
   pendingRemoteDocument: null,
   conflictActive: false,
+  ttsVoices: [],
+  speechStatus: "",
+  speechPlaybackState: "idle",
+  speechNavigationActive: false,
+  workspaceFiles: [],
+  activeSettingsTab: getDefaultSettingsTab(),
 };
 
 let tiptapEditor = null;
+let readerAudio = null;
+let readerUtterance = null;
 
 const elements = {
   chrome: document.querySelector(".chrome"),
@@ -56,19 +83,41 @@ const elements = {
   docName: document.getElementById("doc-name"),
   docMeta: document.getElementById("doc-meta"),
   status: document.getElementById("status-pill"),
+  speechStatus: document.getElementById("speech-status"),
+  readerPopup: document.getElementById("reader-popup"),
+  readerPopupTitle: document.getElementById("reader-popup-title"),
   fileSidebar: document.getElementById("file-sidebar"),
   fileList: document.getElementById("file-list"),
+  addWorkspaceRoot: document.getElementById("add-workspace-root"),
+  workspaceRootForm: document.getElementById("workspace-root-form"),
+  workspaceRootInput: document.getElementById("workspace-root-input"),
+  workspaceRootSubmit: document.getElementById("workspace-root-submit"),
+  workspaceRootCancel: document.getElementById("workspace-root-cancel"),
   outlineSidebar: document.getElementById("outline-sidebar"),
   outlineList: document.getElementById("outline-list"),
   settingsDrawer: document.getElementById("settings-drawer"),
+  closeSettings: document.getElementById("close-settings"),
+  settingsTabTheme: document.getElementById("settings-tab-theme"),
+  settingsTabReading: document.getElementById("settings-tab-reading"),
+  settingsThemePanel: document.getElementById("settings-theme-panel"),
+  settingsReadingPanel: document.getElementById("settings-reading-panel"),
   searchDrawer: document.getElementById("search-drawer"),
   workspace: document.getElementById("workspace"),
   editorPane: document.getElementById("editor-pane"),
   editor: document.getElementById("editor"),
   btnPreview: document.getElementById("btn-preview"),
   btnWysiwyg: document.getElementById("btn-wysiwyg"),
+  btnSpeechPlay: document.getElementById("btn-speech-play"),
+  btnSpeechStop: document.getElementById("btn-speech-stop"),
+  btnSpeechPrev: document.getElementById("btn-speech-prev"),
+  btnSpeechNext: document.getElementById("btn-speech-next"),
   previewPane: document.getElementById("preview-pane"),
   preview: document.getElementById("preview"),
+  speechLanguage: document.getElementById("speech-language-select"),
+  speechVoice: document.getElementById("speech-voice-select"),
+  speechRate: document.getElementById("speech-rate-input"),
+  speechAutoNext: document.getElementById("speech-auto-next-input"),
+  ttsProvider: document.getElementById("tts-provider-select"),
   theme: document.getElementById("theme-select"),
   appearance: document.getElementById("appearance-select"),
   fontFamily: document.getElementById("font-family-select"),
@@ -94,7 +143,7 @@ document.getElementById("toggle-sidebar").addEventListener("click", () => {
     if (isMobileViewport()) {
       const next = getMobilePanelState({
         isMobile: true,
-        filesAvailable: state.files.length > 0,
+        filesAvailable: state.workspaceRoots.length > 0,
         toggle: "sidebar",
         current: {
           sidebarOpen: state.sidebarOpen,
@@ -114,7 +163,7 @@ document.getElementById("toggle-outline").addEventListener("click", () => {
     if (isMobileViewport()) {
       const next = getMobilePanelState({
         isMobile: true,
-        filesAvailable: state.files.length > 0,
+        filesAvailable: state.workspaceRoots.length > 0,
         toggle: "outline",
         current: {
           sidebarOpen: state.sidebarOpen,
@@ -132,6 +181,15 @@ document.getElementById("toggle-outline").addEventListener("click", () => {
 document.getElementById("toggle-settings").addEventListener("click", () => {
   elements.settingsDrawer.classList.toggle("hidden");
   elements.searchDrawer.classList.add("hidden");
+});
+elements.closeSettings?.addEventListener("click", () => {
+  elements.settingsDrawer.classList.add("hidden");
+});
+elements.settingsTabTheme?.addEventListener("click", () => {
+  setActiveSettingsTab("theme");
+});
+elements.settingsTabReading?.addEventListener("click", () => {
+  setActiveSettingsTab("reading");
 });
 document
   .getElementById("print-page")
@@ -170,9 +228,31 @@ elements.codeLineHeight.addEventListener("input", saveSettings);
 elements.editorFont.addEventListener("change", saveSettings);
 elements.editorFontSize.addEventListener("input", saveSettings);
 elements.editorLineHeight.addEventListener("input", saveSettings);
+elements.ttsProvider?.addEventListener("change", handleTTSProviderChange);
+elements.speechLanguage?.addEventListener("change", handleSpeechLanguageChange);
+elements.speechVoice?.addEventListener("change", saveSettings);
+elements.speechRate?.addEventListener("input", saveSettings);
+elements.speechAutoNext?.addEventListener("change", saveSettings);
 
 elements.searchQuery.addEventListener("input", runSearch);
 elements.searchScope.addEventListener("change", runSearch);
+elements.btnSpeechPlay?.addEventListener("click", handleSpeechPlayPause);
+elements.btnSpeechStop?.addEventListener("click", () => stopSpeech());
+elements.btnSpeechPrev?.addEventListener("click", () => navigateSpeechFile("prev"));
+elements.btnSpeechNext?.addEventListener("click", () => navigateSpeechFile("next"));
+elements.addWorkspaceRoot?.addEventListener("click", () => {
+  elements.workspaceRootForm?.classList.toggle("hidden");
+  if (!elements.workspaceRootForm?.classList.contains("hidden")) {
+    elements.workspaceRootInput?.focus();
+  }
+});
+elements.workspaceRootCancel?.addEventListener("click", () => {
+  hideWorkspaceRootForm();
+});
+elements.workspaceRootForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await addWorkspaceRoot();
+});
 elements.reloadDisk?.addEventListener("click", () => {
   resolveExternalConflictByReload().catch(console.error);
 });
@@ -234,12 +314,15 @@ async function init() {
   const [config, doc, files] = await Promise.all([
     api("/api/config"),
     api("/api/document"),
-    api("/api/files").catch(() => ({ files: [] })),
+    api("/api/files").catch(() => ({ roots: [] })),
   ]);
 
   state.config = config;
   state.document = doc;
-  state.files = files.files || [];
+  state.workspaceRoots = files.roots || [];
+  for (const root of state.workspaceRoots) {
+    state.expandedFolders.add(root.path);
+  }
 
   Object.assign(
     state,
@@ -252,6 +335,7 @@ async function init() {
 
   bindSettings(config);
   applyConfig();
+  await initTTSSettings();
   await loadDocument(doc);
   renderFileList();
   syncLayout();
@@ -262,6 +346,7 @@ async function init() {
 }
 
 function bindSettings(config) {
+  setActiveSettingsTab(state.activeSettingsTab);
   elements.theme.value = config.theme;
   elements.appearance.value = config.appearance;
   elements.fontFamily.value = config.font_family;
@@ -278,6 +363,10 @@ function bindSettings(config) {
   elements.editorFontSize.value = config.editor_font_size || 15;
   elements.editorLineHeight.value =
     Number.parseFloat(config.editor_line_height) || 1.7;
+  elements.ttsProvider.value = config.tts_provider || "google";
+  elements.speechLanguage.value = config.tts_language || "vi-VN";
+  elements.speechRate.value = config.tts_speed || 1;
+  elements.speechAutoNext.checked = Boolean(config.tts_auto_next ?? true);
 }
 
 function applyConfig() {
@@ -314,8 +403,336 @@ function applyConfig() {
   );
 }
 
+function bindTTSVoices() {
+  const select = elements.speechVoice;
+  if (!select) return;
+  const current = state.config?.tts_voice || "";
+  select.innerHTML = "";
+  for (const v of state.ttsVoices) {
+    const opt = document.createElement("option");
+    opt.value = v.name;
+    opt.textContent = `${v.label} (${v.gender}, ${v.tier})`;
+    select.appendChild(opt);
+  }
+  if (state.ttsVoices.some((v) => v.name === current)) {
+    select.value = current;
+  }
+}
+
+async function initTTSSettings() {
+  await loadTTSVoices();
+  updateSpeechControls();
+}
+
+async function loadTTSVoices() {
+  const provider = state.config?.tts_provider || "google";
+  const language = state.config?.tts_language || "vi-VN";
+
+  if (provider === "browser") {
+    const synth = window.speechSynthesis;
+    if (!synth) {
+      state.ttsVoices = [];
+      bindTTSVoices();
+      return;
+    }
+    let voices = getBrowserVoicesForLanguage(language);
+    if (voices.length === 0 && synth.onvoiceschanged !== undefined) {
+      await new Promise((resolve) => {
+        synth.addEventListener("voiceschanged", () => {
+          voices = getBrowserVoicesForLanguage(language);
+          resolve();
+        }, { once: true });
+        setTimeout(resolve, 1000);
+      });
+    }
+    state.ttsVoices = voices;
+    bindTTSVoices();
+    return;
+  }
+
+  try {
+    const payload = await api(`/api/tts/voices?language=${encodeURIComponent(language)}`);
+    state.ttsVoices = payload.voices || [];
+  } catch (error) {
+    console.error("Load TTS voices failed:", error);
+    state.ttsVoices = getGoogleVoicesForLanguage(language);
+  }
+  bindTTSVoices();
+}
+
+async function handleSpeechLanguageChange() {
+  if (state.config) {
+    state.config.tts_language = elements.speechLanguage.value;
+  }
+  await loadTTSVoices();
+  saveSettings().catch((error) => {
+    console.error("Save reading language failed:", error);
+  });
+}
+
+async function handleTTSProviderChange() {
+  stopSpeech({ silent: true });
+  if (state.config) {
+    state.config.tts_provider = elements.ttsProvider.value;
+  }
+  await loadTTSVoices();
+  saveSettings().catch((error) => {
+    console.error("Save TTS provider failed:", error);
+  });
+}
+
+function setSpeechStatus(label) {
+  state.speechStatus = label;
+  elements.speechStatus.textContent = label;
+}
+
+function setActiveSettingsTab(tab) {
+  state.activeSettingsTab = tab;
+  const isTheme = tab === "theme";
+  elements.settingsTabTheme?.classList.toggle("active", isTheme);
+  elements.settingsTabReading?.classList.toggle("active", !isTheme);
+  elements.settingsThemePanel?.classList.toggle("hidden", !isTheme);
+  elements.settingsReadingPanel?.classList.toggle("hidden", isTheme);
+}
+
+function updateSpeechControls() {
+  const neighborPrev = getSpeechNeighbor("prev");
+  const neighborNext = getSpeechNeighbor("next");
+  const canPlay = Boolean(state.document?.content) && Boolean(elements.speechVoice?.value);
+  const playbackState = state.speechPlaybackState;
+
+  elements.readerPopup?.classList.toggle("hidden", !getReaderPopupVisibility(playbackState));
+  if (elements.readerPopupTitle) {
+    elements.readerPopupTitle.textContent = state.document?.name || "Reader";
+  }
+  if (elements.btnSpeechPlay) {
+    elements.btnSpeechPlay.disabled = !canPlay;
+    elements.btnSpeechPlay.textContent = playbackState === "paused" ? "Resume" : playbackState === "playing" ? "Pause" : "Play";
+  }
+  if (elements.btnSpeechStop) {
+    elements.btnSpeechStop.disabled = playbackState === "idle";
+  }
+  if (elements.btnSpeechPrev) {
+    elements.btnSpeechPrev.disabled = !neighborPrev;
+  }
+  if (elements.btnSpeechNext) {
+    elements.btnSpeechNext.disabled = !neighborNext;
+  }
+}
+
+async function handleSpeechPlayPause() {
+  if (state.speechPlaybackState === "playing") {
+    if (state.config?.tts_provider === "browser" && window.speechSynthesis) {
+      window.speechSynthesis.pause();
+    } else if (readerAudio) {
+      readerAudio.pause();
+    }
+    return;
+  }
+
+  if (state.speechPlaybackState === "paused") {
+    if (state.config?.tts_provider === "browser" && window.speechSynthesis) {
+      window.speechSynthesis.resume();
+    } else if (readerAudio) {
+      await readerAudio.play();
+    }
+    return;
+  }
+
+  await startSpeech();
+}
+
+async function startSpeech() {
+  const text = toSpeechText(getCurrentDocumentContent());
+  if (!text) {
+    setSpeechStatus("Nothing to read");
+    updateSpeechControls();
+    return;
+  }
+
+  stopSpeech({ silent: true });
+  setSpeechStatus("Loading");
+  state.speechPlaybackState = "loading";
+  updateSpeechControls();
+
+  if (state.config?.tts_provider === "browser") {
+    startBrowserSpeech(text);
+    return;
+  }
+
+  try {
+    const payload = await api("/api/tts", {
+      method: "POST",
+      body: JSON.stringify({
+        provider: state.config.tts_provider,
+        text,
+        language: state.config.tts_language,
+        voice: elements.speechVoice.value || state.config.tts_voice,
+        speed: Number(state.config.tts_speed) || 1,
+      }),
+    });
+
+    readerAudio = new Audio(`data:${payload.content_type};base64,${payload.audio_content}`);
+    readerAudio.addEventListener("play", () => {
+      state.speechPlaybackState = "playing";
+      setSpeechStatus("Reading");
+      updateSpeechControls();
+    });
+    readerAudio.addEventListener("pause", () => {
+      if (state.speechPlaybackState === "idle") {
+        return;
+      }
+      state.speechPlaybackState = "paused";
+      setSpeechStatus("Paused");
+      updateSpeechControls();
+    });
+    readerAudio.addEventListener("ended", async () => {
+      state.speechPlaybackState = "idle";
+      updateSpeechControls();
+      if (state.config.tts_auto_next) {
+        const continued = await navigateSpeechFile("next", { autoplay: true, autoAdvance: true });
+        if (continued) {
+          return;
+        }
+      }
+      setSpeechStatus("Finished");
+      updateSpeechControls();
+    });
+    await readerAudio.play();
+  } catch (error) {
+    console.error("Start reading failed:", error);
+    state.speechPlaybackState = "idle";
+    setSpeechStatus("TTS error");
+    updateSpeechControls();
+  }
+}
+
+function startBrowserSpeech(text) {
+  const synth = window.speechSynthesis;
+  if (!synth) {
+    state.speechPlaybackState = "idle";
+    setSpeechStatus("Browser TTS unavailable");
+    updateSpeechControls();
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = state.config.tts_language || "vi-VN";
+  utterance.rate = Number(state.config.tts_speed) || 1;
+
+  const voiceName = elements.speechVoice.value;
+  if (voiceName) {
+    const allVoices = synth.getVoices();
+    const match = allVoices.find((v) => v.name === voiceName);
+    if (match) {
+      utterance.voice = match;
+    }
+  }
+
+  utterance.addEventListener("start", () => {
+    state.speechPlaybackState = "playing";
+    setSpeechStatus("Reading");
+    updateSpeechControls();
+  });
+  utterance.addEventListener("pause", () => {
+    if (state.speechPlaybackState === "idle") {
+      return;
+    }
+    state.speechPlaybackState = "paused";
+    setSpeechStatus("Paused");
+    updateSpeechControls();
+  });
+  utterance.addEventListener("resume", () => {
+    state.speechPlaybackState = "playing";
+    setSpeechStatus("Reading");
+    updateSpeechControls();
+  });
+  utterance.addEventListener("end", async () => {
+    state.speechPlaybackState = "idle";
+    readerUtterance = null;
+    updateSpeechControls();
+    if (state.config.tts_auto_next) {
+      const continued = await navigateSpeechFile("next", { autoplay: true, autoAdvance: true });
+      if (continued) {
+        return;
+      }
+    }
+    setSpeechStatus("Finished");
+    updateSpeechControls();
+  });
+  utterance.addEventListener("error", (event) => {
+    console.error("Browser TTS error:", event);
+    state.speechPlaybackState = "idle";
+    readerUtterance = null;
+    setSpeechStatus("TTS error");
+    updateSpeechControls();
+  });
+
+  readerUtterance = utterance;
+  synth.speak(utterance);
+}
+
+function stopSpeech(options = {}) {
+  state.speechPlaybackState = "idle";
+  if (readerAudio) {
+    readerAudio.pause();
+    readerAudio.src = "";
+    readerAudio = null;
+  }
+  if (readerUtterance) {
+    const synth = window.speechSynthesis;
+    if (synth) {
+      synth.cancel();
+    }
+    readerUtterance = null;
+  }
+  if (!options.silent) {
+    setSpeechStatus("Stopped");
+  }
+  updateSpeechControls();
+}
+
+function getSpeechNeighbor(direction) {
+  if (!state.document?.path || !state.document?.folder_root) {
+    return null;
+  }
+  const current = {
+    rootPath: state.document.folder_root,
+    path: state.document.path.slice(state.document.folder_root.length + 1).replaceAll("\\", "/"),
+  };
+  return findAdjacentWorkspaceFile(state.workspaceRoots, current, direction);
+}
+
+async function navigateSpeechFile(direction, options = {}) {
+  const neighbor = getSpeechNeighbor(direction);
+  if (!neighbor) {
+    if (options.autoAdvance) {
+      setSpeechStatus("Finished");
+    }
+    updateSpeechControls();
+    return false;
+  }
+
+  state.speechNavigationActive = true;
+  stopSpeech({ silent: true });
+  const doc = await api(buildOpenURL(neighbor.path, neighbor.rootPath));
+  await loadDocument(doc, { speechNavigation: true });
+  state.speechNavigationActive = false;
+  if (options.autoplay) {
+    await startSpeech();
+  } else {
+    setSpeechStatus("Speech ready");
+  }
+  return true;
+}
+
 async function loadDocument(doc, options = {}) {
+  if (!options.speechNavigation) {
+    stopSpeech({ silent: true });
+  }
+
   state.document = doc;
+  renderFileList();
   elements.docName.textContent = doc.name || "Untitled";
   elements.docMeta.textContent =
     doc.path || (doc.temporary ? "Temporary document" : "");
@@ -328,18 +745,15 @@ async function loadDocument(doc, options = {}) {
   autoResizeEditor();
   await renderPreview(doc.content || "");
   if (state.viewMode === "wysiwyg") {
-    initTiptapEditor(
-      getWysiwygInitialContent({
-        markdown: doc.content || "",
-        renderedHTML: elements.preview.innerHTML,
-      }),
-    );
+    initTiptapEditor(doc.content || "");
+    renderOutline();
   }
   syncDocumentMarkers(doc, options);
   updateStatusFromDocument();
   if (options.statusLabel) {
     setStatus(options.statusLabel);
   }
+  updateSpeechControls();
 }
 
 function updateStatusFromDocument() {
@@ -516,7 +930,7 @@ function rewritePreviewLinks() {
     if (href.endsWith(".md")) {
       link.addEventListener("click", async (event) => {
         event.preventDefault();
-        const doc = await api(`/api/open?path=${encodeURIComponent(href)}`);
+        const doc = await api(buildOpenURL(href, state.document.folder_root));
         await loadDocument(doc);
         if (isMobileViewport()) {
           transitionLayout(() => {
@@ -534,9 +948,11 @@ function rewritePreviewLinks() {
 }
 
 function renderOutline() {
-  const headings = Array.from(
-    elements.preview.querySelectorAll("h1, h2, h3, h4"),
-  );
+  const headings = getOutlineHeadingElements({
+    viewMode: state.viewMode,
+    previewElement: elements.preview,
+    editorElement: elements.editor,
+  });
   state.outlineHeadings = headings;
   elements.outlineList.innerHTML = "";
 
@@ -575,20 +991,36 @@ function setupHeadingObserver() {
   if (state.headingObserver) {
     state.headingObserver.disconnect();
   }
+  if (state.headingScrollTarget && state.headingScrollHandler) {
+    state.headingScrollTarget.removeEventListener("scroll", state.headingScrollHandler);
+  }
+  state.headingObserver = null;
+  state.headingScrollTarget = null;
+  state.headingScrollHandler = null;
 
   if (state.outlineHeadings.length === 0) return;
 
   let activeId = null;
   let scrollDir = 0;
-  let lastScrollY = window.scrollY;
+  const scrollContainer = getOutlineScrollContainer({
+    viewMode: state.viewMode,
+    editorElement: elements.editor,
+  });
+  const scrollEventTarget = scrollContainer || window;
+  let lastScrollY = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
 
   const updateActiveHeading = () => {
-    const currentScrollY = window.scrollY;
+    const currentScrollY = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
     scrollDir = currentScrollY > lastScrollY ? 1 : currentScrollY < lastScrollY ? -1 : scrollDir;
     lastScrollY = currentScrollY;
 
     const visibleHeadings = state.outlineHeadings.filter((h) => {
       const rect = h.getBoundingClientRect();
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const threshold = containerRect.top + containerRect.height * 0.6;
+        return rect.top >= containerRect.top && rect.top <= threshold;
+      }
       return rect.top >= 0 && rect.top <= window.innerHeight * 0.6;
     });
 
@@ -648,6 +1080,7 @@ function setupHeadingObserver() {
       }
     },
     {
+      root: scrollContainer,
       rootMargin: "-10% 0px -60% 0px",
       threshold: 0,
     },
@@ -657,99 +1090,181 @@ function setupHeadingObserver() {
     state.headingObserver.observe(heading);
   });
 
-  window.addEventListener("scroll", updateActiveHeading, { passive: true });
+  state.headingScrollTarget = scrollEventTarget;
+  state.headingScrollHandler = updateActiveHeading;
+  scrollEventTarget.addEventListener("scroll", updateActiveHeading, { passive: true });
+  updateActiveHeading();
+}
+
+function getFolderKey(rootPath, path = "") {
+  return `${rootPath}::${path}`;
+}
+
+function toggleFolder(key) {
+  if (state.expandedFolders.has(key)) {
+    state.expandedFolders.delete(key);
+  } else {
+    state.expandedFolders.add(key);
+  }
+  renderFileList();
+}
+
+function buildOpenURL(path, rootPath) {
+  const params = new URLSearchParams({ path });
+  if (rootPath) {
+    params.set("root", rootPath);
+  }
+  return `/api/open?${params.toString()}`;
+}
+
+function hideWorkspaceRootForm() {
+  elements.workspaceRootForm?.classList.add("hidden");
+  if (elements.workspaceRootInput) {
+    elements.workspaceRootInput.value = "";
+  }
+}
+
+async function refreshWorkspaceRoots(payload = null) {
+  const next = payload || await api("/api/files");
+  state.workspaceRoots = next.roots || [];
+  for (const root of state.workspaceRoots) {
+    state.expandedFolders.add(root.path);
+  }
+  state.workspaceFiles = flattenWorkspaceFiles(state.workspaceRoots);
+  renderFileList();
+  syncLayout();
+  updateSpeechControls();
+}
+
+async function addWorkspaceRoot() {
+  const path = elements.workspaceRootInput?.value.trim();
+  if (!path) {
+    return;
+  }
+
+  try {
+    const payload = await api("/api/workspace/roots", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    });
+    hideWorkspaceRootForm();
+    await refreshWorkspaceRoots(payload);
+  } catch (error) {
+    console.error("Add workspace root failed:", error);
+    setStatus("Root error");
+  }
+}
+
+async function removeWorkspaceRoot(path) {
+  try {
+    const payload = await api("/api/workspace/roots", {
+      method: "DELETE",
+      body: JSON.stringify({ path }),
+    });
+    state.expandedFolders.delete(path);
+    await refreshWorkspaceRoots(payload);
+  } catch (error) {
+    console.error("Remove workspace root failed:", error);
+    setStatus("Root error");
+  }
 }
 
 function renderFileList() {
   elements.fileList.innerHTML = "";
+  state.workspaceFiles = flattenWorkspaceFiles(state.workspaceRoots);
+  const tree = buildWorkspaceTree(state.workspaceRoots);
+  const fragment = document.createDocumentFragment();
 
-  const buildTree = (entries, parentPath = "") => {
-    const tree = {};
-    for (const entry of entries) {
-      const parent = entry.path.includes("/") ? entry.path.slice(0, entry.path.lastIndexOf("/") + 1) : "";
-      if (parent === parentPath) {
-        if (!tree[parentPath]) tree[parentPath] = [];
-        tree[parentPath].push(entry);
+  const renderNodes = (nodes, container, depth = 0) => {
+    for (const node of nodes) {
+      if (node.type === "root") {
+        const wrapper = document.createElement("section");
+        wrapper.className = "workspace-root";
+
+        const header = document.createElement("div");
+        header.className = "workspace-root__header";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "file-link folder-toggle workspace-root__toggle";
+        button.innerHTML = `<span class="icon">🗂️</span><span class="name">${node.name}</span>`;
+        button.addEventListener("click", () => {
+          toggleFolder(node.path);
+        });
+        header.appendChild(button);
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "workspace-root__remove";
+        removeButton.textContent = "Remove";
+        removeButton.addEventListener("click", async () => {
+          await removeWorkspaceRoot(node.path);
+        });
+        header.appendChild(removeButton);
+        wrapper.appendChild(header);
+
+        if (state.expandedFolders.has(node.path)) {
+          const children = document.createElement("div");
+          children.className = "folder-children";
+          renderNodes(node.children || [], children, 1);
+          wrapper.appendChild(children);
+        }
+
+        container.appendChild(wrapper);
+        continue;
       }
-    }
-    return tree;
-  };
-
-  const render = (entries, parentPath = "", depth = 0) => {
-    const children = entries.filter(e => {
-      const parent = e.path.includes("/") ? e.path.slice(0, e.path.lastIndexOf("/") + 1) : "";
-      return parent === parentPath;
-    });
-
-    const dirs = children.filter(c => c.type === "directory").sort((a, b) => a.name.localeCompare(b.name));
-    const files = children.filter(c => c.type === "file").sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const dir of dirs) {
-      const folderPath = dir.path;
-      const isExpanded = state.expandedFolders.has(folderPath);
 
       const wrapper = document.createElement("div");
-      wrapper.className = "tree-folder";
+      wrapper.className = node.type === "directory" ? "tree-folder" : "tree-file";
       wrapper.style.setProperty("--depth", depth);
 
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "file-link folder-toggle";
-      button.innerHTML = `<span class="icon">📁</span><span class="name">${dir.name}</span>`;
-      button.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (state.expandedFolders.has(folderPath)) {
-          state.expandedFolders.delete(folderPath);
-        } else {
-          state.expandedFolders.add(folderPath);
-        }
-        renderFileList();
-      });
+      button.className = node.type === "directory" ? "file-link folder-toggle" : "file-link";
+      if (isActiveWorkspaceFile(node, state.document)) {
+        button.classList.add("active");
+      }
+      button.innerHTML = node.type === "directory"
+        ? `<span class="icon">📁</span><span class="name">${node.name}</span>`
+        : `<span class="icon">📄</span><span class="name">${node.name}</span>`;
 
-      wrapper.appendChild(button);
-
-      if (isExpanded) {
-        const childContainer = document.createElement("div");
-        childContainer.className = "folder-children";
-        childContainer.appendChild(render(state.files, folderPath, depth + 1));
-        wrapper.appendChild(childContainer);
+      if (node.type === "directory") {
+        button.addEventListener("click", () => {
+          toggleFolder(getFolderKey(node.rootPath, node.path));
+        });
+      } else {
+        button.addEventListener("click", async () => {
+          const doc = await api(buildOpenURL(node.path, node.rootPath));
+          await loadDocument(doc);
+          if (isMobileViewport()) {
+            transitionLayout(() => {
+              closePanels();
+            });
+          }
+        });
       }
 
-      elements.fileList.appendChild(wrapper);
-    }
-
-    for (const file of files) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "tree-file";
-      wrapper.style.setProperty("--depth", depth);
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "file-link";
-      button.innerHTML = `<span class="icon">📄</span><span class="name">${file.name}</span>`;
-      button.addEventListener("click", async () => {
-        const doc = await api(`/api/open?path=${encodeURIComponent(file.path)}`);
-        await loadDocument(doc);
-        if (isMobileViewport()) {
-          transitionLayout(() => {
-            closePanels();
-          });
-        }
-      });
-
       wrapper.appendChild(button);
-      elements.fileList.appendChild(wrapper);
+      container.appendChild(wrapper);
+
+      if (node.type === "directory" && state.expandedFolders.has(getFolderKey(node.rootPath, node.path))) {
+        const children = document.createElement("div");
+        children.className = "folder-children";
+        renderNodes(node.children || [], children, depth + 1);
+        container.appendChild(children);
+      }
     }
   };
 
-  render(state.files);
+  renderNodes(tree, fragment);
+  elements.fileList.appendChild(fragment);
 }
 
 function syncLayout(fromContext = state.currentContext) {
   const isMobile = isMobileViewport();
   const nextMobilePanels = getMobilePanelState({
     isMobile,
-    filesAvailable: state.files.length > 0,
+    filesAvailable: state.workspaceRoots.length > 0,
     toggle: null,
     current: {
       sidebarOpen: state.sidebarOpen,
@@ -759,7 +1274,7 @@ function syncLayout(fromContext = state.currentContext) {
   state.sidebarOpen = nextMobilePanels.sidebarOpen;
   state.outlineOpen = nextMobilePanels.outlineOpen;
 
-  const showFileSidebar = state.sidebarOpen && state.files.length > 0;
+  const showFileSidebar = state.sidebarOpen && state.workspaceRoots.length > 0;
   const showOutlineSidebar = state.outlineOpen;
 
   document.body.classList.toggle("mobile-viewport", isMobile);
@@ -825,6 +1340,11 @@ function scheduleAutosave() {
 async function saveSettings() {
   state.config = {
     ...state.config,
+    tts_provider: elements.ttsProvider.value,
+    tts_language: elements.speechLanguage.value,
+    tts_voice: elements.speechVoice.value,
+    tts_speed: Number(elements.speechRate.value),
+    tts_auto_next: elements.speechAutoNext.checked,
     theme: elements.theme.value,
     appearance: elements.appearance.value,
     font_family: elements.fontFamily.value,
@@ -838,6 +1358,10 @@ async function saveSettings() {
     editor_font_size: Number(elements.editorFontSize.value),
     editor_line_height: Number(elements.editorLineHeight.value).toFixed(1),
   };
+  state.config.speech_language = state.config.tts_language;
+  state.config.speech_voice = state.config.tts_voice;
+  state.config.speech_rate = state.config.tts_speed;
+  state.config.speech_auto_next = state.config.tts_auto_next;
   applyConfig();
   autoResizeEditor();
   await api("/api/config", {
@@ -860,15 +1384,16 @@ async function runSearch() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "search-result";
-    button.innerHTML = `<strong>${result.path}</strong><span>Line ${result.line}: ${result.excerpt}</span>`;
+    const location = result.root
+      ? `${result.root} / ${result.path}`
+      : result.path;
+    button.innerHTML = `<strong>${location}</strong><span>Line ${result.line}: ${result.excerpt}</span>`;
     button.addEventListener("click", async () => {
       if (
         elements.searchScope.value === "workspace" &&
         result.path.endsWith(".md")
       ) {
-        const doc = await api(
-          `/api/open?path=${encodeURIComponent(result.path)}`,
-        );
+        const doc = await api(buildOpenURL(result.path, result.root));
         await loadDocument(doc);
       }
       scrollToLine(result.line);
@@ -1094,25 +1619,50 @@ function initTiptapEditor(content = "") {
   const mount = document.createElement("div");
   elements.editor.appendChild(mount);
   elements.editor.classList.add("tiptap-editor");
+
+  let wysiwygRenderTimer = null;
+
+  function scheduleWysiwygSideEffects(markdown) {
+    clearTimeout(wysiwygRenderTimer);
+    wysiwygRenderTimer = setTimeout(() => {
+      if (state.outlineOpen) {
+        renderPreview(markdown).catch(console.error);
+      }
+      autoResizeEditor();
+    }, 400);
+  }
+
   tiptapEditor = new Editor({
     element: mount,
-    extensions: [StarterKit],
-    content: "",
-    onUpdate: async ({ editor }) => {
-      const markdown = getEditorContentForSaving({
-        viewMode: "wysiwyg",
-        plainText: editor.getText(),
-        html: editor.getHTML(),
-      });
+    extensions: [
+      StarterKit,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      Markdown.configure({
+        html: false,
+        tightLists: true,
+        tightListsClass: "tight",
+        bulletListMarker: "-",
+        linkify: false,
+        breaks: false,
+        transformPastedText: true,
+        transformCopiedText: false,
+      }),
+    ],
+    content: content,
+    contentType: "markdown",
+    onUpdate: ({ editor }) => {
+      const markdown = editor.storage.markdown.getMarkdown();
       state.document.content = markdown;
       if (!state.document.temporary) {
         setStatus("Unsaved");
       }
-      await renderPreview(markdown);
       scheduleAutosave();
+      scheduleWysiwygSideEffects(markdown);
     },
   });
-  tiptapEditor.commands.setContent(content, false);
 }
 
 function destroyTiptapEditor() {
@@ -1129,11 +1679,7 @@ function setViewMode(mode) {
   if (currentMode === mode) return;
   
   if (currentMode === "wysiwyg" && tiptapEditor) {
-    const markdown = getEditorContentForSaving({
-      viewMode: "wysiwyg",
-      plainText: tiptapEditor.getText(),
-      html: tiptapEditor.getHTML(),
-    });
+    const markdown = tiptapEditor.storage.markdown.getMarkdown();
     state.document.content = markdown;
     elements.editor.textContent = markdown;
     destroyTiptapEditor();
@@ -1143,14 +1689,11 @@ function setViewMode(mode) {
   
   if (mode === "wysiwyg") {
     state.editorType = "wysiwyg";
-    initTiptapEditor(
-      getWysiwygInitialContent({
-        markdown: state.document?.content || getEditorPlainText(),
-        renderedHTML: elements.preview.innerHTML,
-      }),
-    );
+    initTiptapEditor(state.document?.content || "");
+    renderOutline();
   } else {
     state.editorType = "textarea";
+    renderOutline();
   }
   
   syncLayout();
@@ -1165,14 +1708,10 @@ function getEditorPlainText() {
 }
 
 function getCurrentDocumentContent() {
-  return getEditorContentForSaving({
-    viewMode: state.viewMode,
-    plainText:
-      state.viewMode === "wysiwyg" && tiptapEditor
-        ? tiptapEditor.getText()
-        : getEditorPlainText(),
-    html: state.viewMode === "wysiwyg" && tiptapEditor ? tiptapEditor.getHTML() : "",
-  });
+  if (state.viewMode === "wysiwyg" && tiptapEditor) {
+    return tiptapEditor.storage.markdown.getMarkdown();
+  }
+  return getEditorPlainText();
 }
 
 function initViewModeToggle() {
@@ -1286,11 +1825,8 @@ async function replaceDocumentContent(content) {
 
   if (state.viewMode === "wysiwyg" && tiptapEditor) {
     tiptapEditor.commands.setContent(
-      getWysiwygInitialContent({
-        markdown: content,
-        renderedHTML: elements.preview.innerHTML,
-      }),
-      false,
+      content,
+      { emitUpdate: false },
     );
   }
 

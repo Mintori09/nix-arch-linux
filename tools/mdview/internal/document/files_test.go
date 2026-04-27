@@ -47,3 +47,69 @@ func TestListMarkdownFilesReturnsSortedRelativePaths(t *testing.T) {
 		}
 	}
 }
+
+func TestListWorkspaceEntriesReturnsAllDirectoriesAndMarkdownFiles(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	dirs := []string{
+		"docs",
+		"docs/guides",
+		"docs/guides/deep",
+		"notes",
+		"notes/archive",
+		"assets",
+	}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, filepath.FromSlash(dir)), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", dir, err)
+		}
+	}
+
+	fixtures := map[string]string{
+		"docs/overview.md":      "# overview",
+		"docs/guides/setup.md":  "# setup",
+		"notes/today.md":        "# today",
+		"notes/archive/old.txt": "skip",
+		"assets/logo.svg":       "<svg/>",
+	}
+	for name, content := range fixtures {
+		path := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatalf("write fixture %s: %v", name, err)
+		}
+	}
+
+	entries, err := ListWorkspaceEntries(root)
+	if err != nil {
+		t.Fatalf("ListWorkspaceEntries returned error: %v", err)
+	}
+
+	want := map[string]string{
+		"assets/":              "directory",
+		"docs/":                "directory",
+		"docs/guides/":         "directory",
+		"docs/guides/deep/":    "directory",
+		"notes/":               "directory",
+		"notes/archive/":       "directory",
+		"docs/overview.md":     "file",
+		"docs/guides/setup.md": "file",
+		"notes/today.md":       "file",
+	}
+	if len(entries) != len(want) {
+		t.Fatalf("expected %d entries, got %d (%v)", len(want), len(entries), entries)
+	}
+
+	seenFile := false
+	for _, entry := range entries {
+		if entry.Type == "file" {
+			seenFile = true
+		}
+		if entry.Type == "directory" && seenFile {
+			t.Fatalf("expected all directories before files, got %+v", entries)
+		}
+		if want[entry.Path] != entry.Type {
+			t.Fatalf("unexpected entry %+v", entry)
+		}
+	}
+}

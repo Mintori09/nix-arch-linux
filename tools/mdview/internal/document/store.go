@@ -36,7 +36,51 @@ type FileEntry struct {
 	Type string `json:"type"`
 }
 
+type WorkspaceRoot struct {
+	Path    string      `json:"path"`
+	Name    string      `json:"name"`
+	Entries []FileEntry `json:"entries"`
+}
+
 func ListMarkdownFiles(root string) ([]FileEntry, error) {
+	entries, err := listWorkspaceEntries(root, false)
+	if err != nil {
+		return nil, err
+	}
+	filtered := entries[:0]
+	for _, entry := range entries {
+		if entry.Type == "directory" {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	dirs := directoriesFromMarkdownFiles(filtered)
+	filtered = append(filtered, dirs...)
+	sortEntries(filtered)
+	return filtered, nil
+}
+
+func ListWorkspaceEntries(root string) ([]FileEntry, error) {
+	return listWorkspaceEntries(root, true)
+}
+
+func ListWorkspaceRoots(roots []string) ([]WorkspaceRoot, error) {
+	items := make([]WorkspaceRoot, 0, len(roots))
+	for _, root := range roots {
+		entries, err := ListWorkspaceEntries(root)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, WorkspaceRoot{
+			Path:    root,
+			Name:    filepath.Base(root),
+			Entries: entries,
+		})
+	}
+	return items, nil
+}
+
+func listWorkspaceEntries(root string, includeAllDirs bool) ([]FileEntry, error) {
 	var entries []FileEntry
 	dirs := make(map[string]bool)
 
@@ -44,10 +88,8 @@ func ListMarkdownFiles(root string) ([]FileEntry, error) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
-			return nil
-		}
-		if strings.ToLower(filepath.Ext(d.Name())) != ".md" {
+
+		if path == root {
 			return nil
 		}
 
@@ -55,17 +97,30 @@ func ListMarkdownFiles(root string) ([]FileEntry, error) {
 		if err != nil {
 			return fmt.Errorf("get relative path: %w", err)
 		}
+		relative = filepath.ToSlash(relative)
+
+		if d.IsDir() {
+			if includeAllDirs {
+				dirs[relative] = true
+			}
+			return nil
+		}
+		if strings.ToLower(filepath.Ext(d.Name())) != ".md" {
+			return nil
+		}
 
 		entries = append(entries, FileEntry{
-			Path: filepath.ToSlash(relative),
+			Path: relative,
 			Name: d.Name(),
 			Type: "file",
 		})
 
-		dir := filepath.Dir(relative)
-		for dir != "." && dir != "" {
-			dirs[dir] = true
-			dir = filepath.Dir(dir)
+		if !includeAllDirs {
+			dir := filepath.Dir(relative)
+			for dir != "." && dir != "" {
+				dirs[filepath.ToSlash(dir)] = true
+				dir = filepath.Dir(dir)
+			}
 		}
 		return nil
 	})
@@ -81,6 +136,32 @@ func ListMarkdownFiles(root string) ([]FileEntry, error) {
 		})
 	}
 
+	sortEntries(entries)
+	return entries, nil
+}
+
+func directoriesFromMarkdownFiles(files []FileEntry) []FileEntry {
+	dirs := make(map[string]bool)
+	for _, entry := range files {
+		dir := filepath.Dir(entry.Path)
+		for dir != "." && dir != "" {
+			dirs[filepath.ToSlash(dir)] = true
+			dir = filepath.Dir(dir)
+		}
+	}
+
+	entries := make([]FileEntry, 0, len(dirs))
+	for dir := range dirs {
+		entries = append(entries, FileEntry{
+			Path: dir + "/",
+			Name: filepath.Base(dir),
+			Type: "directory",
+		})
+	}
+	return entries
+}
+
+func sortEntries(entries []FileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
 		if a.Type != b.Type {
@@ -88,6 +169,4 @@ func ListMarkdownFiles(root string) ([]FileEntry, error) {
 		}
 		return a.Path < b.Path
 	})
-
-	return entries, nil
 }
