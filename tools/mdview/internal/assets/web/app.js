@@ -21,6 +21,9 @@ const state = {
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
   expandedFolders: new Set(),
+  outlineHeadings: [],
+  activeHeadingId: null,
+  headingObserver: null,
 };
 
 const elements = {
@@ -354,7 +357,17 @@ async function renderMermaid() {
   if (!mermaid) return;
 
   try {
-    mermaid.initialize({ startOnLoad: false });
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: getMermaidTheme(),
+      fontFamily: "inherit",
+      maxTextSize: 100000,
+      flowchart: { curve: "basis", htmlLabels: true },
+      sequence: { actorMargin: 50, showSequenceNumbers: false },
+      state: { useMaxWidth: true },
+      gantt: { topAxis: false },
+    });
     for (const code of elements.preview.querySelectorAll("pre > code")) {
       const pre = code.parentElement;
       if (!pre.classList.contains("language-mermaid") && !pre.classList.contains("lang-mermaid")) {
@@ -367,6 +380,16 @@ async function renderMermaid() {
   } catch (e) {
     console.error("Mermaid render error:", e);
   }
+}
+
+function getMermaidTheme() {
+  const themeMap = {
+    warm: "default",
+    minimal: "neutral",
+    dark: "dark",
+    paper: "base",
+  };
+  return themeMap[state.config.theme] || "default";
 }
 
 async function renderPreview(content) {
@@ -422,13 +445,26 @@ function renderOutline() {
   const headings = Array.from(
     elements.preview.querySelectorAll("h1, h2, h3, h4"),
   );
+  state.outlineHeadings = headings;
   elements.outlineList.innerHTML = "";
-  for (const heading of headings) {
+
+  if (headings.length === 0) return;
+
+  const headingIds = new Set();
+  headings.forEach((h, i) => {
+    if (!h.id) {
+      h.id = `heading-${i}`;
+    }
+    headingIds.add(h.id);
+  });
+
+  headings.forEach((heading) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "outline-link";
     button.textContent = heading.textContent;
     button.dataset.level = heading.tagName.slice(1);
+    button.dataset.target = heading.id;
     button.addEventListener("click", () => {
       heading.scrollIntoView({ behavior: "smooth", block: "start" });
       if (isMobileViewport()) {
@@ -438,7 +474,98 @@ function renderOutline() {
       }
     });
     elements.outlineList.appendChild(button);
+  });
+
+  setupHeadingObserver();
+}
+
+function setupHeadingObserver() {
+  if (state.headingObserver) {
+    state.headingObserver.disconnect();
   }
+
+  if (state.outlineHeadings.length === 0) return;
+
+  let activeId = null;
+  let scrollDir = 0;
+  let lastScrollY = window.scrollY;
+
+  const updateActiveHeading = () => {
+    const currentScrollY = window.scrollY;
+    scrollDir = currentScrollY > lastScrollY ? 1 : currentScrollY < lastScrollY ? -1 : scrollDir;
+    lastScrollY = currentScrollY;
+
+    const visibleHeadings = state.outlineHeadings.filter((h) => {
+      const rect = h.getBoundingClientRect();
+      return rect.top >= 0 && rect.top <= window.innerHeight * 0.6;
+    });
+
+    let newActiveId = null;
+    if (visibleHeadings.length > 0) {
+      if (scrollDir > 0) {
+        const heading = visibleHeadings.reduce((a, b) =>
+          a.getBoundingClientRect().top < b.getBoundingClientRect().top ? a : b,
+        );
+        newActiveId = heading.id;
+      } else {
+        const heading = visibleHeadings.reduce((a, b) =>
+          a.getBoundingClientRect().top > b.getBoundingClientRect().top ? a : b,
+        );
+        newActiveId = heading.id;
+      }
+    }
+
+    if (newActiveId !== activeId) {
+      activeId = newActiveId;
+      state.activeHeadingId = activeId;
+
+      elements.outlineList.querySelectorAll(".outline-link").forEach((link) => {
+        link.classList.toggle("active", link.dataset.target === activeId);
+      });
+
+      if (activeId) {
+        const activeLink = elements.outlineList.querySelector(
+          `.outline-link[data-target="${activeId}"]`,
+        );
+        if (activeLink) {
+          const listRect = elements.outlineList.getBoundingClientRect();
+          const linkRect = activeLink.getBoundingClientRect();
+          const linkTop = linkRect.top - listRect.top + elements.outlineList.scrollTop;
+          const linkBottom = linkTop + linkRect.height;
+          const viewTop = elements.outlineList.scrollTop;
+          const viewBottom = viewTop + listRect.height;
+
+          if (linkTop < viewTop || linkBottom > viewBottom) {
+            elements.outlineList.scrollTo({
+              top: linkTop - listRect.height / 3,
+              behavior: "smooth",
+            });
+          }
+        }
+      }
+    }
+  };
+
+  state.headingObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          updateActiveHeading();
+          break;
+        }
+      }
+    },
+    {
+      rootMargin: "-10% 0px -60% 0px",
+      threshold: 0,
+    },
+  );
+
+  state.outlineHeadings.forEach((heading) => {
+    state.headingObserver.observe(heading);
+  });
+
+  window.addEventListener("scroll", updateActiveHeading, { passive: true });
 }
 
 function renderFileList() {
