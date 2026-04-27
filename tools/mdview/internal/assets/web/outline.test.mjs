@@ -6,7 +6,7 @@ import {
   getOutlineScrollContainer,
 } from "./outline.js";
 
-test("getOutlineHeadingElements reads headings from preview in preview mode", () => {
+test("getOutlineHeadingElements reads headings from preview", () => {
   const previewHeadings = [{ id: "preview-heading" }];
   const previewElement = {
     querySelectorAll(selector) {
@@ -16,12 +16,11 @@ test("getOutlineHeadingElements reads headings from preview in preview mode", ()
   };
   const editorElement = {
     querySelectorAll() {
-      throw new Error("editor should not be queried in preview mode");
+      throw new Error("editor should not be queried");
     },
   };
 
   const headings = getOutlineHeadingElements({
-    viewMode: "preview",
     previewElement,
     editorElement,
   });
@@ -29,53 +28,8 @@ test("getOutlineHeadingElements reads headings from preview in preview mode", ()
   assert.deepEqual(headings, previewHeadings);
 });
 
-test("getOutlineHeadingElements reads headings from the WYSIWYG editor in wysiwyg mode", () => {
-  const editorHeadings = [{ id: "editor-heading" }];
-  const previewElement = {
-    querySelectorAll() {
-      throw new Error("preview should not be queried in wysiwyg mode");
-    },
-  };
-  const editorElement = {
-    querySelector(selector) {
-      assert.equal(selector, ".ProseMirror");
-      return {
-        querySelectorAll(headingSelector) {
-          assert.equal(headingSelector, "h1, h2, h3, h4");
-          return editorHeadings;
-        },
-      };
-    },
-    querySelectorAll() {
-      throw new Error("wysiwyg mode should query the ProseMirror surface");
-    },
-  };
-
-  const headings = getOutlineHeadingElements({
-    viewMode: "wysiwyg",
-    previewElement,
-    editorElement,
-  });
-
-  assert.deepEqual(headings, editorHeadings);
-});
-
-test("getOutlineScrollContainer uses the editor scroller in wysiwyg mode", () => {
-  const editorElement = { id: "editor" };
-
-  const scrollContainer = getOutlineScrollContainer({
-    viewMode: "wysiwyg",
-    editorElement,
-  });
-
-  assert.equal(scrollContainer, editorElement);
-});
-
-test("getOutlineScrollContainer uses the window scroll context in preview mode", () => {
-  const scrollContainer = getOutlineScrollContainer({
-    viewMode: "preview",
-    editorElement: { id: "editor" },
-  });
+test("getOutlineScrollContainer uses the window scroll context", () => {
+  const scrollContainer = getOutlineScrollContainer();
 
   assert.equal(scrollContainer, null);
 });

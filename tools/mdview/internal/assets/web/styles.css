@@ -14,9 +14,6 @@
   --paragraph-spacing: 0.85rem;
   --code-font-size: 14px;
   --code-line-height: 1.6;
-  --editor-font: "IBM Plex Mono", "Fira Code", monospace;
-  --editor-font-size: 15px;
-  --editor-line-height: 1.7;
 }
 
 :root[data-appearance="light"] {
@@ -119,28 +116,6 @@ body {
   flex-wrap: wrap;
 }
 
-.view-mode-btn {
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text-main);
-  border-radius: 0.3rem;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.view-mode-btn:hover {
-  background: var(--accent-soft);
-}
-
-.view-mode-btn.active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
 .toolbar__center {
   display: flex;
   align-items: center;
@@ -189,16 +164,6 @@ body {
   font-size: 0.82rem;
 }
 
-.sync-actions {
-  display: inline-flex;
-  gap: 0.35rem;
-  align-items: center;
-}
-
-.sync-actions.hidden {
-  display: none;
-}
-
 .chrome {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -218,8 +183,7 @@ body {
   grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(220px, 260px);
 }
 
-.preview-pane,
-.editor-pane {
+.preview-pane {
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -339,134 +303,6 @@ body {
 
 .workspace {
   min-width: 0;
-}
-
-.workspace.split {
-  display: grid;
-  grid-template-columns: minmax(20rem, 0.9fr) minmax(0, 1.1fr);
-  gap: 0.9rem;
-  align-items: start;
-}
-
-.workspace.split.stacked {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.editor-pane {
-  padding: 0.25rem 0.6rem;
-  min-width: 0;
-  border-right: 1px solid var(--panel-border);
-}
-
-#editor {
-  width: 100%;
-  min-height: calc(100vh - 4.5rem);
-  resize: none;
-  border: none;
-  background: transparent;
-  color: var(--text-main);
-  font-family: var(--editor-font);
-  font-size: var(--editor-font-size);
-  line-height: var(--editor-line-height);
-  outline: none;
-  overflow: auto;
-  padding: 0.8rem;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-#editor:not(.tiptap-editor) {
-  background: var(--page-bg);
-}
-
-#editor.tiptap-editor {
-  background: var(--page-bg);
-  color: var(--text-main);
-}
-
-#editor.tiptap-editor .ProseMirror {
-  min-height: calc(100vh - 5.5rem);
-  padding: 0.8rem;
-  outline: none;
-  width: min(100%, var(--content-width));
-  margin: 0 auto;
-  font-family: var(--body-font);
-  font-size: var(--font-size);
-  line-height: var(--body-line-height);
-  caret-color: color-mix(in srgb, var(--accent) 78%, black);
-}
-
-#editor.tiptap-editor .ProseMirror > :first-child {
-  margin-top: 0;
-}
-
-#editor.tiptap-editor .ProseMirror p {
-  margin: 0 0 var(--paragraph-spacing);
-}
-
-#editor.tiptap-editor .ProseMirror h1,
-#editor.tiptap-editor .ProseMirror h2,
-#editor.tiptap-editor .ProseMirror h3,
-#editor.tiptap-editor .ProseMirror h4 {
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-  margin: 0 0 0.5em;
-}
-
-#editor.tiptap-editor .ProseMirror ul,
-#editor.tiptap-editor .ProseMirror ol,
-#editor.tiptap-editor .ProseMirror blockquote,
-#editor.tiptap-editor .ProseMirror pre {
-  margin: 0 0 var(--paragraph-spacing);
-}
-
-#editor.tiptap-editor .ProseMirror ul,
-#editor.tiptap-editor .ProseMirror ol {
-  padding-left: 1.5em;
-}
-
-#editor.tiptap-editor .ProseMirror code {
-  font-family: "IBM Plex Mono", "Fira Code", monospace;
-  font-size: var(--code-font-size);
-  line-height: var(--code-line-height);
-  background: rgba(25, 20, 19, 0.08);
-  padding: 0.1em 0.3em;
-  border-radius: 0.2em;
-}
-
-#editor.tiptap-editor .ProseMirror pre {
-  padding: 0.8rem 0.9rem;
-  overflow-x: auto;
-  background: rgba(25, 20, 19, 0.92);
-  color: #f8efe5;
-  border-radius: 0.65rem;
-}
-
-#editor.tiptap-editor .ProseMirror pre code {
-  background: none;
-  padding: 0;
-}
-
-#editor.tiptap-editor .ProseMirror blockquote {
-  padding-left: 0.85rem;
-  border-left: 2px solid var(--accent);
-  color: var(--text-muted);
-}
-
-#editor.tiptap-editor .ProseMirror a {
-  color: var(--accent);
-}
-
-#editor.tiptap-editor .ProseMirror img {
-  max-width: 100%;
-  border-radius: 0.4rem;
-  box-shadow: none;
-}
-
-#editor.tiptap-editor .ProseMirror ::selection {
-  background: color-mix(in srgb, var(--accent) 38%, white);
 }
 
 .preview-pane {
@@ -988,18 +824,8 @@ body {
     font-size: 0.72rem;
   }
 
-  .workspace.split {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-pane,
-  #editor {
+  .preview-pane {
     min-height: 42vh;
-  }
-
-  .editor-pane {
-    border-right: 0;
-    border-bottom: 1px solid var(--panel-border);
   }
 
   .sidebar {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -24,10 +25,6 @@ func TestManagerLoadReturnsDefaultsWhenFileMissing(t *testing.T) {
 
 	if cfg.Theme != "warm" {
 		t.Fatalf("expected default theme warm, got %q", cfg.Theme)
-	}
-
-	if cfg.AutosaveDebounceMS != 700 {
-		t.Fatalf("expected debounce 700, got %d", cfg.AutosaveDebounceMS)
 	}
 
 	if cfg.SpeechLanguage != "vi-VN" {
@@ -80,6 +77,11 @@ func TestManagerSavePersistsConfig(t *testing.T) {
 
 	if len(data) == 0 {
 		t.Fatal("expected config file to be written")
+	}
+
+	text := string(data)
+	if containsAny(text, "editor_font", "editor_font_size", "editor_line_height", "autosave_debounce_ms") {
+		t.Fatalf("expected saved config to omit editor settings, got %s", text)
 	}
 
 	loaded, err := manager.Load(context.Background())
@@ -136,4 +138,13 @@ func TestManagerSavePersistsWorkspaceRoots(t *testing.T) {
 	if loaded.WorkspaceRoots[0] != "/tmp/workspace-a" || loaded.WorkspaceRoots[1] != "/tmp/workspace-b" {
 		t.Fatalf("unexpected workspace roots: %+v", loaded.WorkspaceRoots)
 	}
+}
+
+func containsAny(value string, needles ...string) bool {
+	for _, needle := range needles {
+		if needle != "" && strings.Contains(value, needle) {
+			return true
+		}
+	}
+	return false
 }

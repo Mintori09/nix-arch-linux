@@ -70,7 +70,7 @@ func TestDocumentEndpointReturnsCurrentDocument(t *testing.T) {
 	}
 }
 
-func TestSaveDocumentEndpointPersistsFileBackedDocument(t *testing.T) {
+func TestDocumentEndpointRejectsPutRequests(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -100,8 +100,8 @@ func TestSaveDocumentEndpointPersistsFileBackedDocument(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d with body %s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status 405, got %d with body %s", rec.Code, rec.Body.String())
 	}
 
 	data, err := os.ReadFile(filePath)
@@ -109,8 +109,8 @@ func TestSaveDocumentEndpointPersistsFileBackedDocument(t *testing.T) {
 		t.Fatalf("read file: %v", err)
 	}
 
-	if string(data) != "# updated" {
-		t.Fatalf("expected updated file content, got %q", string(data))
+	if string(data) != "# old" {
+		t.Fatalf("expected original file content to remain unchanged, got %q", string(data))
 	}
 }
 

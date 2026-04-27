@@ -1,9 +1,6 @@
 export function applyInitialUIState({ query, config, document }) {
-  const mode = query.mode || "";
   const hasSidebar = Object.hasOwn(query, "sidebar");
   const hasOutline = Object.hasOwn(query, "outline");
-
-  let viewMode = getInitialViewMode(mode, config);
 
   let sidebarOpen = hasSidebar
     ? query.sidebar === "1"
@@ -12,28 +9,20 @@ export function applyInitialUIState({ query, config, document }) {
     ? query.outline === "1"
     : Boolean(config.default_outline_open);
 
-  if (document.temporary && !document.content && !mode) {
-    viewMode = "wysiwyg";
-  }
-
   return {
-    viewMode,
+    viewMode: "preview",
     sidebarOpen,
     outlineOpen,
   };
 }
 
-export function getLayoutContext({ viewMode, isStacked }) {
-  if (viewMode === "wysiwyg") {
-    return "wysiwyg-only";
-  }
+export function getLayoutContext() {
   return "preview-only";
 }
 
 export function createEmptyScrollSnapshots() {
   return {
     "preview-only": null,
-    "wysiwyg-only": null,
   };
 }
 
@@ -106,12 +95,4 @@ function ratio(value, max) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
-}
-
-function getInitialViewMode(mode, config) {
-  if (mode === "preview" || mode === "wysiwyg") {
-    return mode;
-  }
-
-  return "preview";
 }
