@@ -25,5 +25,6 @@
     ./packages.nix
     ./zed
     ./obs.nix
+    ./9router.nix
   ];
 }
