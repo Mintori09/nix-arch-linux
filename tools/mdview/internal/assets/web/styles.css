@@ -221,16 +221,16 @@ body {
   top: 3.3rem;
   right: 0;
   bottom: 0;
+  width: 240px;
+  min-width: 150px;
+  max-width: 400px;
   background: transparent;
   border: 0;
   border-left: 1px solid rgba(103, 64, 33, 0.12);
   border-radius: 0;
   padding-left: 0.85rem;
   padding-right: 0;
-  resize: horizontal;
   overflow-y: auto;
-  min-width: 150px;
-  max-width: 400px;
   z-index: 30;
 }
 
@@ -239,11 +239,35 @@ body {
   top: 3.3rem;
   height: calc(100vh - 3.3rem);
   width: 240px;
-  resize: horizontal;
-  overflow-y: auto;
   min-width: 150px;
   max-width: 400px;
+  overflow: visible;
   z-index: 30;
+}
+
+#file-sidebar > .panel-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  background: transparent;
+}
+
+.resize-handle:hover {
+  background: rgba(103, 64, 33, 0.15);
+}
+
+.resize-handle.left {
+  right: auto;
+  left: 0;
 }
 
 .panel-title,
@@ -324,6 +348,7 @@ body {
   line-height: 1.12;
   letter-spacing: -0.03em;
   margin: 0 0 0.5em;
+  scroll-margin-top: 3rem;
 }
 
 .preview > :first-child {
@@ -348,20 +373,114 @@ body {
 
 .preview pre {
   padding: 0.8rem 0.9rem;
+  padding-right: 2.5rem;
   overflow: auto;
   background: rgba(25, 20, 19, 0.92);
   color: #f8efe5;
   border-radius: 0.65rem;
 }
 
+.preview .code-block-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.preview .copy-btn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.35rem;
+  color: #f8efe5;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+  font-size: 0.9rem;
+}
+
+.preview .copy-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.preview .code-block-wrapper:hover .copy-btn {
+  opacity: 1;
+}
+
 .preview .mermaid {
-  margin: 1rem 0;
+  margin: 2.5rem 0;
+  padding: 1.25rem;
   text-align: center;
+  background: var(--page-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  overflow-x: auto;
 }
 
 .preview .mermaid svg {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.preview .mermaid svg .node .label text,
+.preview .mermaid svg .label text,
+.preview .mermaid svg text {
+  fill: var(--text-main) !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+}
+
+.preview .mermaid svg .edgePath .path,
+.preview .mermaid svg .flowchart-link {
+  stroke: var(--accent) !important;
+  stroke-width: 1.5px !important;
+}
+
+.preview .mermaid svg .node rect,
+.preview .mermaid svg .node circle,
+.preview .mermaid svg .node ellipse,
+.preview .mermaid svg .node polygon {
+  fill: var(--accent-soft) !important;
+  stroke: var(--accent) !important;
+  stroke-width: 1.5px !important;
+  rx: 4px;
+  ry: 4px;
+}
+
+.preview .mermaid svg .node rect {
+  rx: 4px;
+  ry: 4px;
+}
+
+.preview .mermaid svg .cluster rect {
+  fill: transparent !important;
+  stroke: var(--panel-border) !important;
+  stroke-width: 1px !important;
+  stroke-dasharray: 4 2;
+}
+
+.preview .mermaid svg .cluster-label text {
+  fill: var(--text-muted) !important;
+  font-weight: 600;
+}
+
+.preview .mermaid svg marker {
+  fill: var(--accent) !important;
+}
+
+.preview .mermaid svg .edgeLabel {
+  background: var(--page-bg) !important;
+}
+
+.preview .mermaid svg .edgeLabel text {
+  fill: var(--text-muted) !important;
 }
 
 .preview blockquote {
