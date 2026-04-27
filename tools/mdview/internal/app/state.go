@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
@@ -81,22 +80,19 @@ func BuildSession(_ context.Context, opts BuildOptions) (*session.App, error) {
 }
 
 func loadFileDocument(path, root string) (session.Document, error) {
-	info, err := os.Stat(path)
+	snapshot, err := document.SnapshotFile(path)
 	if err != nil {
-		return session.Document{}, fmt.Errorf("stat document: %w", err)
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return session.Document{}, fmt.Errorf("read document: %w", err)
+		return session.Document{}, err
 	}
 
 	return session.Document{
-		Path:       path,
-		Name:       filepath.Base(path),
-		Content:    string(data),
-		Temporary:  false,
-		ReadOnly:   info.Mode().Perm()&0o200 == 0,
-		FolderRoot: root,
+		Path:         path,
+		Name:         filepath.Base(path),
+		Content:      snapshot.Content,
+		Temporary:    false,
+		ReadOnly:     snapshot.ReadOnly,
+		LastModified: snapshot.LastModified,
+		RevisionID:   snapshot.RevisionID,
+		FolderRoot:   root,
 	}, nil
 }

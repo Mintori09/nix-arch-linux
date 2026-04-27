@@ -45,6 +45,7 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) routes() {
 	s.mux.HandleFunc("/api/document", s.handleDocument)
+	s.mux.HandleFunc("/api/document/status", s.handleDocumentStatus)
 	s.mux.HandleFunc("/api/config", s.handleConfig)
 	s.mux.HandleFunc("/api/files", s.handleFiles)
 	s.mux.HandleFunc("/api/open", s.handleOpen)
@@ -87,17 +88,66 @@ func (s *Server) handleDocument(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		snapshot, err := document.SnapshotFile(doc.Path)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("refresh saved document: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		now := time.Now()
-		doc.Content = payload.Content
+		doc.Content = snapshot.Content
 		doc.SavedAt = now
+		doc.LastModified = snapshot.LastModified
+		doc.RevisionID = snapshot.RevisionID
+		doc.ReadOnly = snapshot.ReadOnly
 		s.opts.App.SetDocument(doc)
 		writeJSON(w, http.StatusOK, map[string]any{
-			"ok":       true,
-			"saved_at": now,
+			"ok":            true,
+			"saved_at":      now,
+			"revision_id":   snapshot.RevisionID,
+			"last_modified": snapshot.LastModified,
 		})
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
+}
+
+func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	_, doc, _ := s.opts.App.Snapshot()
+	if doc.Temporary || doc.Path == "" {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"tracked": false,
+			"changed": false,
+		})
+		return
+	}
+
+	snapshot, err := document.SnapshotFile(doc.Path)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("snapshot document: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	changed := snapshot.RevisionID != doc.RevisionID
+	payload := map[string]any{
+		"tracked":       true,
+		"changed":       changed,
+		"path":          doc.Path,
+		"revision_id":   snapshot.RevisionID,
+		"last_modified": snapshot.LastModified,
+		"read_only":     snapshot.ReadOnly,
+	}
+	if changed {
+		payload["content"] = snapshot.Content
+		payload["name"] = doc.Name
+	}
+
+	writeJSON(w, http.StatusOK, payload)
 }
 
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
@@ -370,19 +420,20 @@ func readFileDocument(root, relative string) (session.Document, error) {
 		return session.Document{}, errors.New("path must be a markdown file")
 	}
 
-	data, err := os.ReadFile(fullPath)
+	snapshot, err := document.SnapshotFile(fullPath)
 	if err != nil {
-		return session.Document{}, fmt.Errorf("read document: %w", err)
+		return session.Document{}, err
 	}
 
-	readonly := info.Mode().Perm()&0o200 == 0
 	return session.Document{
-		Path:       fullPath,
-		Name:       filepath.Base(fullPath),
-		Content:    string(data),
-		Temporary:  false,
-		ReadOnly:   readonly,
-		FolderRoot: root,
+		Path:         fullPath,
+		Name:         filepath.Base(fullPath),
+		Content:      snapshot.Content,
+		Temporary:    false,
+		ReadOnly:     snapshot.ReadOnly,
+		LastModified: snapshot.LastModified,
+		RevisionID:   snapshot.RevisionID,
+		FolderRoot:   root,
 	}, nil
 }
 
