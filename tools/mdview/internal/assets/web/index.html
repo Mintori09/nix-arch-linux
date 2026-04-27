@@ -12,7 +12,10 @@
         <div class="toolbar__left">
           <button id="toggle-sidebar" type="button">Sidebar</button>
           <button id="toggle-outline" type="button">Outline</button>
-          <button id="toggle-edit" type="button">Edit</button>
+          <button id="btn-preview" type="button" class="view-mode-btn">Preview</button>
+          <button id="btn-edit" type="button" class="view-mode-btn">Edit</button>
+          <button id="btn-wysiwyg" type="button" class="view-mode-btn">WYSIWYG</button>
+          <span id="vim-mode-chip" class="vim-mode-chip hidden" aria-live="polite"></span>
         </div>
         <div class="toolbar__center">
           <strong id="doc-name">Untitled</strong>
@@ -34,15 +37,7 @@
 
         <main class="workspace" id="workspace">
           <section class="editor-pane hidden" id="editor-pane">
-            <div class="editor-toolbar" id="editor-toolbar">
-              <button type="button" data-format="bold" title="Bold (Ctrl+B)">B</button>
-              <button type="button" data-format="italic" title="Italic (Ctrl+I)"><em>I</em></button>
-              <button type="button" data-format="heading" title="Heading">H</button>
-              <button type="button" data-format="link" title="Link">🔗</button>
-              <button type="button" data-format="code" title="Code">`</button>
-              <button type="button" data-format="list" title="List">•</button>
-            </div>
-            <textarea id="editor" spellcheck="false"></textarea>
+            <div id="editor" class="editor-area" spellcheck="false" contenteditable="true"></div>
           </section>
           <section class="preview-pane" id="preview-pane">
             <article class="preview prose" id="preview"></article>
@@ -178,6 +173,6 @@
     </div>
 
     <script src="/mermaid.min.js"></script>
-    <script type="module" src="/app.js"></script>
+    <script type="module" src="/app.js" data-tiptap-imports></script>
   </body>
 </html>
