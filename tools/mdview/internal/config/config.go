@@ -21,13 +21,9 @@ type Config struct {
 	ParagraphSpacing   string   `toml:"paragraph_spacing" json:"paragraph_spacing"`
 	CodeFontSize       int      `toml:"code_font_size" json:"code_font_size"`
 	CodeLineHeight     string   `toml:"code_line_height" json:"code_line_height"`
-	EditorFont         string   `toml:"editor_font" json:"editor_font"`
-	EditorFontSize     int      `toml:"editor_font_size" json:"editor_font_size"`
-	EditorLineHeight   string   `toml:"editor_line_height" json:"editor_line_height"`
 	FontFamily         string   `toml:"font_family" json:"font_family"`
 	CustomCSS          string   `toml:"custom_css" json:"custom_css"`
 	AssetsDir          string   `toml:"assets_dir" json:"assets_dir"`
-	AutosaveDebounceMS int      `toml:"autosave_debounce_ms" json:"autosave_debounce_ms"`
 	AllowRawHTML       bool     `toml:"allow_raw_html" json:"allow_raw_html"`
 	LocalOnly          bool     `toml:"local_only" json:"local_only"`
 	DefaultSidebarOpen bool     `toml:"default_sidebar_open" json:"default_sidebar_open"`
@@ -46,34 +42,30 @@ type Config struct {
 
 func Default() Config {
 	return Config{
-		Browser:            "zen-browser",
-		FallbackBrowser:    "system",
-		Theme:              "warm",
-		Appearance:         "system",
-		ContentWidth:       760,
-		FontSize:           17,
-		BodyLineHeight:     "1.8",
-		ParagraphSpacing:   "0.85",
-		CodeFontSize:       14,
-		CodeLineHeight:     "1.6",
-		EditorFont:         "monospace",
-		EditorFontSize:     15,
-		EditorLineHeight:   "1.7",
-		FontFamily:         "serif",
-		CustomCSS:          "~/.config/mdview/custom.css",
-		AssetsDir:          "attachments",
-		AutosaveDebounceMS: 700,
-		AllowRawHTML:       false,
-		LocalOnly:          true,
-		SpeechLanguage:     "vi-VN",
-		SpeechVoice:        "",
-		SpeechRate:         1.0,
-		SpeechAutoNext:     boolPtr(true),
-		TTSProvider:        "google",
-		TTSLanguage:        "vi-VN",
-		TTSVoice:           "vi-VN-Wavenet-A",
-		TTSSpeed:           1.0,
-		TTSAutoNext:        boolPtr(true),
+		Browser:          "zen-browser",
+		FallbackBrowser:  "system",
+		Theme:            "warm",
+		Appearance:       "system",
+		ContentWidth:     760,
+		FontSize:         17,
+		BodyLineHeight:   "1.8",
+		ParagraphSpacing: "0.85",
+		CodeFontSize:     14,
+		CodeLineHeight:   "1.6",
+		FontFamily:       "serif",
+		CustomCSS:        "~/.config/mdview/custom.css",
+		AssetsDir:        "attachments",
+		AllowRawHTML:     false,
+		LocalOnly:        true,
+		SpeechLanguage:   "vi-VN",
+		SpeechVoice:      "",
+		SpeechRate:       1.0,
+		SpeechAutoNext:   boolPtr(true),
+		TTSProvider:      "google",
+		TTSLanguage:      "vi-VN",
+		TTSVoice:         "vi-VN-Wavenet-A",
+		TTSSpeed:         1.0,
+		TTSAutoNext:      boolPtr(true),
 	}
 }
 
@@ -178,15 +170,6 @@ func normalize(cfg Config) Config {
 	if cfg.CodeLineHeight == "" {
 		cfg.CodeLineHeight = defaults.CodeLineHeight
 	}
-	if cfg.EditorFont == "" {
-		cfg.EditorFont = defaults.EditorFont
-	}
-	if cfg.EditorFontSize == 0 {
-		cfg.EditorFontSize = defaults.EditorFontSize
-	}
-	if cfg.EditorLineHeight == "" {
-		cfg.EditorLineHeight = defaults.EditorLineHeight
-	}
 	if cfg.FontFamily == "" {
 		cfg.FontFamily = defaults.FontFamily
 	}
@@ -195,9 +178,6 @@ func normalize(cfg Config) Config {
 	}
 	if cfg.AssetsDir == "" {
 		cfg.AssetsDir = defaults.AssetsDir
-	}
-	if cfg.AutosaveDebounceMS == 0 {
-		cfg.AutosaveDebounceMS = defaults.AutosaveDebounceMS
 	}
 	if cfg.SpeechLanguage == "" {
 		cfg.SpeechLanguage = defaults.SpeechLanguage

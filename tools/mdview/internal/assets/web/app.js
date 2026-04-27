@@ -11,10 +11,6 @@ import {
   getOutlineScrollContainer,
 } from "./outline.js";
 import {
-  getDocumentSyncState,
-  mergeDocumentVersions,
-} from "./document-sync.js";
-import {
   buildWorkspaceTree,
   findAdjacentWorkspaceFile,
   flattenWorkspaceFiles,
@@ -30,12 +26,6 @@ import {
   getReaderPopupVisibility,
 } from "./reader-ui.js";
 
-import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
-import TaskItem from "https://esm.sh/@tiptap/extension-task-item@2.11.5";
-import TaskList from "https://esm.sh/@tiptap/extension-task-list@2.11.5";
-import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
-import { Markdown } from "https://esm.sh/@tiptap/markdown@3";
-
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
 const DOCUMENT_POLL_MS = 1500;
@@ -48,8 +38,6 @@ const state = {
   outlineOpen: false,
   sidebarWidth: 240,
   outlineWidth: 240,
-  editorType: "textarea",
-  autosaveTimer: null,
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
   expandedFolders: new Set(),
@@ -73,7 +61,6 @@ const state = {
   activeSettingsTab: getDefaultSettingsTab(),
 };
 
-let tiptapEditor = null;
 let readerAudio = null;
 let readerUtterance = null;
 
@@ -103,10 +90,6 @@ const elements = {
   settingsReadingPanel: document.getElementById("settings-reading-panel"),
   searchDrawer: document.getElementById("search-drawer"),
   workspace: document.getElementById("workspace"),
-  editorPane: document.getElementById("editor-pane"),
-  editor: document.getElementById("editor"),
-  btnPreview: document.getElementById("btn-preview"),
-  btnWysiwyg: document.getElementById("btn-wysiwyg"),
   btnSpeechPlay: document.getElementById("btn-speech-play"),
   btnSpeechStop: document.getElementById("btn-speech-stop"),
   btnSpeechPrev: document.getElementById("btn-speech-prev"),
@@ -127,15 +110,9 @@ const elements = {
   paragraphSpacing: document.getElementById("paragraph-spacing-input"),
   codeFontSize: document.getElementById("code-font-size-input"),
   codeLineHeight: document.getElementById("code-line-height-input"),
-  editorFont: document.getElementById("editor-font-select"),
-  editorFontSize: document.getElementById("editor-font-size-input"),
-  editorLineHeight: document.getElementById("editor-line-height-input"),
   searchQuery: document.getElementById("search-query"),
   searchScope: document.getElementById("search-scope"),
   searchResults: document.getElementById("search-results"),
-  syncActions: document.getElementById("sync-actions"),
-  reloadDisk: document.getElementById("reload-disk"),
-  keepLocal: document.getElementById("keep-local"),
 };
 
 document.getElementById("toggle-sidebar").addEventListener("click", () => {
@@ -202,20 +179,6 @@ document.getElementById("open-search").addEventListener("click", () => {
   }
 });
 
-elements.editor.addEventListener("input", async () => {
-  if (state.viewMode === "wysiwyg" && tiptapEditor) {
-    return;
-  }
-
-  const value = getEditorPlainText();
-  state.document.content = value;
-  if (!state.document.temporary) {
-    setStatus("Unsaved");
-  }
-  await renderPreview(value);
-  scheduleAutosave();
-});
-
 elements.theme.addEventListener("change", saveSettings);
 elements.appearance.addEventListener("change", saveSettings);
 elements.fontFamily.addEventListener("change", saveSettings);
@@ -225,9 +188,6 @@ elements.bodyLineHeight.addEventListener("input", saveSettings);
 elements.paragraphSpacing.addEventListener("input", saveSettings);
 elements.codeFontSize.addEventListener("input", saveSettings);
 elements.codeLineHeight.addEventListener("input", saveSettings);
-elements.editorFont.addEventListener("change", saveSettings);
-elements.editorFontSize.addEventListener("input", saveSettings);
-elements.editorLineHeight.addEventListener("input", saveSettings);
 elements.ttsProvider?.addEventListener("change", handleTTSProviderChange);
 elements.speechLanguage?.addEventListener("change", handleSpeechLanguageChange);
 elements.speechVoice?.addEventListener("change", saveSettings);
@@ -252,12 +212,6 @@ elements.workspaceRootCancel?.addEventListener("click", () => {
 elements.workspaceRootForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   await addWorkspaceRoot();
-});
-elements.reloadDisk?.addEventListener("click", () => {
-  resolveExternalConflictByReload().catch(console.error);
-});
-elements.keepLocal?.addEventListener("click", () => {
-  resolveExternalConflictByKeepingLocal();
 });
 window.addEventListener("resize", () => {
   transitionLayout(() => {}, state.currentContext);
@@ -341,7 +295,6 @@ async function init() {
   syncLayout();
   initSidebarResize();
   initOutlineResize();
-  initViewModeToggle();
   startDocumentPolling();
 }
 
@@ -359,10 +312,6 @@ function bindSettings(config) {
   elements.codeFontSize.value = config.code_font_size || 14;
   elements.codeLineHeight.value =
     Number.parseFloat(config.code_line_height) || 1.6;
-  elements.editorFont.value = config.editor_font || "monospace";
-  elements.editorFontSize.value = config.editor_font_size || 15;
-  elements.editorLineHeight.value =
-    Number.parseFloat(config.editor_line_height) || 1.7;
   elements.ttsProvider.value = config.tts_provider || "google";
   elements.speechLanguage.value = config.tts_language || "vi-VN";
   elements.speechRate.value = config.tts_speed || 1;
@@ -389,18 +338,6 @@ function applyConfig() {
   );
   root.style.setProperty("--code-line-height", state.config.code_line_height);
   root.style.setProperty("--body-font", state.config.font_family);
-  root.style.setProperty(
-    "--editor-font",
-    state.config.editor_font || "monospace",
-  );
-  root.style.setProperty(
-    "--editor-font-size",
-    `${state.config.editor_font_size || 15}px`,
-  );
-  root.style.setProperty(
-    "--editor-line-height",
-    state.config.editor_line_height || "1.7",
-  );
 }
 
 function bindTTSVoices() {
@@ -736,18 +673,7 @@ async function loadDocument(doc, options = {}) {
   elements.docName.textContent = doc.name || "Untitled";
   elements.docMeta.textContent =
     doc.path || (doc.temporary ? "Temporary document" : "");
-  if (state.viewMode !== "wysiwyg" || !tiptapEditor) {
-    elements.editor.textContent = doc.content || "";
-  }
-  elements.editor.placeholder = doc.temporary
-    ? "Paste Markdown here or open a file."
-    : "";
-  autoResizeEditor();
   await renderPreview(doc.content || "");
-  if (state.viewMode === "wysiwyg") {
-    initTiptapEditor(doc.content || "");
-    renderOutline();
-  }
   syncDocumentMarkers(doc, options);
   updateStatusFromDocument();
   if (options.statusLabel) {
@@ -777,26 +703,13 @@ function setStatus(label) {
 }
 
 function syncDocumentMarkers(doc, options = {}) {
-  const clearAcknowledgedRemote = options.clearAcknowledgedRemote !== false;
-  const clearPendingRemote = options.clearPendingRemote !== false;
-
   state.lastSyncedContent = doc.content || "";
   state.lastSyncedRevision = doc.revision_id || "";
   state.document.revision_id = doc.revision_id || "";
   state.document.last_modified = doc.last_modified || "";
-
-  if (clearAcknowledgedRemote) {
-    state.acknowledgedRemoteRevision = "";
-  }
-  if (clearPendingRemote) {
-    state.pendingRemoteDocument = null;
-    state.conflictActive = false;
-    toggleSyncActions(false);
-  }
-}
-
-function toggleSyncActions(visible) {
-  elements.syncActions?.classList.toggle("hidden", !visible);
+  state.acknowledgedRemoteRevision = "";
+  state.pendingRemoteDocument = null;
+  state.conflictActive = false;
 }
 
 function parseHTML(htmlString) {
@@ -903,7 +816,6 @@ async function renderPreview(content) {
     body: JSON.stringify({ content }),
   });
   elements.preview.innerHTML = payload.html;
-  autoResizeEditor();
   rewritePreviewLinks();
   renderOutline();
   await renderMermaid();
@@ -949,9 +861,7 @@ function rewritePreviewLinks() {
 
 function renderOutline() {
   const headings = getOutlineHeadingElements({
-    viewMode: state.viewMode,
     previewElement: elements.preview,
-    editorElement: elements.editor,
   });
   state.outlineHeadings = headings;
   elements.outlineList.innerHTML = "";
@@ -1002,10 +912,7 @@ function setupHeadingObserver() {
 
   let activeId = null;
   let scrollDir = 0;
-  const scrollContainer = getOutlineScrollContainer({
-    viewMode: state.viewMode,
-    editorElement: elements.editor,
-  });
+  const scrollContainer = getOutlineScrollContainer();
   const scrollEventTarget = scrollContainer || window;
   let lastScrollY = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
 
@@ -1282,10 +1189,6 @@ function syncLayout(fromContext = state.currentContext) {
     "mobile-panel-open",
     isMobile && (showFileSidebar || showOutlineSidebar),
   );
-  const isWysiwygMode = state.viewMode === "wysiwyg";
-  const isEditorMode = isWysiwygMode;
-  elements.editorPane.classList.toggle("hidden", !isEditorMode);
-  elements.previewPane.classList.toggle("hidden", isWysiwygMode);
   elements.fileSidebar.classList.toggle("hidden", !showFileSidebar);
   elements.outlineSidebar.classList.toggle("hidden", !showOutlineSidebar);
   elements.workspace.classList.remove("split");
@@ -1299,42 +1202,7 @@ function syncLayout(fromContext = state.currentContext) {
     const nextContext = getCurrentLayoutContext();
     restoreScrollPosition(fromContext, nextContext);
     state.currentContext = nextContext;
-    autoResizeEditor();
   });
-}
-
-function scheduleAutosave() {
-  if (!state.document || state.document.temporary || state.document.read_only) {
-    return;
-  }
-  if (state.autosaveTimer) {
-    clearTimeout(state.autosaveTimer);
-  }
-  state.autosaveTimer = setTimeout(async () => {
-    try {
-      setStatus("Saving...");
-      const saved = await api("/api/document", {
-        method: "PUT",
-        body: JSON.stringify({ content: getCurrentDocumentContent() }),
-      });
-      syncDocumentMarkers(
-        {
-          ...state.document,
-          content: getCurrentDocumentContent(),
-          revision_id: saved.revision_id || "",
-          last_modified: saved.last_modified || "",
-        },
-        {
-          clearAcknowledgedRemote: true,
-          clearPendingRemote: true,
-        },
-      );
-      setStatus("Saved");
-    } catch (error) {
-      console.error(error);
-      setStatus("Save error");
-    }
-  }, state.config.autosave_debounce_ms);
 }
 
 async function saveSettings() {
@@ -1354,16 +1222,12 @@ async function saveSettings() {
     paragraph_spacing: Number(elements.paragraphSpacing.value).toFixed(1),
     code_font_size: Number(elements.codeFontSize.value),
     code_line_height: Number(elements.codeLineHeight.value).toFixed(1),
-    editor_font: elements.editorFont.value,
-    editor_font_size: Number(elements.editorFontSize.value),
-    editor_line_height: Number(elements.editorLineHeight.value).toFixed(1),
   };
   state.config.speech_language = state.config.tts_language;
   state.config.speech_voice = state.config.tts_voice;
   state.config.speech_rate = state.config.tts_speed;
   state.config.speech_auto_next = state.config.tts_auto_next;
   applyConfig();
-  autoResizeEditor();
   await api("/api/config", {
     method: "PUT",
     body: JSON.stringify(state.config),
@@ -1408,27 +1272,15 @@ async function runSearch() {
 }
 
 function scrollToLine(lineNumber) {
-  const lines = getEditorPlainText().split("\n");
-  let offset = 0;
-  for (let i = 0; i < lineNumber - 1 && i < lines.length; i += 1) {
-    offset += lines[i].length + 1;
+  const blocks = [
+    ...elements.preview.querySelectorAll("p, li, blockquote, pre, h1, h2, h3, h4"),
+  ];
+  const targetBlock = blocks[Math.max(0, Math.min(blocks.length - 1, lineNumber - 1))];
+  if (targetBlock) {
+    targetBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
   }
-  elements.editor.focus();
-  if (
-    typeof elements.editor.setSelectionRange === "function" &&
-    state.viewMode !== "wysiwyg"
-  ) {
-    elements.editor.setSelectionRange(offset, offset);
-  }
-  const styles = window.getComputedStyle(elements.editor);
-  const lineHeight =
-    Number.parseFloat(styles.lineHeight) ||
-    Number.parseFloat(styles.fontSize) * 1.7;
-  const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
-  const editorTop =
-    elements.editor.getBoundingClientRect().top + window.scrollY + paddingTop;
-  const target = editorTop + Math.max(0, lineNumber - 1) * lineHeight - 96;
-  window.scrollTo({ top: target, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function api(path, options = {}) {
@@ -1505,10 +1357,7 @@ function restoreScrollPosition(fromContext, toContext) {
 }
 
 function getCurrentLayoutContext() {
-  return getLayoutContext({
-    viewMode: state.viewMode,
-    isStacked: elements.workspace.classList.contains("stacked"),
-  });
+  return getLayoutContext();
 }
 
 function getPageMaxScroll() {
@@ -1525,19 +1374,6 @@ function isMobileViewport() {
 function closePanels() {
   state.sidebarOpen = false;
   state.outlineOpen = false;
-}
-
-function autoResizeEditor() {
-  const isEditorMode = state.viewMode === "wysiwyg";
-  if (!elements.editor || !isEditorMode) {
-    if (elements.editor) {
-      elements.editor.style.height = "";
-    }
-    return;
-  }
-
-  elements.editor.style.height = "auto";
-  elements.editor.style.height = `${elements.editor.scrollHeight}px`;
 }
 
 function initSidebarResize() {
@@ -1610,119 +1446,8 @@ function initOutlineResize() {
   });
 }
 
-function initTiptapEditor(content = "") {
-  if (tiptapEditor) {
-    destroyTiptapEditor();
-  }
-
-  elements.editor.innerHTML = "";
-  const mount = document.createElement("div");
-  elements.editor.appendChild(mount);
-  elements.editor.classList.add("tiptap-editor");
-
-  let wysiwygRenderTimer = null;
-
-  function scheduleWysiwygSideEffects(markdown) {
-    clearTimeout(wysiwygRenderTimer);
-    wysiwygRenderTimer = setTimeout(() => {
-      if (state.outlineOpen) {
-        renderPreview(markdown).catch(console.error);
-      }
-      autoResizeEditor();
-    }, 400);
-  }
-
-  tiptapEditor = new Editor({
-    element: mount,
-    extensions: [
-      StarterKit,
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
-      Markdown.configure({
-        html: false,
-        tightLists: true,
-        tightListsClass: "tight",
-        bulletListMarker: "-",
-        linkify: false,
-        breaks: false,
-        transformPastedText: true,
-        transformCopiedText: false,
-      }),
-    ],
-    content: content,
-    contentType: "markdown",
-    onUpdate: ({ editor }) => {
-      const markdown = editor.storage.markdown.getMarkdown();
-      state.document.content = markdown;
-      if (!state.document.temporary) {
-        setStatus("Unsaved");
-      }
-      scheduleAutosave();
-      scheduleWysiwygSideEffects(markdown);
-    },
-  });
-}
-
-function destroyTiptapEditor() {
-  if (tiptapEditor) {
-    tiptapEditor.destroy();
-    tiptapEditor = null;
-  }
-  elements.editor.classList.remove("tiptap-editor");
-}
-
-function setViewMode(mode) {
-  const currentMode = state.viewMode;
-  
-  if (currentMode === mode) return;
-  
-  if (currentMode === "wysiwyg" && tiptapEditor) {
-    const markdown = tiptapEditor.storage.markdown.getMarkdown();
-    state.document.content = markdown;
-    elements.editor.textContent = markdown;
-    destroyTiptapEditor();
-  }
-  
-  state.viewMode = mode;
-  
-  if (mode === "wysiwyg") {
-    state.editorType = "wysiwyg";
-    initTiptapEditor(state.document?.content || "");
-    renderOutline();
-  } else {
-    state.editorType = "textarea";
-    renderOutline();
-  }
-  
-  syncLayout();
-  updateViewModeButtons();
-}
-
-function getEditorPlainText() {
-  if (!elements.editor) {
-    return "";
-  }
-  return elements.editor.textContent || "";
-}
-
 function getCurrentDocumentContent() {
-  if (state.viewMode === "wysiwyg" && tiptapEditor) {
-    return tiptapEditor.storage.markdown.getMarkdown();
-  }
-  return getEditorPlainText();
-}
-
-function initViewModeToggle() {
-  if (elements.btnPreview) {
-    elements.btnPreview.addEventListener("click", () => setViewMode("preview"));
-  }
-  if (elements.btnWysiwyg) {
-    elements.btnWysiwyg.addEventListener("click", () => setViewMode("wysiwyg"));
-  }
-
-  updateViewModeButtons();
+  return state.document?.content || "";
 }
 
 function startDocumentPolling() {
@@ -1774,93 +1499,5 @@ async function handleDocumentStatus(status) {
     last_modified: status.last_modified || "",
     read_only: Boolean(status.read_only),
   };
-  const currentContent = getCurrentDocumentContent();
-  const syncState = getDocumentSyncState({
-    lastSyncedContent: state.lastSyncedContent,
-    currentContent,
-  });
-
-  if (!syncState.hasUnsavedLocalChanges) {
-    await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
-    return;
-  }
-
-  const merge = mergeDocumentVersions({
-    base: state.lastSyncedContent,
-    local: currentContent,
-    remote: remoteDocument.content,
-  });
-
-  if (merge.status === "unchanged" || merge.status === "remote") {
-    await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
-    return;
-  }
-
-  if (merge.status === "merged") {
-    syncDocumentMarkers(remoteDocument, {
-      clearAcknowledgedRemote: false,
-      clearPendingRemote: true,
-    });
-    state.acknowledgedRemoteRevision = remoteDocument.revision_id || "";
-    await replaceDocumentContent(merge.content);
-    state.document.content = merge.content;
-    setStatus("Merged");
-    scheduleAutosave();
-    return;
-  }
-
-  state.pendingRemoteDocument = remoteDocument;
-  state.conflictActive = true;
-  state.acknowledgedRemoteRevision = remoteDocument.revision_id || "";
-  toggleSyncActions(true);
-  setStatus("Conflict");
-}
-
-async function replaceDocumentContent(content) {
-  state.document.content = content;
-  if (state.viewMode !== "wysiwyg" || !tiptapEditor) {
-    elements.editor.textContent = content;
-  }
-  await renderPreview(content);
-
-  if (state.viewMode === "wysiwyg" && tiptapEditor) {
-    tiptapEditor.commands.setContent(
-      content,
-      { emitUpdate: false },
-    );
-  }
-
-  autoResizeEditor();
-}
-
-async function resolveExternalConflictByReload() {
-  if (!state.pendingRemoteDocument) {
-    return;
-  }
-
-  await loadDocument(state.pendingRemoteDocument, {
-    statusLabel: "Reloaded",
-    clearAcknowledgedRemote: true,
-    clearPendingRemote: true,
-  });
-}
-
-function resolveExternalConflictByKeepingLocal() {
-  if (!state.pendingRemoteDocument) {
-    return;
-  }
-
-  state.pendingRemoteDocument = null;
-  state.conflictActive = false;
-  toggleSyncActions(false);
-  setStatus("Unsaved");
-}
-
-function updateViewModeButtons() {
-  if (elements.btnPreview) {
-    elements.btnPreview.classList.toggle("active", state.viewMode === "preview");
-  }
-  if (elements.btnWysiwyg) {
-    elements.btnWysiwyg.classList.toggle("active", state.viewMode === "wysiwyg");
-  }
+  await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
 }

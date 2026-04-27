@@ -12,8 +12,6 @@
         <div class="toolbar__left">
           <button id="toggle-sidebar" type="button">Sidebar</button>
           <button id="toggle-outline" type="button">Outline</button>
-          <button id="btn-preview" type="button" class="view-mode-btn">Preview</button>
-          <button id="btn-wysiwyg" type="button" class="view-mode-btn">WYSIWYG</button>
         </div>
         <div class="toolbar__center">
           <strong id="doc-name">Untitled</strong>
@@ -24,10 +22,6 @@
           <button id="toggle-settings" type="button">Settings</button>
           <button id="print-page" type="button">Print</button>
           <span id="status-pill">Temporary</span>
-          <div id="sync-actions" class="sync-actions hidden">
-            <button id="reload-disk" type="button">Reload disk</button>
-            <button id="keep-local" type="button">Keep local</button>
-          </div>
         </div>
       </header>
 
@@ -52,9 +46,6 @@
         </aside>
 
         <main class="workspace" id="workspace">
-          <section class="editor-pane hidden" id="editor-pane">
-            <div id="editor" class="editor-area" spellcheck="false" contenteditable="true"></div>
-          </section>
           <section class="preview-pane" id="preview-pane">
             <article class="preview prose" id="preview"></article>
           </section>
@@ -149,34 +140,6 @@
               step="0.1"
             />
           </label>
-          <label
-            >Editor font
-            <select id="editor-font-select">
-              <option value="monospace">Mono</option>
-              <option value="serif">Serif</option>
-              <option value="sans-serif">Sans</option>
-            </select>
-          </label>
-          <label
-            >Editor font size
-            <input
-              id="editor-font-size-input"
-              type="range"
-              min="12"
-              max="20"
-              step="1"
-            />
-          </label>
-          <label
-            >Editor line height
-            <input
-              id="editor-line-height-input"
-              type="range"
-              min="1.2"
-              max="2.0"
-              step="0.1"
-            />
-          </label>
         </div>
         <div id="settings-reading-panel" class="settings-section hidden">
           <label
@@ -240,6 +203,6 @@
     </div>
 
     <script src="/mermaid.min.js"></script>
-    <script type="module" src="/app.js" data-tiptap-imports></script>
+    <script type="module" src="/app.js"></script>
   </body>
 </html>

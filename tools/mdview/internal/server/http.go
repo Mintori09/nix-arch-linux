@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
@@ -63,60 +62,13 @@ func (s *Server) routes() {
 }
 
 func (s *Server) handleDocument(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
+	if r.Method == http.MethodGet {
 		_, doc, _ := s.opts.App.Snapshot()
 		writeJSON(w, http.StatusOK, doc)
-	case http.MethodPut:
-		if !requireToken(s.opts.App.Token, w, r) {
-			return
-		}
-
-		var payload struct {
-			Content string `json:"content"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			http.Error(w, "invalid document payload", http.StatusBadRequest)
-			return
-		}
-
-		_, doc, _ := s.opts.App.Snapshot()
-		if doc.Temporary || doc.Path == "" {
-			http.Error(w, "temporary document cannot be autosaved", http.StatusConflict)
-			return
-		}
-		if doc.ReadOnly {
-			http.Error(w, "document is read-only", http.StatusForbidden)
-			return
-		}
-
-		if err := s.opts.Store.SaveAtomic(r.Context(), doc.Path, []byte(payload.Content)); err != nil {
-			http.Error(w, fmt.Sprintf("save document: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		snapshot, err := document.SnapshotFile(doc.Path)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("refresh saved document: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		now := time.Now()
-		doc.Content = snapshot.Content
-		doc.SavedAt = now
-		doc.LastModified = snapshot.LastModified
-		doc.RevisionID = snapshot.RevisionID
-		doc.ReadOnly = snapshot.ReadOnly
-		s.opts.App.SetDocument(doc)
-		writeJSON(w, http.StatusOK, map[string]any{
-			"ok":            true,
-			"saved_at":      now,
-			"revision_id":   snapshot.RevisionID,
-			"last_modified": snapshot.LastModified,
-		})
-	default:
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
 	}
+
+	http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 }
 
 func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
@@ -554,9 +506,6 @@ func mergeConfig(current, next config.Config) config.Config {
 	}
 	if next.AssetsDir != "" {
 		merged.AssetsDir = next.AssetsDir
-	}
-	if next.AutosaveDebounceMS != 0 {
-		merged.AutosaveDebounceMS = next.AutosaveDebounceMS
 	}
 	if len(next.WorkspaceRoots) > 0 {
 		merged.WorkspaceRoots = append([]string(nil), next.WorkspaceRoots...)

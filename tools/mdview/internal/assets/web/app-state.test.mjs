@@ -13,7 +13,7 @@ import {
 test('applyInitialUIState prefers query params over config defaults', () => {
   const state = applyInitialUIState({
     query: {
-      mode: 'wysiwyg',
+      mode: 'preview',
       sidebar: '0',
     },
     config: {
@@ -27,13 +27,13 @@ test('applyInitialUIState prefers query params over config defaults', () => {
   });
 
   assert.deepEqual(state, {
-    viewMode: 'wysiwyg',
+    viewMode: 'preview',
     sidebarOpen: false,
     outlineOpen: true,
   });
 });
 
-test('applyInitialUIState enables wysiwyg mode for empty temporary documents when no explicit mode is requested', () => {
+test('applyInitialUIState keeps empty temporary documents in preview mode', () => {
   const state = applyInitialUIState({
     query: {},
     config: {
@@ -46,10 +46,10 @@ test('applyInitialUIState enables wysiwyg mode for empty temporary documents whe
     },
   });
 
-  assert.equal(state.viewMode, 'wysiwyg');
+  assert.equal(state.viewMode, 'preview');
 });
 
-test('applyInitialUIState preserves explicit wysiwyg mode', () => {
+test('applyInitialUIState ignores explicit wysiwyg mode', () => {
   const state = applyInitialUIState({
     query: {
       mode: 'wysiwyg',
@@ -64,7 +64,7 @@ test('applyInitialUIState preserves explicit wysiwyg mode', () => {
     },
   });
 
-  assert.equal(state.viewMode, 'wysiwyg');
+  assert.equal(state.viewMode, 'preview');
 });
 
 test('applyInitialUIState falls back to preview for unsupported modes', () => {
@@ -85,7 +85,7 @@ test('applyInitialUIState falls back to preview for unsupported modes', () => {
   assert.equal(state.viewMode, 'preview');
 });
 
-test('getLayoutContext distinguishes preview and wysiwyg layouts', () => {
+test('getLayoutContext always returns the preview layout', () => {
   assert.equal(
     getLayoutContext({ viewMode: 'preview', isStacked: false }),
     'preview-only',
@@ -94,10 +94,7 @@ test('getLayoutContext distinguishes preview and wysiwyg layouts', () => {
     getLayoutContext({ viewMode: 'preview', isStacked: true }),
     'preview-only',
   );
-  assert.equal(
-    getLayoutContext({ viewMode: 'wysiwyg', isStacked: false }),
-    'wysiwyg-only',
-  );
+  assert.equal(getLayoutContext({ viewMode: 'wysiwyg', isStacked: false }), 'preview-only');
 });
 
 test('saveScrollSnapshot stores exact values and normalized ratios by context', () => {
@@ -122,7 +119,7 @@ test('restoreScrollTargets reuses exact snapshot inside same context', () => {
   });
 
   const target = restoreScrollTargets({
-    fromContext: 'wysiwyg-only',
+    fromContext: 'preview-only',
     toContext: 'preview-only',
     snapshots,
     current: {
@@ -144,7 +141,7 @@ test('restoreScrollTargets maps page scroll by ratio when entering a new context
 
   const target = restoreScrollTargets({
     fromContext: 'preview-only',
-    toContext: 'wysiwyg-only',
+    toContext: 'unknown',
     snapshots,
     current: {
       pageMax: 200,
@@ -153,27 +150,6 @@ test('restoreScrollTargets maps page scroll by ratio when entering a new context
 
   assert.deepEqual(target, {
     pageY: 100,
-  });
-});
-
-test('restoreScrollTargets keeps a dedicated snapshot for wysiwyg mode', () => {
-  const snapshots = createEmptyScrollSnapshots();
-  saveScrollSnapshot(snapshots, 'wysiwyg-only', {
-    pageY: 90,
-    pageMax: 300,
-  });
-
-  const target = restoreScrollTargets({
-    fromContext: 'preview-only',
-    toContext: 'wysiwyg-only',
-    snapshots,
-    current: {
-      pageMax: 500,
-    },
-  });
-
-  assert.deepEqual(target, {
-    pageY: 90,
   });
 });
 
