@@ -65,7 +65,7 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 		fmt.Println("  -font-size int     font size")
 		fmt.Println("  -no-sidebar       start with sidebar hidden")
 		fmt.Println("  -port int          listen on specific port")
-		fmt.Println("  -no-token          disable write token protection")
+		fmt.Println("  -no-token          disable token protection for write actions")
 		fmt.Println("  -version           print version")
 		fmt.Println("  -help, -h         show help")
 		return nil
@@ -157,7 +157,7 @@ func ParseCLI(args []string) (CLIOptions, error) {
 	fs.IntVar(&opts.FontSize, "font-size", 0, "font size")
 	fs.BoolVar(&opts.NoSidebar, "no-sidebar", false, "start with sidebar hidden")
 	fs.IntVar(&opts.Port, "port", 0, "listen on a specific port")
-	fs.BoolVar(&opts.NoToken, "no-token", false, "disable write token protection")
+	fs.BoolVar(&opts.NoToken, "no-token", false, "disable token protection for write actions")
 	fs.BoolVar(&opts.Version, "version", false, "print version")
 	fs.BoolVar(&opts.Help, "h", false, "show help")
 	fs.BoolVar(&opts.Help, "help", false, "show help")
