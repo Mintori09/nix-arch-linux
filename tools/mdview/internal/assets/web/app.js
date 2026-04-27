@@ -8,14 +8,11 @@ import {
 } from "./app-state.js";
 import {
   getEditorContentForSaving,
-  getVimIndicatorState,
-  getVimKeyAction,
   getWysiwygInitialContent,
 } from "./app-wysiwyg.js";
 
 import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
 import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
-import { Selection, TextSelection } from "https://esm.sh/prosemirror-state@1.4.3";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
@@ -30,9 +27,6 @@ const state = {
   sidebarWidth: 240,
   outlineWidth: 240,
   editorType: "textarea",
-  vimMode: "insert",
-  vimRegister: "",
-  vimCount: "",
   autosaveTimer: null,
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
@@ -59,9 +53,7 @@ const elements = {
   workspace: document.getElementById("workspace"),
   editorPane: document.getElementById("editor-pane"),
   editor: document.getElementById("editor"),
-  vimModeChip: document.getElementById("vim-mode-chip"),
   btnPreview: document.getElementById("btn-preview"),
-  btnEdit: document.getElementById("btn-edit"),
   btnWysiwyg: document.getElementById("btn-wysiwyg"),
   previewPane: document.getElementById("preview-pane"),
   preview: document.getElementById("preview"),
@@ -164,52 +156,12 @@ elements.editorFont.addEventListener("change", saveSettings);
 elements.editorFontSize.addEventListener("input", saveSettings);
 elements.editorLineHeight.addEventListener("input", saveSettings);
 
-function insertFormatting(format) {
-  const editor = elements.editor;
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-  const text = editor.value;
-  const selected = text.substring(start, end) || "text";
-
-  const formats = {
-    bold: `**${selected}**`,
-    italic: `*${selected}*`,
-    heading: `\n# ${selected}`,
-    link: `[${selected}](url)`,
-    code: `\`${selected}\``,
-    list: `\n- ${selected}`,
-  };
-
-  const replacement = formats[format] || selected;
-  editor.setRangeText(replacement, start, end, "select");
-  editor.focus();
-  editor.dispatchEvent(new Event("input", { bubbles: true }));
-}
-
 elements.searchQuery.addEventListener("input", runSearch);
 elements.searchScope.addEventListener("change", runSearch);
 window.addEventListener("resize", () => {
   transitionLayout(() => {}, state.currentContext);
 });
 window.addEventListener("keydown", (event) => {
-  const isPlainEditMode = state.viewMode === "edit";
-  if ((state.viewMode === "edit" || state.viewMode === "wysiwyg") && (event.ctrlKey || event.metaKey)) {
-    if (event.shiftKey && event.key.toLowerCase() === "v") {
-      event.preventDefault();
-      if (state.viewMode === "wysiwyg") {
-        toggleVimMode();
-      }
-      return;
-    }
-    const shortcuts = { b: "bold", i: "italic", k: "link" };
-    const key = event.key.toLowerCase();
-    if (isPlainEditMode && shortcuts[key] && !event.shiftKey) {
-      event.preventDefault();
-      insertFormatting(shortcuts[key]);
-      return;
-    }
-  }
-
   if (event.key !== "Escape") {
     return;
   }
@@ -284,7 +236,7 @@ async function init() {
   syncLayout();
   initSidebarResize();
   initOutlineResize();
-  initVimModeToggle();
+  initViewModeToggle();
 }
 
 function bindSettings(config) {
@@ -760,18 +712,13 @@ function syncLayout(fromContext = state.currentContext) {
     "mobile-panel-open",
     isMobile && (showFileSidebar || showOutlineSidebar),
   );
-  const isEditMode = state.viewMode === "edit";
   const isWysiwygMode = state.viewMode === "wysiwyg";
-  const isEditorMode = isEditMode || isWysiwygMode;
+  const isEditorMode = isWysiwygMode;
   elements.editorPane.classList.toggle("hidden", !isEditorMode);
   elements.previewPane.classList.toggle("hidden", isWysiwygMode);
   elements.fileSidebar.classList.toggle("hidden", !showFileSidebar);
   elements.outlineSidebar.classList.toggle("hidden", !showOutlineSidebar);
-  if (isEditMode) {
-    elements.workspace.classList.add("split");
-  } else {
-    elements.workspace.classList.remove("split");
-  }
+  elements.workspace.classList.remove("split");
   elements.chrome.dataset.layout = getChromeLayout(
     showFileSidebar,
     showOutlineSidebar,
@@ -925,8 +872,7 @@ function getChromeLayout(showFileSidebar, showOutlineSidebar) {
 }
 
 function syncResponsiveState() {
-  const shouldStack = state.viewMode === "edit" && elements.workspace.clientWidth < 960;
-  elements.workspace.classList.toggle("stacked", shouldStack);
+  elements.workspace.classList.remove("stacked");
 }
 
 function wrapPreviewTables() {
@@ -990,7 +936,7 @@ function closePanels() {
 }
 
 function autoResizeEditor() {
-  const isEditorMode = state.viewMode === "edit" || state.viewMode === "wysiwyg";
+  const isEditorMode = state.viewMode === "wysiwyg";
   if (!elements.editor || !isEditorMode) {
     if (elements.editor) {
       elements.editor.style.height = "";
@@ -1100,9 +1046,6 @@ function initTiptapEditor(content = "") {
     },
   });
   tiptapEditor.commands.setContent(content, false);
-
-  setupVimBindings();
-  elements.editor.classList.add(`vim-${state.vimMode}-mode`);
 }
 
 function destroyTiptapEditor() {
@@ -1110,7 +1053,7 @@ function destroyTiptapEditor() {
     tiptapEditor.destroy();
     tiptapEditor = null;
   }
-  elements.editor.classList.remove("tiptap-editor", "vim-insert-mode", "vim-normal-mode");
+  elements.editor.classList.remove("tiptap-editor");
 }
 
 function setViewMode(mode) {
@@ -1139,14 +1082,12 @@ function setViewMode(mode) {
         renderedHTML: elements.preview.innerHTML,
       }),
     );
-    state.vimMode = "insert";
   } else {
     state.editorType = "textarea";
   }
   
   syncLayout();
   updateViewModeButtons();
-  updateVimModeChip();
 }
 
 function getEditorPlainText() {
@@ -1167,235 +1108,22 @@ function getCurrentDocumentContent() {
   });
 }
 
-let vimKeyHandler = null;
-
-function setupVimBindings() {
-  if (!tiptapEditor) return;
-  if (vimKeyHandler) {
-    document.removeEventListener("keydown", vimKeyHandler);
-  }
-  vimKeyHandler = (e) => handleVimKeydown(e);
-  document.addEventListener("keydown", vimKeyHandler);
-}
-
-function handleVimKeydown(e) {
-  if (state.viewMode !== "wysiwyg") return;
-  if (!tiptapEditor) return;
-
-  const isCtrl = e.ctrlKey || e.metaKey;
-  const action = getVimKeyAction({
-    vimMode: state.vimMode,
-    key: e.key,
-    isCtrl,
-  });
-
-  if (!action) {
-    return;
-  }
-
-  e.preventDefault();
-  applyVimAction(action);
-}
-
-function setVimMode(mode) {
-  state.vimMode = mode;
-  elements.editor.classList.remove(
-    "vim-insert-mode",
-    "vim-normal-mode",
-    "vim-visual-mode",
-  );
-  elements.editor.classList.add(`vim-${mode}-mode`);
-  updateVimModeChip();
-}
-
-function toggleVimMode() {
-  if (state.viewMode !== "wysiwyg") return;
-  if (state.vimMode === "insert") {
-    setVimMode("normal");
-  } else {
-    setVimMode("insert");
-  }
-}
-
-function initVimModeToggle() {
+function initViewModeToggle() {
   if (elements.btnPreview) {
     elements.btnPreview.addEventListener("click", () => setViewMode("preview"));
-  }
-  if (elements.btnEdit) {
-    elements.btnEdit.addEventListener("click", () => setViewMode("edit"));
   }
   if (elements.btnWysiwyg) {
     elements.btnWysiwyg.addEventListener("click", () => setViewMode("wysiwyg"));
   }
 
   updateViewModeButtons();
-  updateVimModeChip();
 }
 
 function updateViewModeButtons() {
   if (elements.btnPreview) {
     elements.btnPreview.classList.toggle("active", state.viewMode === "preview");
   }
-  if (elements.btnEdit) {
-    elements.btnEdit.classList.toggle("active", state.viewMode === "edit");
-  }
   if (elements.btnWysiwyg) {
     elements.btnWysiwyg.classList.toggle("active", state.viewMode === "wysiwyg");
   }
-}
-
-function updateVimModeChip() {
-  if (!elements.vimModeChip) return;
-
-  const chip = getVimIndicatorState({
-    viewMode: state.viewMode,
-    vimMode: state.vimMode,
-  });
-
-  elements.vimModeChip.className = `vim-mode-chip${chip.hidden ? " hidden" : ""}${chip.tone ? ` ${chip.tone}` : ""}`;
-  elements.vimModeChip.textContent = chip.text;
-}
-
-function applyVimAction(action) {
-  if (!tiptapEditor) {
-    return;
-  }
-
-  tiptapEditor.commands.focus();
-
-  if (action.type === "noop") {
-    return;
-  }
-
-  if (action.type === "set-mode") {
-    if (action.collapseSelection) {
-      collapseSelectionToHead();
-    }
-    setVimMode(action.mode);
-    return;
-  }
-
-  if (action.type === "command") {
-    runEditorCommand(action.command, action.extend);
-    if (action.mode) {
-      setVimMode(action.mode);
-    }
-    return;
-  }
-
-  if (action.type === "command-sequence") {
-    for (const command of action.commands) {
-      runEditorCommand(command, false);
-    }
-    if (action.mode) {
-      setVimMode(action.mode);
-    }
-  }
-}
-
-function runEditorCommand(command, extendSelection = false) {
-  if (!tiptapEditor) {
-    return;
-  }
-
-  if (extendSelection) {
-    moveEditorSelection(command, true);
-    return;
-  }
-
-  switch (command) {
-    case "moveCursorBackward":
-    case "moveCursorForward":
-    case "moveCursorToStartOfLine":
-    case "moveCursorToEndOfLine":
-    case "moveCursorToStart":
-    case "moveCursorToEnd":
-      moveEditorSelection(command, false);
-      return;
-    case "insertContentNewline":
-      tiptapEditor.commands.insertContent("\n");
-      return;
-    default:
-      if (typeof tiptapEditor.commands[command] === "function") {
-        tiptapEditor.commands[command]();
-      }
-  }
-}
-
-function collapseSelectionToHead() {
-  if (!tiptapEditor) {
-    return;
-  }
-
-  const { state: editorState, dispatch } = tiptapEditor.view;
-  const head = editorState.selection.head;
-  dispatch(
-    editorState.tr.setSelection(
-      TextSelection.create(
-        editorState.doc,
-        resolveInlinePosition(editorState.doc, head, -1),
-      ),
-    ),
-  );
-}
-
-function moveEditorSelection(command, extendSelection) {
-  if (!tiptapEditor) {
-    return;
-  }
-
-  const { state: editorState, dispatch } = tiptapEditor.view;
-  const { selection, doc } = editorState;
-  const { anchor, head, $head } = selection;
-  const nextHead = getTargetSelectionPosition({
-    command,
-    head,
-    docSize: doc.content.size,
-    parentOffset: $head.parentOffset,
-    parentSize: $head.parent.content.size,
-  });
-
-  if (nextHead === head && (!extendSelection || anchor === head)) {
-    return;
-  }
-
-  const from = extendSelection
-    ? resolveInlinePosition(doc, anchor, anchor <= nextHead ? 1 : -1)
-    : resolveInlinePosition(doc, nextHead, -1);
-  const to = extendSelection
-    ? resolveInlinePosition(doc, nextHead, nextHead >= anchor ? 1 : -1)
-    : from;
-
-  dispatch(editorState.tr.setSelection(TextSelection.create(doc, from, to)));
-}
-
-function getTargetSelectionPosition({
-  command,
-  head,
-  docSize,
-  parentOffset,
-  parentSize,
-}) {
-  const blockStart = head - parentOffset;
-  const blockEnd = blockStart + parentSize;
-
-  switch (command) {
-    case "moveCursorBackward":
-      return Math.max(1, head - 1);
-    case "moveCursorForward":
-      return Math.min(docSize - 1, head + 1);
-    case "moveCursorToStartOfLine":
-    case "moveCursorToStart":
-      return blockStart;
-    case "moveCursorToEndOfLine":
-    case "moveCursorToEnd":
-      return blockEnd;
-    default:
-      return head;
-  }
-}
-
-function resolveInlinePosition(doc, position, bias) {
-  const clamped = Math.max(0, Math.min(position, doc.content.size));
-  return Selection.near(doc.resolve(clamped), bias).from;
 }

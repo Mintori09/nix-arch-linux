@@ -13,7 +13,7 @@ export function applyInitialUIState({ query, config, document }) {
     : Boolean(config.default_outline_open);
 
   if (document.temporary && !document.content && !mode) {
-    viewMode = "edit";
+    viewMode = "wysiwyg";
   }
 
   return {
@@ -24,9 +24,6 @@ export function applyInitialUIState({ query, config, document }) {
 }
 
 export function getLayoutContext({ viewMode, isStacked }) {
-  if (viewMode === "edit") {
-    return isStacked ? "edit-split-stacked" : "edit-split-desktop";
-  }
   if (viewMode === "wysiwyg") {
     return "wysiwyg-only";
   }
@@ -36,8 +33,6 @@ export function getLayoutContext({ viewMode, isStacked }) {
 export function createEmptyScrollSnapshots() {
   return {
     "preview-only": null,
-    "edit-split-desktop": null,
-    "edit-split-stacked": null,
     "wysiwyg-only": null,
   };
 }
@@ -114,12 +109,8 @@ function clamp(value, min, max) {
 }
 
 function getInitialViewMode(mode, config) {
-  if (mode === "edit" || mode === "preview" || mode === "wysiwyg") {
+  if (mode === "preview" || mode === "wysiwyg") {
     return mode;
-  }
-
-  if (config.default_edit_mode) {
-    return "edit";
   }
 
   return "preview";

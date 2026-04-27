@@ -1,10 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import * as wysiwygModule from './app-wysiwyg.js';
 import {
   getEditorContentForSaving,
-  getVimIndicatorState,
-  getVimKeyAction,
   getWysiwygInitialContent,
 } from './app-wysiwyg.js';
 
@@ -20,9 +19,9 @@ test('getWysiwygInitialContent prefers rendered preview HTML to preserve markdow
   );
 });
 
-test('getEditorContentForSaving keeps plain edit mode content unchanged', () => {
+test('getEditorContentForSaving keeps preview mode content unchanged', () => {
   const content = getEditorContentForSaving({
-    viewMode: 'edit',
+    viewMode: 'preview',
     plainText: '# WYSIWYG Test\n\nThis is a seed paragraph.',
   });
 
@@ -42,61 +41,7 @@ test('getEditorContentForSaving converts WYSIWYG HTML back to markdown for autos
   );
 });
 
-test('getVimIndicatorState shows a visual mode chip only in wysiwyg mode', () => {
-  assert.deepEqual(
-    getVimIndicatorState({ viewMode: 'wysiwyg', vimMode: 'visual' }),
-    {
-      hidden: false,
-      text: 'VISUAL',
-      tone: 'visual',
-    },
-  );
-
-  assert.deepEqual(
-    getVimIndicatorState({ viewMode: 'edit', vimMode: 'visual' }),
-    {
-      hidden: true,
-      text: '',
-      tone: '',
-    },
-  );
-});
-
-test('getVimKeyAction enters visual mode from normal mode and exits with escape', () => {
-  assert.deepEqual(
-    getVimKeyAction({ vimMode: 'normal', key: 'v', isCtrl: false }),
-    {
-      type: 'set-mode',
-      mode: 'visual',
-    },
-  );
-
-  assert.deepEqual(
-    getVimKeyAction({ vimMode: 'visual', key: 'Escape', isCtrl: false }),
-    {
-      type: 'set-mode',
-      mode: 'normal',
-      collapseSelection: true,
-    },
-  );
-});
-
-test('getVimKeyAction extends selection in visual mode with horizontal motions', () => {
-  assert.deepEqual(
-    getVimKeyAction({ vimMode: 'visual', key: 'h', isCtrl: false }),
-    {
-      type: 'command',
-      command: 'moveCursorBackward',
-      extend: true,
-    },
-  );
-
-  assert.deepEqual(
-    getVimKeyAction({ vimMode: 'visual', key: '$', isCtrl: false }),
-    {
-      type: 'command',
-      command: 'moveCursorToEndOfLine',
-      extend: true,
-    },
-  );
+test('app-wysiwyg exports no vim helpers', () => {
+  assert.equal('getVimIndicatorState' in wysiwygModule, false);
+  assert.equal('getVimKeyAction' in wysiwygModule, false);
 });
