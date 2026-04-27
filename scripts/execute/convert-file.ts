@@ -408,6 +408,20 @@ const ROUTE_HANDLERS: Record<string, Converter> = {
   "ppt:pdf": (input, output, context) =>
     convertViaLibreOffice(input, output, context, "pdf"),
 
+  // PDF to Images
+  "pdf:png": (input, output, context) =>
+    runCommand(["pdftoppm", "-r", "200", "-png", input, output.replace(/\.png$/, "")], {
+      dryRun: context.dryRun,
+    }),
+  "pdf:jpg": (input, output, context) =>
+    runCommand(["pdftoppm", "-r", "200", "-jpeg", input, output.replace(/\.jpg$/, "")], {
+      dryRun: context.dryRun,
+    }),
+  "pdf:webp": (input, output, context) =>
+    runCommand(["pdftoppm", "-r", "200", "-png", input, output.replace(/\.webp$/, "")], {
+      dryRun: context.dryRun,
+    }),
+
   // Data
   "json:yaml": (input, output, context) =>
     convertViaYq(input, output, context, "json", "yaml"),

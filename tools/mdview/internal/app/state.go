@@ -21,16 +21,19 @@ func BuildSession(_ context.Context, opts BuildOptions) (*session.App, error) {
 		Token:  opts.Token,
 		Config: opts.Config,
 	}
+	workspaceRoots := append([]string(nil), opts.Config.WorkspaceRoots...)
 
 	switch opts.Input.Kind {
 	case InputFile:
+		appState.SetWorkspaceRoots(workspaceRoots)
 		doc, err := loadFileDocument(opts.Input.Path, "")
 		if err != nil {
 			return nil, err
 		}
 		appState.SetDocument(doc)
 	case InputFolder:
-		appState.Root = opts.Input.Path
+		workspaceRoots = []string{opts.Input.Path}
+		appState.SetWorkspaceRoots(workspaceRoots)
 		files, err := document.ListMarkdownFiles(opts.Input.Path)
 		if err != nil {
 			return nil, fmt.Errorf("list folder markdown files: %w", err)
@@ -58,25 +61,52 @@ func BuildSession(_ context.Context, opts BuildOptions) (*session.App, error) {
 			})
 		}
 	case InputClipboard:
+		appState.SetWorkspaceRoots(workspaceRoots)
 		appState.SetDocument(session.Document{
 			Name:      "Clipboard",
 			Content:   opts.Input.Content,
 			Temporary: true,
 		})
 	case InputStdin:
+		appState.SetWorkspaceRoots(workspaceRoots)
 		appState.SetDocument(session.Document{
 			Name:      "stdin.md",
 			Content:   opts.Input.Content,
 			Temporary: true,
 		})
 	default:
-		appState.SetDocument(session.Document{
-			Name:      "Untitled",
-			Temporary: true,
-		})
+		appState.SetWorkspaceRoots(workspaceRoots)
+		doc, err := firstWorkspaceDocument(workspaceRoots)
+		if err != nil {
+			return nil, err
+		}
+		if doc.Path != "" {
+			appState.SetDocument(doc)
+		} else {
+			appState.SetDocument(session.Document{
+				Name:      "Untitled",
+				Temporary: true,
+			})
+		}
 	}
 
 	return appState, nil
+}
+
+func firstWorkspaceDocument(roots []string) (session.Document, error) {
+	for _, root := range roots {
+		files, err := document.ListMarkdownFiles(root)
+		if err != nil {
+			return session.Document{}, fmt.Errorf("list workspace markdown files: %w", err)
+		}
+		for _, file := range files {
+			if file.Type != "file" {
+				continue
+			}
+			return loadFileDocument(filepath.Join(root, filepath.FromSlash(file.Path)), root)
+		}
+	}
+	return session.Document{}, nil
 }
 
 func loadFileDocument(path, root string) (session.Document, error) {

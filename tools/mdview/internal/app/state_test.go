@@ -27,9 +27,9 @@ func TestBuildSessionFromFileLoadsDocument(t *testing.T) {
 		t.Fatalf("BuildSession returned error: %v", err)
 	}
 
-	_, doc, root := appState.Snapshot()
-	if root != "" {
-		t.Fatalf("expected empty root for single file mode, got %q", root)
+	_, doc, roots := appState.Snapshot()
+	if len(roots) != 0 {
+		t.Fatalf("expected no workspace roots for single file mode, got %+v", roots)
 	}
 
 	if doc.Path != filePath || doc.Content != "# note" {
@@ -57,9 +57,9 @@ func TestBuildSessionFromFolderSelectsFirstMarkdownFile(t *testing.T) {
 		t.Fatalf("BuildSession returned error: %v", err)
 	}
 
-	_, doc, folder := appState.Snapshot()
-	if folder != root {
-		t.Fatalf("expected root %q, got %q", root, folder)
+	_, doc, roots := appState.Snapshot()
+	if len(roots) != 1 || roots[0] != root {
+		t.Fatalf("expected workspace root %q, got %+v", root, roots)
 	}
 
 	if doc.Name != "a.md" {
@@ -86,5 +86,39 @@ func TestBuildSessionFromClipboardCreatesTemporaryDocument(t *testing.T) {
 
 	if doc.Content != "# clip" {
 		t.Fatalf("expected clipboard content, got %q", doc.Content)
+	}
+}
+
+func TestBuildSessionUsesConfiguredWorkspaceRootsWhenNoInputIsProvided(t *testing.T) {
+	t.Parallel()
+
+	rootA := t.TempDir()
+	rootB := t.TempDir()
+	if err := os.WriteFile(filepath.Join(rootA, "z.md"), []byte("# z"), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootB, "a.md"), []byte("# a"), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	cfg := config.Default()
+	cfg.WorkspaceRoots = []string{rootA, rootB}
+
+	appState, err := BuildSession(context.Background(), BuildOptions{
+		Input:  Input{},
+		Config: cfg,
+		Token:  "secret",
+	})
+	if err != nil {
+		t.Fatalf("BuildSession returned error: %v", err)
+	}
+
+	_, doc, roots := appState.Snapshot()
+	if len(roots) != 2 || roots[0] != rootA || roots[1] != rootB {
+		t.Fatalf("expected configured workspace roots, got %+v", roots)
+	}
+
+	if doc.Name != "z.md" {
+		t.Fatalf("expected first workspace markdown z.md, got %q", doc.Name)
 	}
 }

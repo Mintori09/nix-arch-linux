@@ -22,6 +22,7 @@ type Options struct {
 	Store         document.Store
 	ConfigManager config.Manager
 	Assets        fs.FS
+	TTS           TTSService
 }
 
 type Server struct {
@@ -30,6 +31,9 @@ type Server struct {
 }
 
 func New(opts Options) *Server {
+	if opts.TTS == nil && opts.App != nil {
+		opts.TTS = NewTTSService(opts.App.Config)
+	}
 	s := &Server{
 		opts: opts,
 		mux:  http.NewServeMux(),
@@ -48,8 +52,11 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/document/status", s.handleDocumentStatus)
 	s.mux.HandleFunc("/api/config", s.handleConfig)
 	s.mux.HandleFunc("/api/files", s.handleFiles)
+	s.mux.HandleFunc("/api/workspace/roots", s.handleWorkspaceRoots)
 	s.mux.HandleFunc("/api/open", s.handleOpen)
 	s.mux.HandleFunc("/api/search", s.handleSearch)
+	s.mux.HandleFunc("/api/tts", s.handleTTS)
+	s.mux.HandleFunc("/api/tts/voices", s.handleTTSVoices)
 	s.mux.HandleFunc("/api/asset", s.handleAsset)
 	s.mux.HandleFunc("/api/render", s.handleRender)
 	s.mux.HandleFunc("/", s.handleIndex)
@@ -173,6 +180,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		}
 
 		s.opts.App.SetConfig(merged)
+		s.opts.TTS = NewTTSService(merged)
 		writeJSON(w, http.StatusOK, merged)
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -185,16 +193,75 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files, err := s.opts.App.MarkdownFiles()
+	roots, err := s.opts.App.WorkspaceFiles()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("list files: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	_, _, root := s.opts.App.Snapshot()
 	writeJSON(w, http.StatusOK, map[string]any{
-		"root":  root,
-		"files": files,
+		"roots": roots,
+	})
+}
+
+func (s *Server) handleWorkspaceRoots(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+
+	var payload struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid workspace root payload", http.StatusBadRequest)
+		return
+	}
+
+	rootPath := filepath.Clean(strings.TrimSpace(payload.Path))
+	if rootPath == "" || rootPath == "." {
+		http.Error(w, "missing path", http.StatusBadRequest)
+		return
+	}
+
+	cfg, _, roots := s.opts.App.Snapshot()
+	switch r.Method {
+	case http.MethodPost:
+		info, err := os.Stat(rootPath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("stat workspace root: %v", err), http.StatusBadRequest)
+			return
+		}
+		if !info.IsDir() {
+			http.Error(w, "workspace root must be a directory", http.StatusBadRequest)
+			return
+		}
+		if !containsRoot(roots, rootPath) {
+			roots = append(roots, rootPath)
+		}
+	case http.MethodDelete:
+		roots = removeRoot(roots, rootPath)
+	default:
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	cfg.WorkspaceRoots = roots
+	if err := s.opts.ConfigManager.Save(r.Context(), cfg); err != nil {
+		http.Error(w, fmt.Sprintf("save workspace roots: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	s.opts.App.SetConfig(cfg)
+	s.opts.App.SetWorkspaceRoots(roots)
+
+	items, err := s.opts.App.WorkspaceFiles()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("list workspace files: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"roots": items,
 	})
 }
 
@@ -204,7 +271,7 @@ func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, currentDoc, root := s.opts.App.Snapshot()
+	_, currentDoc, workspaceRoots := s.opts.App.Snapshot()
 
 	relative := strings.TrimSpace(r.URL.Query().Get("path"))
 	if relative == "" {
@@ -212,13 +279,25 @@ func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	baseRoot := root
-	if baseRoot == "" {
-		if currentDoc.Path == "" {
-			http.Error(w, "folder mode is not active", http.StatusConflict)
+	baseRoot := strings.TrimSpace(r.URL.Query().Get("root"))
+	if baseRoot != "" {
+		baseRoot = filepath.Clean(baseRoot)
+		if !containsRoot(workspaceRoots, baseRoot) {
+			http.Error(w, "unknown workspace root", http.StatusBadRequest)
 			return
 		}
-		baseRoot = filepath.Dir(currentDoc.Path)
+	} else if currentDoc.Path != "" {
+		doc, err := readRelativeFileDocument(currentDoc, relative)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		s.opts.App.SetDocument(doc)
+		writeJSON(w, http.StatusOK, doc)
+		return
+	} else {
+		http.Error(w, "folder mode is not active", http.StatusConflict)
+		return
 	}
 
 	doc, err := readFileDocument(baseRoot, relative)
@@ -239,7 +318,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 	query := strings.TrimSpace(r.URL.Query().Get("q"))
 	scope := strings.TrimSpace(r.URL.Query().Get("scope"))
-	_, doc, root := s.opts.App.Snapshot()
+	_, doc, roots := s.opts.App.Snapshot()
 	results := make([]map[string]any, 0)
 
 	if query == "" {
@@ -251,18 +330,23 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	case "", "file":
 		results = append(results, searchInContent(doc.Name, doc.Content, query)...)
 	case "workspace":
-		files, err := document.ListMarkdownFiles(root)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("search workspace: %v", err), http.StatusInternalServerError)
-			return
-		}
-		for _, file := range files {
-			fullPath := filepath.Join(root, filepath.FromSlash(file.Path))
-			data, err := os.ReadFile(fullPath)
+		for _, root := range roots {
+			files, err := document.ListMarkdownFiles(root)
 			if err != nil {
-				continue
+				http.Error(w, fmt.Sprintf("search workspace: %v", err), http.StatusInternalServerError)
+				return
 			}
-			results = append(results, searchInContent(file.Path, string(data), query)...)
+			for _, file := range files {
+				if file.Type != "file" {
+					continue
+				}
+				fullPath := filepath.Join(root, filepath.FromSlash(file.Path))
+				data, err := os.ReadFile(fullPath)
+				if err != nil {
+					continue
+				}
+				results = append(results, searchInWorkspaceContent(root, file.Path, string(data), query)...)
+			}
 		}
 	default:
 		http.Error(w, "invalid search scope", http.StatusBadRequest)
@@ -284,8 +368,8 @@ func (s *Server) handleAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, doc, root := s.opts.App.Snapshot()
-	fullPath, err := resolveAssetPath(root, doc.Path, requested)
+	_, doc, _ := s.opts.App.Snapshot()
+	fullPath, err := resolveAssetPath(doc.FolderRoot, doc.Path, requested)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -310,6 +394,80 @@ func (s *Server) handleRender(w http.ResponseWriter, r *http.Request) {
 
 	html := renderMarkdown(payload.Content)
 	writeJSON(w, http.StatusOK, map[string]any{"html": html})
+}
+
+func (s *Server) handleTTS(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+	if s.opts.TTS == nil {
+		http.Error(w, "tts service is not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	var payload struct {
+		Text     string  `json:"text"`
+		Provider string  `json:"provider"`
+		Language string  `json:"language"`
+		Voice    string  `json:"voice"`
+		Speed    float64 `json:"speed"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid tts payload", http.StatusBadRequest)
+		return
+	}
+
+	cfg, _, _ := s.opts.App.Snapshot()
+	req := SynthesizeRequest{
+		Text:     strings.TrimSpace(payload.Text),
+		Provider: firstNonEmpty(payload.Provider, cfg.TTSProvider),
+		Language: firstNonEmpty(payload.Language, cfg.TTSLanguage),
+		Voice:    firstNonEmpty(payload.Voice, cfg.TTSVoice),
+		Speed:    payload.Speed,
+	}
+	if req.Speed == 0 {
+		req.Speed = cfg.TTSSpeed
+	}
+	if req.Text == "" {
+		http.Error(w, "tts text is required", http.StatusBadRequest)
+		return
+	}
+
+	audio, err := s.opts.TTS.Synthesize(r.Context(), req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("tts synthesis failed: %v", err), http.StatusBadGateway)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"audio_content":  audio.AudioContentBase64,
+		"audio_encoding": audio.AudioEncoding,
+		"content_type":   audio.ContentType,
+		"voice":          audio.VoiceName,
+	})
+}
+
+func (s *Server) handleTTSVoices(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	cfg, _, _ := s.opts.App.Snapshot()
+	language := strings.TrimSpace(r.URL.Query().Get("language"))
+	if language == "" {
+		language = cfg.TTSLanguage
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"provider": cfg.TTSProvider,
+		"language": language,
+		"voices":   googleVoicesForLanguage(language),
+	})
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -400,9 +558,48 @@ func mergeConfig(current, next config.Config) config.Config {
 	if next.AutosaveDebounceMS != 0 {
 		merged.AutosaveDebounceMS = next.AutosaveDebounceMS
 	}
+	if len(next.WorkspaceRoots) > 0 {
+		merged.WorkspaceRoots = append([]string(nil), next.WorkspaceRoots...)
+	}
+	if next.SpeechLanguage != "" {
+		merged.SpeechLanguage = next.SpeechLanguage
+	}
+	if next.SpeechVoice != "" || merged.SpeechVoice != "" {
+		merged.SpeechVoice = next.SpeechVoice
+	}
+	if next.SpeechRate != 0 {
+		merged.SpeechRate = next.SpeechRate
+	}
+	if next.SpeechAutoNext != nil {
+		merged.SpeechAutoNext = next.SpeechAutoNext
+	}
+	if next.TTSProvider != "" {
+		merged.TTSProvider = next.TTSProvider
+	}
+	if next.TTSLanguage != "" {
+		merged.TTSLanguage = next.TTSLanguage
+	}
+	if next.TTSVoice != "" || merged.TTSVoice != "" {
+		merged.TTSVoice = next.TTSVoice
+	}
+	if next.TTSSpeed != 0 {
+		merged.TTSSpeed = next.TTSSpeed
+	}
+	if next.TTSAutoNext != nil {
+		merged.TTSAutoNext = next.TTSAutoNext
+	}
 	merged.AllowRawHTML = next.AllowRawHTML
 	merged.LocalOnly = next.LocalOnly
 	return merged
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func readFileDocument(root, relative string) (session.Document, error) {
@@ -434,6 +631,38 @@ func readFileDocument(root, relative string) (session.Document, error) {
 		LastModified: snapshot.LastModified,
 		RevisionID:   snapshot.RevisionID,
 		FolderRoot:   root,
+	}, nil
+}
+
+func readRelativeFileDocument(currentDoc session.Document, relative string) (session.Document, error) {
+	cleaned := filepath.Clean(relative)
+	if cleaned == "." || strings.HasPrefix(cleaned, "..") {
+		return session.Document{}, errors.New("invalid relative path")
+	}
+
+	fullPath := filepath.Join(filepath.Dir(currentDoc.Path), cleaned)
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		return session.Document{}, fmt.Errorf("open document: %w", err)
+	}
+	if info.IsDir() {
+		return session.Document{}, errors.New("path must be a markdown file")
+	}
+
+	snapshot, err := document.SnapshotFile(fullPath)
+	if err != nil {
+		return session.Document{}, err
+	}
+
+	return session.Document{
+		Path:         fullPath,
+		Name:         filepath.Base(fullPath),
+		Content:      snapshot.Content,
+		Temporary:    false,
+		ReadOnly:     snapshot.ReadOnly,
+		LastModified: snapshot.LastModified,
+		RevisionID:   snapshot.RevisionID,
+		FolderRoot:   currentDoc.FolderRoot,
 	}, nil
 }
 
@@ -472,6 +701,34 @@ func searchInContent(path, content, query string) []map[string]any {
 		}
 	}
 	return results
+}
+
+func searchInWorkspaceContent(root, path, content, query string) []map[string]any {
+	results := searchInContent(path, content, query)
+	for _, result := range results {
+		result["root"] = root
+	}
+	return results
+}
+
+func containsRoot(roots []string, root string) bool {
+	for _, item := range roots {
+		if item == root {
+			return true
+		}
+	}
+	return false
+}
+
+func removeRoot(roots []string, root string) []string {
+	filtered := roots[:0]
+	for _, item := range roots {
+		if item == root {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	return filtered
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {

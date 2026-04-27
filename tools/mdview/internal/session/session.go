@@ -22,17 +22,18 @@ type Document struct {
 }
 
 type App struct {
-	mu       sync.RWMutex
-	Token    string
-	Config   config.Config
-	Document Document
-	Root     string
+	mu             sync.RWMutex
+	Token          string
+	Config         config.Config
+	Document       Document
+	WorkspaceRoots []string
 }
 
-func (a *App) Snapshot() (config.Config, Document, string) {
+func (a *App) Snapshot() (config.Config, Document, []string) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.Config, a.Document, a.Root
+	roots := append([]string(nil), a.WorkspaceRoots...)
+	return a.Config, a.Document, roots
 }
 
 func (a *App) SetDocument(doc Document) {
@@ -53,14 +54,22 @@ func (a *App) SetConfig(cfg config.Config) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.Config = cfg
+	a.WorkspaceRoots = append([]string(nil), cfg.WorkspaceRoots...)
 }
 
-func (a *App) MarkdownFiles() ([]document.FileEntry, error) {
+func (a *App) SetWorkspaceRoots(roots []string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.WorkspaceRoots = append([]string(nil), roots...)
+	a.Config.WorkspaceRoots = append([]string(nil), roots...)
+}
+
+func (a *App) WorkspaceFiles() ([]document.WorkspaceRoot, error) {
 	a.mu.RLock()
-	root := a.Root
+	roots := append([]string(nil), a.WorkspaceRoots...)
 	a.mu.RUnlock()
-	if root == "" {
+	if len(roots) == 0 {
 		return nil, nil
 	}
-	return document.ListMarkdownFiles(root)
+	return document.ListWorkspaceRoots(roots)
 }
