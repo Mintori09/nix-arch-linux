@@ -3,11 +3,7 @@ export function applyInitialUIState({ query, config, document }) {
   const hasSidebar = Object.hasOwn(query, "sidebar");
   const hasOutline = Object.hasOwn(query, "outline");
 
-  let editMode = mode === "edit";
-
-  if (!editMode) {
-    editMode = Boolean(config.default_edit_mode);
-  }
+  let viewMode = getInitialViewMode(mode, config);
 
   let sidebarOpen = hasSidebar
     ? query.sidebar === "1"
@@ -16,27 +12,33 @@ export function applyInitialUIState({ query, config, document }) {
     ? query.outline === "1"
     : Boolean(config.default_outline_open);
 
-  if (document.temporary && !document.content && mode !== "edit") {
-    editMode = true;
+  if (document.temporary && !document.content && !mode) {
+    viewMode = "edit";
   }
 
   return {
-    editMode,
+    viewMode,
     sidebarOpen,
     outlineOpen,
   };
 }
 
-export function getLayoutContext({ editMode, isStacked }) {
-  if (!editMode) return "preview-only";
-  return isStacked ? "split-stacked" : "split-desktop";
+export function getLayoutContext({ viewMode, isStacked }) {
+  if (viewMode === "edit") {
+    return isStacked ? "edit-split-stacked" : "edit-split-desktop";
+  }
+  if (viewMode === "wysiwyg") {
+    return "wysiwyg-only";
+  }
+  return "preview-only";
 }
 
 export function createEmptyScrollSnapshots() {
   return {
     "preview-only": null,
-    "split-desktop": null,
-    "split-stacked": null,
+    "edit-split-desktop": null,
+    "edit-split-stacked": null,
+    "wysiwyg-only": null,
   };
 }
 
@@ -109,4 +111,16 @@ function ratio(value, max) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getInitialViewMode(mode, config) {
+  if (mode === "edit" || mode === "preview" || mode === "wysiwyg") {
+    return mode;
+  }
+
+  if (config.default_edit_mode) {
+    return "edit";
+  }
+
+  return "preview";
 }
