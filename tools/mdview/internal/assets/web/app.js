@@ -6,6 +6,16 @@ import {
   restoreScrollTargets,
   saveScrollSnapshot,
 } from "./app-state.js";
+import {
+  getEditorContentForSaving,
+  getVimIndicatorState,
+  getVimKeyAction,
+  getWysiwygInitialContent,
+} from "./app-wysiwyg.js";
+
+import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
+import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
+import { Selection, TextSelection } from "https://esm.sh/prosemirror-state@1.4.3";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
@@ -14,11 +24,15 @@ const state = {
   config: null,
   document: null,
   files: [],
-  editMode: false,
+  viewMode: "preview",
   sidebarOpen: false,
   outlineOpen: false,
   sidebarWidth: 240,
   outlineWidth: 240,
+  editorType: "textarea",
+  vimMode: "insert",
+  vimRegister: "",
+  vimCount: "",
   autosaveTimer: null,
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
@@ -27,6 +41,8 @@ const state = {
   activeHeadingId: null,
   headingObserver: null,
 };
+
+let tiptapEditor = null;
 
 const elements = {
   chrome: document.querySelector(".chrome"),
@@ -42,8 +58,11 @@ const elements = {
   searchDrawer: document.getElementById("search-drawer"),
   workspace: document.getElementById("workspace"),
   editorPane: document.getElementById("editor-pane"),
-  editorToolbar: document.getElementById("editor-toolbar"),
   editor: document.getElementById("editor"),
+  vimModeChip: document.getElementById("vim-mode-chip"),
+  btnPreview: document.getElementById("btn-preview"),
+  btnEdit: document.getElementById("btn-edit"),
+  btnWysiwyg: document.getElementById("btn-wysiwyg"),
   previewPane: document.getElementById("preview-pane"),
   preview: document.getElementById("preview"),
   theme: document.getElementById("theme-select"),
@@ -103,11 +122,6 @@ document.getElementById("toggle-outline").addEventListener("click", () => {
     state.outlineOpen = !state.outlineOpen;
   });
 });
-document.getElementById("toggle-edit").addEventListener("click", () => {
-  transitionLayout(() => {
-    state.editMode = !state.editMode;
-  });
-});
 document.getElementById("toggle-settings").addEventListener("click", () => {
   elements.settingsDrawer.classList.toggle("hidden");
   elements.searchDrawer.classList.add("hidden");
@@ -123,8 +137,12 @@ document.getElementById("open-search").addEventListener("click", () => {
   }
 });
 
-elements.editor.addEventListener("input", async (event) => {
-  const value = event.target.value;
+elements.editor.addEventListener("input", async () => {
+  if (state.viewMode === "wysiwyg" && tiptapEditor) {
+    return;
+  }
+
+  const value = getEditorPlainText();
   state.document.content = value;
   if (!state.document.temporary) {
     setStatus("Unsaved");
@@ -145,17 +163,6 @@ elements.codeLineHeight.addEventListener("input", saveSettings);
 elements.editorFont.addEventListener("change", saveSettings);
 elements.editorFontSize.addEventListener("input", saveSettings);
 elements.editorLineHeight.addEventListener("input", saveSettings);
-
-function setupEditorToolbar() {
-  const toolbar = elements.editorToolbar;
-  if (!toolbar) return;
-  toolbar.querySelectorAll("button[data-format]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const format = btn.dataset.format;
-      insertFormatting(format);
-    });
-  });
-}
 
 function insertFormatting(format) {
   const editor = elements.editor;
@@ -179,18 +186,24 @@ function insertFormatting(format) {
   editor.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-setupEditorToolbar();
-
 elements.searchQuery.addEventListener("input", runSearch);
 elements.searchScope.addEventListener("change", runSearch);
 window.addEventListener("resize", () => {
   transitionLayout(() => {}, state.currentContext);
 });
 window.addEventListener("keydown", (event) => {
-  if (state.editMode && (event.ctrlKey || event.metaKey)) {
+  const isPlainEditMode = state.viewMode === "edit";
+  if ((state.viewMode === "edit" || state.viewMode === "wysiwyg") && (event.ctrlKey || event.metaKey)) {
+    if (event.shiftKey && event.key.toLowerCase() === "v") {
+      event.preventDefault();
+      if (state.viewMode === "wysiwyg") {
+        toggleVimMode();
+      }
+      return;
+    }
     const shortcuts = { b: "bold", i: "italic", k: "link" };
     const key = event.key.toLowerCase();
-    if (shortcuts[key] && !event.shiftKey) {
+    if (isPlainEditMode && shortcuts[key] && !event.shiftKey) {
       event.preventDefault();
       insertFormatting(shortcuts[key]);
       return;
@@ -266,11 +279,12 @@ async function init() {
 
   bindSettings(config);
   applyConfig();
-  loadDocument(doc);
+  await loadDocument(doc);
   renderFileList();
   syncLayout();
   initSidebarResize();
   initOutlineResize();
+  initVimModeToggle();
 }
 
 function bindSettings(config) {
@@ -326,17 +340,25 @@ function applyConfig() {
   );
 }
 
-function loadDocument(doc) {
+async function loadDocument(doc) {
   state.document = doc;
   elements.docName.textContent = doc.name || "Untitled";
   elements.docMeta.textContent =
     doc.path || (doc.temporary ? "Temporary document" : "");
-  elements.editor.value = doc.content || "";
+  elements.editor.textContent = doc.content || "";
   elements.editor.placeholder = doc.temporary
     ? "Paste Markdown here or open a file."
     : "";
   autoResizeEditor();
-  renderPreview(doc.content || "");
+  await renderPreview(doc.content || "");
+  if (state.viewMode === "wysiwyg") {
+    initTiptapEditor(
+      getWysiwygInitialContent({
+        markdown: doc.content || "",
+        renderedHTML: elements.preview.innerHTML,
+      }),
+    );
+  }
   updateStatusFromDocument();
 }
 
@@ -488,7 +510,7 @@ function rewritePreviewLinks() {
       link.addEventListener("click", async (event) => {
         event.preventDefault();
         const doc = await api(`/api/open?path=${encodeURIComponent(href)}`);
-        loadDocument(doc);
+        await loadDocument(doc);
         if (isMobileViewport()) {
           transitionLayout(() => {
             closePanels();
@@ -700,7 +722,7 @@ function renderFileList() {
       button.innerHTML = `<span class="icon">📄</span><span class="name">${file.name}</span>`;
       button.addEventListener("click", async () => {
         const doc = await api(`/api/open?path=${encodeURIComponent(file.path)}`);
-        loadDocument(doc);
+        await loadDocument(doc);
         if (isMobileViewport()) {
           transitionLayout(() => {
             closePanels();
@@ -738,10 +760,14 @@ function syncLayout(fromContext = state.currentContext) {
     "mobile-panel-open",
     isMobile && (showFileSidebar || showOutlineSidebar),
   );
-  elements.editorPane.classList.toggle("hidden", !state.editMode);
+  const isEditMode = state.viewMode === "edit";
+  const isWysiwygMode = state.viewMode === "wysiwyg";
+  const isEditorMode = isEditMode || isWysiwygMode;
+  elements.editorPane.classList.toggle("hidden", !isEditorMode);
+  elements.previewPane.classList.toggle("hidden", isWysiwygMode);
   elements.fileSidebar.classList.toggle("hidden", !showFileSidebar);
   elements.outlineSidebar.classList.toggle("hidden", !showOutlineSidebar);
-  if (state.editMode) {
+  if (isEditMode) {
     elements.workspace.classList.add("split");
   } else {
     elements.workspace.classList.remove("split");
@@ -772,7 +798,7 @@ function scheduleAutosave() {
       setStatus("Saving...");
       await api("/api/document", {
         method: "PUT",
-        body: JSON.stringify({ content: elements.editor.value }),
+        body: JSON.stringify({ content: getCurrentDocumentContent() }),
       });
       setStatus("Saved");
     } catch (error) {
@@ -829,7 +855,7 @@ async function runSearch() {
         const doc = await api(
           `/api/open?path=${encodeURIComponent(result.path)}`,
         );
-        loadDocument(doc);
+        await loadDocument(doc);
       }
       scrollToLine(result.line);
       if (isMobileViewport()) {
@@ -843,13 +869,18 @@ async function runSearch() {
 }
 
 function scrollToLine(lineNumber) {
-  const lines = elements.editor.value.split("\n");
+  const lines = getEditorPlainText().split("\n");
   let offset = 0;
   for (let i = 0; i < lineNumber - 1 && i < lines.length; i += 1) {
     offset += lines[i].length + 1;
   }
   elements.editor.focus();
-  elements.editor.setSelectionRange(offset, offset);
+  if (
+    typeof elements.editor.setSelectionRange === "function" &&
+    state.viewMode !== "wysiwyg"
+  ) {
+    elements.editor.setSelectionRange(offset, offset);
+  }
   const styles = window.getComputedStyle(elements.editor);
   const lineHeight =
     Number.parseFloat(styles.lineHeight) ||
@@ -894,7 +925,7 @@ function getChromeLayout(showFileSidebar, showOutlineSidebar) {
 }
 
 function syncResponsiveState() {
-  const shouldStack = state.editMode && elements.workspace.clientWidth < 960;
+  const shouldStack = state.viewMode === "edit" && elements.workspace.clientWidth < 960;
   elements.workspace.classList.toggle("stacked", shouldStack);
 }
 
@@ -937,7 +968,7 @@ function restoreScrollPosition(fromContext, toContext) {
 
 function getCurrentLayoutContext() {
   return getLayoutContext({
-    editMode: state.editMode,
+    viewMode: state.viewMode,
     isStacked: elements.workspace.classList.contains("stacked"),
   });
 }
@@ -959,7 +990,8 @@ function closePanels() {
 }
 
 function autoResizeEditor() {
-  if (!elements.editor || !state.editMode) {
+  const isEditorMode = state.viewMode === "edit" || state.viewMode === "wysiwyg";
+  if (!elements.editor || !isEditorMode) {
     if (elements.editor) {
       elements.editor.style.height = "";
     }
@@ -1038,4 +1070,332 @@ function initOutlineResize() {
       document.body.style.userSelect = "";
     }
   });
+}
+
+function initTiptapEditor(content = "") {
+  if (tiptapEditor) {
+    destroyTiptapEditor();
+  }
+
+  elements.editor.innerHTML = "";
+  const mount = document.createElement("div");
+  elements.editor.appendChild(mount);
+  elements.editor.classList.add("tiptap-editor");
+  tiptapEditor = new Editor({
+    element: mount,
+    extensions: [StarterKit],
+    content: "",
+    onUpdate: async ({ editor }) => {
+      const markdown = getEditorContentForSaving({
+        viewMode: "wysiwyg",
+        plainText: editor.getText(),
+        html: editor.getHTML(),
+      });
+      state.document.content = markdown;
+      if (!state.document.temporary) {
+        setStatus("Unsaved");
+      }
+      await renderPreview(markdown);
+      scheduleAutosave();
+    },
+  });
+  tiptapEditor.commands.setContent(content, false);
+
+  setupVimBindings();
+  elements.editor.classList.add(`vim-${state.vimMode}-mode`);
+}
+
+function destroyTiptapEditor() {
+  if (tiptapEditor) {
+    tiptapEditor.destroy();
+    tiptapEditor = null;
+  }
+  elements.editor.classList.remove("tiptap-editor", "vim-insert-mode", "vim-normal-mode");
+}
+
+function setViewMode(mode) {
+  const currentMode = state.viewMode;
+  
+  if (currentMode === mode) return;
+  
+  if (currentMode === "wysiwyg" && tiptapEditor) {
+    const markdown = getEditorContentForSaving({
+      viewMode: "wysiwyg",
+      plainText: tiptapEditor.getText(),
+      html: tiptapEditor.getHTML(),
+    });
+    state.document.content = markdown;
+    elements.editor.textContent = markdown;
+    destroyTiptapEditor();
+  }
+  
+  state.viewMode = mode;
+  
+  if (mode === "wysiwyg") {
+    state.editorType = "wysiwyg";
+    initTiptapEditor(
+      getWysiwygInitialContent({
+        markdown: state.document?.content || getEditorPlainText(),
+        renderedHTML: elements.preview.innerHTML,
+      }),
+    );
+    state.vimMode = "insert";
+  } else {
+    state.editorType = "textarea";
+  }
+  
+  syncLayout();
+  updateViewModeButtons();
+  updateVimModeChip();
+}
+
+function getEditorPlainText() {
+  if (!elements.editor) {
+    return "";
+  }
+  return elements.editor.textContent || "";
+}
+
+function getCurrentDocumentContent() {
+  return getEditorContentForSaving({
+    viewMode: state.viewMode,
+    plainText:
+      state.viewMode === "wysiwyg" && tiptapEditor
+        ? tiptapEditor.getText()
+        : getEditorPlainText(),
+    html: state.viewMode === "wysiwyg" && tiptapEditor ? tiptapEditor.getHTML() : "",
+  });
+}
+
+let vimKeyHandler = null;
+
+function setupVimBindings() {
+  if (!tiptapEditor) return;
+  if (vimKeyHandler) {
+    document.removeEventListener("keydown", vimKeyHandler);
+  }
+  vimKeyHandler = (e) => handleVimKeydown(e);
+  document.addEventListener("keydown", vimKeyHandler);
+}
+
+function handleVimKeydown(e) {
+  if (state.viewMode !== "wysiwyg") return;
+  if (!tiptapEditor) return;
+
+  const isCtrl = e.ctrlKey || e.metaKey;
+  const action = getVimKeyAction({
+    vimMode: state.vimMode,
+    key: e.key,
+    isCtrl,
+  });
+
+  if (!action) {
+    return;
+  }
+
+  e.preventDefault();
+  applyVimAction(action);
+}
+
+function setVimMode(mode) {
+  state.vimMode = mode;
+  elements.editor.classList.remove(
+    "vim-insert-mode",
+    "vim-normal-mode",
+    "vim-visual-mode",
+  );
+  elements.editor.classList.add(`vim-${mode}-mode`);
+  updateVimModeChip();
+}
+
+function toggleVimMode() {
+  if (state.viewMode !== "wysiwyg") return;
+  if (state.vimMode === "insert") {
+    setVimMode("normal");
+  } else {
+    setVimMode("insert");
+  }
+}
+
+function initVimModeToggle() {
+  if (elements.btnPreview) {
+    elements.btnPreview.addEventListener("click", () => setViewMode("preview"));
+  }
+  if (elements.btnEdit) {
+    elements.btnEdit.addEventListener("click", () => setViewMode("edit"));
+  }
+  if (elements.btnWysiwyg) {
+    elements.btnWysiwyg.addEventListener("click", () => setViewMode("wysiwyg"));
+  }
+
+  updateViewModeButtons();
+  updateVimModeChip();
+}
+
+function updateViewModeButtons() {
+  if (elements.btnPreview) {
+    elements.btnPreview.classList.toggle("active", state.viewMode === "preview");
+  }
+  if (elements.btnEdit) {
+    elements.btnEdit.classList.toggle("active", state.viewMode === "edit");
+  }
+  if (elements.btnWysiwyg) {
+    elements.btnWysiwyg.classList.toggle("active", state.viewMode === "wysiwyg");
+  }
+}
+
+function updateVimModeChip() {
+  if (!elements.vimModeChip) return;
+
+  const chip = getVimIndicatorState({
+    viewMode: state.viewMode,
+    vimMode: state.vimMode,
+  });
+
+  elements.vimModeChip.className = `vim-mode-chip${chip.hidden ? " hidden" : ""}${chip.tone ? ` ${chip.tone}` : ""}`;
+  elements.vimModeChip.textContent = chip.text;
+}
+
+function applyVimAction(action) {
+  if (!tiptapEditor) {
+    return;
+  }
+
+  tiptapEditor.commands.focus();
+
+  if (action.type === "noop") {
+    return;
+  }
+
+  if (action.type === "set-mode") {
+    if (action.collapseSelection) {
+      collapseSelectionToHead();
+    }
+    setVimMode(action.mode);
+    return;
+  }
+
+  if (action.type === "command") {
+    runEditorCommand(action.command, action.extend);
+    if (action.mode) {
+      setVimMode(action.mode);
+    }
+    return;
+  }
+
+  if (action.type === "command-sequence") {
+    for (const command of action.commands) {
+      runEditorCommand(command, false);
+    }
+    if (action.mode) {
+      setVimMode(action.mode);
+    }
+  }
+}
+
+function runEditorCommand(command, extendSelection = false) {
+  if (!tiptapEditor) {
+    return;
+  }
+
+  if (extendSelection) {
+    moveEditorSelection(command, true);
+    return;
+  }
+
+  switch (command) {
+    case "moveCursorBackward":
+    case "moveCursorForward":
+    case "moveCursorToStartOfLine":
+    case "moveCursorToEndOfLine":
+    case "moveCursorToStart":
+    case "moveCursorToEnd":
+      moveEditorSelection(command, false);
+      return;
+    case "insertContentNewline":
+      tiptapEditor.commands.insertContent("\n");
+      return;
+    default:
+      if (typeof tiptapEditor.commands[command] === "function") {
+        tiptapEditor.commands[command]();
+      }
+  }
+}
+
+function collapseSelectionToHead() {
+  if (!tiptapEditor) {
+    return;
+  }
+
+  const { state: editorState, dispatch } = tiptapEditor.view;
+  const head = editorState.selection.head;
+  dispatch(
+    editorState.tr.setSelection(
+      TextSelection.create(
+        editorState.doc,
+        resolveInlinePosition(editorState.doc, head, -1),
+      ),
+    ),
+  );
+}
+
+function moveEditorSelection(command, extendSelection) {
+  if (!tiptapEditor) {
+    return;
+  }
+
+  const { state: editorState, dispatch } = tiptapEditor.view;
+  const { selection, doc } = editorState;
+  const { anchor, head, $head } = selection;
+  const nextHead = getTargetSelectionPosition({
+    command,
+    head,
+    docSize: doc.content.size,
+    parentOffset: $head.parentOffset,
+    parentSize: $head.parent.content.size,
+  });
+
+  if (nextHead === head && (!extendSelection || anchor === head)) {
+    return;
+  }
+
+  const from = extendSelection
+    ? resolveInlinePosition(doc, anchor, anchor <= nextHead ? 1 : -1)
+    : resolveInlinePosition(doc, nextHead, -1);
+  const to = extendSelection
+    ? resolveInlinePosition(doc, nextHead, nextHead >= anchor ? 1 : -1)
+    : from;
+
+  dispatch(editorState.tr.setSelection(TextSelection.create(doc, from, to)));
+}
+
+function getTargetSelectionPosition({
+  command,
+  head,
+  docSize,
+  parentOffset,
+  parentSize,
+}) {
+  const blockStart = head - parentOffset;
+  const blockEnd = blockStart + parentSize;
+
+  switch (command) {
+    case "moveCursorBackward":
+      return Math.max(1, head - 1);
+    case "moveCursorForward":
+      return Math.min(docSize - 1, head + 1);
+    case "moveCursorToStartOfLine":
+    case "moveCursorToStart":
+      return blockStart;
+    case "moveCursorToEndOfLine":
+    case "moveCursorToEnd":
+      return blockEnd;
+    default:
+      return head;
+  }
+}
+
+function resolveInlinePosition(doc, position, bias) {
+  const clamped = Math.max(0, Math.min(position, doc.content.size));
+  return Selection.near(doc.resolve(clamped), bias).from;
 }
