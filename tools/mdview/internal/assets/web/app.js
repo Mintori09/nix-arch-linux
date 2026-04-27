@@ -17,6 +17,8 @@ const state = {
   editMode: false,
   sidebarOpen: false,
   outlineOpen: false,
+  sidebarWidth: 240,
+  outlineWidth: 240,
   autosaveTimer: null,
   scrollSnapshots: createEmptyScrollSnapshots(),
   currentContext: "preview-only",
@@ -267,6 +269,8 @@ async function init() {
   loadDocument(doc);
   renderFileList();
   syncLayout();
+  initSidebarResize();
+  initOutlineResize();
 }
 
 function bindSettings(config) {
@@ -352,28 +356,58 @@ function setStatus(label) {
   elements.status.textContent = label;
 }
 
+function parseHTML(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, "text/html");
+  return doc.body.firstChild;
+}
+
 async function renderMermaid() {
   const mermaid = window.mermaid;
-  if (!mermaid) return;
+  if (!mermaid) {
+    console.warn("Mermaid not loaded");
+    return;
+  }
 
   try {
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "loose",
-      theme: getMermaidTheme(),
-      fontFamily: "inherit",
-      maxTextSize: 100000,
-      flowchart: { curve: "basis", htmlLabels: true },
-      sequence: { actorMargin: 50, showSequenceNumbers: false },
-      state: { useMaxWidth: true },
-      gantt: { topAxis: false },
-    });
-    for (const code of elements.preview.querySelectorAll("pre > code")) {
-      const pre = code.parentElement;
-      if (!pre.classList.contains("language-mermaid") && !pre.classList.contains("lang-mermaid")) {
-        continue;
-      }
+    if (!mermaid._initialized) {
+      await mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "loose",
+        theme: getMermaidTheme(),
+        fontFamily: "inherit",
+        maxTextSize: 100000,
+        flowchart: { 
+          curve: "basis", 
+          htmlLabels: true,
+          rankSpacing: 80,
+          nodeSpacing: 50,
+          padding: 15,
+        },
+        sequence: { 
+          actorMargin: 50, 
+          showSequenceNumbers: false,
+          boxMargin: 10,
+          boxTextMargin: 5,
+        },
+        state: { useMaxWidth: true },
+        gantt: { topAxis: false },
+      });
+      mermaid._initialized = true;
+    }
+    const preBlocks = elements.preview.querySelectorAll("pre");
+    console.log("Found pre blocks:", preBlocks.length);
+    for (const pre of preBlocks) {
+      const code = pre.querySelector("code");
+      if (!code) continue;
+      const classList = code.className || "";
+      const isMermaid = classList.includes("language-mermaid") || 
+                        classList.includes("lang-mermaid") ||
+                        pre.classList.contains("mermaid");
+      console.log("Checking block:", classList, "isMermaid:", isMermaid);
+      if (!isMermaid) continue;
       const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+      console.log("Rendering mermaid:", id, "content:", code.textContent.slice(0, 50));
       const { svg } = await mermaid.render(id, code.textContent);
       pre.replaceWith(parseHTML(svg));
     }
@@ -383,13 +417,41 @@ async function renderMermaid() {
 }
 
 function getMermaidTheme() {
-  const themeMap = {
-    warm: "default",
-    minimal: "neutral",
-    dark: "dark",
-    paper: "base",
-  };
-  return themeMap[state.config.theme] || "default";
+  const appearance = document.documentElement.dataset.appearance;
+  if (appearance === "dark") return "dark";
+  return "default";
+}
+
+function addCopyButtons() {
+  const codeBlocks = elements.preview.querySelectorAll("pre");
+  codeBlocks.forEach((pre) => {
+    if (pre.querySelector(".copy-btn") || pre.querySelector(".mermaid")) {
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block-wrapper";
+    pre.parentNode?.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const button = document.createElement("button");
+    button.className = "copy-btn";
+    button.type = "button";
+    button.innerHTML = "📋";
+    button.title = "Copy code";
+
+    const code = pre.querySelector("code")?.textContent || pre.textContent;
+
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(code);
+      button.innerHTML = "✓";
+      setTimeout(() => {
+        button.innerHTML = "📋";
+      }, 2000);
+    });
+
+    wrapper.appendChild(button);
+  });
 }
 
 async function renderPreview(content) {
@@ -402,6 +464,7 @@ async function renderPreview(content) {
   rewritePreviewLinks();
   renderOutline();
   await renderMermaid();
+  addCopyButtons();
 }
 
 function rewritePreviewLinks() {
@@ -905,4 +968,74 @@ function autoResizeEditor() {
 
   elements.editor.style.height = "auto";
   elements.editor.style.height = `${elements.editor.scrollHeight}px`;
+}
+
+function initSidebarResize() {
+  const handle = document.createElement("div");
+  handle.className = "resize-handle";
+  elements.fileSidebar.appendChild(handle);
+
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener("mousedown", (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = elements.fileSidebar.offsetWidth;
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isResizing) return;
+    const width = startWidth + (e.clientX - startX);
+    const clamped = Math.min(400, Math.max(150, width));
+    elements.fileSidebar.style.width = `${clamped}px`;
+    state.sidebarWidth = clamped;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+  });
+}
+
+function initOutlineResize() {
+  const handle = document.createElement("div");
+  handle.className = "resize-handle left";
+  elements.outlineSidebar.appendChild(handle);
+
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener("mousedown", (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = elements.outlineSidebar.offsetWidth;
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isResizing) return;
+    const width = startWidth - (e.clientX - startX);
+    const clamped = Math.min(400, Math.max(150, width));
+    elements.outlineSidebar.style.width = `${clamped}px`;
+    state.outlineWidth = clamped;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+  });
 }
