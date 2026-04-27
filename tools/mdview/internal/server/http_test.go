@@ -222,3 +222,125 @@ func TestConfigEndpointUpdatesSettings(t *testing.T) {
 		t.Fatalf("expected persisted config update, got %+v", loaded)
 	}
 }
+
+func TestDocumentStatusEndpointReportsExternalChanges(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "note.md")
+	if err := os.WriteFile(filePath, []byte("# old"), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	doc, err := readFileDocument(dir, "note.md")
+	if err != nil {
+		t.Fatalf("read file document: %v", err)
+	}
+
+	app := &session.App{
+		Config:   config.Default(),
+		Document: doc,
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/document/status", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var unchanged struct {
+		Tracked bool `json:"tracked"`
+		Changed bool `json:"changed"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &unchanged); err != nil {
+		t.Fatalf("decode unchanged payload: %v", err)
+	}
+
+	if !unchanged.Tracked {
+		t.Fatal("expected file-backed document to be tracked")
+	}
+
+	if unchanged.Changed {
+		t.Fatal("expected document to be unchanged")
+	}
+
+	if err := os.WriteFile(filePath, []byte("# updated"), 0o644); err != nil {
+		t.Fatalf("update file: %v", err)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/document/status", nil)
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200 after external change, got %d", rec.Code)
+	}
+
+	var changed struct {
+		Tracked    bool   `json:"tracked"`
+		Changed    bool   `json:"changed"`
+		Content    string `json:"content"`
+		RevisionID string `json:"revision_id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &changed); err != nil {
+		t.Fatalf("decode changed payload: %v", err)
+	}
+
+	if !changed.Changed {
+		t.Fatal("expected document change to be reported")
+	}
+
+	if changed.Content != "# updated" {
+		t.Fatalf("expected changed content, got %q", changed.Content)
+	}
+
+	if changed.RevisionID == "" {
+		t.Fatal("expected changed payload to include revision id")
+	}
+}
+
+func TestDocumentStatusEndpointIgnoresTemporaryDocuments(t *testing.T) {
+	t.Parallel()
+
+	app := &session.App{
+		Config: config.Default(),
+		Document: session.Document{
+			Name:      "scratch.md",
+			Content:   "# temp",
+			Temporary: true,
+		},
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/document/status", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var payload struct {
+		Tracked bool `json:"tracked"`
+		Changed bool `json:"changed"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+
+	if payload.Tracked {
+		t.Fatal("expected temporary document to be untracked")
+	}
+
+	if payload.Changed {
+		t.Fatal("expected temporary document to report unchanged")
+	}
+}
