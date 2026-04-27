@@ -43,6 +43,39 @@
           local file=$(fzf)
           [ -n "$file" ] && nvim "$file"
       }
+      codex-with() {
+        local name="$1"
+        shift
+
+        local src="$HOME/.codex/auth.$name.json"
+        local default="$HOME/.codex/auth.default.json"
+        local active="$HOME/.codex/auth.json"
+
+        if [[ -z "$name" ]]; then
+          echo "Usage: codex-with one|two -- codex args"
+          return 1
+        fi
+
+        if [[ ! -f "$src" ]]; then
+          echo "Không tìm thấy: $src"
+          return 1
+        fi
+
+        if [[ ! -f "$default" ]]; then
+          echo "Không tìm thấy default: $default"
+          echo "Tạo bằng: cp ~/.codex/auth.json ~/.codex/auth.default.json"
+          return 1
+        fi
+
+        {
+          cp "$src" "$active"
+          echo "Switched Codex to account: $name"
+          codex "$@"
+        } always {
+          cp "$default" "$active"
+          echo "Restored Codex to default account"
+        }
+      }
     '';
   };
 
