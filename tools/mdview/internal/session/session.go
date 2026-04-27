@@ -9,14 +9,16 @@ import (
 )
 
 type Document struct {
-	Path       string    `json:"path,omitempty"`
-	Name       string    `json:"name"`
-	Content    string    `json:"content"`
-	Temporary  bool      `json:"temporary"`
-	Dirty      bool      `json:"dirty"`
-	ReadOnly   bool      `json:"read_only"`
-	SavedAt    time.Time `json:"saved_at,omitempty"`
-	FolderRoot string    `json:"folder_root,omitempty"`
+	Path         string    `json:"path,omitempty"`
+	Name         string    `json:"name"`
+	Content      string    `json:"content"`
+	Temporary    bool      `json:"temporary"`
+	Dirty        bool      `json:"dirty"`
+	ReadOnly     bool      `json:"read_only"`
+	SavedAt      time.Time `json:"saved_at,omitempty"`
+	LastModified time.Time `json:"last_modified,omitempty"`
+	RevisionID   string    `json:"revision_id,omitempty"`
+	FolderRoot   string    `json:"folder_root,omitempty"`
 }
 
 type App struct {
