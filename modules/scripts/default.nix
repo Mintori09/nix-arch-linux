@@ -18,6 +18,5 @@
     ./copy-files.nix
     ./mdview.nix
     ./remove.nix
-    ./lose-law.nix
   ];
 }
