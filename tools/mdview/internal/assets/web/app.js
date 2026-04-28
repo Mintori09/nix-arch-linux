@@ -31,6 +31,7 @@ import {
   getTopAlignedScrollY,
   shouldPollDocumentStatus,
 } from "./navigation-ui.js";
+import { createSessionPresence } from "./session-presence.js";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
@@ -69,6 +70,7 @@ const state = {
 
 let readerAudio = null;
 let readerUtterance = null;
+let sessionPresence = null;
 
 const elements = {
   chrome: document.querySelector(".chrome"),
@@ -277,6 +279,12 @@ function retryInit() {
 }
 
 async function init() {
+  if (!sessionPresence) {
+    const presence = createSessionPresence({ token });
+    await presence.start();
+    sessionPresence = presence;
+  }
+
   const [config, doc, files] = await Promise.all([
     api("/api/config"),
     api("/api/document"),
