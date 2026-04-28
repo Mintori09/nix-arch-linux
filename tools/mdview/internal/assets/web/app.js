@@ -25,6 +25,12 @@ import {
   getBrowserVoicesForLanguage,
   getReaderPopupVisibility,
 } from "./reader-ui.js";
+import {
+  findPreviewSearchTarget,
+  getSidebarToggleVisibility,
+  getTopAlignedScrollY,
+  shouldPollDocumentStatus,
+} from "./navigation-ui.js";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
@@ -73,6 +79,7 @@ const elements = {
   speechStatus: document.getElementById("speech-status"),
   readerPopup: document.getElementById("reader-popup"),
   readerPopupTitle: document.getElementById("reader-popup-title"),
+  toggleSidebar: document.getElementById("toggle-sidebar"),
   fileSidebar: document.getElementById("file-sidebar"),
   fileList: document.getElementById("file-list"),
   addWorkspaceRoot: document.getElementById("add-workspace-root"),
@@ -115,12 +122,17 @@ const elements = {
   searchResults: document.getElementById("search-results"),
 };
 
-document.getElementById("toggle-sidebar").addEventListener("click", () => {
+elements.toggleSidebar.addEventListener("click", () => {
   transitionLayout(() => {
+    if (!getSidebarToggleVisibility(state.workspaceFiles)) {
+      state.sidebarOpen = false;
+      return;
+    }
+
     if (isMobileViewport()) {
       const next = getMobilePanelState({
         isMobile: true,
-        filesAvailable: state.workspaceRoots.length > 0,
+        filesAvailable: getSidebarToggleVisibility(state.workspaceFiles),
         toggle: "sidebar",
         current: {
           sidebarOpen: state.sidebarOpen,
@@ -295,7 +307,6 @@ async function init() {
   syncLayout();
   initSidebarResize();
   initOutlineResize();
-  startDocumentPolling();
 }
 
 function bindSettings(config) {
@@ -679,6 +690,7 @@ async function loadDocument(doc, options = {}) {
   if (options.statusLabel) {
     setStatus(options.statusLabel);
   }
+  syncDocumentPolling();
   updateSpeechControls();
 }
 
@@ -1171,7 +1183,7 @@ function syncLayout(fromContext = state.currentContext) {
   const isMobile = isMobileViewport();
   const nextMobilePanels = getMobilePanelState({
     isMobile,
-    filesAvailable: state.workspaceRoots.length > 0,
+    filesAvailable: getSidebarToggleVisibility(state.workspaceFiles),
     toggle: null,
     current: {
       sidebarOpen: state.sidebarOpen,
@@ -1181,7 +1193,12 @@ function syncLayout(fromContext = state.currentContext) {
   state.sidebarOpen = nextMobilePanels.sidebarOpen;
   state.outlineOpen = nextMobilePanels.outlineOpen;
 
-  const showFileSidebar = state.sidebarOpen && state.workspaceRoots.length > 0;
+  const sidebarToggleVisible = getSidebarToggleVisibility(state.workspaceFiles);
+  if (!sidebarToggleVisible) {
+    state.sidebarOpen = false;
+  }
+
+  const showFileSidebar = state.sidebarOpen && sidebarToggleVisible;
   const showOutlineSidebar = state.outlineOpen;
 
   document.body.classList.toggle("mobile-viewport", isMobile);
@@ -1191,6 +1208,7 @@ function syncLayout(fromContext = state.currentContext) {
   );
   elements.fileSidebar.classList.toggle("hidden", !showFileSidebar);
   elements.outlineSidebar.classList.toggle("hidden", !showOutlineSidebar);
+  elements.toggleSidebar.classList.toggle("hidden", !sidebarToggleVisible);
   elements.workspace.classList.remove("split");
   elements.chrome.dataset.layout = getChromeLayout(
     showFileSidebar,
@@ -1260,7 +1278,7 @@ async function runSearch() {
         const doc = await api(buildOpenURL(result.path, result.root));
         await loadDocument(doc);
       }
-      scrollToLine(result.line);
+      scrollToSearchResult(result);
       if (isMobileViewport()) {
         transitionLayout(() => {
           closePanels();
@@ -1271,16 +1289,29 @@ async function runSearch() {
   }
 }
 
-function scrollToLine(lineNumber) {
-  const blocks = [
-    ...elements.preview.querySelectorAll("p, li, blockquote, pre, h1, h2, h3, h4"),
-  ];
-  const targetBlock = blocks[Math.max(0, Math.min(blocks.length - 1, lineNumber - 1))];
-  if (targetBlock) {
-    targetBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+function scrollToSearchResult(result) {
+  const blocks = elements.preview.querySelectorAll(
+    "p, li, blockquote, pre, h1, h2, h3, h4, td, th",
+  );
+  const targetBlock = findPreviewSearchTarget({
+    blocks,
+    excerpt: result.excerpt,
+    lineNumber: result.line,
+  });
+  if (!targetBlock) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     return;
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const topOffset = (elements.toolbar?.offsetHeight || 0) + 16;
+  window.scrollTo({
+    top: getTopAlignedScrollY({
+      currentScrollY: window.scrollY,
+      targetTop: targetBlock.getBoundingClientRect().top,
+      topOffset,
+    }),
+    behavior: "smooth",
+  });
 }
 
 async function api(path, options = {}) {
@@ -1452,6 +1483,9 @@ function getCurrentDocumentContent() {
 
 function startDocumentPolling() {
   stopDocumentPolling();
+  if (!shouldPollDocumentStatus(state.document)) {
+    return;
+  }
   state.documentPollTimer = window.setInterval(() => {
     pollDocumentStatus().catch((error) => {
       console.error("document poll failed:", error);
@@ -1464,6 +1498,14 @@ function stopDocumentPolling() {
     window.clearInterval(state.documentPollTimer);
     state.documentPollTimer = null;
   }
+}
+
+function syncDocumentPolling() {
+  if (shouldPollDocumentStatus(state.document)) {
+    startDocumentPolling();
+    return;
+  }
+  stopDocumentPolling();
 }
 
 async function pollDocumentStatus() {
