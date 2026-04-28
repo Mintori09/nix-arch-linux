@@ -8,7 +8,7 @@ import (
 func TestRenderMarkdownSupportsHeadingsAndTaskLists(t *testing.T) {
 	t.Parallel()
 
-	html := renderMarkdown("# Hello\n\n- [x] done")
+	html := renderMarkdown("# Hello\n\n- [x] done", false)
 
 	if !strings.Contains(html, "<h1") {
 		t.Fatalf("expected heading output, got %q", html)
@@ -22,7 +22,7 @@ func TestRenderMarkdownSupportsHeadingsAndTaskLists(t *testing.T) {
 func TestRenderMarkdownSupportsCodeHighlighting(t *testing.T) {
 	t.Parallel()
 
-	html := renderMarkdown("```go\nfunc main() {}\n```")
+	html := renderMarkdown("```go\nfunc main() {}\n```", false)
 
 	if !strings.Contains(html, `<pre`) || !strings.Contains(html, `style=`) {
 		t.Fatalf("expected pre element with style, got %q", html)
@@ -45,11 +45,39 @@ func TestRenderMarkdownStableAcrossCalls(t *testing.T) {
 		"- [x] done",
 	}, "\n")
 
-	first := renderMarkdown(input)
-	second := renderMarkdown(input)
+	first := renderMarkdown(input, false)
+	second := renderMarkdown(input, false)
 
 	if first != second {
 		t.Fatalf("expected stable output across calls")
+	}
+}
+
+func TestRenderMarkdownEscapesRawHTMLByDefault(t *testing.T) {
+	t.Parallel()
+
+	html := renderMarkdown("<script>alert('x')</script>\n<div>safe</div>", false)
+
+	if strings.Contains(html, "<script>") {
+		t.Fatalf("expected script tag to be escaped, got %q", html)
+	}
+
+	if strings.Contains(html, "<div>safe</div>") {
+		t.Fatalf("expected raw html block to be escaped by default, got %q", html)
+	}
+
+	if !strings.Contains(html, "raw HTML omitted") {
+		t.Fatalf("expected raw html to be omitted in safe mode, got %q", html)
+	}
+}
+
+func TestRenderMarkdownAllowsRawHTMLWhenEnabled(t *testing.T) {
+	t.Parallel()
+
+	html := renderMarkdown("<div>safe</div>", true)
+
+	if !strings.Contains(html, "<div>safe</div>") {
+		t.Fatalf("expected raw html to be preserved when enabled, got %q", html)
 	}
 }
 
@@ -70,6 +98,6 @@ func BenchmarkRenderMarkdownLargeDocument(b *testing.B) {
 
 	b.ReportAllocs()
 	for b.Loop() {
-		_ = renderMarkdown(content)
+		_ = renderMarkdown(content, false)
 	}
 }

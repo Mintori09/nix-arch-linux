@@ -63,8 +63,48 @@ func (s *Server) routes() {
 }
 
 func (s *Server) handleDocument(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		_, doc, _ := s.opts.App.Snapshot()
+		writeJSON(w, http.StatusOK, doc)
+		return
+	case http.MethodPut:
+		if !requireToken(s.opts.App.Token, w, r) {
+			return
+		}
+
+		var payload struct {
+			Content        string `json:"content"`
+			BaseRevisionID string `json:"base_revision_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid document payload", http.StatusBadRequest)
+			return
+		}
+
+		doc, err := s.saveDocument(r.Context(), payload.Content, payload.BaseRevisionID)
+		if err != nil {
+			var conflictErr *documentConflictError
+			switch {
+			case errors.As(err, &conflictErr):
+				writeJSON(w, http.StatusConflict, map[string]any{
+					"conflict":      true,
+					"path":          conflictErr.Path,
+					"content":       conflictErr.Content,
+					"revision_id":   conflictErr.RevisionID,
+					"last_modified": conflictErr.LastModified,
+					"read_only":     conflictErr.ReadOnly,
+				})
+			case errors.Is(err, errDocumentNotSaveable):
+				http.Error(w, err.Error(), http.StatusConflict)
+			case errors.Is(err, errDocumentReadOnly):
+				http.Error(w, err.Error(), http.StatusForbidden)
+			default:
+				http.Error(w, fmt.Sprintf("save document: %v", err), http.StatusInternalServerError)
+			}
+			return
+		}
+
 		writeJSON(w, http.StatusOK, doc)
 		return
 	}
@@ -97,6 +137,7 @@ func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{
 		"tracked":       true,
 		"changed":       changed,
+		"dirty":         doc.Dirty,
 		"path":          doc.Path,
 		"revision_id":   snapshot.RevisionID,
 		"last_modified": snapshot.LastModified,
@@ -105,6 +146,7 @@ func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
 	if changed {
 		payload["content"] = snapshot.Content
 		payload["name"] = doc.Name
+		payload["conflict"] = doc.Dirty
 	}
 
 	writeJSON(w, http.StatusOK, payload)
@@ -388,8 +430,74 @@ func (s *Server) handleRender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	html := renderMarkdown(payload.Content)
+	cfg, _, _ := s.opts.App.Snapshot()
+	html := renderMarkdown(payload.Content, cfg.AllowRawHTML)
 	writeJSON(w, http.StatusOK, map[string]any{"html": html})
+}
+
+var (
+	errDocumentNotSaveable = errors.New("document is not file-backed")
+	errDocumentReadOnly    = errors.New("document is read-only")
+)
+
+type documentConflictError struct {
+	Path         string
+	Content      string
+	RevisionID   string
+	LastModified any
+	ReadOnly     bool
+}
+
+func (e *documentConflictError) Error() string {
+	return "document changed on disk"
+}
+
+func (s *Server) saveDocument(ctx context.Context, content, baseRevisionID string) (session.Document, error) {
+	_, doc, _ := s.opts.App.Snapshot()
+	if doc.Temporary || doc.Path == "" {
+		return session.Document{}, errDocumentNotSaveable
+	}
+	if doc.ReadOnly {
+		return session.Document{}, errDocumentReadOnly
+	}
+
+	snapshot, err := document.SnapshotFile(doc.Path)
+	if err != nil {
+		return session.Document{}, err
+	}
+
+	expectedRevision := strings.TrimSpace(baseRevisionID)
+	if expectedRevision == "" {
+		expectedRevision = doc.RevisionID
+	}
+	if expectedRevision != "" && snapshot.RevisionID != expectedRevision {
+		return session.Document{}, &documentConflictError{
+			Path:         doc.Path,
+			Content:      snapshot.Content,
+			RevisionID:   snapshot.RevisionID,
+			LastModified: snapshot.LastModified,
+			ReadOnly:     snapshot.ReadOnly,
+		}
+	}
+
+	if err := s.opts.Store.SaveAtomic(ctx, doc.Path, []byte(content)); err != nil {
+		return session.Document{}, err
+	}
+
+	savedSnapshot, err := document.SnapshotFile(doc.Path)
+	if err != nil {
+		return session.Document{}, err
+	}
+
+	savedDoc := doc
+	savedDoc.Content = savedSnapshot.Content
+	savedDoc.Dirty = false
+	savedDoc.ReadOnly = savedSnapshot.ReadOnly
+	savedDoc.SavedAt = savedSnapshot.LastModified
+	savedDoc.LastModified = savedSnapshot.LastModified
+	savedDoc.RevisionID = savedSnapshot.RevisionID
+	s.opts.App.SetDocument(savedDoc)
+	return savedDoc, nil
 }
 
 func (s *Server) handleTTS(w http.ResponseWriter, r *http.Request) {

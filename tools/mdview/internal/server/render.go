@@ -13,18 +13,32 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
-var markdownRenderer = goldmark.New(
-	goldmark.WithExtensions(
-		extension.GFM,
-		extension.DefinitionList,
-		extension.Footnote,
-		extension.Table,
-		highlighting.NewHighlighting(
-			highlighting.WithStyle("monokai"),
+var (
+	markdownRendererSafe = goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.DefinitionList,
+			extension.Footnote,
+			extension.Table,
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("monokai"),
+			),
 		),
-	),
-	goldmark.WithParserOptions(parser.WithAutoHeadingID()),
-	goldmark.WithRendererOptions(renderhtml.WithUnsafe()),
+		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+	)
+	markdownRendererUnsafe = goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.DefinitionList,
+			extension.Footnote,
+			extension.Table,
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("monokai"),
+			),
+		),
+		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+		goldmark.WithRendererOptions(renderhtml.WithUnsafe()),
+	)
 )
 
 var markdownBufferPool = sync.Pool{
@@ -33,7 +47,7 @@ var markdownBufferPool = sync.Pool{
 	},
 }
 
-func renderMarkdown(content string) string {
+func renderMarkdown(content string, allowRawHTML bool) string {
 	source := stripFrontmatter(content)
 	buf := markdownBufferPool.Get().(*bytes.Buffer)
 	buf.Reset()
@@ -42,7 +56,12 @@ func renderMarkdown(content string) string {
 		markdownBufferPool.Put(buf)
 	}()
 
-	if err := markdownRenderer.Convert([]byte(source), buf); err != nil {
+	renderer := markdownRendererSafe
+	if allowRawHTML {
+		renderer = markdownRendererUnsafe
+	}
+
+	if err := renderer.Convert([]byte(source), buf); err != nil {
 		return "<pre>Failed to render markdown.</pre>"
 	}
 	return buf.String()
