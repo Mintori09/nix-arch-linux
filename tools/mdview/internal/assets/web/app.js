@@ -37,6 +37,7 @@ import {
   getTopAlignedScrollY,
   shouldPollDocumentStatus,
 } from "./navigation-ui.js";
+import { getDocumentStatusAction } from "./document-sync.js";
 import { createSessionPresence } from "./session-presence.js";
 
 const query = new URLSearchParams(window.location.search);
@@ -781,7 +782,7 @@ async function getMermaid() {
     mermaidInitializePromise = Promise.resolve(
       mermaid.initialize({
         startOnLoad: false,
-        securityLevel: "loose",
+        securityLevel: state.config?.allow_raw_html ? "loose" : "strict",
         theme: getMermaidTheme(),
         fontFamily: "inherit",
         maxTextSize: 100000,
@@ -1623,14 +1624,14 @@ async function pollDocumentStatus() {
 }
 
 async function handleDocumentStatus(status) {
-  if (!status?.tracked || !status.revision_id || !status.changed) {
-    return;
-  }
+  const action = getDocumentStatusAction({
+    status,
+    lastSyncedRevision: state.lastSyncedRevision,
+    acknowledgedRemoteRevision: state.acknowledgedRemoteRevision,
+    isDirty: Boolean(state.document?.dirty),
+  });
 
-  if (
-    status.revision_id === state.lastSyncedRevision ||
-    status.revision_id === state.acknowledgedRemoteRevision
-  ) {
+  if (action === "ignore") {
     return;
   }
 
@@ -1641,5 +1642,13 @@ async function handleDocumentStatus(status) {
     last_modified: status.last_modified || "",
     read_only: Boolean(status.read_only),
   };
+
+  if (action === "conflict") {
+    state.pendingRemoteDocument = remoteDocument;
+    state.conflictActive = true;
+    setStatus("Conflict");
+    return;
+  }
+
   await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
 }

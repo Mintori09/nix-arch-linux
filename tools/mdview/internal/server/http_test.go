@@ -72,7 +72,7 @@ func TestDocumentEndpointReturnsCurrentDocument(t *testing.T) {
 	}
 }
 
-func TestDocumentEndpointRejectsPutRequests(t *testing.T) {
+func TestDocumentEndpointSavesUpdatedContent(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -95,15 +95,15 @@ func TestDocumentEndpointRejectsPutRequests(t *testing.T) {
 		Store: document.Store{},
 	})
 
-	body := bytes.NewBufferString(`{"content":"# updated"}`)
+	body := bytes.NewBufferString(`{"content":"# updated","base_revision_id":""}`)
 	req := httptest.NewRequest(http.MethodPut, "/api/document", body)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-MDView-Token", "secret")
 	rec := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(rec, req)
-	if rec.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("expected status 405, got %d with body %s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d with body %s", rec.Code, rec.Body.String())
 	}
 
 	data, err := os.ReadFile(filePath)
@@ -111,8 +111,70 @@ func TestDocumentEndpointRejectsPutRequests(t *testing.T) {
 		t.Fatalf("read file: %v", err)
 	}
 
-	if string(data) != "# old" {
-		t.Fatalf("expected original file content to remain unchanged, got %q", string(data))
+	if string(data) != "# updated" {
+		t.Fatalf("expected file content to be updated, got %q", string(data))
+	}
+}
+
+func TestDocumentEndpointRejectsSaveWhenFileChangedOnDisk(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "note.md")
+	if err := os.WriteFile(filePath, []byte("# old"), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	doc, err := readFileDocument(dir, "note.md")
+	if err != nil {
+		t.Fatalf("read file document: %v", err)
+	}
+
+	if err := os.WriteFile(filePath, []byte("# remote"), 0o644); err != nil {
+		t.Fatalf("mutate fixture: %v", err)
+	}
+
+	app := &session.App{
+		Token:    "secret",
+		Config:   config.Default(),
+		Document: doc,
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+	})
+
+	body := bytes.NewBufferString(`{"content":"# local edit"}`)
+	req := httptest.NewRequest(http.MethodPut, "/api/document", body)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-MDView-Token", "secret")
+	rec := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected status 409, got %d with body %s", rec.Code, rec.Body.String())
+	}
+
+	var payload struct {
+		Conflict   bool   `json:"conflict"`
+		Content    string `json:"content"`
+		RevisionID string `json:"revision_id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode conflict payload: %v", err)
+	}
+
+	if !payload.Conflict {
+		t.Fatal("expected conflict payload")
+	}
+
+	if payload.Content != "# remote" {
+		t.Fatalf("expected remote content in conflict payload, got %q", payload.Content)
+	}
+
+	if payload.RevisionID == "" {
+		t.Fatal("expected conflict payload to include revision id")
 	}
 }
 
@@ -676,6 +738,67 @@ func TestDocumentStatusEndpointReportsExternalChanges(t *testing.T) {
 
 	if changed.RevisionID == "" {
 		t.Fatal("expected changed payload to include revision id")
+	}
+}
+
+func TestDocumentStatusEndpointReportsConflictForDirtyDocument(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "note.md")
+	if err := os.WriteFile(filePath, []byte("# old"), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	doc, err := readFileDocument(dir, "note.md")
+	if err != nil {
+		t.Fatalf("read file document: %v", err)
+	}
+	doc.Content = "# local draft"
+	doc.Dirty = true
+
+	app := &session.App{
+		Config:   config.Default(),
+		Document: doc,
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+	})
+
+	if err := os.WriteFile(filePath, []byte("# updated"), 0o644); err != nil {
+		t.Fatalf("update file: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/document/status", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var payload struct {
+		Changed    bool   `json:"changed"`
+		Conflict   bool   `json:"conflict"`
+		Dirty      bool   `json:"dirty"`
+		Content    string `json:"content"`
+		RevisionID string `json:"revision_id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+
+	if !payload.Changed || !payload.Conflict || !payload.Dirty {
+		t.Fatalf("expected changed+conflict+dirty payload, got %+v", payload)
+	}
+
+	if payload.Content != "# updated" {
+		t.Fatalf("expected remote content, got %q", payload.Content)
+	}
+
+	if payload.RevisionID == "" {
+		t.Fatal("expected revision id in payload")
 	}
 }
 
