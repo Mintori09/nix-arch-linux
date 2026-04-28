@@ -15,6 +15,7 @@ export function createSessionPresence({
   const url = buildPresenceURL(endpoint, token);
   let started = false;
   let intervalId = null;
+  let closingAnnounced = false;
 
   async function announce(state) {
     if (typeof fetchImpl !== "function") {
@@ -32,12 +33,29 @@ export function createSessionPresence({
   }
 
   async function handleVisibilityChange() {
+    if (documentImpl?.visibilityState === "hidden") {
+      announceClosing();
+      return;
+    }
     if (documentImpl?.visibilityState === "visible") {
+      closingAnnounced = false;
       await announce("active");
     }
   }
 
-  function handlePageHide() {
+  function stopHeartbeat() {
+    if (intervalId !== null) {
+      clearIntervalImpl?.(intervalId);
+      intervalId = null;
+    }
+  }
+
+  function announceClosing() {
+    if (closingAnnounced) {
+      return;
+    }
+    closingAnnounced = true;
+    stopHeartbeat();
     const payload = JSON.stringify({ client_id: clientId, state: "closing" });
     if (typeof navigatorImpl?.sendBeacon === "function") {
       if (navigatorImpl.sendBeacon(url, payload)) {
@@ -52,9 +70,11 @@ export function createSessionPresence({
       return;
     }
     started = true;
+    closingAnnounced = false;
     await announce("active");
     documentImpl?.addEventListener?.("visibilitychange", handleVisibilityChange);
-    windowImpl?.addEventListener?.("pagehide", handlePageHide);
+    windowImpl?.addEventListener?.("beforeunload", announceClosing);
+    windowImpl?.addEventListener?.("pagehide", announceClosing);
     intervalId = setIntervalImpl?.(() => announce("active"), heartbeatMs) ?? null;
   }
 
@@ -63,12 +83,10 @@ export function createSessionPresence({
       return;
     }
     started = false;
-    if (intervalId !== null) {
-      clearIntervalImpl?.(intervalId);
-      intervalId = null;
-    }
+    stopHeartbeat();
     documentImpl?.removeEventListener?.("visibilitychange", handleVisibilityChange);
-    windowImpl?.removeEventListener?.("pagehide", handlePageHide);
+    windowImpl?.removeEventListener?.("beforeunload", announceClosing);
+    windowImpl?.removeEventListener?.("pagehide", announceClosing);
   }
 
   return {

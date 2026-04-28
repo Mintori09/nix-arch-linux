@@ -114,6 +114,64 @@ test('pagehide emits a closing payload through sendBeacon', async () => {
   }));
 });
 
+test('beforeunload emits a closing payload through sendBeacon', async () => {
+  const beacons = [];
+  const documentImpl = createEmitter();
+  const windowImpl = createEmitter();
+  const presence = createSessionPresence({
+    clientId: 'client-1',
+    token: 'secret',
+    documentImpl,
+    windowImpl,
+    fetchImpl: async () => ({ ok: true }),
+    navigatorImpl: {
+      sendBeacon(url, payload) {
+        beacons.push({ url, payload });
+        return true;
+      },
+    },
+    setIntervalImpl: () => 1,
+    clearIntervalImpl: () => {},
+  });
+
+  await presence.start();
+  windowImpl.dispatch('beforeunload');
+
+  assert.equal(beacons.length, 1);
+  assert.equal(beacons[0].url, '/api/session/presence?token=secret');
+  assert.equal(beacons[0].payload, JSON.stringify({
+    client_id: 'client-1',
+    state: 'closing',
+  }));
+});
+
+test('closing is only announced once across beforeunload and pagehide', async () => {
+  const beacons = [];
+  const documentImpl = createEmitter();
+  const windowImpl = createEmitter();
+  const presence = createSessionPresence({
+    clientId: 'client-1',
+    token: 'secret',
+    documentImpl,
+    windowImpl,
+    fetchImpl: async () => ({ ok: true }),
+    navigatorImpl: {
+      sendBeacon(url, payload) {
+        beacons.push({ url, payload });
+        return true;
+      },
+    },
+    setIntervalImpl: () => 1,
+    clearIntervalImpl: () => {},
+  });
+
+  await presence.start();
+  windowImpl.dispatch('beforeunload');
+  windowImpl.dispatch('pagehide');
+
+  assert.equal(beacons.length, 1);
+});
+
 test('visibility return re-announces presence', async () => {
   const fetchCalls = [];
   const documentImpl = createEmitter('hidden');
@@ -136,4 +194,35 @@ test('visibility return re-announces presence', async () => {
 
   assert.equal(fetchCalls.length, 2);
   assert.equal(JSON.parse(fetchCalls[1].options.body).state, 'active');
+});
+
+test('visibility hidden announces closing before unload', async () => {
+  const beacons = [];
+  const documentImpl = createEmitter('visible');
+  const windowImpl = createEmitter();
+  const presence = createSessionPresence({
+    clientId: 'client-1',
+    token: 'secret',
+    documentImpl,
+    windowImpl,
+    fetchImpl: async () => ({ ok: true }),
+    navigatorImpl: {
+      sendBeacon(url, payload) {
+        beacons.push({ url, payload });
+        return true;
+      },
+    },
+    setIntervalImpl: () => 1,
+    clearIntervalImpl: () => {},
+  });
+
+  await presence.start();
+  documentImpl.visibilityState = 'hidden';
+  documentImpl.dispatch('visibilitychange');
+
+  assert.equal(beacons.length, 1);
+  assert.equal(beacons[0].payload, JSON.stringify({
+    client_id: 'client-1',
+    state: 'closing',
+  }));
 });
