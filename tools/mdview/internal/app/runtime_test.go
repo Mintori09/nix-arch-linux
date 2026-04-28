@@ -9,6 +9,48 @@ import (
 	"time"
 )
 
+func TestWaitForShutdownReturnsWhenPresenceMonitorCloses(t *testing.T) {
+	t.Parallel()
+
+	signalDone := make(chan struct{})
+	presenceDone := make(chan struct{})
+	finished := make(chan struct{})
+
+	go func() {
+		waitForShutdown(signalDone, presenceDone)
+		close(finished)
+	}()
+
+	close(presenceDone)
+
+	select {
+	case <-finished:
+	case <-time.After(time.Second):
+		t.Fatal("expected waitForShutdown to return when presence monitor closes")
+	}
+}
+
+func TestWaitForShutdownReturnsWhenSignalContextCloses(t *testing.T) {
+	t.Parallel()
+
+	signalDone := make(chan struct{})
+	presenceDone := make(chan struct{})
+	finished := make(chan struct{})
+
+	go func() {
+		waitForShutdown(signalDone, presenceDone)
+		close(finished)
+	}()
+
+	close(signalDone)
+
+	select {
+	case <-finished:
+	case <-time.After(time.Second):
+		t.Fatal("expected waitForShutdown to return when signal channel closes")
+	}
+}
+
 func TestParseCLIDoesNotAcceptEditFlag(t *testing.T) {
 	t.Parallel()
 

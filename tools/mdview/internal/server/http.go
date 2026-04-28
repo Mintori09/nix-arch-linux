@@ -51,6 +51,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/document/status", s.handleDocumentStatus)
 	s.mux.HandleFunc("/api/config", s.handleConfig)
 	s.mux.HandleFunc("/api/files", s.handleFiles)
+	s.mux.HandleFunc("/api/session/presence", s.handleSessionPresence)
 	s.mux.HandleFunc("/api/workspace/roots", s.handleWorkspaceRoots)
 	s.mux.HandleFunc("/api/open", s.handleOpen)
 	s.mux.HandleFunc("/api/search", s.handleSearch)
@@ -154,6 +155,49 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"roots": roots,
 	})
+}
+
+func (s *Server) handleSessionPresence(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+
+	var payload struct {
+		ClientID string `json:"client_id"`
+		State    string `json:"state"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid presence payload", http.StatusBadRequest)
+		return
+	}
+
+	payload.ClientID = strings.TrimSpace(payload.ClientID)
+	payload.State = strings.TrimSpace(payload.State)
+	if payload.ClientID == "" {
+		http.Error(w, "missing client_id", http.StatusBadRequest)
+		return
+	}
+
+	if s.opts.App.Presence != nil {
+		switch payload.State {
+		case "active":
+			s.opts.App.Presence.Touch(payload.ClientID)
+		case "closing":
+			s.opts.App.Presence.CloseClient(payload.ClientID)
+		default:
+			http.Error(w, "invalid state", http.StatusBadRequest)
+			return
+		}
+	} else if payload.State != "active" && payload.State != "closing" {
+		http.Error(w, "invalid state", http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleWorkspaceRoots(w http.ResponseWriter, r *http.Request) {

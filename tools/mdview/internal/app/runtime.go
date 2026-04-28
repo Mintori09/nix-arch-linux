@@ -23,6 +23,7 @@ import (
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
 	"github.com/mintori/home-manager/tools/mdview/internal/server"
+	"github.com/mintori/home-manager/tools/mdview/internal/session"
 )
 
 const Version = "0.1.1"
@@ -103,6 +104,9 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 	if err != nil {
 		return err
 	}
+	presence := session.NewPresenceMonitor(session.PresenceOptions{})
+	defer presence.Close()
+	appState.Presence = presence
 
 	srv := server.New(server.Options{
 		App:           appState,
@@ -135,12 +139,13 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 		return err
 	}
 	if err := browser.Open(cfg.Browser, cfg.FallbackBrowser, targetURL); err != nil {
+		_ = httpServer.Shutdown(context.Background())
 		return err
 	}
 
 	sigCtx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	<-sigCtx.Done()
+	waitForShutdown(sigCtx.Done(), presence.Done())
 	return httpServer.Shutdown(context.Background())
 }
 
@@ -242,6 +247,13 @@ func waitForServerReady(ctx context.Context, targetURL string) error {
 			return fmt.Errorf("wait for local server ready: %w", ctx.Err())
 		case <-ticker.C:
 		}
+	}
+}
+
+func waitForShutdown(signalDone <-chan struct{}, presenceDone <-chan struct{}) {
+	select {
+	case <-signalDone:
+	case <-presenceDone:
 	}
 }
 
