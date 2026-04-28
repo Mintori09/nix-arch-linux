@@ -10,7 +10,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
@@ -375,6 +377,146 @@ func TestConfigEndpointUpdatesSettings(t *testing.T) {
 
 	if loaded.TTSAutoNext == nil || *loaded.TTSAutoNext {
 		t.Fatalf("expected TTS auto next false, got %+v", loaded.TTSAutoNext)
+	}
+}
+
+func TestSessionPresenceEndpointRequiresToken(t *testing.T) {
+	t.Parallel()
+
+	monitor := session.NewPresenceMonitor(session.PresenceOptions{
+		IdleGrace:     time.Second,
+		StaleAfter:    time.Minute,
+		PruneInterval: time.Hour,
+	})
+	defer monitor.Close()
+
+	server := New(Options{
+		App: &session.App{
+			Token:    "secret",
+			Config:   config.Default(),
+			Presence: monitor,
+		},
+		Store: document.Store{},
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/session/presence", strings.NewReader(`{"client_id":"tab-1","state":"active"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", rec.Code)
+	}
+}
+
+func TestSessionPresenceEndpointRejectsInvalidPayload(t *testing.T) {
+	t.Parallel()
+
+	monitor := session.NewPresenceMonitor(session.PresenceOptions{
+		IdleGrace:     time.Second,
+		StaleAfter:    time.Minute,
+		PruneInterval: time.Hour,
+	})
+	defer monitor.Close()
+
+	server := New(Options{
+		App: &session.App{
+			Token:    "secret",
+			Config:   config.Default(),
+			Presence: monitor,
+		},
+		Store: document.Store{},
+	})
+
+	for _, body := range []string{
+		`{"client_id":"","state":"active"}`,
+		`{"client_id":"tab-1","state":"idle"}`,
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/api/session/presence", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-MDView-Token", "secret")
+		rec := httptest.NewRecorder()
+
+		server.Handler().ServeHTTP(rec, req)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("expected status 400 for payload %s, got %d", body, rec.Code)
+		}
+	}
+}
+
+func TestSessionPresenceEndpointActiveIsIdempotent(t *testing.T) {
+	t.Parallel()
+
+	monitor := session.NewPresenceMonitor(session.PresenceOptions{
+		IdleGrace:     time.Second,
+		StaleAfter:    time.Minute,
+		PruneInterval: time.Hour,
+	})
+	defer monitor.Close()
+
+	server := New(Options{
+		App: &session.App{
+			Token:    "secret",
+			Config:   config.Default(),
+			Presence: monitor,
+		},
+		Store: document.Store{},
+	})
+
+	for range 2 {
+		req := httptest.NewRequest(http.MethodPost, "/api/session/presence", strings.NewReader(`{"client_id":"tab-1","state":"active"}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-MDView-Token", "secret")
+		rec := httptest.NewRecorder()
+
+		server.Handler().ServeHTTP(rec, req)
+		if rec.Code != http.StatusNoContent {
+			t.Fatalf("expected status 204, got %d", rec.Code)
+		}
+	}
+
+	if got := monitor.ActiveClientCount(); got != 1 {
+		t.Fatalf("expected 1 active client after repeated active calls, got %d", got)
+	}
+}
+
+func TestSessionPresenceEndpointClosingOneClientKeepsOthersActive(t *testing.T) {
+	t.Parallel()
+
+	monitor := session.NewPresenceMonitor(session.PresenceOptions{
+		IdleGrace:     time.Second,
+		StaleAfter:    time.Minute,
+		PruneInterval: time.Hour,
+	})
+	defer monitor.Close()
+
+	server := New(Options{
+		App: &session.App{
+			Token:    "secret",
+			Config:   config.Default(),
+			Presence: monitor,
+		},
+		Store: document.Store{},
+	})
+
+	for _, body := range []string{
+		`{"client_id":"tab-1","state":"active"}`,
+		`{"client_id":"tab-2","state":"active"}`,
+		`{"client_id":"tab-1","state":"closing"}`,
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/api/session/presence", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-MDView-Token", "secret")
+		rec := httptest.NewRecorder()
+
+		server.Handler().ServeHTTP(rec, req)
+		if rec.Code != http.StatusNoContent {
+			t.Fatalf("expected status 204, got %d", rec.Code)
+		}
+	}
+
+	if got := monitor.ActiveClientCount(); got != 1 {
+		t.Fatalf("expected one remaining active client, got %d", got)
 	}
 }
 

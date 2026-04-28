@@ -24,6 +24,7 @@ type Document struct {
 type App struct {
 	mu             sync.RWMutex
 	Token          string
+	Presence       *PresenceMonitor
 	Config         config.Config
 	Document       Document
 	WorkspaceRoots []string
