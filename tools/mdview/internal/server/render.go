@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"regexp"
+	"sync"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
@@ -12,24 +13,36 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
-func renderMarkdown(content string) string {
-	markdown := goldmark.New(
-		goldmark.WithExtensions(
-			extension.GFM,
-			extension.DefinitionList,
-			extension.Footnote,
-			extension.Table,
-			highlighting.NewHighlighting(
-				highlighting.WithStyle("monokai"),
-			),
+var markdownRenderer = goldmark.New(
+	goldmark.WithExtensions(
+		extension.GFM,
+		extension.DefinitionList,
+		extension.Footnote,
+		extension.Table,
+		highlighting.NewHighlighting(
+			highlighting.WithStyle("monokai"),
 		),
-		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
-		goldmark.WithRendererOptions(renderhtml.WithUnsafe()),
-	)
+	),
+	goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+	goldmark.WithRendererOptions(renderhtml.WithUnsafe()),
+)
 
+var markdownBufferPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
+func renderMarkdown(content string) string {
 	source := stripFrontmatter(content)
-	var buf bytes.Buffer
-	if err := markdown.Convert([]byte(source), &buf); err != nil {
+	buf := markdownBufferPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer func() {
+		buf.Reset()
+		markdownBufferPool.Put(buf)
+	}()
+
+	if err := markdownRenderer.Convert([]byte(source), buf); err != nil {
 		return "<pre>Failed to render markdown.</pre>"
 	}
 	return buf.String()
