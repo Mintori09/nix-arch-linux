@@ -7,9 +7,15 @@ import {
   saveScrollSnapshot,
 } from "./app-state.js";
 import {
+  createOutlineRenderState,
   getOutlineHeadingElements,
   getOutlineScrollContainer,
+  markOutlineDirty,
+  shouldBuildOutline,
 } from "./outline.js";
+import {
+  collectPreviewCodeBlocks,
+} from "./preview-enhancements.js";
 import {
   buildWorkspaceTree,
   findAdjacentWorkspaceFile,
@@ -49,10 +55,12 @@ const state = {
   currentContext: "preview-only",
   expandedFolders: new Set(),
   outlineHeadings: [],
+  outlineRenderState: createOutlineRenderState(),
   activeHeadingId: null,
   headingObserver: null,
   headingScrollTarget: null,
   headingScrollHandler: null,
+  previewRenderVersion: 0,
   documentPollTimer: null,
   documentPollInFlight: false,
   lastSyncedContent: "",
@@ -71,6 +79,8 @@ const state = {
 let readerAudio = null;
 let readerUtterance = null;
 let sessionPresence = null;
+let mermaidLoadPromise = null;
+let mermaidInitializePromise = null;
 
 const elements = {
   chrome: document.querySelector(".chrome"),
@@ -738,57 +748,86 @@ function parseHTML(htmlString) {
   return doc.body.firstChild;
 }
 
-async function renderMermaid() {
-  const mermaid = window.mermaid;
-  if (!mermaid) {
-    console.warn("Mermaid not loaded");
-    return;
+function loadMermaidScript() {
+  if (window.mermaid) {
+    return Promise.resolve(window.mermaid);
   }
 
-  try {
-    if (!mermaid._initialized) {
-      await mermaid.initialize({
+  if (!mermaidLoadPromise) {
+    mermaidLoadPromise = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector('script[data-mdview-mermaid="true"]');
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolve(window.mermaid), { once: true });
+        existingScript.addEventListener("error", () => reject(new Error("Failed to load Mermaid")), { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "/mermaid.min.js";
+      script.async = true;
+      script.dataset.mdviewMermaid = "true";
+      script.addEventListener("load", () => resolve(window.mermaid), { once: true });
+      script.addEventListener("error", () => reject(new Error("Failed to load Mermaid")), { once: true });
+      document.head.appendChild(script);
+    });
+  }
+
+  return mermaidLoadPromise;
+}
+
+async function getMermaid() {
+  const mermaid = await loadMermaidScript();
+  if (!mermaidInitializePromise) {
+    mermaidInitializePromise = Promise.resolve(
+      mermaid.initialize({
         startOnLoad: false,
         securityLevel: "loose",
         theme: getMermaidTheme(),
         fontFamily: "inherit",
         maxTextSize: 100000,
-        flowchart: { 
-          curve: "basis", 
+        flowchart: {
+          curve: "basis",
           htmlLabels: true,
           rankSpacing: 80,
           nodeSpacing: 50,
           padding: 15,
         },
-        sequence: { 
-          actorMargin: 50, 
+        sequence: {
+          actorMargin: 50,
           showSequenceNumbers: false,
           boxMargin: 10,
           boxTextMargin: 5,
         },
         state: { useMaxWidth: true },
         gantt: { topAxis: false },
-      });
-      mermaid._initialized = true;
-    }
-    const preBlocks = elements.preview.querySelectorAll("pre");
-    console.log("Found pre blocks:", preBlocks.length);
-    for (const pre of preBlocks) {
-      const code = pre.querySelector("code");
-      if (!code) continue;
-      const classList = code.className || "";
-      const isMermaid = classList.includes("language-mermaid") || 
-                        classList.includes("lang-mermaid") ||
-                        pre.classList.contains("mermaid");
-      console.log("Checking block:", classList, "isMermaid:", isMermaid);
-      if (!isMermaid) continue;
+      }),
+    );
+  }
+
+  await mermaidInitializePromise;
+  return mermaid;
+}
+
+async function renderMermaid(blocks, renderVersion) {
+  if (blocks.length === 0) {
+    return;
+  }
+
+  try {
+    const mermaid = await getMermaid();
+    for (const { pre, code } of blocks) {
+      if (renderVersion !== state.previewRenderVersion) {
+        return;
+      }
       const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
-      console.log("Rendering mermaid:", id, "content:", code.textContent.slice(0, 50));
       const { svg } = await mermaid.render(id, code.textContent);
+      if (renderVersion !== state.previewRenderVersion || !pre.isConnected) {
+        return;
+      }
       pre.replaceWith(parseHTML(svg));
     }
-  } catch (e) {
-    console.error("Mermaid render error:", e);
+  } catch (error) {
+    console.error("Mermaid render error:", error);
   }
 }
 
@@ -798,9 +837,8 @@ function getMermaidTheme() {
   return "default";
 }
 
-function addCopyButtons() {
-  const codeBlocks = elements.preview.querySelectorAll("pre");
-  codeBlocks.forEach((pre) => {
+function addCopyButtons(blocks) {
+  blocks.forEach(({ pre, code }) => {
     if (pre.querySelector(".copy-btn") || pre.querySelector(".mermaid")) {
       return;
     }
@@ -816,10 +854,10 @@ function addCopyButtons() {
     button.innerHTML = "📋";
     button.title = "Copy code";
 
-    const code = pre.querySelector("code")?.textContent || pre.textContent;
+    const text = code.textContent || pre.textContent;
 
     button.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       button.innerHTML = "✓";
       setTimeout(() => {
         button.innerHTML = "📋";
@@ -831,15 +869,15 @@ function addCopyButtons() {
 }
 
 async function renderPreview(content) {
+  const renderVersion = ++state.previewRenderVersion;
   const payload = await api("/api/render", {
     method: "POST",
     body: JSON.stringify({ content }),
   });
   elements.preview.innerHTML = payload.html;
   rewritePreviewLinks();
-  renderOutline();
-  await renderMermaid();
-  addCopyButtons();
+  markOutlineForRefresh();
+  schedulePreviewEnhancements(renderVersion);
 }
 
 function rewritePreviewLinks() {
@@ -917,7 +955,7 @@ function renderOutline() {
   setupHeadingObserver();
 }
 
-function setupHeadingObserver() {
+function resetOutlineObserver() {
   if (state.headingObserver) {
     state.headingObserver.disconnect();
   }
@@ -927,6 +965,29 @@ function setupHeadingObserver() {
   state.headingObserver = null;
   state.headingScrollTarget = null;
   state.headingScrollHandler = null;
+}
+
+function resetOutlineTracking() {
+  resetOutlineObserver();
+  state.outlineHeadings = [];
+  state.activeHeadingId = null;
+}
+
+function markOutlineForRefresh() {
+  resetOutlineTracking();
+  markOutlineDirty(state.outlineRenderState);
+}
+
+function syncOutlineIfNeeded() {
+  state.outlineRenderState.open = state.outlineOpen;
+  if (!shouldBuildOutline(state.outlineRenderState)) {
+    return;
+  }
+  renderOutline();
+}
+
+function setupHeadingObserver() {
+  resetOutlineObserver();
 
   if (state.outlineHeadings.length === 0) return;
 
@@ -1208,6 +1269,7 @@ function syncLayout(fromContext = state.currentContext) {
 
   const showFileSidebar = state.sidebarOpen && sidebarToggleVisible;
   const showOutlineSidebar = state.outlineOpen;
+  syncOutlineIfNeeded();
 
   document.body.classList.toggle("mobile-viewport", isMobile);
   document.body.classList.toggle(
@@ -1229,6 +1291,36 @@ function syncLayout(fromContext = state.currentContext) {
     restoreScrollPosition(fromContext, nextContext);
     state.currentContext = nextContext;
   });
+}
+
+function schedulePreviewEnhancements(renderVersion) {
+  requestAnimationFrame(() => {
+    enhancePreview(renderVersion).catch((error) => {
+      console.error("Preview enhancement error:", error);
+    });
+  });
+}
+
+async function enhancePreview(renderVersion) {
+  if (renderVersion !== state.previewRenderVersion) {
+    return;
+  }
+
+  const blocks = collectPreviewCodeBlocks(elements.preview);
+  const mermaidBlocks = new Set(blocks.mermaid.map(({ pre }) => pre));
+
+  if (blocks.mermaid.length > 0) {
+    await renderMermaid(blocks.mermaid, renderVersion);
+  }
+
+  if (renderVersion !== state.previewRenderVersion) {
+    return;
+  }
+
+  addCopyButtons(
+    blocks.copyable.filter(({ pre }) => !mermaidBlocks.has(pre)),
+  );
+  syncOutlineIfNeeded();
 }
 
 async function saveSettings() {
