@@ -213,6 +213,12 @@ type readyResult struct {
 	err    error
 }
 
+type outputScanResult struct {
+	line string
+	err  error
+	done bool
+}
+
 func startCloudflaredProcess(ctx context.Context, localURL string) (Process, error) {
 	path, err := exec.LookPath("cloudflared")
 	if err != nil {
@@ -271,23 +277,47 @@ func (p *cloudflaredProcess) Stop() error {
 }
 
 func (p *cloudflaredProcess) captureReady(stdout, stderr io.ReadCloser) {
-	reader := io.MultiReader(stdout, stderr)
-	scanner := bufio.NewScanner(reader)
+	results := make(chan outputScanResult, 2)
+	go scanCloudflaredOutput(stdout, results)
+	go scanCloudflaredOutput(stderr, results)
+
 	var builder strings.Builder
-	for scanner.Scan() {
-		line := scanner.Text()
-		builder.WriteString(line)
-		builder.WriteByte('\n')
-		if quickTunnelPattern.MatchString(line) {
+	completed := 0
+	for completed < 2 {
+		result := <-results
+		if result.line != "" {
+			builder.WriteString(result.line)
+			builder.WriteByte('\n')
+		}
+		if result.err != nil {
+			p.ready <- readyResult{err: fmt.Errorf("read cloudflared output: %w", result.err)}
+			close(p.ready)
+			return
+		}
+		if result.done {
+			completed++
+			continue
+		}
+		if quickTunnelPattern.MatchString(result.line) {
 			p.ready <- readyResult{output: builder.String()}
 			close(p.ready)
 			return
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		p.ready <- readyResult{err: fmt.Errorf("read cloudflared output: %w", err)}
-	} else {
-		p.ready <- readyResult{err: errors.New("cloudflared exited before reporting a public URL")}
-	}
+	p.ready <- readyResult{err: errors.New("cloudflared exited before reporting a public URL")}
 	close(p.ready)
+}
+
+func scanCloudflaredOutput(reader io.ReadCloser, results chan<- outputScanResult) {
+	defer reader.Close()
+
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		results <- outputScanResult{line: scanner.Text()}
+	}
+	if err := scanner.Err(); err != nil {
+		results <- outputScanResult{err: err}
+		return
+	}
+	results <- outputScanResult{done: true}
 }
