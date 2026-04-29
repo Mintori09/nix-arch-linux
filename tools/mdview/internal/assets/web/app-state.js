@@ -16,8 +16,36 @@ export function applyInitialUIState({ query, config, document }) {
   };
 }
 
+export function getAppMode(bootstrap) {
+  if (bootstrap?.mode === "public-share") {
+    return "public-share";
+  }
+  return "admin";
+}
+
 export function getLayoutContext() {
   return "preview-only";
+}
+
+export function getShareButtonState({ status, disabledReason, error = "" }) {
+  if (status === "starting") {
+    return { label: "Starting...", disabled: true, error: "" };
+  }
+  if (status === "active") {
+    return { label: "Stop sharing", disabled: false, error: "" };
+  }
+  if (status === "error") {
+    return {
+      label: "Share",
+      disabled: Boolean(disabledReason),
+      error,
+    };
+  }
+  return {
+    label: "Share",
+    disabled: Boolean(disabledReason),
+    error: "",
+  };
 }
 
 export function createEmptyScrollSnapshots() {

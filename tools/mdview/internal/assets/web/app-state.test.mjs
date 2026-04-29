@@ -4,8 +4,10 @@ import assert from 'node:assert/strict';
 import {
   applyInitialUIState,
   createEmptyScrollSnapshots,
+  getAppMode,
   getLayoutContext,
   getMobilePanelState,
+  getShareButtonState,
   restoreScrollTargets,
   saveScrollSnapshot,
 } from './app-state.js';
@@ -83,6 +85,30 @@ test('applyInitialUIState falls back to preview for unsupported modes', () => {
   });
 
   assert.equal(state.viewMode, 'preview');
+});
+
+test('getAppMode treats share bootstrap as public-share mode', () => {
+  assert.equal(getAppMode({ mode: 'public-share' }), 'public-share');
+  assert.equal(getAppMode({ mode: 'unknown' }), 'admin');
+});
+
+test('getShareButtonState maps share lifecycle to button labels', () => {
+  assert.deepEqual(
+    getShareButtonState({ status: 'idle', disabledReason: '' }),
+    { label: 'Share', disabled: false, error: '' },
+  );
+  assert.deepEqual(
+    getShareButtonState({ status: 'starting', disabledReason: '' }),
+    { label: 'Starting...', disabled: true, error: '' },
+  );
+  assert.deepEqual(
+    getShareButtonState({ status: 'active', disabledReason: '' }),
+    { label: 'Stop sharing', disabled: false, error: '' },
+  );
+  assert.deepEqual(
+    getShareButtonState({ status: 'error', disabledReason: 'share unavailable', error: 'cloudflared failed' }),
+    { label: 'Share', disabled: true, error: 'cloudflared failed' },
+  );
 });
 
 test('getLayoutContext always returns the preview layout', () => {
