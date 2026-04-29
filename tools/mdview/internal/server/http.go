@@ -625,10 +625,12 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		name = "index.html"
 	}
 
+	servedName := name
 	data, err := fs.ReadFile(s.opts.Assets, name)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			data, err = fs.ReadFile(s.opts.Assets, "index.html")
+			servedName = "index.html"
+			data, err = fs.ReadFile(s.opts.Assets, servedName)
 		}
 		if err != nil {
 			http.NotFound(w, r)
@@ -636,14 +638,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	switch filepath.Ext(name) {
-	case ".css":
-		w.Header().Set("Content-Type", "text/css; charset=utf-8")
-	case ".js":
-		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	default:
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	}
+	setAssetContentType(w, servedName)
 
 	_, _ = w.Write(data)
 }
@@ -674,7 +669,7 @@ func (s *Server) handleShareStart(w http.ResponseWriter, r *http.Request) {
 
 	cfg, doc, _ := s.opts.App.Snapshot()
 	localURL := "http://" + r.Host
-	if _, err := s.opts.Share.Start(r.Context(), localURL, doc, cfg); err != nil {
+	if _, err := s.opts.Share.Start(context.WithoutCancel(r.Context()), localURL, doc, cfg); err != nil {
 		payload := s.sharePayload()
 		payload["error"] = err.Error()
 		writeJSON(w, http.StatusBadGateway, payload)
@@ -770,15 +765,21 @@ func (s *Server) serveAssetFile(w http.ResponseWriter, name string) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
+	setAssetContentType(w, name)
+	_, _ = w.Write(data)
+}
+
+func setAssetContentType(w http.ResponseWriter, name string) {
 	switch filepath.Ext(name) {
 	case ".css":
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	case ".js":
 		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	case ".svg":
+		w.Header().Set("Content-Type", "image/svg+xml")
 	default:
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
-	_, _ = w.Write(data)
 }
 
 func (s *Server) sharePayload() map[string]any {

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -281,6 +282,49 @@ func TestShareEndpointsRequireToken(t *testing.T) {
 	}
 }
 
+func TestShareStartDetachesFromRequestContext(t *testing.T) {
+	t.Parallel()
+
+	shareService := &stubShareService{
+		state: share.State{
+			Status:    share.StatusActive,
+			PublicURL: "https://demo.trycloudflare.com/s/share-123",
+			ShareID:   "share-123",
+		},
+	}
+	app := &session.App{
+		Token:  "secret",
+		Config: config.Default(),
+		Document: session.Document{
+			Name:    "note.md",
+			Content: "# shared",
+		},
+	}
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+		Share: shareService,
+	})
+
+	requestCtx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequest(http.MethodPost, "/api/share/start?token=secret", nil).WithContext(requestCtx)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d with body %s", rec.Code, rec.Body.String())
+	}
+	if shareService.startContext == nil {
+		t.Fatal("expected share start context to be captured")
+	}
+
+	cancel()
+	time.Sleep(20 * time.Millisecond)
+	if err := shareService.startContext.Err(); err != nil {
+		t.Fatalf("expected detached context to remain active after request, got %v", err)
+	}
+}
+
 func TestShareBootstrapReturnsFrozenDocumentAndSanitizedConfig(t *testing.T) {
 	t.Parallel()
 
@@ -376,6 +420,60 @@ func TestShareBootstrapReturnsGoneForExpiredShare(t *testing.T) {
 
 	if rec.Code != http.StatusGone {
 		t.Fatalf("expected 410, got %d", rec.Code)
+	}
+}
+
+func TestFaviconAssetServesSVGContentType(t *testing.T) {
+	t.Parallel()
+
+	server := New(Options{
+		App:    &session.App{Config: config.Default()},
+		Store:  document.Store{},
+		Assets: testAssetFS(),
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/favicon.svg", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d with body %s", rec.Code, rec.Body.String())
+	}
+
+	contentType := rec.Header().Get("Content-Type")
+	if contentType != "image/svg+xml" {
+		t.Fatalf("expected image/svg+xml content type, got %q", contentType)
+	}
+}
+
+func TestIndexFallbackServesHTMLContentTypeForUnknownRoute(t *testing.T) {
+	t.Parallel()
+
+	server := New(Options{
+		App:    &session.App{Config: config.Default()},
+		Store:  document.Store{},
+		Assets: testAssetFS(),
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/missing-route.js", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d with body %s", rec.Code, rec.Body.String())
+	}
+
+	contentType := rec.Header().Get("Content-Type")
+	if contentType != "text/html; charset=utf-8" {
+		t.Fatalf("expected HTML content type for SPA fallback, got %q", contentType)
+	}
+
+	assets, err := fs.ReadFile(testAssetFS(), "index.html")
+	if err != nil {
+		t.Fatalf("read index asset: %v", err)
+	}
+	if rec.Body.String() != string(assets) {
+		t.Fatal("expected fallback response to serve index.html")
 	}
 }
 
@@ -1016,12 +1114,14 @@ func TestDocumentStatusEndpointIgnoresTemporaryDocuments(t *testing.T) {
 }
 
 type stubShareService struct {
-	state    share.State
-	startErr error
-	stopErr  error
+	state        share.State
+	startErr     error
+	stopErr      error
+	startContext context.Context
 }
 
-func (s *stubShareService) Start(_ context.Context, _ string, _ session.Document, _ config.Config) (share.State, error) {
+func (s *stubShareService) Start(ctx context.Context, _ string, _ session.Document, _ config.Config) (share.State, error) {
+	s.startContext = ctx
 	if s.startErr != nil {
 		return share.State{}, s.startErr
 	}
@@ -1038,4 +1138,8 @@ func (s *stubShareService) Snapshot() share.State {
 
 func (s *stubShareService) Close() error {
 	return nil
+}
+
+func testAssetFS() fs.FS {
+	return os.DirFS(filepath.Join("..", "assets", "web"))
 }
