@@ -3,6 +3,8 @@ package share
 import (
 	"context"
 	"errors"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +24,101 @@ func TestParseQuickTunnelURL(t *testing.T) {
 
 	if publicURL != "https://demo.trycloudflare.com/s/share-123" {
 		t.Fatalf("expected public url with share path, got %q", publicURL)
+	}
+}
+
+func TestCloudflaredProcessCaptureReadyDetectsURLFromStderrWhileStdoutStaysOpen(t *testing.T) {
+	t.Parallel()
+
+	stdoutReader, stdoutWriter := io.Pipe()
+	stderrReader, stderrWriter := io.Pipe()
+	process := &cloudflaredProcess{ready: make(chan readyResult, 1)}
+
+	go process.captureReady(stdoutReader, stderrReader)
+
+	go func() {
+		_, _ = io.WriteString(stderrWriter, "INF quick tunnel: https://demo.trycloudflare.com\n")
+		_ = stderrWriter.Close()
+	}()
+
+	result, ok := waitForReadyResult(process.ready, 200*time.Millisecond)
+	_ = stdoutWriter.Close()
+	if !ok {
+		t.Fatal("expected ready result before stdout closed")
+	}
+	if result.err != nil {
+		t.Fatalf("expected ready without error, got %v", result.err)
+	}
+	if got := parseReadyURL(t, result.output); got != "https://demo.trycloudflare.com/s/share-123" {
+		t.Fatalf("expected stderr URL to be parsed, got %q", got)
+	}
+}
+
+func TestCloudflaredProcessCaptureReadyDetectsURLFromStdout(t *testing.T) {
+	t.Parallel()
+
+	stdoutReader, stdoutWriter := io.Pipe()
+	stderrReader, stderrWriter := io.Pipe()
+	process := &cloudflaredProcess{ready: make(chan readyResult, 1)}
+
+	go process.captureReady(stdoutReader, stderrReader)
+
+	go func() {
+		_, _ = io.WriteString(stdoutWriter, "INF quick tunnel: https://demo.trycloudflare.com\n")
+		_ = stdoutWriter.Close()
+		_ = stderrWriter.Close()
+	}()
+
+	result, ok := waitForReadyResult(process.ready, time.Second)
+	if !ok {
+		t.Fatal("expected ready result from stdout")
+	}
+	if result.err != nil {
+		t.Fatalf("expected ready without error, got %v", result.err)
+	}
+	if got := parseReadyURL(t, result.output); got != "https://demo.trycloudflare.com/s/share-123" {
+		t.Fatalf("expected stdout URL to be parsed, got %q", got)
+	}
+}
+
+func TestCloudflaredProcessCaptureReadyReturnsErrorWhenStreamsEndWithoutURL(t *testing.T) {
+	t.Parallel()
+
+	stdoutReader, stdoutWriter := io.Pipe()
+	stderrReader, stderrWriter := io.Pipe()
+	process := &cloudflaredProcess{ready: make(chan readyResult, 1)}
+
+	go process.captureReady(stdoutReader, stderrReader)
+
+	go func() {
+		_, _ = io.WriteString(stdoutWriter, "INF still starting\n")
+		_ = stdoutWriter.Close()
+		_, _ = io.WriteString(stderrWriter, "ERR no public URL emitted\n")
+		_ = stderrWriter.Close()
+	}()
+
+	result, ok := waitForReadyResult(process.ready, time.Second)
+	if !ok {
+		t.Fatal("expected ready error when both streams end")
+	}
+	if result.err == nil || result.err.Error() != "cloudflared exited before reporting a public URL" {
+		t.Fatalf("expected missing URL error, got %v", result.err)
+	}
+}
+
+func TestCloudflaredProcessCaptureReadyReturnsScannerError(t *testing.T) {
+	t.Parallel()
+
+	process := &cloudflaredProcess{ready: make(chan readyResult, 1)}
+
+	go process.captureReady(errReadCloser{err: errors.New("boom")}, io.NopCloser(strings.NewReader("")))
+
+	result, ok := waitForReadyResult(process.ready, time.Second)
+	if !ok {
+		t.Fatal("expected ready error from scanner")
+	}
+	if result.err == nil || result.err.Error() != "read cloudflared output: boom" {
+		t.Fatalf("expected scanner error, got %v", result.err)
 	}
 }
 
@@ -142,4 +239,35 @@ func (p *stubProcess) Done() <-chan error {
 func (p *stubProcess) Stop() error {
 	p.stopped = true
 	return nil
+}
+
+type errReadCloser struct {
+	err error
+}
+
+func (r errReadCloser) Read([]byte) (int, error) {
+	return 0, r.err
+}
+
+func (r errReadCloser) Close() error {
+	return nil
+}
+
+func waitForReadyResult(ch <-chan readyResult, timeout time.Duration) (readyResult, bool) {
+	select {
+	case result, ok := <-ch:
+		return result, ok
+	case <-time.After(timeout):
+		return readyResult{}, false
+	}
+}
+
+func parseReadyURL(t *testing.T, output string) string {
+	t.Helper()
+
+	publicURL, err := parseQuickTunnelURL(output, "share-123")
+	if err != nil {
+		t.Fatalf("parseQuickTunnelURL returned error: %v", err)
+	}
+	return publicURL
 }
