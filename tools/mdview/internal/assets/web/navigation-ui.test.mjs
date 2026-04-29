@@ -5,6 +5,7 @@ import {
   findPreviewSearchTarget,
   getSidebarToggleVisibility,
   getTopAlignedScrollY,
+  shouldHandleWorkspaceArrowKey,
   shouldPollDocumentStatus,
 } from './navigation-ui.js';
 
@@ -95,5 +96,118 @@ test('top-aligned scroll keeps the target near the top edge with offset', () => 
       topOffset: 80,
     }),
     0,
+  );
+});
+
+test('workspace arrow navigation accepts plain left and right keys on non-interactive targets', () => {
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      appMode: 'admin',
+      event: { key: 'ArrowLeft', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: null },
+      document: { path: '/workspace/docs/a.md', folder_root: '/workspace/docs', temporary: false },
+      workspaceRoots: [{ path: '/workspace/docs' }],
+    }),
+    true,
+  );
+
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      appMode: 'admin',
+      event: { key: 'ArrowRight', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: { tagName: 'DIV', isContentEditable: false } },
+      document: { path: '/workspace/docs/a.md', folder_root: '/workspace/docs', temporary: false },
+      workspaceRoots: [{ path: '/workspace/docs' }],
+    }),
+    true,
+  );
+});
+
+test('workspace arrow navigation rejects unsupported key events and inactive documents', () => {
+  const base = {
+    appMode: 'admin',
+    document: { path: '/workspace/docs/a.md', folder_root: '/workspace/docs', temporary: false },
+    workspaceRoots: [{ path: '/workspace/docs' }],
+  };
+
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { key: 'ArrowUp', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: null },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { key: 'ArrowLeft', repeat: true, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: null },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { key: 'ArrowRight', repeat: false, ctrlKey: true, metaKey: false, altKey: false, shiftKey: false, target: null },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      appMode: 'public-share',
+      event: { key: 'ArrowLeft', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: null },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      document: { path: '/outside/a.md', folder_root: '/outside', temporary: false },
+      event: { key: 'ArrowLeft', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, target: null },
+    }),
+    false,
+  );
+});
+
+test('workspace arrow navigation rejects interactive event targets', () => {
+  const base = {
+    appMode: 'admin',
+    document: { path: '/workspace/docs/a.md', folder_root: '/workspace/docs', temporary: false },
+    workspaceRoots: [{ path: '/workspace/docs' }],
+    event: { key: 'ArrowLeft', repeat: false, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false },
+  };
+
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { ...base.event, target: { tagName: 'INPUT', isContentEditable: false } },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { ...base.event, target: { tagName: 'TEXTAREA', isContentEditable: false } },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { ...base.event, target: { tagName: 'SELECT', isContentEditable: false } },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { ...base.event, target: { tagName: 'BUTTON', isContentEditable: false } },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldHandleWorkspaceArrowKey({
+      ...base,
+      event: { ...base.event, target: { tagName: 'DIV', isContentEditable: true } },
+    }),
+    false,
   );
 });
