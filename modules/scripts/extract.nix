@@ -14,7 +14,6 @@ in
       pkgs.unzip
       pkgs.p7zip
       pkgs.unrar
-      pkgs.ncompress
       pkgs.libarchive
       pkgs.binutils
     ];
