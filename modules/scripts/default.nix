@@ -18,5 +18,6 @@
     ./copy-files.nix
     ./mdview.nix
     ./remove.nix
+    ./compress-wrap.nix
   ];
 }
