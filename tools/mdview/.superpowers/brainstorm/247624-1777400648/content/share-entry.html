@@ -1,0 +1,69 @@
+<h2>Nút Share Nên Đặt Ở Đâu?</h2>
+<p class="subtitle">Mục tiêu: bấm một lần để mở tunnel read-only bằng cloudflared và copy link gửi bạn bè.</p>
+
+<div class="cards">
+  <div class="card" data-choice="toolbar" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Phương án A: Thanh công cụ góc phải trên</div>
+        <div class="mockup-body">
+          <div class="mock-nav">mdview <span style="float:right">Outline | TTS | <button class="mock-button">Share</button></span></div>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <div class="mock-sidebar">Files</div>
+            <div class="mock-content">
+              <div class="label">Reading view</div>
+              <h3 style="margin-top:8px;">README.md</h3>
+              <p>Người dùng đang đọc hoặc chỉnh tài liệu, nút Share luôn hiện cạnh các action chính.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Toolbar Button</h3>
+      <p>Rõ ràng, quen thuộc, phù hợp action chủ động và ít gây rối layout.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="statusbar" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Phương án B: Thanh trạng thái dưới cùng</div>
+        <div class="mockup-body">
+          <div style="display:flex; gap:12px;">
+            <div class="mock-sidebar">Files</div>
+            <div class="mock-content">
+              <div class="label">Reading view</div>
+              <h3 style="margin-top:8px;">README.md</h3>
+              <p>Nội dung chính giữ tối giản; share sống cùng trạng thái kết nối và chế độ local/remote.</p>
+            </div>
+          </div>
+          <div class="mock-nav" style="margin-top:12px;">Local only <span style="float:right"><button class="mock-button">Start share link</button></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Status Bar Action</h3>
+      <p>Nhấn mạnh đây là trạng thái phiên làm việc, nhưng kém trực tiếp hơn khi cần bấm nhanh.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Khuyến nghị</h4>
+      <ul>
+        <li>Chọn A nếu muốn thao tác share là action chính, nhanh, dễ thấy.</li>
+        <li>Chọn B nếu muốn nhấn mạnh chế độ local mặc định và trạng thái tunnel.</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Ràng buộc đã chốt</h4>
+      <ul>
+        <li>Link public chỉ đọc, không cho thao tác ghi từ xa.</li>
+        <li>CLI nên hỗ trợ tự chạy cloudflared kiểu <code>--share</code>/<code>share mode</code>.</li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -14,6 +14,7 @@ import (
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
 	"github.com/mintori/home-manager/tools/mdview/internal/session"
+	"github.com/mintori/home-manager/tools/mdview/internal/share"
 )
 
 type Options struct {
@@ -22,6 +23,7 @@ type Options struct {
 	ConfigManager config.Manager
 	Assets        fs.FS
 	TTS           TTSService
+	Share         share.Service
 }
 
 type Server struct {
@@ -32,6 +34,9 @@ type Server struct {
 func New(opts Options) *Server {
 	if opts.TTS == nil && opts.App != nil {
 		opts.TTS = NewTTSService(opts.App.Config)
+	}
+	if opts.Share == nil {
+		opts.Share = share.NewManager(share.Options{})
 	}
 	s := &Server{
 		opts: opts,
@@ -46,7 +51,15 @@ func (s *Server) Handler() http.Handler {
 	return s.mux
 }
 
+func (s *Server) Share() share.Service {
+	return s.opts.Share
+}
+
 func (s *Server) routes() {
+	s.mux.HandleFunc("/api/share/public/", s.handlePublicSharePublic)
+	s.mux.HandleFunc("/api/share/start", s.handleShareStart)
+	s.mux.HandleFunc("/api/share/stop", s.handleShareStop)
+	s.mux.HandleFunc("/api/share", s.handleShare)
 	s.mux.HandleFunc("/api/document", s.handleDocument)
 	s.mux.HandleFunc("/api/document/status", s.handleDocumentStatus)
 	s.mux.HandleFunc("/api/config", s.handleConfig)
@@ -59,10 +72,15 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/tts/voices", s.handleTTSVoices)
 	s.mux.HandleFunc("/api/asset", s.handleAsset)
 	s.mux.HandleFunc("/api/render", s.handleRender)
+	s.mux.HandleFunc("/s/", s.handlePublicSharePage)
 	s.mux.HandleFunc("/", s.handleIndex)
 }
 
 func (s *Server) handleDocument(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		_, doc, _ := s.opts.App.Snapshot()
@@ -113,6 +131,9 @@ func (s *Server) handleDocument(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -153,6 +174,10 @@ func (s *Server) handleDocumentStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		cfg, _, _ := s.opts.App.Snapshot()
@@ -183,6 +208,9 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -304,6 +332,9 @@ func (s *Server) handleWorkspaceRoots(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -349,6 +380,9 @@ func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -395,6 +429,9 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAsset(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -556,6 +593,9 @@ func (s *Server) handleTTS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleTTSVoices(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -606,6 +646,191 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _ = w.Write(data)
+}
+
+func (s *Server) handleShare(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	writeJSON(w, http.StatusOK, s.sharePayload())
+}
+
+func (s *Server) handleShareStart(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if s.opts.App.Token == "" {
+		writeJSON(w, http.StatusConflict, s.sharePayload())
+		return
+	}
+
+	cfg, doc, _ := s.opts.App.Snapshot()
+	localURL := "http://" + r.Host
+	if _, err := s.opts.Share.Start(r.Context(), localURL, doc, cfg); err != nil {
+		payload := s.sharePayload()
+		payload["error"] = err.Error()
+		writeJSON(w, http.StatusBadGateway, payload)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, s.sharePayload())
+}
+
+func (s *Server) handleShareStop(w http.ResponseWriter, r *http.Request) {
+	if !requireToken(s.opts.App.Token, w, r) {
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if err := s.opts.Share.Stop(); err != nil {
+		http.Error(w, fmt.Sprintf("stop share: %v", err), http.StatusBadGateway)
+		return
+	}
+	writeJSON(w, http.StatusOK, s.sharePayload())
+}
+
+func (s *Server) handlePublicSharePublic(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	switch {
+	case strings.HasSuffix(r.URL.Path, "/bootstrap"):
+		shareID, ok := publicShareID(r.URL.Path, "/api/share/public/", "/bootstrap")
+		if !ok {
+			http.Error(w, "share link expired", http.StatusGone)
+			return
+		}
+		state, ok := s.activePublicShare(shareID)
+		if !ok {
+			http.Error(w, "share link expired", http.StatusGone)
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]any{
+			"mode":     "public-share",
+			"document": state.SharedDocument,
+			"config":   sanitizePublicConfig(state.SharedConfig),
+		})
+	case strings.HasSuffix(r.URL.Path, "/asset"):
+		shareID, ok := publicShareID(r.URL.Path, "/api/share/public/", "/asset")
+		if !ok {
+			http.Error(w, "share link expired", http.StatusGone)
+			return
+		}
+		state, ok := s.activePublicShare(shareID)
+		if !ok {
+			http.Error(w, "share link expired", http.StatusGone)
+			return
+		}
+
+		requested := strings.TrimSpace(r.URL.Query().Get("path"))
+		if requested == "" {
+			http.NotFound(w, r)
+			return
+		}
+
+		fullPath, err := resolveAssetPath(state.SharedDocument.FolderRoot, state.SharedDocument.Path, requested)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.ServeFile(w, r, fullPath)
+	default:
+		http.Error(w, "share link expired", http.StatusGone)
+	}
+}
+
+func (s *Server) handlePublicSharePage(w http.ResponseWriter, r *http.Request) {
+	shareID, ok := publicShareID(r.URL.Path, "/s/", "")
+	if !ok {
+		http.Error(w, "share link expired", http.StatusGone)
+		return
+	}
+	if _, ok := s.activePublicShare(shareID); !ok {
+		http.Error(w, "share link expired", http.StatusGone)
+		return
+	}
+	s.serveAssetFile(w, "index.html")
+}
+
+func (s *Server) serveAssetFile(w http.ResponseWriter, name string) {
+	data, err := fs.ReadFile(s.opts.Assets, name)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+	switch filepath.Ext(name) {
+	case ".css":
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+	case ".js":
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	default:
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	}
+	_, _ = w.Write(data)
+}
+
+func (s *Server) sharePayload() map[string]any {
+	state := s.opts.Share.Snapshot()
+	payload := map[string]any{
+		"status":               state.Status,
+		"public_url":           state.PublicURL,
+		"error":                state.Error,
+		"disabled_reason":      "",
+		"shared_document_name": state.SharedDocument.Name,
+	}
+	if s.opts.App.Token == "" {
+		payload["disabled_reason"] = "Share is unavailable when -no-token is enabled."
+	}
+	return payload
+}
+
+func sanitizePublicConfig(cfg config.Config) map[string]any {
+	return map[string]any{
+		"theme":             cfg.Theme,
+		"appearance":        cfg.Appearance,
+		"content_width":     cfg.ContentWidth,
+		"font_size":         cfg.FontSize,
+		"body_line_height":  cfg.BodyLineHeight,
+		"paragraph_spacing": cfg.ParagraphSpacing,
+		"code_font_size":    cfg.CodeFontSize,
+		"code_line_height":  cfg.CodeLineHeight,
+		"font_family":       cfg.FontFamily,
+	}
+}
+
+func publicShareID(path, prefix, suffix string) (string, bool) {
+	if !strings.HasPrefix(path, prefix) {
+		return "", false
+	}
+	trimmed := strings.TrimPrefix(path, prefix)
+	if suffix != "" {
+		if !strings.HasSuffix(trimmed, suffix) {
+			return "", false
+		}
+		trimmed = strings.TrimSuffix(trimmed, suffix)
+	}
+	trimmed = strings.Trim(trimmed, "/")
+	if trimmed == "" || strings.Contains(trimmed, "/") {
+		return "", false
+	}
+	return trimmed, true
+}
+
+func (s *Server) activePublicShare(shareID string) (share.State, bool) {
+	state := s.opts.Share.Snapshot()
+	return state, state.Status == share.StatusActive && state.ShareID == shareID
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

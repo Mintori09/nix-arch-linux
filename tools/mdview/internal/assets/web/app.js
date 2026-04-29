@@ -1,8 +1,10 @@
 import {
   applyInitialUIState,
   createEmptyScrollSnapshots,
+  getAppMode,
   getLayoutContext,
   getMobilePanelState,
+  getShareButtonState,
   restoreScrollTargets,
   saveScrollSnapshot,
 } from "./app-state.js";
@@ -42,11 +44,22 @@ import { createSessionPresence } from "./session-presence.js";
 
 const query = new URLSearchParams(window.location.search);
 const token = query.get("token") || "";
+const publicShareMatch = window.location.pathname.match(/^\/s\/([^/]+)\/?$/);
 const DOCUMENT_POLL_MS = 1500;
+const SHARE_POLL_MS = 2000;
 const state = {
+  appMode: "admin",
+  publicShareId: publicShareMatch?.[1] || "",
   config: null,
   document: null,
   workspaceRoots: [],
+  share: {
+    status: "idle",
+    public_url: "",
+    error: "",
+    disabled_reason: "",
+    shared_document_name: "",
+  },
   viewMode: "preview",
   sidebarOpen: false,
   outlineOpen: false,
@@ -64,6 +77,7 @@ const state = {
   previewRenderVersion: 0,
   documentPollTimer: null,
   documentPollInFlight: false,
+  sharePollTimer: null,
   lastSyncedContent: "",
   lastSyncedRevision: "",
   acknowledgedRemoteRevision: "",
@@ -133,6 +147,10 @@ const elements = {
   searchQuery: document.getElementById("search-query"),
   searchScope: document.getElementById("search-scope"),
   searchResults: document.getElementById("search-results"),
+  shareToggle: document.getElementById("share-toggle"),
+  shareCopy: document.getElementById("share-copy"),
+  shareURL: document.getElementById("share-url"),
+  shareError: document.getElementById("share-error"),
 };
 
 elements.toggleSidebar.addEventListener("click", () => {
@@ -196,6 +214,22 @@ elements.settingsTabReading?.addEventListener("click", () => {
 document
   .getElementById("print-page")
   .addEventListener("click", () => window.print());
+elements.shareToggle?.addEventListener("click", async () => {
+  if (state.appMode !== "admin") {
+    return;
+  }
+  if (state.share.status === "active") {
+    await stopShare();
+    return;
+  }
+  await startShare();
+});
+elements.shareCopy?.addEventListener("click", async () => {
+  if (!state.share.public_url) {
+    return;
+  }
+  await navigator.clipboard.writeText(state.share.public_url);
+});
 document.getElementById("open-search").addEventListener("click", () => {
   elements.searchDrawer.classList.toggle("hidden");
   elements.settingsDrawer.classList.add("hidden");
@@ -290,21 +324,29 @@ function retryInit() {
 }
 
 async function init() {
+  state.appMode = publicShareMatch ? "public-share" : "admin";
+  if (state.appMode === "public-share") {
+    await initPublicShare();
+    return;
+  }
+
   if (!sessionPresence) {
     const presence = createSessionPresence({ token });
     await presence.start();
     sessionPresence = presence;
   }
 
-  const [config, doc, files] = await Promise.all([
+  const [config, doc, files, shareState] = await Promise.all([
     api("/api/config"),
     api("/api/document"),
     api("/api/files").catch(() => ({ roots: [] })),
+    api("/api/share").catch(() => null),
   ]);
 
   state.config = config;
   state.document = doc;
   state.workspaceRoots = files.roots || [];
+  state.share = normalizeShareState(shareState);
   for (const root of state.workspaceRoots) {
     state.expandedFolders.add(root.path);
   }
@@ -322,10 +364,56 @@ async function init() {
   applyConfig();
   await initTTSSettings();
   await loadDocument(doc);
+  renderShareControls();
+  startSharePolling();
   renderFileList();
   syncLayout();
   initSidebarResize();
   initOutlineResize();
+}
+
+async function initPublicShare() {
+  const response = await fetch(`/api/share/public/${encodeURIComponent(state.publicShareId)}/bootstrap`);
+  if (!response.ok) {
+    showPublicShareExpired();
+    return;
+  }
+
+  const bootstrap = await response.json();
+  state.appMode = getAppMode(bootstrap);
+  state.config = bootstrap.config;
+  state.document = bootstrap.document;
+  state.workspaceRoots = [];
+  configurePublicShareUI();
+  applyConfig();
+  await loadDocument(bootstrap.document);
+  syncLayout();
+}
+
+function configurePublicShareUI() {
+  document.body.classList.add("public-share-mode");
+  elements.toggleSidebar.classList.add("hidden");
+  document.getElementById("toggle-outline")?.classList.add("hidden");
+  document.getElementById("open-search")?.classList.add("hidden");
+  document.getElementById("toggle-settings")?.classList.add("hidden");
+  document.getElementById("print-page")?.classList.add("hidden");
+  elements.shareToggle?.classList.add("hidden");
+  elements.shareCopy?.classList.add("hidden");
+  elements.shareURL?.classList.add("hidden");
+  elements.shareError?.classList.add("hidden");
+  elements.fileSidebar.classList.add("hidden");
+  elements.outlineSidebar.classList.add("hidden");
+  elements.settingsDrawer.classList.add("hidden");
+  elements.searchDrawer.classList.add("hidden");
+  elements.readerPopup?.classList.add("hidden");
+}
+
+function showPublicShareExpired() {
+  configurePublicShareUI();
+  elements.docName.textContent = "Share expired";
+  elements.docMeta.textContent = "";
+  setStatus("Expired");
+  elements.preview.innerHTML = "<p>This share link has expired.</p>";
 }
 
 function bindSettings(config) {
@@ -387,6 +475,9 @@ function bindTTSVoices() {
 }
 
 async function initTTSSettings() {
+  if (state.appMode !== "admin") {
+    return;
+  }
   await loadTTSVoices();
   updateSpeechControls();
 }
@@ -463,6 +554,10 @@ function setActiveSettingsTab(tab) {
 }
 
 function updateSpeechControls() {
+  if (state.appMode !== "admin") {
+    elements.readerPopup?.classList.add("hidden");
+    return;
+  }
   const neighborPrev = getSpeechNeighbor("prev");
   const neighborNext = getSpeechNeighbor("next");
   const canPlay = Boolean(state.document?.content) && Boolean(elements.speechVoice?.value);
@@ -699,10 +794,13 @@ async function loadDocument(doc, options = {}) {
   }
 
   state.document = doc;
-  renderFileList();
+  if (state.appMode === "admin") {
+    renderFileList();
+  }
   elements.docName.textContent = doc.name || "Untitled";
-  elements.docMeta.textContent =
-    doc.path || (doc.temporary ? "Temporary document" : "");
+  elements.docMeta.textContent = state.appMode === "public-share"
+    ? "Shared read-only"
+    : (doc.path || (doc.temporary ? "Temporary document" : ""));
   await renderPreview(doc.content || "");
   syncDocumentMarkers(doc, options);
   updateStatusFromDocument();
@@ -714,6 +812,10 @@ async function loadDocument(doc, options = {}) {
 }
 
 function updateStatusFromDocument() {
+  if (state.appMode === "public-share") {
+    setStatus("Shared read-only");
+    return;
+  }
   if (state.conflictActive) {
     setStatus("Conflict");
     return;
@@ -884,7 +986,7 @@ async function renderPreview(content) {
 function rewritePreviewLinks() {
   for (const image of elements.preview.querySelectorAll("img")) {
     const src = image.getAttribute("src");
-    if (!src || isAbsoluteURL(src) || src.startsWith("/api/asset")) continue;
+    if (!src || isAbsoluteURL(src) || src.startsWith("/api/asset") || src.startsWith("/api/share/public/")) continue;
     if (looksLikeMarkdownPath(src)) {
       image.removeAttribute("src");
       image.dataset.invalidSource = src;
@@ -892,13 +994,19 @@ function rewritePreviewLinks() {
       image.classList.add("preview-image--invalid");
       continue;
     }
-    image.src = `/api/asset?path=${encodeURIComponent(src)}`;
+    image.src = assetURL(src);
   }
 
   for (const link of elements.preview.querySelectorAll("a")) {
     const href = link.getAttribute("href");
     if (!href) continue;
     if (href.endsWith(".md")) {
+      if (state.appMode === "public-share") {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+        });
+        continue;
+      }
       link.addEventListener("click", async (event) => {
         event.preventDefault();
         const doc = await api(buildOpenURL(href, state.document.folder_root));
@@ -910,7 +1018,7 @@ function rewritePreviewLinks() {
         }
       });
     } else if (!isAbsoluteURL(href) && !href.startsWith("#")) {
-      link.href = `/api/asset?path=${encodeURIComponent(href)}`;
+      link.href = assetURL(href);
       link.target = "_blank";
     }
   }
@@ -1325,6 +1433,9 @@ async function enhancePreview(renderVersion) {
 }
 
 async function saveSettings() {
+  if (state.appMode !== "admin") {
+    return;
+  }
   state.config = {
     ...state.config,
     tts_provider: elements.ttsProvider.value,
@@ -1354,6 +1465,9 @@ async function saveSettings() {
 }
 
 async function runSearch() {
+  if (state.appMode !== "admin") {
+    return;
+  }
   const q = elements.searchQuery.value.trim();
   if (!q) {
     elements.searchResults.innerHTML = "";
@@ -1509,6 +1623,9 @@ function closePanels() {
 }
 
 function initSidebarResize() {
+  if (state.appMode !== "admin") {
+    return;
+  }
   const handle = document.createElement("div");
   handle.className = "resize-handle";
   elements.fileSidebar.appendChild(handle);
@@ -1544,6 +1661,9 @@ function initSidebarResize() {
 }
 
 function initOutlineResize() {
+  if (state.appMode !== "admin") {
+    return;
+  }
   const handle = document.createElement("div");
   handle.className = "resize-handle left";
   elements.outlineSidebar.appendChild(handle);
@@ -1602,6 +1722,10 @@ function stopDocumentPolling() {
 }
 
 function syncDocumentPolling() {
+  if (state.appMode !== "admin") {
+    stopDocumentPolling();
+    return;
+  }
   if (shouldPollDocumentStatus(state.document)) {
     startDocumentPolling();
     return;
@@ -1651,4 +1775,117 @@ async function handleDocumentStatus(status) {
   }
 
   await loadDocument(remoteDocument, { statusLabel: "Reloaded" });
+}
+
+function assetURL(path) {
+  if (state.appMode === "public-share") {
+    return `/api/share/public/${encodeURIComponent(state.publicShareId)}/asset?path=${encodeURIComponent(path)}`;
+  }
+  const params = new URLSearchParams({ path });
+  if (token) {
+    params.set("token", token);
+  }
+  return `/api/asset?${params.toString()}`;
+}
+
+function normalizeShareState(payload) {
+  return {
+    status: payload?.status || "idle",
+    public_url: payload?.public_url || "",
+    error: payload?.error || "",
+    disabled_reason: payload?.disabled_reason || "",
+    shared_document_name: payload?.shared_document_name || "",
+  };
+}
+
+function renderShareControls() {
+  if (state.appMode !== "admin") {
+    return;
+  }
+
+  const buttonState = getShareButtonState({
+    status: state.share.status,
+    disabledReason: state.share.disabled_reason,
+    error: state.share.error,
+  });
+  elements.shareToggle.textContent = buttonState.label;
+  elements.shareToggle.disabled = buttonState.disabled;
+  elements.shareCopy.classList.toggle("hidden", !state.share.public_url);
+  elements.shareURL.classList.toggle("hidden", !state.share.public_url);
+  elements.shareURL.href = state.share.public_url || "";
+  elements.shareURL.textContent = state.share.public_url || "";
+  elements.shareError.classList.toggle("hidden", !buttonState.error);
+  elements.shareError.textContent = buttonState.error;
+}
+
+async function startShare() {
+  state.share = {
+    ...state.share,
+    status: "starting",
+    error: "",
+  };
+  renderShareControls();
+
+  try {
+    state.share = normalizeShareState(await api("/api/share/start", {
+      method: "POST",
+    }));
+  } catch (error) {
+    console.error("Start share failed:", error);
+    try {
+      state.share = normalizeShareState(await api("/api/share"));
+    } catch {
+      state.share = {
+        ...state.share,
+        status: "error",
+      };
+    }
+    state.share.error = error.message;
+  }
+
+  renderShareControls();
+  startSharePolling();
+}
+
+async function stopShare() {
+  try {
+    state.share = normalizeShareState(await api("/api/share/stop", {
+      method: "POST",
+    }));
+  } catch (error) {
+    console.error("Stop share failed:", error);
+    state.share = {
+      ...state.share,
+      status: "error",
+      error: error.message,
+    };
+  }
+  renderShareControls();
+}
+
+function startSharePolling() {
+  stopSharePolling();
+  if (state.appMode !== "admin") {
+    return;
+  }
+  state.sharePollTimer = window.setInterval(() => {
+    refreshShareState().catch((error) => {
+      console.error("Share state poll failed:", error);
+    });
+  }, SHARE_POLL_MS);
+}
+
+function stopSharePolling() {
+  if (state.sharePollTimer) {
+    window.clearInterval(state.sharePollTimer);
+    state.sharePollTimer = null;
+  }
+}
+
+async function refreshShareState() {
+  if (state.appMode !== "admin") {
+    return;
+  }
+  state.share = normalizeShareState(await api("/api/share"));
+  renderShareControls();
 }

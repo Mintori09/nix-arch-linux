@@ -153,6 +153,24 @@ body {
   font-size: 0.82rem;
 }
 
+.share-url,
+.share-error {
+  font-size: 0.82rem;
+  max-width: min(28vw, 20rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-url {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.share-error {
+  color: #b94a48;
+}
+
 .speech-status {
   display: inline-flex;
   align-items: center;

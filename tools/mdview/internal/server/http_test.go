@@ -17,6 +17,7 @@ import (
 	"github.com/mintori/home-manager/tools/mdview/internal/config"
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
 	"github.com/mintori/home-manager/tools/mdview/internal/session"
+	"github.com/mintori/home-manager/tools/mdview/internal/share"
 )
 
 type stubTTSService struct {
@@ -240,6 +241,177 @@ func TestFilesEndpointReturnsMarkdownFiles(t *testing.T) {
 
 	if payload.Roots[0].Entries[0].Type != "directory" || payload.Roots[0].Entries[1].Type != "file" {
 		t.Fatalf("expected directory before file for rootA, got %+v", payload.Roots[0].Entries)
+	}
+}
+
+func TestShareEndpointsRequireToken(t *testing.T) {
+	t.Parallel()
+
+	app := &session.App{
+		Token:  "secret",
+		Config: config.Default(),
+		Document: session.Document{
+			Name:      "note.md",
+			Content:   "# shared",
+			Temporary: true,
+		},
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+		Share: &stubShareService{},
+	})
+
+	for _, tc := range []struct {
+		method string
+		path   string
+	}{
+		{method: http.MethodGet, path: "/api/share"},
+		{method: http.MethodPost, path: "/api/share/start"},
+		{method: http.MethodPost, path: "/api/share/stop"},
+	} {
+		req := httptest.NewRequest(tc.method, tc.path, nil)
+		rec := httptest.NewRecorder()
+
+		server.Handler().ServeHTTP(rec, req)
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("%s %s expected 401, got %d", tc.method, tc.path, rec.Code)
+		}
+	}
+}
+
+func TestShareBootstrapReturnsFrozenDocumentAndSanitizedConfig(t *testing.T) {
+	t.Parallel()
+
+	app := &session.App{
+		Token:  "secret",
+		Config: config.Default(),
+	}
+	shareState := share.State{
+		Status:    share.StatusActive,
+		PublicURL: "https://demo.trycloudflare.com/s/share-123",
+		ShareID:   "share-123",
+		SharedDocument: session.Document{
+			Name:      "note.md",
+			Content:   "# frozen",
+			Temporary: true,
+		},
+		SharedConfig: config.Config{
+			Theme:            "paper",
+			Appearance:       "dark",
+			ContentWidth:     900,
+			FontSize:         19,
+			BodyLineHeight:   "1.9",
+			ParagraphSpacing: "1.1",
+			CodeFontSize:     15,
+			CodeLineHeight:   "1.7",
+			FontFamily:       "sans-serif",
+			CustomCSS:        "should-not-leak",
+			WorkspaceRoots:   []string{"/secret"},
+		},
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+		Share: &stubShareService{state: shareState},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/share/public/share-123/bootstrap", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d with body %s", rec.Code, rec.Body.String())
+	}
+
+	var payload struct {
+		Mode     string           `json:"mode"`
+		Document session.Document `json:"document"`
+		Config   map[string]any   `json:"config"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+
+	if payload.Mode != "public-share" {
+		t.Fatalf("expected public-share mode, got %q", payload.Mode)
+	}
+	if payload.Document.Name != "note.md" || payload.Document.Content != "# frozen" {
+		t.Fatalf("unexpected document payload: %+v", payload.Document)
+	}
+	if payload.Config["theme"] != "paper" {
+		t.Fatalf("expected theme to be included, got %+v", payload.Config)
+	}
+	if _, ok := payload.Config["custom_css"]; ok {
+		t.Fatalf("expected custom_css to be omitted, got %+v", payload.Config)
+	}
+	if _, ok := payload.Config["workspace_roots"]; ok {
+		t.Fatalf("expected workspace_roots to be omitted, got %+v", payload.Config)
+	}
+}
+
+func TestShareBootstrapReturnsGoneForExpiredShare(t *testing.T) {
+	t.Parallel()
+
+	app := &session.App{
+		Config: config.Default(),
+	}
+
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+		Share: &stubShareService{
+			state: share.State{
+				Status:  share.StatusIdle,
+				ShareID: "share-123",
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/share/public/share-123/bootstrap", nil)
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusGone {
+		t.Fatalf("expected 410, got %d", rec.Code)
+	}
+}
+
+func TestWorkspaceAndDocumentAPIsRequireTokenWhenProtectionEnabled(t *testing.T) {
+	t.Parallel()
+
+	app := &session.App{
+		Token:  "secret",
+		Config: config.Default(),
+		Document: session.Document{
+			Name:      "note.md",
+			Content:   "# note",
+			Temporary: true,
+		},
+	}
+	server := New(Options{
+		App:   app,
+		Store: document.Store{},
+	})
+
+	for _, tc := range []struct {
+		method string
+		path   string
+	}{
+		{method: http.MethodGet, path: "/api/document"},
+		{method: http.MethodGet, path: "/api/config"},
+		{method: http.MethodGet, path: "/api/files"},
+		{method: http.MethodGet, path: "/api/search?q=note"},
+	} {
+		req := httptest.NewRequest(tc.method, tc.path, nil)
+		rec := httptest.NewRecorder()
+		server.Handler().ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("%s %s expected 401, got %d", tc.method, tc.path, rec.Code)
+		}
 	}
 }
 
@@ -841,4 +1013,29 @@ func TestDocumentStatusEndpointIgnoresTemporaryDocuments(t *testing.T) {
 	if payload.Changed {
 		t.Fatal("expected temporary document to report unchanged")
 	}
+}
+
+type stubShareService struct {
+	state    share.State
+	startErr error
+	stopErr  error
+}
+
+func (s *stubShareService) Start(_ context.Context, _ string, _ session.Document, _ config.Config) (share.State, error) {
+	if s.startErr != nil {
+		return share.State{}, s.startErr
+	}
+	return s.state, nil
+}
+
+func (s *stubShareService) Stop() error {
+	return s.stopErr
+}
+
+func (s *stubShareService) Snapshot() share.State {
+	return s.state
+}
+
+func (s *stubShareService) Close() error {
+	return nil
 }

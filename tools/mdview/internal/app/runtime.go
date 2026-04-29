@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -24,12 +25,19 @@ import (
 	"github.com/mintori/home-manager/tools/mdview/internal/document"
 	"github.com/mintori/home-manager/tools/mdview/internal/server"
 	"github.com/mintori/home-manager/tools/mdview/internal/session"
+	"github.com/mintori/home-manager/tools/mdview/internal/share"
 )
 
 const Version = "0.1.1"
 
 type Runtime struct {
 	ConfigManager config.Manager
+	stdout        io.Writer
+	loadConfig    func(context.Context) (config.Config, error)
+	openBrowser   func(string, string, string) error
+	waitForServer func(context.Context, string) error
+	serveHTTP     func(net.Listener, http.Handler) httpServerHandle
+	shareStarter  func(context.Context, string, session.Document, config.Config) (shareRuntimeHandle, error)
 }
 
 type CLIOptions struct {
@@ -42,9 +50,21 @@ type CLIOptions struct {
 	NoSidebar  bool
 	Port       int
 	NoToken    bool
+	Share      bool
 	Version    bool
 	Help       bool
 	Path       string
+}
+
+type httpServerHandle struct {
+	Shutdown func(context.Context) error
+}
+
+type shareRuntimeHandle struct {
+	PublicURL string
+	ShareID   string
+	Stop      func() error
+	Done      <-chan error
 }
 
 func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error {
@@ -67,12 +87,18 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 		fmt.Println("  -no-sidebar       start with sidebar hidden")
 		fmt.Println("  -port int          listen on specific port")
 		fmt.Println("  -no-token          disable token protection for write actions")
+		fmt.Println("  -share             start a read-only public share with cloudflared")
 		fmt.Println("  -version           print version")
 		fmt.Println("  -help, -h         show help")
 		return nil
 	}
 
-	cfg, err := rt.ConfigManager.Load(ctx)
+	loadConfig := rt.loadConfig
+	if loadConfig == nil {
+		loadConfig = rt.ConfigManager.Load
+	}
+
+	cfg, err := loadConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -113,7 +139,9 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 		Store:         document.Store{},
 		ConfigManager: rt.ConfigManager,
 		Assets:        assets.FS(),
+		Share:         shareService(rt.shareStarter),
 	})
+	defer srv.Share().Close()
 
 	listenAddr := "127.0.0.1:0"
 	if opts.Port > 0 {
@@ -126,21 +154,48 @@ func (rt Runtime) Run(ctx context.Context, args []string, stdin io.Reader) error
 	}
 	defer listener.Close()
 
-	httpServer := &http.Server{Handler: srv.Handler()}
-	go func() {
-		_ = httpServer.Serve(listener)
-	}()
+	serveHTTP := rt.serveHTTP
+	if serveHTTP == nil {
+		serveHTTP = func(listener net.Listener, handler http.Handler) httpServerHandle {
+			httpServer := &http.Server{Handler: handler}
+			go func() {
+				_ = httpServer.Serve(listener)
+			}()
+			return httpServerHandle{Shutdown: httpServer.Shutdown}
+		}
+	}
+	httpServer := serveHTTP(listener, srv.Handler())
 
 	targetURL := buildURL(listener.Addr().String(), token, opts)
 	readyCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
-	if err := waitForServerReady(readyCtx, targetURL); err != nil {
+	waitForServer := rt.waitForServer
+	if waitForServer == nil {
+		waitForServer = waitForServerReady
+	}
+	if err := waitForServer(readyCtx, targetURL); err != nil {
 		_ = httpServer.Shutdown(context.Background())
 		return err
 	}
-	if err := browser.Open(cfg.Browser, cfg.FallbackBrowser, targetURL); err != nil {
-		_ = httpServer.Shutdown(context.Background())
-		return err
+
+	if opts.Share {
+		_, doc, _ := appState.Snapshot()
+		state, err := srv.Share().Start(ctx, "http://"+listener.Addr().String(), doc, cfg)
+		if err != nil {
+			_ = httpServer.Shutdown(context.Background())
+			return err
+		}
+		fmt.Fprintf(rt.output(), "Share URL: %s\n", state.PublicURL)
+		fmt.Fprintf(rt.output(), "Admin URL: %s\n", targetURL)
+	} else {
+		openBrowser := rt.openBrowser
+		if openBrowser == nil {
+			openBrowser = browser.Open
+		}
+		if err := openBrowser(cfg.Browser, cfg.FallbackBrowser, targetURL); err != nil {
+			_ = httpServer.Shutdown(context.Background())
+			return err
+		}
 	}
 
 	sigCtx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
@@ -163,6 +218,7 @@ func ParseCLI(args []string) (CLIOptions, error) {
 	fs.BoolVar(&opts.NoSidebar, "no-sidebar", false, "start with sidebar hidden")
 	fs.IntVar(&opts.Port, "port", 0, "listen on a specific port")
 	fs.BoolVar(&opts.NoToken, "no-token", false, "disable token protection for write actions")
+	fs.BoolVar(&opts.Share, "share", false, "start a read-only public share with cloudflared")
 	fs.BoolVar(&opts.Version, "version", false, "print version")
 	fs.BoolVar(&opts.Help, "h", false, "show help")
 	fs.BoolVar(&opts.Help, "help", false, "show help")
@@ -176,7 +232,72 @@ func ParseCLI(args []string) (CLIOptions, error) {
 	if fs.NArg() == 1 {
 		opts.Path = fs.Arg(0)
 	}
+	if opts.Share && opts.NoToken {
+		return CLIOptions{}, errors.New("--share cannot be used with --no-token")
+	}
 	return opts, nil
+}
+
+func (rt Runtime) output() io.Writer {
+	if rt.stdout != nil {
+		return rt.stdout
+	}
+	return os.Stdout
+}
+
+func shareService(starter func(context.Context, string, session.Document, config.Config) (shareRuntimeHandle, error)) share.Service {
+	if starter == nil {
+		return share.NewManager(share.Options{})
+	}
+	return &injectedShareService{start: starter}
+}
+
+type injectedShareService struct {
+	mu    sync.RWMutex
+	state share.State
+	start func(context.Context, string, session.Document, config.Config) (shareRuntimeHandle, error)
+	stop  func() error
+}
+
+func (s *injectedShareService) Start(ctx context.Context, localURL string, doc session.Document, cfg config.Config) (share.State, error) {
+	handle, err := s.start(ctx, localURL, doc, cfg)
+	if err != nil {
+		return share.State{}, err
+	}
+
+	s.mu.Lock()
+	s.stop = handle.Stop
+	s.state = share.State{
+		Status:         share.StatusActive,
+		PublicURL:      handle.PublicURL,
+		ShareID:        handle.ShareID,
+		SharedDocument: doc,
+		SharedConfig:   cfg,
+	}
+	s.mu.Unlock()
+	return s.state, nil
+}
+
+func (s *injectedShareService) Stop() error {
+	s.mu.Lock()
+	stop := s.stop
+	s.stop = nil
+	s.state = share.State{Status: share.StatusIdle}
+	s.mu.Unlock()
+	if stop != nil {
+		return stop()
+	}
+	return nil
+}
+
+func (s *injectedShareService) Snapshot() share.State {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.state
+}
+
+func (s *injectedShareService) Close() error {
+	return s.Stop()
 }
 
 func applyOverrides(cfg *config.Config, opts CLIOptions) {
