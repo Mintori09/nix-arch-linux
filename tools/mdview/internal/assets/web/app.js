@@ -41,6 +41,7 @@ import {
   shouldPollDocumentStatus,
 } from "./navigation-ui.js";
 import { getDocumentStatusAction } from "./document-sync.js";
+import { syncPageTitle } from "./page-metadata.js";
 import { createSessionPresence } from "./session-presence.js";
 
 const query = new URLSearchParams(window.location.search);
@@ -427,6 +428,7 @@ function configurePublicShareUI() {
 
 function showPublicShareExpired() {
   configurePublicShareUI();
+  syncPageTitle(document, "Share expired");
   elements.docName.textContent = "Share expired";
   elements.docMeta.textContent = "";
   setStatus("Expired");
@@ -850,6 +852,7 @@ async function loadDocument(doc, options = {}) {
   }
 
   state.document = doc;
+  syncPageTitle(document, doc.name || "");
   if (state.appMode === "admin") {
     renderFileList();
   }
