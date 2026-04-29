@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildWorkspaceTree, isActiveWorkspaceFile } from './workspace-tree.js';
+import { buildWorkspaceTree, findAdjacentWorkspaceFile, isActiveWorkspaceFile } from './workspace-tree.js';
 
 test('buildWorkspaceTree nests directories and keeps folders before files', () => {
   const tree = buildWorkspaceTree([
@@ -109,5 +109,71 @@ test('isActiveWorkspaceFile ignores temporary documents and files outside the wo
       },
     ),
     false,
+  );
+});
+
+test('findAdjacentWorkspaceFile follows flattened workspace order across nested folders and roots', () => {
+  const roots = [
+    {
+      path: '/workspace/a',
+      name: 'a',
+      entries: [
+        { path: 'guide/', name: 'guide', type: 'directory' },
+        { path: 'guide/intro.md', name: 'intro.md', type: 'file' },
+        { path: 'guide/setup/', name: 'setup', type: 'directory' },
+        { path: 'guide/setup/install.md', name: 'install.md', type: 'file' },
+        { path: 'readme.md', name: 'readme.md', type: 'file' },
+      ],
+    },
+    {
+      path: '/workspace/b',
+      name: 'b',
+      entries: [
+        { path: 'notes.md', name: 'notes.md', type: 'file' },
+      ],
+    },
+  ];
+
+  assert.deepEqual(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/a', path: 'guide/intro.md' }, 'next'),
+    { path: 'readme.md', name: 'readme.md', type: 'file', rootPath: '/workspace/a', children: undefined },
+  );
+  assert.deepEqual(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/a', path: 'guide/intro.md' }, 'prev'),
+    { path: 'guide/setup/install.md', name: 'install.md', type: 'file', rootPath: '/workspace/a', children: undefined },
+  );
+  assert.deepEqual(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/a', path: 'readme.md' }, 'next'),
+    { path: 'notes.md', name: 'notes.md', type: 'file', rootPath: '/workspace/b', children: undefined },
+  );
+  assert.deepEqual(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/b', path: 'notes.md' }, 'prev'),
+    { path: 'readme.md', name: 'readme.md', type: 'file', rootPath: '/workspace/a', children: undefined },
+  );
+});
+
+test('findAdjacentWorkspaceFile stops at workspace boundaries and unknown files', () => {
+  const roots = [
+    {
+      path: '/workspace/docs',
+      name: 'docs',
+      entries: [
+        { path: 'a.md', name: 'a.md', type: 'file' },
+        { path: 'b.md', name: 'b.md', type: 'file' },
+      ],
+    },
+  ];
+
+  assert.equal(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/docs', path: 'a.md' }, 'prev'),
+    null,
+  );
+  assert.equal(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/docs', path: 'b.md' }, 'next'),
+    null,
+  );
+  assert.equal(
+    findAdjacentWorkspaceFile(roots, { rootPath: '/workspace/docs', path: 'missing.md' }, 'next'),
+    null,
   );
 });
