@@ -37,6 +37,7 @@ import {
   findPreviewSearchTarget,
   getSidebarToggleVisibility,
   getTopAlignedScrollY,
+  shouldHandleWorkspaceArrowKey,
   shouldPollDocumentStatus,
 } from "./navigation-ui.js";
 import { getDocumentStatusAction } from "./document-sync.js";
@@ -276,6 +277,22 @@ window.addEventListener("resize", () => {
   transitionLayout(() => {}, state.currentContext);
 });
 window.addEventListener("keydown", (event) => {
+  if (shouldHandleWorkspaceArrowKey({
+    appMode: state.appMode,
+    event,
+    document: state.document,
+    workspaceRoots: state.workspaceRoots,
+  })) {
+    const direction = event.key === "ArrowLeft" ? "prev" : "next";
+    if (getWorkspaceNeighbor(direction)) {
+      event.preventDefault();
+      navigateWorkspaceFile(direction, { closePanelsOnMobile: true }).catch((error) => {
+        console.error("Keyboard navigation failed:", error);
+        setStatus("Open error");
+      });
+    }
+    return;
+  }
   if (event.key !== "Escape") {
     return;
   }
@@ -755,37 +772,76 @@ function stopSpeech(options = {}) {
 }
 
 function getSpeechNeighbor(direction) {
+  return getWorkspaceNeighbor(direction);
+}
+
+function getCurrentWorkspaceFile() {
   if (!state.document?.path || !state.document?.folder_root) {
     return null;
   }
-  const current = {
+
+  return {
     rootPath: state.document.folder_root,
     path: state.document.path.slice(state.document.folder_root.length + 1).replaceAll("\\", "/"),
   };
+}
+
+function getWorkspaceNeighbor(direction) {
+  const current = getCurrentWorkspaceFile();
+  if (!current) {
+    return null;
+  }
   return findAdjacentWorkspaceFile(state.workspaceRoots, current, direction);
 }
 
-async function navigateSpeechFile(direction, options = {}) {
-  const neighbor = getSpeechNeighbor(direction);
+async function navigateWorkspaceFile(direction, options = {}) {
+  const neighbor = getWorkspaceNeighbor(direction);
   if (!neighbor) {
     if (options.autoAdvance) {
       setSpeechStatus("Finished");
     }
-    updateSpeechControls();
+    if (options.updateSpeechControls !== false) {
+      updateSpeechControls();
+    }
     return false;
   }
 
-  state.speechNavigationActive = true;
-  stopSpeech({ silent: true });
-  const doc = await api(buildOpenURL(neighbor.path, neighbor.rootPath));
-  await loadDocument(doc, { speechNavigation: true });
-  state.speechNavigationActive = false;
-  if (options.autoplay) {
-    await startSpeech();
-  } else {
-    setSpeechStatus("Speech ready");
+  const loadOptions = options.speechNavigation ? { speechNavigation: true } : {};
+
+  try {
+    if (options.speechNavigation) {
+      state.speechNavigationActive = true;
+      stopSpeech({ silent: true });
+    }
+
+    const doc = await api(buildOpenURL(neighbor.path, neighbor.rootPath));
+    await loadDocument(doc, loadOptions);
+
+    if (options.closePanelsOnMobile && isMobileViewport()) {
+      transitionLayout(() => {
+        closePanels();
+      });
+    }
+
+    if (options.autoplay) {
+      await startSpeech();
+    } else if (options.speechNavigation) {
+      setSpeechStatus("Speech ready");
+    }
+
+    return true;
+  } finally {
+    if (options.speechNavigation) {
+      state.speechNavigationActive = false;
+    }
   }
-  return true;
+}
+
+async function navigateSpeechFile(direction, options = {}) {
+  return navigateWorkspaceFile(direction, {
+    ...options,
+    speechNavigation: true,
+  });
 }
 
 async function loadDocument(doc, options = {}) {
