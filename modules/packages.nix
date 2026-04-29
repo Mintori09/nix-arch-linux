@@ -70,6 +70,7 @@
     gcc
     gnumake
     pkg-config
+    shell-gpt
 
     # Program
     slack
