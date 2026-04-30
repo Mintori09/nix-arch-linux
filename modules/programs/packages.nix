@@ -5,23 +5,47 @@
 }:
 let
   wrapped = import ./_nixgl-wrappers.nix { inherit pkgs; };
+
+  mpvWrapped = wrapped.mkWrappedBinary {
+    name = "mpv";
+    package = pkgs.mpv;
+  };
+
+  obsidianWrapped = wrapped.mkWrappedBinary {
+    name = "obsidian";
+    package = pkgs.obsidian;
+  };
+
+  hoppscotchWrapped = wrapped.mkWrappedBinary {
+    name = "hoppscotch";
+    package = pkgs.hoppscotch;
+  };
+
+  nautilusWrapped = wrapped.mkWrappedBinary {
+    name = "nautilus";
+    package = pkgs.nautilus;
+  };
+
+  vicinaeWrapped = wrapped.mkWrappedBinary {
+    name = "vicinae";
+    package = pkgs.vicinae;
+  };
+
+  gimpWrapped = wrapped.mkWrappedBinary {
+    name = "gimp";
+    package = pkgs.gimp;
+  };
 in
 
 {
   programs.mpv = {
     enable = true;
-    package = wrapped.mkWrappedBinary {
-      name = "mpv";
-      package = pkgs.mpv;
-    };
+    package = mpvWrapped;
   };
 
   programs.obsidian = {
     enable = true;
-    package = wrapped.mkWrappedBinary {
-      name = "obsidian";
-      package = pkgs.obsidian;
-    };
+    package = obsidianWrapped;
   };
 
   programs.spicetify = {
@@ -38,21 +62,9 @@ in
   };
 
   home.packages = [
-    (wrapped.mkWrappedBinary {
-      name = "hoppscotch";
-      package = pkgs.hoppscotch;
-    })
-    (wrapped.mkWrappedBinary {
-      name = "nautilus";
-      package = pkgs.nautilus;
-    })
-    (wrapped.mkWrappedBinary {
-      name = "vicinae";
-      package = pkgs.vicinae;
-    })
-    (wrapped.mkWrappedBinary {
-      name = "gimp";
-      package = pkgs.gimp;
-    })
+    hoppscotchWrapped
+    nautilusWrapped
+    vicinaeWrapped
+    gimpWrapped
   ];
 }
