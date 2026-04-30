@@ -26,5 +26,6 @@
     ./zed
     ./obs.nix
     ./9router.nix
+    ./pandoc.nix
   ];
 }
