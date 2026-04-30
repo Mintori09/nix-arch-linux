@@ -7,6 +7,8 @@ in
     LANG = "en_GB.UTF-8";
     LC_ALL = "en_GB.UTF-8";
     EDITOR = "nvim";
+    XMODIFIERS = "@im=fcitx";
+    GLFW_IM_MODULE = "ibus";
     SUDO_EDITOR = "nvim";
     VISUAL = "zeditor";
     TERMINAL = "kitty";
