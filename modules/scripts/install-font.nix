@@ -7,5 +7,11 @@ in
     name = "ifont";
     runtime = "${pkgs.bun}/bin/bun";
     entry = "${../../scripts/execute/install-font.ts}";
+    extraPathPackages = [
+      pkgs.rpm
+      pkgs.zstd
+      pkgs.cpio
+      pkgs.file
+    ];
   };
 }
