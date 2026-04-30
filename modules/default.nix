@@ -5,5 +5,6 @@
     ./shell
     ./scripts
     ./secrets.nix
+    ./fonts.nix
   ];
 }
