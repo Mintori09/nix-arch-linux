@@ -7,5 +7,9 @@ in
     name = "irpm";
     runtime = "${pkgs.bun}/bin/bun";
     entry = "${../../scripts/execute/install-rpm.ts}";
+    extraPathPackages = [
+      pkgs.rpm
+      pkgs.cpio
+    ];
   };
 }
