@@ -67,4 +67,92 @@ in
     vicinaeWrapped
     gimpWrapped
   ];
+
+  xdg.desktopEntries = {
+    mpv = {
+      name = "mpv";
+      genericName = "Media Player";
+      comment = "Lightweight media player";
+      exec = "${mpvWrapped}/bin/mpv";
+      terminal = false;
+      categories = [
+        "AudioVideo"
+        "Video"
+        "Player"
+      ];
+      icon = "mpv";
+      startupNotify = true;
+    };
+
+    obsidian = {
+      name = "Obsidian";
+      genericName = "Knowledge Base";
+      comment = "Markdown knowledge base";
+      exec = "${obsidianWrapped}/bin/obsidian";
+      terminal = false;
+      categories = [
+        "Office"
+        "Utility"
+      ];
+      icon = "obsidian";
+      startupNotify = true;
+    };
+
+    hoppscotch = {
+      name = "Hoppscotch";
+      genericName = "API Client";
+      comment = "Open source API development ecosystem";
+      exec = "${hoppscotchWrapped}/bin/hoppscotch";
+      terminal = false;
+      categories = [
+        "Development"
+        "Network"
+      ];
+      icon = "hoppscotch";
+      startupNotify = true;
+    };
+
+    nautilus = {
+      name = "Files";
+      genericName = "File Manager";
+      comment = "Browse files and folders";
+      exec = "${nautilusWrapped}/bin/nautilus";
+      terminal = false;
+      categories = [
+        "GNOME"
+        "GTK"
+        "Core"
+        "Utility"
+        "FileManager"
+      ];
+      icon = "org.gnome.Nautilus";
+      startupNotify = true;
+    };
+
+    vicinae = {
+      name = "Vicinae";
+      genericName = "Utility";
+      comment = "Launch Vicinae through the nixGL wrapper";
+      exec = "${vicinaeWrapped}/bin/vicinae";
+      terminal = false;
+      categories = [ "Utility" ];
+      icon = "vicinae";
+      startupNotify = true;
+    };
+
+    gimp = {
+      name = "GIMP";
+      genericName = "Image Editor";
+      comment = "Create images and edit photographs";
+      exec = "${gimpWrapped}/bin/gimp";
+      terminal = false;
+      categories = [
+        "Graphics"
+        "2DGraphics"
+        "RasterGraphics"
+      ];
+      icon = "gimp";
+      startupNotify = true;
+    };
+  };
 }
