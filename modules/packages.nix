@@ -18,9 +18,13 @@
 
     # Core utilities
     fastfetch
+    systemctl-tui
+    magika
+    cliphist
     fd
     ripgrep
     wl-clipboard
+    just
     opencode
     wails
 
@@ -44,6 +48,9 @@
     lazygit
     lazydocker
     spicetify-cli
+    rclone
+    codex
+
     brotab
     navi
     lazyjournal
@@ -69,7 +76,6 @@
     python3
     gcc
     gnumake
-    pkg-config
     shell-gpt
 
     # Program
