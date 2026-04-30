@@ -1,32 +1,14 @@
 #!/usr/bin/env bun
 
-type RemoveTarget = {
-  description: string;
-  extensions: string[];
-};
-
-const targets: Record<string, RemoveTarget> = {
-  subtitles: {
-    description: "Remove subtitle files",
-    extensions: ["srt", "vtt", "ass", "ssa", "sub"],
-  },
-  images: {
-    description: "Remove image files",
-    extensions: ["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "svg"],
-  },
-  text: {
-    description: "Remove text files",
-    extensions: ["txt", "md", "log"],
-  },
-};
+import { fileGroups } from "./file-groups";
 
 const args = Bun.argv.slice(2);
 const command = args[0];
 const flags = new Set(args.slice(1));
 
 function help() {
-  const commands = Object.entries(targets)
-    .map(([name, target]) => `  ${name.padEnd(12)} ${target.description}`)
+  const commands = Object.entries(fileGroups)
+    .map(([name, target]) => `  ${name.padEnd(12)} Remove ${target.description.toLowerCase()}`)
     .join("\n");
 
   console.log(`remove — simple file removal utility
@@ -98,7 +80,7 @@ if (!command || args.includes("-h") || args.includes("--help")) {
   exitWithHelp(0);
 }
 
-const target = targets[command];
+const target = fileGroups[command];
 
 if (!target) {
   exitWithHelp(1);

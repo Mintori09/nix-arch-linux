@@ -43,6 +43,10 @@ in
       package = pkgs.hoppscotch;
     })
     (wrapped.mkWrappedBinary {
+      name = "nautilus";
+      package = pkgs.nautilus;
+    })
+    (wrapped.mkWrappedBinary {
       name = "vicinae";
       package = pkgs.vicinae;
     })

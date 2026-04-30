@@ -67,14 +67,9 @@
           return 1
         fi
 
-        {
           cp "$src" "$active"
           echo "Switched Codex to account: $name"
           codex "$@"
-        } always {
-          cp "$default" "$active"
-          echo "Restored Codex to default account"
-        }
       }
     '';
   };
