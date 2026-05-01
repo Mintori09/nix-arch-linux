@@ -99,7 +99,7 @@ in
     (helpers.mkScriptPackage {
       name = "cpath";
       runtime = "${pkgs.bun}/bin/bun";
-      entry = "${../../scripts/execute/copy-files.ts}";
+      entry = "${../../scripts/execute}/copy-files.ts";
       extraPathPackages = [
         pkgs.fd
       ];
