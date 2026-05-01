@@ -8,7 +8,6 @@ let
 in
 {
   home.packages = with pkgs; [
-    yt-dlp
     aria2
     ffmpeg
   ];
