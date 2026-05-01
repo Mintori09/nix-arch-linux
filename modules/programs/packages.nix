@@ -36,6 +36,11 @@ let
     name = "gimp";
     package = pkgs.gimp;
   };
+
+  foliateWrapped = wrapped.mkWrappedBinary {
+    name = "foliate";
+    package = pkgs.foliate;
+  };
 in
 
 {
@@ -67,6 +72,7 @@ in
     nautilusWrapped
     vicinaeWrapped
     gimpWrapped
+    foliateWrapped
   ];
 
   xdg.desktopEntries = {
@@ -153,6 +159,20 @@ in
         "RasterGraphics"
       ];
       icon = "gimp";
+      startupNotify = true;
+    };
+
+    foliate = {
+      name = "Foliate";
+      genericName = "E-book Reader";
+      comment = "Read EPUB books";
+      exec = "${foliateWrapped}/bin/foliate";
+      terminal = false;
+      categories = [
+        "Office"
+        "Viewer"
+      ];
+      icon = "foliate";
       startupNotify = true;
     };
   };
