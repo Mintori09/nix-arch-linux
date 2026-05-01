@@ -7,11 +7,6 @@
 let
   wrapped = import ./_nixgl-wrappers.nix { inherit pkgs; };
 
-  mpvWrapped = wrapped.mkWrappedBinary {
-    name = "mpv";
-    package = pkgs.mpv;
-  };
-
   obsidianWrapped = wrapped.mkWrappedBinary {
     name = "obsidian";
     package = pkgs.obsidian;
@@ -45,10 +40,6 @@ let
 in
 
 {
-  programs.mpv = {
-    enable = true;
-    package = mpvWrapped;
-  };
 
   programs.obsidian = {
     enable = true;
@@ -77,21 +68,6 @@ in
   ];
 
   xdg.desktopEntries = {
-
-    mpv = {
-      name = "mpv";
-      genericName = "Media Player";
-      comment = "Lightweight media player";
-      exec = "${mpvWrapped}/bin/mpv";
-      terminal = false;
-      categories = [
-        "AudioVideo"
-        "Video"
-        "Player"
-      ];
-      icon = "mpv";
-      startupNotify = true;
-    };
 
     obsidian = {
       name = "Obsidian";
@@ -180,11 +156,11 @@ in
   };
 
   home.activation.updateDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    if [ -d "$HOME/.nix-profile/share/applications" ]; then
+    if [ -w "$HOME/.nix-profile/share/applications" ]; then
       ${pkgs.desktop-file-utils}/bin/update-desktop-database "$HOME/.nix-profile/share/applications"
     fi
 
-    if [ -d "$HOME/.local/share/applications" ]; then
+    if [ -w "$HOME/.local/share/applications" ]; then
       ${pkgs.desktop-file-utils}/bin/update-desktop-database "$HOME/.local/share/applications"
     fi
   '';
