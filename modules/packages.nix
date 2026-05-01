@@ -72,7 +72,6 @@
     yarn
     node-gyp
 
-    python3
     gcc
     gnumake
     shell-gpt
