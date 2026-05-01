@@ -26,7 +26,6 @@
     wl-clipboard
     just
     opencode
-    wails
 
     # CLI tools
     tdf
