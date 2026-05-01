@@ -41,6 +41,7 @@ let
     name = "foliate";
     package = pkgs.foliate;
   };
+
 in
 
 {
@@ -76,6 +77,7 @@ in
   ];
 
   xdg.desktopEntries = {
+
     mpv = {
       name = "mpv";
       genericName = "Media Player";
