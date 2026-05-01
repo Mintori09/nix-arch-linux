@@ -1,58 +1,45 @@
+# ~/.config/home-manager/modules/programs/neovim.nix
 { pkgs, ... }:
 
 {
-  programs.neovim = {
-    enable = true;
-    viAlias = true;
-    vimAlias = true;
+  home.packages = with pkgs; [
+    gcc
+    gnumake
+    tree-sitter
 
-    withNodeJs = true;
-    withPython3 = true;
+    go
+    gopls
+    golangci-lint
+    gomodifytags
+    impl
 
-    extraPackages = with pkgs; [
-      gcc
-      gnumake
-      tree-sitter
+    bun
+    nodejs_22
+    typescript-language-server
+    vtsls
+    prettier
+    eslint
 
-      # --- Go Development ---
-      go
-      gopls
-      gotools
-      golangci-lint
-      gomodifytags
-      impl
+    (python3.withPackages (
+      ps: with ps; [
+        black
+        isort
+        pyflakes
+      ]
+    ))
+    pyright
+    ruff
 
-      # --- JavaScript / TypeScript / Bun ---
-      bun
-      nodejs_22
-      typescript-language-server
-      vtsls
-      prettier
-      eslint
+    lua-language-server
+    stylua
 
-      (python3.withPackages (
-        ps: with ps; [
-          black
-          isort
-          pyflakes
-        ]
-      ))
-      pyright
-      ruff
+    ripgrep
+    fd
+    fzf
+    lazygit
+    sqlite
 
-      # --- Lua  ---
-      lua-language-server
-      stylua
-
-      # --- CLI Utilities  ---
-      ripgrep
-      fd
-      fzf
-      lazygit
-      sqlite
-
-      pandoc
-      marksman
-    ];
-  };
+    pandoc
+    marksman
+  ];
 }
