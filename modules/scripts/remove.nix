@@ -67,7 +67,7 @@ in
     (helpers.mkScriptPackage {
       name = "remove";
       runtime = "${pkgs.bun}/bin/bun";
-      entry = "${../../scripts/execute/remove.ts}";
+      entry = "${../../scripts/execute}/remove.ts";
       extraPathPackages = [
         pkgs.fd
       ];
