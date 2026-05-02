@@ -51,7 +51,9 @@ in
 
     # SYNCTHING
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
+    nix-clean = "nix-collect-garbage --delete-older-than 2d --cores 16";
     syncthing-web = "xdg-open http://localhost:8384/#";
+    open = "xdg-open";
 
     # DEVELOPMENT & GIT
     cm = "cargo watch -x build -x test -x run";

@@ -24,6 +24,7 @@
     ./qutebrowser.nix
     ./packages.nix
     ./zed
+    ./yt-dlp.nix
     ./obs.nix
     ./9router.nix
     ./pandoc.nix

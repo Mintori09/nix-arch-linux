@@ -95,6 +95,27 @@ in
         export HISTSIZE=10000
         export HISTFILE="$HOME/.zsh_history"
         export SAVEHIST=$HISTSIZE
+
+        # cd: no args -> pick directory via fzf, args -> normal cd
+        cd() {
+          if (( $# > 0 )); then
+            builtin cd "$@"
+            return
+          fi
+
+          local dir
+          dir="$(
+            ${pkgs.fd}/bin/fd --hidden --type d \
+              --exclude .git \
+              --exclude node_modules \
+              --exclude venv \
+              . . 2>/dev/null |
+            fzf --height=40% --reverse \
+              --preview '${pkgs.eza}/bin/eza -la --icons --group-directories-first {} 2>/dev/null'
+          )" || return
+
+          [[ -n "$dir" ]] && builtin cd -- "$dir"
+        }
       '')
 
       # =========================
