@@ -1,12 +1,21 @@
-{ ... }:
+{ config, lib, ... }:
 let
   c = import ./_constants.nix;
 in
 {
+  xdg.systemDirs.data = lib.mkForce (
+    c.systemDataPriority
+    ++ [
+      "\${NIX_STATE_DIR:-/nix/var/nix}/profiles/default/share"
+      "${config.home.profileDirectory}/share"
+    ]
+  );
+
   home.sessionVariables = {
     LANG = "en_GB.UTF-8";
     LC_ALL = "en_GB.UTF-8";
     EDITOR = "nvim";
+    SHELL = "zsh";
     XMODIFIERS = "@im=fcitx";
     GLFW_IM_MODULE = "ibus";
     SUDO_EDITOR = "nvim";
@@ -33,7 +42,7 @@ in
     INTELLI_HOME = c.intelliHome;
   };
 
-  home.sessionPath = [
+  home.sessionPath = c.systemPathPriority ++ [
     c.spicetifyPath
     "$HOME/.local/bin"
     "$HOME/.local/scripts"

@@ -23,75 +23,67 @@
     enable = true;
 
     initContent = ''
-            zo() {
-                local dir
-                dir="$(
-                    zoxide query -l "$@" |
-                    fzf --height 40% --reverse --preview 'eza -la --icons --group-directories-first {} 2>/dev/null || ls -la {}'
-                )" && cd "$dir"
-            }
+      zo() {
+          local dir
+          dir="$(
+              zoxide query -l "$@" |
+              fzf --height 40% --reverse --preview 'eza -la --icons --group-directories-first {} 2>/dev/null || ls -la {}'
+          )" && cd "$dir"
+      }
 
-            mkcd() {
-                if [ -z "$1" ]; then
-                    echo "Error: Please add folder's name."
-                    return 1
-                fi
-                mkdir -p "$1" && cd "$1"
-            }
+      mkcd() {
+          if [ -z "$1" ]; then
+              echo "Error: Please add folder's name."
+              return 1
+          fi
+          mkdir -p "$1" && cd "$1"
+      }
 
-            nf() {
-                local file=$(fzf)
-                [ -n "$file" ] && nvim "$file"
-            }
-            codex-with() {
-              local name="$1"
-              shift
+      nf() {
+          local file=$(fzf)
+          [ -n "$file" ] && nvim "$file"
+      }
+      codex-with() {
+        local name="$1"
+        shift
 
-              local src="$HOME/.codex/auth.$name.json"
-              local default="$HOME/.codex/auth.default.json"
-              local active="$HOME/.codex/auth.json"
+        local src="$HOME/.codex/auth.$name.json"
+        local default="$HOME/.codex/auth.default.json"
+        local active="$HOME/.codex/auth.json"
 
-              if [[ -z "$name" ]]; then
-                echo "Usage: codex-with one|two -- codex args"
-                return 1
-              fi
+        if [[ -z "$name" ]]; then
+          echo "Usage: codex-with one|two -- codex args"
+          return 1
+        fi
 
-              if [[ ! -f "$src" ]]; then
-                echo "Không tìm thấy: $src"
-                return 1
-              fi
+        if [[ ! -f "$src" ]]; then
+          echo "Không tìm thấy: $src"
+          return 1
+        fi
 
-              if [[ ! -f "$default" ]]; then
-                echo "Không tìm thấy default: $default"
-                echo "Tạo bằng: cp ~/.codex/auth.json ~/.codex/auth.default.json"
-                return 1
-              fi
+        if [[ ! -f "$default" ]]; then
+          echo "Không tìm thấy default: $default"
+          echo "Tạo bằng: cp ~/.codex/auth.json ~/.codex/auth.default.json"
+          return 1
+        fi
 
-                cp "$src" "$active"
-                echo "Switched Codex to account: $name"
-                codex "$@"
-            }
-      nonix-shell() {
-        local clean_path=""
-        local part
+          cp "$src" "$active"
+          echo "Switched Codex to account: $name"
+          codex "$@"
+      }
 
-        IFS=':' read -ra parts <<< "$PATH"
+      prefer_nix() {
+          local pkg="$1"
 
-        for part in "\$\{parts[@]\}"; do
-          case "$part" in
-            "$HOME/.nix-profile/bin"|/nix/var/nix/profiles/default/bin|/nix/store/*|"")
-              ;;
-            *)
-              if [ -z "$clean_path" ]; then
-                clean_path="$part"
-              else
-                clean_path="$clean_path:$part"
-              fi
-              ;;
-          esac
-        done
+          local path
+          path="$(find /nix/store -maxdepth 1 -type d -name "*-''${pkg}-*" | head -n 1)"
 
-        PATH="$clean_path" bash --noprofile --norc
+          if [ -n "$path" ] && [ -d "$path/bin" ]; then
+              export PATH="$path/bin:$PATH"
+          else
+              echo "Không tìm thấy package $pkg trong /nix/store"
+              return 1
+          fi
       }
     '';
   };
@@ -117,8 +109,23 @@
       }
 
       nf() {
-          local file=$(fzf)
+          local file
+          file="$(fzf)"
           [ -n "$file" ] && nvim "$file"
+      }
+
+      prefer_nix() {
+          local pkg="$1"
+
+          local path
+          path="$(find /nix/store -maxdepth 1 -type d -name "*-''${pkg}-*" | head -n 1)"
+
+          if [ -n "$path" ] && [ -d "$path/bin" ]; then
+              export PATH="$path/bin:$PATH"
+          else
+              echo "Không tìm thấy package $pkg trong /nix/store"
+              return 1
+          fi
       }
     '';
   };
