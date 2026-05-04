@@ -175,6 +175,7 @@ in
       entry = "${../../scripts/execute/convert-file.ts}";
       extraPathPackages = [
         pkgs.ffmpeg
+        pkgs.chromium
         pkgs.imagemagick
         pkgs.pandoc
         pkgs.libreoffice
