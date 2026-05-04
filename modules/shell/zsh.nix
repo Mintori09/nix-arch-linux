@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 let
   c = import ./_constants.nix;
+  systemPathPriorityZsh = lib.concatStringsSep "\n          " c.systemPathPriority;
 in
 
 {
@@ -170,6 +171,12 @@ in
         }
 
         compdef _fn fn
+        typeset -U path
+        path=(
+          ${systemPathPriorityZsh}
+          $path
+        )
+        export PATH
 
       '')
     ];
