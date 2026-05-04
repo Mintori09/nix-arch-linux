@@ -29,7 +29,7 @@ in
       --embed-chapters
       --write-auto-sub
       --write-sub
-      --sub-langs en,vi
+      --sub-langs en
       --embed-subs
 
       # Plugins and Tools
