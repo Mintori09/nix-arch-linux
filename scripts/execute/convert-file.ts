@@ -1,6 +1,15 @@
 #!/usr/bin/env bun
 import path from "node:path";
-import { access, mkdir, rename, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { pathToFileURL } from "node:url";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { constants as FS_CONSTANTS } from "node:fs";
 import { parseArgs } from "node:util";
 
@@ -17,7 +26,14 @@ const SPINNER_FRAMES = ["-", "\\", "|", "/"] as const;
 const SPINNER_INTERVAL_MS = 80;
 const SPINNER_DELAY_MS = 300;
 
-type ToolName = "ffmpeg" | "magick" | "pandoc" | "soffice" | "pdftoppm" | "yq";
+type ToolName =
+  | "chromium"
+  | "ffmpeg"
+  | "magick"
+  | "pandoc"
+  | "soffice"
+  | "pdftoppm"
+  | "yq";
 
 type ConvertContext = {
   dryRun: boolean;
@@ -39,6 +55,22 @@ type ToolConverter = {
 type CommandOptions = {
   dryRun: boolean;
   captureStdout?: boolean;
+};
+
+type ViewportMetrics = {
+  width: number;
+  height: number;
+};
+
+type ViewportSize = {
+  width: number;
+  height: number;
+};
+
+type ChromeJsonTarget = {
+  type?: string;
+  url?: string;
+  webSocketDebuggerUrl?: string;
 };
 
 class CliError extends Error {
@@ -111,6 +143,19 @@ function renderSpinnerFrame(frameIndex: number, label: string): string {
 
 function clearSpinnerLine(): string {
   return "\r\x1b[2K";
+}
+
+export function calculateViewportSize(metrics: ViewportMetrics): ViewportSize {
+  if (!Number.isFinite(metrics.width) || !Number.isFinite(metrics.height)) {
+    throw new CliError(
+      `${COLORS.RED}Error:${COLORS.NC} Chromium returned invalid page dimensions.`,
+    );
+  }
+
+  return {
+    width: Math.max(1, Math.ceil(metrics.width)),
+    height: Math.max(1, Math.ceil(metrics.height) + 32),
+  };
 }
 
 function shouldEnableSpinner(options: {
@@ -190,6 +235,263 @@ async function runCommand(
   }
 
   return stdout;
+}
+
+function parseDevToolsPort(text: string): number | undefined {
+  const match = text.match(
+    /DevTools listening on ws:\/\/(?:127\.0\.0\.1|localhost):(\d+)\//,
+  );
+  if (!match) return undefined;
+  return Number.parseInt(match[1], 10);
+}
+
+async function waitForDevToolsPort(
+  stream: ReadableStream<Uint8Array>,
+): Promise<number> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let stderr = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      stderr += decoder.decode(value, { stream: true });
+      const port = parseDevToolsPort(stderr);
+      if (port) return port;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  throw new CommandExecutionError("chromium", shortStderr(stderr), 1);
+}
+
+async function waitForPageWebSocketUrl(
+  port: number,
+  pageUrl: string,
+): Promise<string> {
+  const endpoint = `http://127.0.0.1:${port}/json/list`;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < 5000) {
+    try {
+      const targets = (await fetch(endpoint).then((response) =>
+        response.json(),
+      )) as ChromeJsonTarget[];
+      const page = targets.find(
+        (target) =>
+          target.type === "page" &&
+          target.url === pageUrl &&
+          target.webSocketDebuggerUrl,
+      );
+
+      if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;
+    } catch {
+      // Chromium may need a moment before the DevTools HTTP endpoint is ready.
+    }
+
+    await Bun.sleep(50);
+  }
+
+  throw new CommandExecutionError(
+    "chromium",
+    `Timed out waiting for DevTools page target: ${pageUrl}`,
+    1,
+  );
+}
+
+class DevToolsSession {
+  private nextId = 1;
+  private pending = new Map<
+    number,
+    {
+      resolve: (value: unknown) => void;
+      reject: (reason?: unknown) => void;
+    }
+  >();
+
+  constructor(private readonly socket: WebSocket) {
+    this.socket.addEventListener("message", (event) => {
+      const message = JSON.parse(String(event.data)) as {
+        id?: number;
+        result?: unknown;
+        error?: unknown;
+      };
+
+      if (!message.id) return;
+
+      const pending = this.pending.get(message.id);
+      if (!pending) return;
+
+      this.pending.delete(message.id);
+
+      if (message.error) {
+        pending.reject(new Error(JSON.stringify(message.error)));
+      } else {
+        pending.resolve(message.result);
+      }
+    });
+  }
+
+  send<T>(
+    method: string,
+    params: Record<string, unknown> = {},
+  ): Promise<T> {
+    const id = this.nextId;
+    this.nextId += 1;
+
+    const promise = new Promise<T>((resolve, reject) => {
+      this.pending.set(id, {
+        resolve: (value) => resolve(value as T),
+        reject,
+      });
+    });
+
+    this.socket.send(JSON.stringify({ id, method, params }));
+    return promise;
+  }
+
+  close(): void {
+    this.socket.close();
+  }
+}
+
+async function openDevToolsSession(
+  webSocketUrl: string,
+): Promise<DevToolsSession> {
+  const socket = new WebSocket(webSocketUrl);
+
+  await new Promise<void>((resolve, reject) => {
+    socket.addEventListener("open", () => resolve(), { once: true });
+    socket.addEventListener(
+      "error",
+      () => reject(new Error("DevTools WebSocket failed")),
+      {
+        once: true,
+      },
+    );
+  });
+
+  return new DevToolsSession(socket);
+}
+
+async function waitForDocumentReady(session: DevToolsSession): Promise<void> {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < 5000) {
+    const result = await session.send<{ result: { value?: string } }>(
+      "Runtime.evaluate",
+      {
+        expression: "document.readyState",
+        returnByValue: true,
+      },
+    );
+
+    if (result.result.value === "complete") return;
+    await Bun.sleep(50);
+  }
+
+  throw new CommandExecutionError(
+    "chromium",
+    "Timed out waiting for document.readyState=complete",
+    1,
+  );
+}
+
+async function captureMhtmlScreenshot(
+  input: string,
+  output: string,
+  context: ConvertContext,
+): Promise<void> {
+  const pageUrl = pathToFileURL(input).href;
+
+  if (context.dryRun) {
+    await runCommand(
+      [
+        "chromium",
+        "--headless",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--hide-scrollbars",
+        "--remote-debugging-port=0",
+        "--remote-allow-origins=*",
+        pageUrl,
+      ],
+      { dryRun: true },
+    );
+    return;
+  }
+
+  const userDataDir = await mkdtemp(path.join(tmpdir(), "cv-chromium-"));
+  const proc = Bun.spawn(
+    [
+      "chromium",
+      "--headless",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--hide-scrollbars",
+      "--remote-debugging-port=0",
+      "--remote-allow-origins=*",
+      `--user-data-dir=${userDataDir}`,
+      pageUrl,
+    ],
+    {
+      stdout: "ignore",
+      stderr: "pipe",
+    },
+  );
+
+  try {
+    const port = await waitForDevToolsPort(proc.stderr);
+    const webSocketUrl = await waitForPageWebSocketUrl(port, pageUrl);
+    const session = await openDevToolsSession(webSocketUrl);
+
+    try {
+      await session.send("Page.enable");
+      await waitForDocumentReady(session);
+      await session.send("Runtime.evaluate", {
+        expression: "document.fonts ? document.fonts.ready : Promise.resolve()",
+        awaitPromise: true,
+      });
+
+      const metrics = await session.send<{
+        contentSize: ViewportMetrics;
+      }>("Page.getLayoutMetrics");
+      const viewport = calculateViewportSize(metrics.contentSize);
+
+      await session.send("Emulation.setDeviceMetricsOverride", {
+        width: viewport.width,
+        height: viewport.height,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+
+      const screenshot = await session.send<{ data: string }>(
+        "Page.captureScreenshot",
+        {
+          format: "png",
+          fromSurface: true,
+          clip: {
+            x: 0,
+            y: 0,
+            width: viewport.width,
+            height: viewport.height,
+            scale: 1,
+          },
+        },
+      );
+
+      await writeFile(output, Buffer.from(screenshot.data, "base64"));
+    } finally {
+      session.close();
+    }
+  } finally {
+    proc.kill();
+    await proc.exited.catch(() => undefined);
+    await rm(userDataDir, { recursive: true, force: true });
+  }
 }
 
 async function assertToolAvailable(
@@ -329,6 +631,37 @@ function pdfToImage(
   };
 }
 
+function mhtmlToImage(outputExt: "png" | "jpg" | "webp"): ToolConverter {
+  return {
+    tool: "chromium",
+    convert: async (input, output, context) => {
+      const tempDir = context.dryRun
+        ? undefined
+        : await mkdtemp(path.join(tmpdir(), "cv-mhtml-"));
+      const screenshotOutput =
+        outputExt === "png"
+          ? output
+          : context.dryRun
+            ? output.replace(new RegExp(`\\.${outputExt}$`, "i"), ".png")
+            : path.join(tempDir!, "screenshot.png");
+
+      try {
+        await captureMhtmlScreenshot(input, screenshotOutput, context);
+
+        if (outputExt !== "png") {
+          await runCommand(["magick", screenshotOutput, output], {
+            dryRun: context.dryRun,
+          });
+        }
+      } finally {
+        if (tempDir) {
+          await rm(tempDir, { recursive: true, force: true });
+        }
+      }
+    },
+  };
+}
+
 function mdToPdf(): ToolConverter {
   return {
     tool: "pandoc",
@@ -387,6 +720,9 @@ const ROUTES: Record<string, ToolConverter> = {
   "webp:jpg": imageMagick(),
   "tiff:png": imageMagick(),
   "bmp:png": imageMagick(),
+  "mhtml:png": mhtmlToImage("png"),
+  "mhtml:jpg": mhtmlToImage("jpg"),
+  "mhtml:webp": mhtmlToImage("webp"),
 
   // Documents
   "md:pdf": mdToPdf(),
@@ -451,6 +787,51 @@ function extensionOf(filePath: string): string {
   return path.extname(filePath).slice(1).toLowerCase();
 }
 
+async function convertOne(
+  input: string,
+  output: string,
+  passthroughArgs: string[],
+  options: { dryRun: boolean },
+): Promise<void> {
+  if (!(await pathExists(input))) {
+    throw new CliError(
+      `${COLORS.RED}Error:${COLORS.NC} Input file '${input}' not found.`,
+    );
+  }
+
+  const inExt = extensionOf(input);
+  const outExt = extensionOf(output);
+
+  if (!inExt || !outExt) {
+    throw new CliError(
+      `${COLORS.RED}Error:${COLORS.NC} Both input and output need file extensions.`,
+    );
+  }
+
+  const route = `${inExt}:${outExt}`;
+  const routeConfig = ROUTES[route];
+
+  if (!routeConfig) {
+    throw new CliError(
+      `${COLORS.RED}Unsupported conversion:${COLORS.NC} ${route}`,
+    );
+  }
+
+  const context: ConvertContext = {
+    dryRun: options.dryRun,
+    passthroughArgs,
+    route,
+  };
+
+  await assertToolAvailable(routeConfig.tool, options.dryRun);
+  await ensureOutputDir(output);
+  await withSpinner(context, () => routeConfig.convert(input, output, context));
+
+  console.log(
+    `\n${COLORS.GREEN}Conversion successful:${COLORS.NC} ${output}${options.dryRun ? " (dry-run)" : ""}`,
+  );
+}
+
 async function run(): Promise<void> {
   const parsed = parseArgs({
     args: Bun.argv.slice(2),
@@ -481,39 +862,7 @@ async function run(): Promise<void> {
     throw new CliError("Input and output files are required.");
   }
 
-  if (!(await pathExists(input))) {
-    throw new CliError(
-      `${COLORS.RED}Error:${COLORS.NC} Input file '${input}' not found.`,
-    );
-  }
-
-  const inExt = extensionOf(input);
-  const outExt = extensionOf(output);
-
-  if (!inExt || !outExt) {
-    throw new CliError(
-      `${COLORS.RED}Error:${COLORS.NC} Both input and output need file extensions.`,
-    );
-  }
-
-  const route = `${inExt}:${outExt}`;
-  const routeConfig = ROUTES[route];
-
-  if (!routeConfig) {
-    throw new CliError(
-      `${COLORS.RED}Unsupported conversion:${COLORS.NC} ${route}`,
-    );
-  }
-
-  const context: ConvertContext = { dryRun, passthroughArgs, route };
-
-  await assertToolAvailable(routeConfig.tool, dryRun);
-  await ensureOutputDir(output);
-  await withSpinner(context, () => routeConfig.convert(input, output, context));
-
-  console.log(
-    `\n${COLORS.GREEN}Conversion successful:${COLORS.NC} ${output}${dryRun ? " (dry-run)" : ""}`,
-  );
+  await convertOne(input, output, passthroughArgs, { dryRun });
 }
 
 if (import.meta.main) {
