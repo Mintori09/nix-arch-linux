@@ -41,7 +41,6 @@
     nixfmt
     rust-script
     television
-    go
     pnpm
     gopls
     lazygit
@@ -72,7 +71,6 @@
     yarn
     node-gyp
 
-    gcc
     gnumake
     shell-gpt
 
