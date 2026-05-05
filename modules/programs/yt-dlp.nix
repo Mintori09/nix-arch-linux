@@ -35,8 +35,8 @@ in
       # Plugins and Tools
       --yes-playlist
       --sponsorblock-remove sponsor,selfpromo,interaction
-      --downloader aria2c
-      --downloader-args aria2c:'--continue --min-split-size=5M --max-connection-per-server=4'
+      # --downloader aria2c
+      # --downloader-args aria2c:'--continue --min-split-size=5M --max-connection-per-server=4'
 
       # Browser Integration
       --cookies-from-browser firefox

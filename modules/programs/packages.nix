@@ -12,11 +12,6 @@ let
     package = pkgs.obsidian;
   };
 
-  hoppscotchWrapped = wrapped.mkWrappedBinary {
-    name = "hoppscotch";
-    package = pkgs.hoppscotch;
-  };
-
   nautilusWrapped = wrapped.mkWrappedBinary {
     name = "nautilus";
     package = pkgs.nautilus;
@@ -60,7 +55,6 @@ in
   };
 
   home.packages = [
-    hoppscotchWrapped
     nautilusWrapped
     vicinaeWrapped
     gimpWrapped
@@ -80,20 +74,6 @@ in
         "Utility"
       ];
       icon = "obsidian";
-      startupNotify = true;
-    };
-
-    hoppscotch = {
-      name = "Hoppscotch";
-      genericName = "API Client";
-      comment = "Open source API development ecosystem";
-      exec = "${hoppscotchWrapped}/bin/hoppscotch";
-      terminal = false;
-      categories = [
-        "Development"
-        "Network"
-      ];
-      icon = "hoppscotch";
       startupNotify = true;
     };
 
