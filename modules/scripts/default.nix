@@ -17,5 +17,6 @@
     ./copy-files.nix
     ./remove.nix
     ./compress-wrap.nix
+    ./open.nix
   ];
 }
