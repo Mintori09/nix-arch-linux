@@ -53,7 +53,7 @@ in
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
     nix-clean = "nix-collect-garbage --delete-older-than 2d --cores 16";
     syncthing-web = "xdg-open http://localhost:8384/#";
-    open = "xdg-open";
+    xdgo = "xdg-open";
 
     # DEVELOPMENT & GIT
     cm = "cargo watch -x build -x test -x run";
@@ -78,6 +78,7 @@ in
     hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy && echo \"Copied to clipboard: $(wl-paste)\"";
 
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
+    navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
 
   };
 }

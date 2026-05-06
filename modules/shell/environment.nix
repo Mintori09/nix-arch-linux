@@ -20,7 +20,7 @@ in
     GLFW_IM_MODULE = "ibus";
     SUDO_EDITOR = "nvim";
     VISUAL = "zeditor";
-    TERM = "xterm-256color";
+    TERM = "xterm";
     TERMINAL = "kitty";
     BROWSER = "zen-browser";
     CLIPCOPY = c.clipCopy;

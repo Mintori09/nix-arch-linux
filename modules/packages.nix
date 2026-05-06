@@ -73,6 +73,7 @@
 
     gnumake
     shell-gpt
+    brotab
 
     # Program
     slack
