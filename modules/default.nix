@@ -6,5 +6,6 @@
     ./scripts
     ./secrets.nix
     ./fonts.nix
+    ./config
   ];
 }

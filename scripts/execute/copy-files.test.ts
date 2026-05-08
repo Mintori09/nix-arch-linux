@@ -4,6 +4,8 @@ import { join } from "path";
 
 import {
   applyRandomSelection,
+  buildContentBlocks,
+  decodeSeparatorValue,
   formatDisplayPath,
   parseArgs,
   shouldQuotePath,
@@ -80,9 +82,17 @@ describe("formatDisplayPath", () => {
 });
 
 describe("parseArgs", () => {
-  test("parses selectors, recursion, and home-relative output", () => {
+  test("parses repeated type selectors, recursion, and home-relative output", () => {
     expect(
-      parseArgs(["--subtitles", "--images", "-R", "-H", "movie.mkv"]),
+      parseArgs([
+        "--type",
+        "subtitles",
+        "--type",
+        "images",
+        "--recursive",
+        "--home-relative",
+        "movie.mkv",
+      ]),
     ).toEqual({
       copyContent: false,
       files: ["movie.mkv"],
@@ -104,14 +114,143 @@ describe("parseArgs", () => {
     ]);
   });
 
-  test("parses random count after selector flags", () => {
-    expect(parseArgs(["--text", "-r", "3"]).randomCount).toBe(3);
+  test("parses random count after type selector flags", () => {
+    expect(parseArgs(["--type", "text", "--random", "3"]).randomCount).toBe(3);
   });
 
   test("rejects invalid random count", () => {
-    expect(() => parseArgs(["-r", "0"])).toThrow(
-      "Invalid number for -r flag: 0",
+    expect(() => parseArgs(["--random", "0"])).toThrow(
+      "Invalid number for --random flag: 0",
     );
+  });
+
+  test("rejects missing random count", () => {
+    expect(() => parseArgs(["--random"])).toThrow(
+      "Usage: --random requires a number argument (e.g., --random 3)",
+    );
+  });
+
+  test("rejects invalid type values with valid groups listed", () => {
+    expect(() => parseArgs(["--type", "unknown"])).toThrow(
+      'Invalid value for --type: unknown. Valid groups: images, subtitles, text',
+    );
+  });
+
+  test("rejects missing type value", () => {
+    expect(() => parseArgs(["--type"])).toThrow(
+      "Usage: --type requires a value (images, subtitles, or text)",
+    );
+  });
+
+  test("parses newline separator from long flag", () => {
+    expect(parseArgs(["--separator", "\\n"]).separator).toBe("\n");
+  });
+
+  test("rejects empty separator", () => {
+    expect(() => parseArgs(["--separator", ""])).toThrow(
+      "--separator value cannot be empty",
+    );
+  });
+
+  test("rejects missing separator value", () => {
+    expect(() => parseArgs(["--separator"])).toThrow(
+      "Usage: --separator requires a value (e.g., --separator \"\\n\")",
+    );
+  });
+
+  test("enables content mode from long flag", () => {
+    expect(parseArgs(["--content"]).copyContent).toBe(true);
+  });
+
+  test("enables basename-only mode from long flag", () => {
+    expect(parseArgs(["--name-only"]).useBasename).toBe(true);
+  });
+
+  test("enables quote mode from long flag", () => {
+    expect(parseArgs(["--quote"]).useQuotes).toBe(true);
+  });
+
+  test("rejects legacy comma separator flag with migration guidance", () => {
+    expect(() => parseArgs(["-c"])).toThrow(
+      'Flag -c was removed. Use --separator "," instead.',
+    );
+  });
+
+  test("rejects legacy tab separator flag with migration guidance", () => {
+    expect(() => parseArgs(["-t"])).toThrow(
+      'Flag -t was removed. Use --separator "\\t" instead.',
+    );
+  });
+
+  test("rejects legacy line separator flag with migration guidance", () => {
+    expect(() => parseArgs(["-l"])).toThrow(
+      'Flag -l was removed. Use --separator "\\n" instead.',
+    );
+  });
+
+  test("rejects removed selector flags with migration guidance", () => {
+    expect(() => parseArgs(["--images"])).toThrow(
+      'Flag --images was removed. Use --type images instead.',
+    );
+    expect(() => parseArgs(["--subtitles"])).toThrow(
+      'Flag --subtitles was removed. Use --type subtitles instead.',
+    );
+    expect(() => parseArgs(["--text"])).toThrow(
+      'Flag --text was removed. Use --type text instead.',
+    );
+  });
+
+  test("rejects removed short flags with migration guidance", () => {
+    expect(() => parseArgs(["-s", "\\t"])).toThrow(
+      "Flag -s was removed. Use --separator instead.",
+    );
+    expect(() => parseArgs(["-C"])).toThrow(
+      "Flag -C was removed. Use --content instead.",
+    );
+    expect(() => parseArgs(["-R"])).toThrow(
+      "Flag -R was removed. Use --recursive instead.",
+    );
+    expect(() => parseArgs(["-H"])).toThrow(
+      "Flag -H was removed. Use --home-relative instead.",
+    );
+    expect(() => parseArgs(["-r", "3"])).toThrow(
+      "Flag -r was removed. Use --random instead.",
+    );
+    expect(() => parseArgs(["-b"])).toThrow(
+      "Flag -b was removed. Use --name-only instead.",
+    );
+    expect(() => parseArgs(["-q"])).toThrow(
+      "Flag -q was removed. Use --quote instead.",
+    );
+  });
+});
+
+describe("decodeSeparatorValue", () => {
+  test("decodes supported escape sequences", () => {
+    expect(decodeSeparatorValue("\\n\\t\\r\\\\")).toBe("\n\t\r\\");
+  });
+
+  test("leaves unknown escape sequences literal", () => {
+    expect(decodeSeparatorValue("\\x\\z")).toBe("\\x\\z");
+  });
+});
+
+describe("buildContentBlocks", () => {
+  test("formats one file as full path, blank line, and content", () => {
+    expect(
+      buildContentBlocks([
+        { resolvedPath: "/tmp/a.txt", fileContent: "alpha\nbeta" },
+      ]),
+    ).toBe("/tmp/a.txt\n\nalpha\nbeta");
+  });
+
+  test("joins multiple files with blank lines between blocks in order", () => {
+    expect(
+      buildContentBlocks([
+        { resolvedPath: "/tmp/a.txt", fileContent: "alpha" },
+        { resolvedPath: "/tmp/b.txt", fileContent: "beta" },
+      ]),
+    ).toBe("/tmp/a.txt\n\nalpha\n\n/tmp/b.txt\n\nbeta");
   });
 });
 
@@ -145,7 +284,9 @@ describe("validateParsedArgs", () => {
         useBasename: false,
         useQuotes: true,
       }),
-    ).toThrow("--home-relative cannot be combined with -C, -b, or -q");
+    ).toThrow(
+      "--home-relative cannot be combined with --content, --name-only, or --quote",
+    );
   });
 
   test("rejects home-relative with basename mode", () => {
@@ -161,7 +302,9 @@ describe("validateParsedArgs", () => {
         useBasename: true,
         useQuotes: false,
       }),
-    ).toThrow("--home-relative cannot be combined with -C, -b, or -q");
+    ).toThrow(
+      "--home-relative cannot be combined with --content, --name-only, or --quote",
+    );
   });
 
   test("rejects home-relative with content mode", () => {
@@ -177,7 +320,9 @@ describe("validateParsedArgs", () => {
         useBasename: false,
         useQuotes: false,
       }),
-    ).toThrow("--home-relative cannot be combined with -C, -b, or -q");
+    ).toThrow(
+      "--home-relative cannot be combined with --content, --name-only, or --quote",
+    );
   });
 });
 

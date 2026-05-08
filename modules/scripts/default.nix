@@ -2,6 +2,7 @@
 {
   imports = [
     ./format.nix
+    ./each.nix
     ./which_file.nix
     ./install-font.nix
     ./install-rpm.nix

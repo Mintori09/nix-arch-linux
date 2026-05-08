@@ -7,15 +7,9 @@ import { fileGroupNames, fileGroups } from "./file-groups";
 const SHELL_UNSAFE_PATH_PATTERN = /[\s"'`$!&;|<>(){}\[\]*?~#]/;
 const HOME_DIR = homedir();
 
-const SELECTOR_FLAG_TO_GROUP = {
-  "--subtitles": "subtitles",
-  "--images": "images",
-  "--text": "text",
-} as const;
-
-type Separator = " " | "," | "\t" | "\n";
 type FileGroupName = keyof typeof fileGroups;
 type Selector = "all" | FileGroupName;
+const TYPE_GROUPS: FileGroupName[] = ["images", "subtitles", "text"];
 
 type ParsedArgs = {
   copyContent: boolean;
@@ -24,7 +18,7 @@ type ParsedArgs = {
   randomCount: number | null;
   recursive: boolean;
   selectors: Selector[];
-  separator: Separator;
+  separator: string;
   useBasename: boolean;
   useQuotes: boolean;
 };
@@ -78,8 +72,33 @@ export function formatDisplayPath(
   return path;
 }
 
+export function decodeSeparatorValue(value: string): string {
+  return value.replace(/\\([ntr\\])/g, (_, escape: string) => {
+    switch (escape) {
+      case "n":
+        return "\n";
+      case "t":
+        return "\t";
+      case "r":
+        return "\r";
+      case "\\":
+        return "\\";
+      default:
+        return `\\${escape}`;
+    }
+  });
+}
+
+export function buildContentBlocks(
+  entries: { fileContent: string; resolvedPath: string }[],
+): string {
+  return entries
+    .map(({ resolvedPath, fileContent }) => `${resolvedPath}\n\n${fileContent}`)
+    .join("\n\n");
+}
+
 export function parseArgs(args: string[]): ParsedArgs {
-  let separator: Separator = " ";
+  let separator = " ";
   let useBasename = false;
   let useQuotes = false;
   let copyContent = false;
@@ -94,28 +113,52 @@ export function parseArgs(args: string[]): ParsedArgs {
 
     switch (arg) {
       case "-c":
-        separator = ",";
-        continue;
+        throw new Error('Flag -c was removed. Use --separator "," instead.');
       case "-t":
-        separator = "\t";
-        continue;
+        throw new Error('Flag -t was removed. Use --separator "\\t" instead.');
       case "-l":
-        separator = "\n";
+        throw new Error('Flag -l was removed. Use --separator "\\n" instead.');
+      case "-s":
+        throw new Error("Flag -s was removed. Use --separator instead.");
+      case "--separator": {
+        const value = args[index + 1];
+        if (value === undefined) {
+          throw new Error(
+            'Usage: --separator requires a value (e.g., --separator "\\n")',
+          );
+        }
+
+        const decoded = decodeSeparatorValue(value);
+        if (decoded.length === 0) {
+          throw new Error("--separator value cannot be empty");
+        }
+
+        separator = decoded;
+        index += 1;
         continue;
+      }
       case "-b":
+        throw new Error("Flag -b was removed. Use --name-only instead.");
+      case "--name-only":
         useBasename = true;
         continue;
       case "-q":
+        throw new Error("Flag -q was removed. Use --quote instead.");
+      case "--quote":
         useQuotes = true;
         continue;
       case "-C":
+        throw new Error("Flag -C was removed. Use --content instead.");
+      case "--content":
         copyContent = true;
         continue;
       case "-R":
+        throw new Error("Flag -R was removed. Use --recursive instead.");
       case "--recursive":
         recursive = true;
         continue;
       case "-H":
+        throw new Error("Flag -H was removed. Use --home-relative instead.");
       case "--home-relative":
         homeRelative = true;
         continue;
@@ -123,19 +166,46 @@ export function parseArgs(args: string[]): ParsedArgs {
         selectors.push("all");
         continue;
       case "--subtitles":
+        throw new Error(
+          "Flag --subtitles was removed. Use --type subtitles instead.",
+        );
       case "--images":
+        throw new Error(
+          "Flag --images was removed. Use --type images instead.",
+        );
       case "--text":
-        selectors.push(SELECTOR_FLAG_TO_GROUP[arg]);
+        throw new Error("Flag --text was removed. Use --type text instead.");
+      case "--type": {
+        const value = args[index + 1];
+        if (value === undefined) {
+          throw new Error(
+            "Usage: --type requires a value (images, subtitles, or text)",
+          );
+        }
+
+        if (!Object.hasOwn(fileGroups, value)) {
+          throw new Error(
+            `Invalid value for --type: ${value}. Valid groups: ${TYPE_GROUPS.join(", ")}`,
+          );
+        }
+
+        selectors.push(value as FileGroupName);
+        index += 1;
         continue;
-      case "-r": {
+      }
+      case "-r":
+        throw new Error("Flag -r was removed. Use --random instead.");
+      case "--random": {
         const countStr = args[index + 1];
         if (countStr === undefined) {
-          throw new Error("Usage: -r requires a number argument (e.g., -r 3)");
+          throw new Error(
+            "Usage: --random requires a number argument (e.g., --random 3)",
+          );
         }
 
         const parsed = parseInt(countStr, 10);
         if (Number.isNaN(parsed) || parsed <= 0) {
-          throw new Error(`Invalid number for -r flag: ${countStr}`);
+          throw new Error(`Invalid number for --random flag: ${countStr}`);
         }
 
         randomCount = parsed;
@@ -167,7 +237,7 @@ export function validateParsedArgs(args: ParsedArgs): void {
 
   if (args.copyContent || args.useBasename || args.useQuotes) {
     throw new Error(
-      "--home-relative cannot be combined with -C, -b, or -q",
+      "--home-relative cannot be combined with --content, --name-only, or --quote",
     );
   }
 }
@@ -296,27 +366,31 @@ async function collectSelectorFiles(
 
 function printUsage(): void {
   const selectorHelp = fileGroupNames
-    .map((name) => `  --${name.padEnd(11)} copy ${fileGroups[name].description.toLowerCase()}`)
+    .map(
+      (name) =>
+        `  --type ${name.padEnd(7)} copy ${fileGroups[name].description.toLowerCase()}`,
+    )
     .join("\n");
 
   console.error(
-    "Usage: bun run copy-files.ts [-c|-t|-l|-b|-q|-C|-H] [--all|--subtitles|--images|--text] [-R] [-r <n>] <file1> [file2] ...",
+    "Usage: bun run copy-files.ts [--separator <value>] [--content] [--home-relative] [--name-only] [--quote] [--all | --type <group> ...] [--recursive] [--random <n>] <file1> [file2] ...",
   );
   console.error(
-    "       fd ... | bun run copy-files.ts [-c|-t|-l|-b|-q|-C|-H] [-r <n>]",
+    "       fd ... | bun run copy-files.ts [--separator <value>] [--random <n>]",
   );
-  console.error("  -c  comma separated");
-  console.error("  -t  tab separated");
-  console.error("  -l  line separated (one per line)");
-  console.error("  -b  copy basename only (filename/directory name only)");
-  console.error("  -q  always wrap paths in double quotes");
-  console.error("  -C  copy file content instead of path");
-  console.error("  -H, --home-relative  render paths under $HOME as ~/...");
-  console.error("  -R, --recursive  search subdirectories for selector flags");
-  console.error("  --all        copy all files in the current directory scope");
+  console.error(
+    "  --separator     custom separator for full paths; supports \\n, \\t, \\r, \\\\",
+  );
+  console.error("  --content       copy content with a full path header for each file");
+  console.error("  --home-relative render paths under $HOME as ~/...");
+  console.error("  --name-only     copy basename only (filename/directory name only)");
+  console.error("  --quote         always wrap paths in double quotes");
+  console.error("  --recursive     search subdirectories for selector flags");
+  console.error("  --all           copy all files in the current directory scope");
   console.error(selectorHelp);
-  console.error("  -r <n>  randomly select n files to copy");
-  console.error("  (default: space separated, full path)");
+  console.error("  --random <n>    randomly select n files to copy");
+  console.error('  Examples: --separator "\\n", --separator "\\t"');
+  console.error("  (default: full paths separated by spaces)");
 }
 
 async function main() {
@@ -351,7 +425,7 @@ async function main() {
   files = applyRandomSelection(files, parsedArgs.randomCount);
 
   const existingFiles: string[] = [];
-  const fileContents: string[] = [];
+  const contentEntries: { fileContent: string; resolvedPath: string }[] = [];
 
   for (const file of files) {
     if (!existsSync(file)) {
@@ -364,7 +438,7 @@ async function main() {
     if (parsedArgs.copyContent) {
       try {
         const content = readFileSync(fullPath, "utf-8");
-        fileContents.push(content);
+        contentEntries.push({ fileContent: content, resolvedPath: fullPath });
         console.log(`✓ Read content: ${file}`);
       } catch {
         console.error(`✗ Failed to read: ${file}`);
@@ -384,12 +458,12 @@ async function main() {
   }
 
   if (parsedArgs.copyContent) {
-    if (fileContents.length === 0) {
+    if (contentEntries.length === 0) {
       console.error("No valid files read to copy content");
       process.exit(1);
     }
 
-    const clipboardContent = fileContents.join("\n");
+    const clipboardContent = buildContentBlocks(contentEntries);
     const proc = Bun.spawn(["wl-copy"], {
       stdin: new Response(clipboardContent),
     });
@@ -398,7 +472,7 @@ async function main() {
 
     if (proc.exitCode === 0) {
       console.log(
-        `\nCopied content of ${fileContents.length} file(s) to clipboard`,
+        `\nCopied content of ${contentEntries.length} file(s) to clipboard`,
       );
       return;
     }
