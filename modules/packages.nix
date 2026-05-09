@@ -28,6 +28,7 @@
     opencode
 
     # CLI tools
+    xh
     tdf
     dust
     aichat
@@ -35,8 +36,8 @@
     bun
     chafa
     ffmpegthumbnailer
-    glow
     hexyl
+    jq
     mise
     nixfmt
     rust-script

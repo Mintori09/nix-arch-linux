@@ -95,6 +95,8 @@ describe("parseArgs", () => {
       ]),
     ).toEqual({
       copyContent: false,
+      contentPathMode: "none",
+      dryRun: false,
       files: ["movie.mkv"],
       homeRelative: true,
       randomCount: null,
@@ -251,6 +253,15 @@ describe("buildContentBlocks", () => {
         { resolvedPath: "/tmp/b.txt", fileContent: "beta" },
       ]),
     ).toBe("/tmp/a.txt\n\nalpha\n\n/tmp/b.txt\n\nbeta");
+  });
+
+  test("returns just content when path mode is none", () => {
+    expect(
+      buildContentBlocks([
+        { resolvedPath: "/tmp/a.txt", fileContent: "alpha" },
+        { resolvedPath: "/tmp/b.txt", fileContent: "beta" },
+      ], "none"),
+    ).toBe("alpha\n\nbeta");
   });
 });
 

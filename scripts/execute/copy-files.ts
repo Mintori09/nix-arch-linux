@@ -11,8 +11,12 @@ type FileGroupName = keyof typeof fileGroups;
 type Selector = "all" | FileGroupName;
 const TYPE_GROUPS: FileGroupName[] = ["images", "subtitles", "text"];
 
+type ContentPathMode = "only-name" | "fullpath" | "relative" | "none";
+
 type ParsedArgs = {
   copyContent: boolean;
+  contentPathMode: ContentPathMode;
+  dryRun: boolean;
   files: string[];
   homeRelative: boolean;
   randomCount: number | null;
@@ -52,9 +56,7 @@ export function formatHomeRelativePath(path: string): string {
     return path;
   }
 
-  return relPath === ""
-    ? "~"
-    : `~/${escapeShellPath(relPath)}`;
+  return relPath === "" ? "~" : `~/${escapeShellPath(relPath)}`;
 }
 
 export function formatDisplayPath(
@@ -91,9 +93,24 @@ export function decodeSeparatorValue(value: string): string {
 
 export function buildContentBlocks(
   entries: { fileContent: string; resolvedPath: string }[],
+  pathMode: ContentPathMode,
+  cwd: string = process.cwd(),
 ): string {
   return entries
-    .map(({ resolvedPath, fileContent }) => `${resolvedPath}\n\n${fileContent}`)
+    .map(({ resolvedPath, fileContent }) => {
+      if (pathMode === "none") {
+        return fileContent;
+      }
+      let displayPath: string;
+      if (pathMode === "only-name") {
+        displayPath = basename(resolvedPath);
+      } else if (pathMode === "relative") {
+        displayPath = relative(cwd, resolvedPath);
+      } else {
+        displayPath = resolvedPath;
+      }
+      return `${displayPath}\n\n${fileContent}`;
+    })
     .join("\n\n");
 }
 
@@ -105,6 +122,8 @@ export function parseArgs(args: string[]): ParsedArgs {
   let randomCount: number | null = null;
   let recursive = false;
   let homeRelative = false;
+  let contentPathMode: ContentPathMode = "none";
+  let dryRun = false;
   const selectors: Selector[] = [];
   const files: string[] = [];
 
@@ -151,6 +170,32 @@ export function parseArgs(args: string[]): ParsedArgs {
         throw new Error("Flag -C was removed. Use --content instead.");
       case "--content":
         copyContent = true;
+        continue;
+      case "--content-path-mode": {
+        const value = args[index + 1];
+        if (value === undefined) {
+          throw new Error(
+            "Usage: --content-path-mode requires a value (only-name, fullpath, relative)",
+          );
+        }
+
+        if (
+          value !== "only-name" &&
+          value !== "fullpath" &&
+          value !== "relative" &&
+          value !== "none"
+        ) {
+          throw new Error(
+            `Invalid value for --content-path-mode: ${value}. Valid values: only-name, fullpath, relative, none`,
+          );
+        }
+
+        contentPathMode = value;
+        index += 1;
+        continue;
+      }
+      case "--dry-run":
+        dryRun = true;
         continue;
       case "-R":
         throw new Error("Flag -R was removed. Use --recursive instead.");
@@ -219,6 +264,8 @@ export function parseArgs(args: string[]): ParsedArgs {
 
   return {
     copyContent,
+    contentPathMode,
+    dryRun,
     files,
     homeRelative,
     randomCount,
@@ -381,12 +428,24 @@ function printUsage(): void {
   console.error(
     "  --separator     custom separator for full paths; supports \\n, \\t, \\r, \\\\",
   );
-  console.error("  --content       copy content with a full path header for each file");
+  console.error(
+    "  --content       copy content with a full path header for each file",
+  );
+  console.error(
+    "  --content-path-mode path format for --content: only-name, fullpath, relative",
+  );
+  console.error(
+    "  --dry-run       show content that would be copied without actually copying",
+  );
   console.error("  --home-relative render paths under $HOME as ~/...");
-  console.error("  --name-only     copy basename only (filename/directory name only)");
+  console.error(
+    "  --name-only     copy basename only (filename/directory name only)",
+  );
   console.error("  --quote         always wrap paths in double quotes");
   console.error("  --recursive     search subdirectories for selector flags");
-  console.error("  --all           copy all files in the current directory scope");
+  console.error(
+    "  --all           copy all files in the current directory scope",
+  );
   console.error(selectorHelp);
   console.error("  --random <n>    randomly select n files to copy");
   console.error('  Examples: --separator "\\n", --separator "\\t"');
@@ -426,35 +485,38 @@ async function main() {
 
   const existingFiles: string[] = [];
   const contentEntries: { fileContent: string; resolvedPath: string }[] = [];
-
-  for (const file of files) {
-    if (!existsSync(file)) {
-      console.error(`✗ Not found: ${file}`);
-      continue;
-    }
-
-    const fullPath = realpathSync(file);
-
-    if (parsedArgs.copyContent) {
-      try {
-        const content = readFileSync(fullPath, "utf-8");
-        contentEntries.push({ fileContent: content, resolvedPath: fullPath });
-        console.log(`✓ Read content: ${file}`);
-      } catch {
-        console.error(`✗ Failed to read: ${file}`);
+  if (!parsedArgs.dryRun) {
+    for (const file of files) {
+      if (!existsSync(file)) {
+        console.error(`✗ Not found: ${file}`);
+        continue;
       }
 
-      continue;
+      const fullPath = realpathSync(file);
+
+      if (parsedArgs.copyContent) {
+        try {
+          const content = readFileSync(fullPath, "utf-8");
+          contentEntries.push({ fileContent: content, resolvedPath: fullPath });
+          console.log(`✓ Read content: ${file}`);
+        } catch {
+          console.error(`✗ Failed to read: ${file}`);
+        }
+
+        continue;
+      }
+
+      const pathToRender = parsedArgs.useBasename
+        ? basename(fullPath)
+        : fullPath;
+      const displayPath = formatDisplayPath(pathToRender, {
+        alwaysQuote: parsedArgs.useQuotes,
+        homeRelative: parsedArgs.homeRelative,
+      });
+
+      existingFiles.push(displayPath);
+      console.log(`✓ Found: ${displayPath}`);
     }
-
-    const pathToRender = parsedArgs.useBasename ? basename(fullPath) : fullPath;
-    const displayPath = formatDisplayPath(pathToRender, {
-      alwaysQuote: parsedArgs.useQuotes,
-      homeRelative: parsedArgs.homeRelative,
-    });
-
-    existingFiles.push(displayPath);
-    console.log(`✓ Found: ${displayPath}`);
   }
 
   if (parsedArgs.copyContent) {
@@ -463,7 +525,11 @@ async function main() {
       process.exit(1);
     }
 
-    const clipboardContent = buildContentBlocks(contentEntries);
+    const clipboardContent = buildContentBlocks(
+      contentEntries,
+      parsedArgs.contentPathMode,
+    );
+
     const proc = Bun.spawn(["wl-copy"], {
       stdin: new Response(clipboardContent),
     });
@@ -487,6 +553,13 @@ async function main() {
   }
 
   const clipboardContent = existingFiles.join(parsedArgs.separator);
+
+  if (parsedArgs.dryRun) {
+    // console.log(`\n[Dry run] Would copy ${existingFiles.length} path(s):`);
+    console.log(clipboardContent);
+    return;
+  }
+
   const proc = Bun.spawn(["wl-copy"], {
     stdin: new Response(clipboardContent),
   });

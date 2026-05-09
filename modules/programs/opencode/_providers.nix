@@ -8,7 +8,6 @@
     "cerebras"
     "cloudflare-ai-gateway"
     "cortecs"
-    "deepseek"
     "deep-infra"
     "github-copilot"
     "groq"
@@ -19,7 +18,6 @@
     "lmstudio"
     "moonshot-ai"
     "nebius-token-factory"
-    "ollama-cloud"
     "openai"
     "sap-ai-core"
     "ovhcloud-ai-endpoints"
@@ -33,8 +31,10 @@
 
   enabled = [
     "openrouter"
+    "ollama-cloud"
     "ollama"
     "opencode"
+    "deepseek"
     "nano-gpt"
   ];
 }

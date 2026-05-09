@@ -92,6 +92,8 @@ let
           '--name-only[copy basename only instead of the full path]'
           '--quote[always wrap full paths in double quotes]'
           '--content[copy content with a path header for each file]'
+          '--content-path-mode[path format for --content (only-name, fullpath, relative)]:mode:(only-name fullpath relative)'
+          '--dry-run[show content that would be copied without actually copying]'
           '--home-relative[render paths under $HOME as ~/...]'
           '--recursive[search subdirectories for selector flags]'
           '--all[copy all files in the current directory scope as full paths]'
