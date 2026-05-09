@@ -171,6 +171,19 @@ in
         }
 
         compdef _fn fn
+
+        # FZF-tab completion for dw - shows scaffold files in preview
+        zstyle ':fzf-tab:complete:dw:*' fzf-preview \
+          'case $word in \
+            python) echo "scaffold: requirements.txt" ;; \
+            node) echo "scaffold: package.json" ;; \
+            ruby) echo "scaffold: Gemfile" ;; \
+            *) echo "no scaffold" ;; \
+          esac'
+        zstyle ':fzf-tab:complete:dw:*' fzf-flags \
+          '--prompt=dw > ' \
+          '--height=40%' \
+          '--reverse'
         typeset -U path
         path=(
           ${systemPathPriorityZsh}

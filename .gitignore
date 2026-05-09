@@ -10,3 +10,4 @@ tools/ask/ask
 tools/mdview/network*.json
 tools/mdview/network Requests.json
 tools/mdview/vendor/
+plans/

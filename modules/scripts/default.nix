@@ -19,5 +19,6 @@
     ./remove.nix
     ./compress-wrap.nix
     ./open.nix
+    ./direnv-wrap.nix
   ];
 }
