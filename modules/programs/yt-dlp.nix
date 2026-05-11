@@ -3,47 +3,79 @@
   pkgs,
   ...
 }:
+
 let
-  configFile = "yt-dlp/config";
+  youtubeDir = "${config.home.homeDirectory}/Desktop/Youtube";
 in
 {
   home.packages = with pkgs; [
     aria2
     ffmpeg
+    yt-dlp
   ];
 
-  xdg.configFile."${configFile}" = {
+  xdg.configFile."yt-dlp/config" = {
     force = true;
-    text = ''
-      # Output settings (yt-dlp creates folders in the path automatically)
-      -o "${config.home.homeDirectory}/Desktop/Youtube/%(upload_date)s.%(title).100s.%(ext)s"
 
-      # Video Quality and Networking
+    text = ''
+      # Output settings
+      # yt-dlp tự tạo folder nếu chưa có
+      -o "${youtubeDir}/%(upload_date)s.%(title).100s.%(ext)s"
+
+      # Video quality
+      # bv+ba: best video + best audio
+      # /b: fallback sang best single file nếu không có stream tách riêng
       --format "bv+ba/b"
+
+      # Networking
       --force-ipv4
+
+      # Filename safety
       --trim-filenames 100
 
-      # Post-processing / Embedding
+      # Không dừng cả playlist nếu một video lỗi
+      --ignore-errors
+      --no-abort-on-error
+
+      # Metadata / chapters / thumbnail
       --embed-metadata
       --embed-thumbnail
       --embed-chapters
-      --write-auto-sub
-      --write-sub
-      --sub-langs en
+
+      # Subtitles
+      # Có sub thì tải/nhúng, không có thì bỏ qua
+      --write-subs
+      --write-auto-subs
+      --sub-langs "vi.*,en.*"
+      --sub-format "best"
       --embed-subs
 
-      # Plugins and Tools
-      --yes-playlist
-      --sponsorblock-remove sponsor,selfpromo,interaction
-      # --downloader aria2c
-      # --downloader-args aria2c:'--continue --min-split-size=5M --max-connection-per-server=4'
+      # Dùng mkv để embed subtitles ổn định hơn mp4
+      --merge-output-format mkv
 
-      # Browser Integration
+      # Playlist
+      --yes-playlist
+
+      # SponsorBlock
+      --sponsorblock-remove sponsor,selfpromo,interaction
+
+      # Browser cookies
       --cookies-from-browser firefox
+
+      # Aria2 disabled by default because it can be slower for YouTube
+      # --downloader aria2c
+      # --downloader-args aria2c:'--continue --min-split-size=20M --max-connection-per-server=2 --split=2'
     '';
   };
 
   home.shellAliases = {
-    download-music = "yt-dlp -x --audio-format mp3 --audio-quality 0 -o '${config.home.homeDirectory}/Desktop/Youtube/%(title)s.%(ext)s'";
+    # Tải nhạc mp3
+    download-music = "yt-dlp -x --audio-format mp3 --audio-quality 0 -o '${youtubeDir}/%(title).100s.%(ext)s'";
+
+    # Tải video bình thường bằng yt-dlp trực tiếp
+    ytdlp = "yt-dlp";
+
+    # Chỉ dùng aria2 khi muốn test thủ công
+    ytdlp-aria = "yt-dlp --downloader aria2c --downloader-args aria2c:'--continue --min-split-size=20M --max-connection-per-server=2 --split=2'";
   };
 }
