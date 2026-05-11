@@ -137,6 +137,20 @@ in
           zvm_bindkey visual 'd' zvm_vi_delete
           zvm_bindkey visual '^?' zvm_vi_delete
           zvm_bindkey visual '^H' zvm_vi_delete
+
+          # Ctrl+O: plaintext file search → nvim
+          fzf-select() {
+            emulate -L zsh
+            local file
+            file="$(
+              ${pkgs.ripgrep}/bin/rg -l '.*' --hidden --glob '!.git' --glob '!.venv' --glob '!node_modules' --glob '!target' 2>/dev/null |
+              fzf --height=80% --reverse \
+                --preview '${pkgs.bat}/bin/bat --color=always --line-range :50 {}'
+            )" && [[ -n "$file" ]] && nvim "$file"
+          }
+          zle -N fzf-select
+          bindkey -M viins '^O' fzf-select
+          zvm_bindkey vicmd '^O' fzf-select
         }
 
         function zvm_after_lazy_keybindings() {

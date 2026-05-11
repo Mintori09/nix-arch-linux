@@ -81,6 +81,7 @@ in
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
     co = "wl-copy";
     cat = "bat";
+    ai-rename = "ai-renamer --provider=ollama ---model=gemma3:4b-it-qat --chars 100 --language English";
 
   };
 }
