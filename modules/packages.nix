@@ -78,5 +78,6 @@
 
     # Program
     slack
+    signal-desktop
   ];
 }
