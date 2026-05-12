@@ -29,12 +29,4 @@
     "google"
   ];
 
-  enabled = [
-    "openrouter"
-    "ollama-cloud"
-    "ollama"
-    "opencode"
-    "deepseek"
-    "nano-gpt"
-  ];
 }

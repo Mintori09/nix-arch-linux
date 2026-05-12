@@ -46,7 +46,7 @@ in
       # Có sub thì tải/nhúng, không có thì bỏ qua
       --write-subs
       --write-auto-subs
-      --sub-langs "vi.*,en.*"
+      --sub-langs "en.*"
       --sub-format "best"
       --embed-subs
 

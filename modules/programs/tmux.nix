@@ -1,128 +1,287 @@
 { pkgs, ... }:
 
 {
+  home.packages = with pkgs; [
+    fzf
+    wl-clipboard
+  ];
+
+  home.shellAliases = {
+    # TMUX
+    ta = "tmux attach -t";
+    tn = "tmux new -s";
+    tk = "tmux kill-session -t";
+    td = "tmux detach";
+    tls = "tmux ls";
+    tl = "tmux list-sessions";
+  };
+
+  programs.zsh.initContent = ''
+    # Attach tmux session with fzf.
+    # - 0 session: create/attach "main"
+    # - 1 session: attach directly
+    # - 2+ sessions: select with fzf
+    # - Esc in fzf: do nothing
+    t() {
+      local sessions count session
+
+      sessions=$(tmux list-sessions 2>/dev/null)
+      count=$(printf "%s\n" "$sessions" | sed '/^$/d' | wc -l | tr -d ' ')
+
+      if [ "$count" = "0" ]; then
+        tmux new-session -A -s main
+      elif [ "$count" = "1" ]; then
+        session=$(printf "%s\n" "$sessions" | cut -d: -f1)
+        tmux attach-session -t "$session"
+      else
+        session=$(
+          printf "%s\n" "$sessions" |
+            fzf \
+              --prompt="tmux session> " \
+              --reverse \
+              --preview='tmux list-windows -t {1} 2>/dev/null' \
+              --preview-window=right:60% |
+            cut -d: -f1
+        )
+
+        [ -n "$session" ] && tmux attach-session -t "$session"
+      fi
+    }
+  '';
+
   programs.tmux = {
     enable = true;
 
     shell = "${pkgs.zsh}/bin/zsh";
-    terminal = "xterm-256color";
+    terminal = "tmux-256color";
 
     baseIndex = 1;
     keyMode = "vi";
     mouse = true;
     escapeTime = 0;
+    historyLimit = 100000;
 
-    extraConfig = ''
-      # 🧰 Core Settings
-      set -gq allow-passthrough on
-      set -g visual-activity off
-      set -g default-terminal "xterm-256color"
-      set -ag terminal-overrides ",xterm-256color:RGB"
-
-      setw -g monitor-activity on
-      set -g visual-activity on
-      set -g visual-bell on
-      set -g bell-action other
-
-      set -g renumber-windows on
-
-      # 🔑 Prefix & Keybindings
-
-      unbind C-b
-      set -g prefix C-Space
-      bind C-Space send-prefix
-
-      bind r source-file ~/.config/tmux/tmux.conf \; display "🔁 Reloaded!"
-
-      bind -r C-h select-pane -L
-      bind -r C-j select-pane -D
-      bind -r C-k select-pane -U
-      bind -r C-l select-pane -R
-
-      bind -r h resize-pane -L 5
-      bind -r j resize-pane -D 5
-      bind -r k resize-pane -U 5
-      bind -r l resize-pane -R 5
-
-      bind v split-window -h -c "#{pane_current_path}"
-      bind s split-window -v -c "#{pane_current_path}"
-      bind y setw synchronize-panes
-
-      bind -r ^ last-window
-
-      bind-key ? display-popup -E 'tmux list-keys | fzf --reverse --ansi --preview "echo {}" | cut -f 2 | xargs -I % tmux display-message "%"'
-
-      # 🧭 Appearance
-
-      set -g pane-border-style "fg=red,bg=default"
-      set -g pane-active-border-style "fg=green,bg=default"
-
-      setw -g mode-style "bg=black,fg=colour154"
-
-      set -g status-position bottom
-      set -g status-justify centre
-      set -g status-bg black
-      set -g status-left-length 100
-      set -g status-right-length 100
-      setw -g window-status-separator \'\'
-
-      # 🎨 Statusline Theme
-
-      set -g status-left '#[fg=white,bg=blue]  #{cursor_x},#{cursor_y} #[fg=blue,bg=green]#[fg=black,bg=green] #S #{prefix_highlight} #[fg=green,bg=black] #W #(whoami)  CPU: #{cpu_percentage}  Online:#{online_status}'
-
-      set -g status-right '#[fg=white,bg=black]Bat: #{battery_percentage} #[fg=blue,bg=black]#[fg=white,bg=blue]Continuum:#{continuum_status} #[fg=blue,bg=white]#{vm_status} #[fg=white,bg=black]#{docker_status}'
-    '';
+    sensibleOnTop = true;
 
     plugins = with pkgs.tmuxPlugins; [
       sensible
       yank
-      prefix-highlight
       tmux-fzf
-      resurrect
-      continuum
       vim-tmux-navigator
-      cpu
-      battery
-      online-status
 
       {
-        plugin = pkgs.tmuxPlugins.mkTmuxPlugin {
-          pluginName = "tmux-docker-status";
-          version = "latest";
-          src = pkgs.fetchFromGitHub {
-            owner = "stonevil";
-            repo = "tmux-docker-status";
-            rev = "606c7af";
-            sha256 = "0qypssgzmrw5n9pikyji8ny7mz0jam0352fqcz2jicdvynk1mnbk";
-          };
-        };
+        plugin = resurrect;
+        extraConfig = ''
+          set -g @resurrect-capture-pane-contents 'on'
+          set -g @resurrect-strategy-vim 'session'
+          set -g @resurrect-strategy-nvim 'session'
+        '';
       }
 
-      # {
-      #   plugin = pkgs.tmuxPlugins.mkTmuxPlugin {
-      #     pluginName = "tmux-fingers";
-      #     version = "latest";
-      #     src = pkgs.fetchFromGitHub {
-      #       owner = "Morantron";
-      #       repo = "tmux-fingers";
-      #       rev = "master";
-      #       sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-      #     };
-      #   };
-      # }
+      {
+        plugin = continuum;
+        extraConfig = ''
+          set -g @continuum-restore 'on'
+          set -g @continuum-save-interval '15'
+        '';
+      }
 
       {
         plugin = pkgs.tmuxPlugins.mkTmuxPlugin {
-          pluginName = "tmux-split-statusbar";
-          version = "latest";
+          pluginName = "dotbar";
+          version = "0.3.2";
+
           src = pkgs.fetchFromGitHub {
-            owner = "charlietag";
-            repo = "tmux-split-statusbar";
-            rev = "33a367b";
-            sha256 = "1ds5910s5wkp4r84qp7rd704shwil0q3h7yaqd2lfif75jw9s37x";
+            owner = "vaaleyard";
+            repo = "tmux-dotbar";
+            rev = "0.3.2";
+
+            # Nếu hash này lỗi, xem phần "Cách lấy hash" bên dưới.
+            hash = "sha256-WaRKepmPqiE+W8Tm0dBc6hGiqqZP122eXjrG0rJnt0w=";
           };
         };
+
+        extraConfig = ''
+          # ---------------------------------------------------------------------
+          # tmux-dotbar
+          # ---------------------------------------------------------------------
+
+          set -g @tmux-dotbar-bg "#0B0E14"
+          set -g @tmux-dotbar-fg "#475266"
+          set -g @tmux-dotbar-fg-current "#BFBDB6"
+          set -g @tmux-dotbar-fg-session "#565B66"
+          set -g @tmux-dotbar-fg-prefix "#95E6CB"
+
+          set -g @tmux-dotbar-position "top"
+          set -g @tmux-dotbar-justify "absolute-centre"
+
+          set -g @tmux-dotbar-left "true"
+          set -g @tmux-dotbar-right "true"
+          set -g @tmux-dotbar-status-right-text " %H:%M "
+
+          set -g @tmux-dotbar-session-position "left"
+          set -g @tmux-dotbar-session-text " #S "
+          set -g @tmux-dotbar-rounded "true"
+
+          set -g @tmux-dotbar-bold-status "false"
+          set -g @tmux-dotbar-bold-current-window "true"
+
+          set -g @tmux-dotbar-window-status-format " #I:#W "
+          set -g @tmux-dotbar-window-status-separator " • "
+
+          set -g @tmux-dotbar-maximized-icon "󰊓"
+          set -g @tmux-dotbar-show-maximized-icon-for-all-tabs "false"
+
+          set -g @tmux-dotbar-ssh-enabled "true"
+          set -g @tmux-dotbar-ssh-icon "󰌘"
+          set -g @tmux-dotbar-ssh-icon-only "false"
+        '';
       }
     ];
+
+    extraConfig = ''
+                  # ---------------------------------------------------------------------
+                  # Core
+                  # ---------------------------------------------------------------------
+      unbind t
+
+      bind -r t run-shell '\
+        if [ "#{session_name}" != "float" ]; then \
+          tmux has-session -t float 2>/dev/null || \
+          tmux new-session -d -s float -c "#{pane_current_path}"; \
+          tmux display-popup -d "#{pane_current_path}" -w 90% -h 85% \
+            -E "tmux attach-session -t float"; \
+        fi'
+            bind p display-popup -w 100% -h 100% -E '
+            tmux list-panes -F "#{pane_id} | #I.#P | #{pane_current_command} | #{pane_current_path}" |
+            fzf \
+              --delimiter="|" \
+              --preview "tmux capture-pane -pt {1}" \
+              --preview-window=right:70% |
+            cut -d"|" -f1 |
+            xargs tmux select-pane -t
+            '
+
+                  set -gq allow-passthrough on
+
+                  set -as terminal-features ',xterm-256color:RGB'
+                  set -as terminal-features ',tmux-256color:RGB'
+                  set -as terminal-features ',*:RGB'
+
+                  set -g renumber-windows on
+                  set -g focus-events on
+
+                  setw -g monitor-activity on
+                  set -g visual-activity on
+                  set -g visual-bell on
+                  set -g bell-action other
+
+                  setw -g allow-rename off
+                  set -g detach-on-destroy off
+                  set -g display-time 4000
+                  set -g set-clipboard on
+
+                  # ---------------------------------------------------------------------
+                  # Prefix & reload
+                  # ---------------------------------------------------------------------
+
+                  unbind C-b
+
+                  set -g prefix C-Space
+                  bind C-Space send-prefix
+                  bind C-a send-prefix
+
+                  bind r source-file -q ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
+
+                  # ---------------------------------------------------------------------
+                  # Pane navigation / resize
+                  # ---------------------------------------------------------------------
+
+                  bind -r C-h select-pane -L
+                  bind -r C-j select-pane -D
+                  bind -r C-k select-pane -U
+                  bind -r C-l select-pane -R
+
+                  bind -r h resize-pane -L 5
+                  bind -r j resize-pane -D 5
+                  bind -r k resize-pane -U 5
+                  bind -r l resize-pane -R 5
+
+                  bind v split-window -h -c "#{pane_current_path}"
+                  bind s split-window -v -c "#{pane_current_path}"
+                  bind y setw synchronize-panes
+
+                  # ---------------------------------------------------------------------
+                  # Session / window workflow
+                  # ---------------------------------------------------------------------
+
+                  bind C new-session
+                  bind w new-window -c "#{pane_current_path}"
+                  bind o choose-tree -Zw
+
+                  bind x kill-pane
+                  bind X kill-window
+                  bind D detach-client
+
+                  bind -r ^ last-window
+
+                  bind , command-prompt -I "#W" "rename-window '%%'"
+                  bind '$' command-prompt -I "#S" "rename-session '%%'"
+
+                  # ---------------------------------------------------------------------
+                  # Copy mode - Vim style
+                  # ---------------------------------------------------------------------
+
+                  bind [ copy-mode
+
+                  bind-key -T copy-mode-vi v send -X begin-selection
+                  bind-key -T copy-mode-vi C-v send -X rectangle-toggle
+                  bind-key -T copy-mode-vi y send -X copy-selection-and-cancel
+                  bind-key -T copy-mode-vi Escape send -X cancel
+
+                  # ---------------------------------------------------------------------
+                  # FZF helpers
+                  # ---------------------------------------------------------------------
+
+                  bind-key ? display-popup -E 'tmux list-keys | fzf --reverse --ansi --preview "echo {}" | cut -f 2 | xargs -I % tmux display-message "%"'
+
+                  bind W display-popup -w 100% -h 100% -E '\
+                    tmux list-windows -a -F "#{session_name}:#{window_index}|#{window_name}|#{window_layout}" | \
+                    fzf --reverse --header " switch window " \
+                      --delimiter="|" \
+                      --preview "tmux capture-pane -pt {1}.0" \
+                      --preview-window=right:70% | \
+                    cut -d"|" -f1 | tr -d " " | \
+                    xargs tmux select-window -t'
+
+                  bind S display-popup -w 100% -h 100% -E '\
+                    tmux list-sessions -F "#{session_name} | #{session_windows} windows" | \
+                    fzf --reverse --header " switch session " | \
+                    cut -d"|" -f1 | tr -d " " | \
+                    xargs tmux switch-client -t'
+
+                  # ---------------------------------------------------------------------
+                  # Popups
+                  # ---------------------------------------------------------------------
+
+                  bind -r g display-popup -d '#{pane_current_path}' -w80% -h80% -E lazygit
+
+                  bind -r y run-shell '\
+                    SESSION="opencode-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
+                    if [ "#{session_name}" != "$SESSION" ]; then \
+                      tmux has-session -t "$SESSION" 2>/dev/null || \
+                      tmux new-session -d -s "$SESSION" -c "#{pane_current_path}" "opencode"; \
+                      tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
+                    fi'
+
+                  # ---------------------------------------------------------------------
+                  # Appearance not managed by dotbar
+                  # ---------------------------------------------------------------------
+
+                  set -g pane-border-style "fg=red,bg=default"
+                  set -g pane-active-border-style "fg=green,bg=default"
+
+                  setw -g mode-style "bg=black,fg=colour154"
+    '';
   };
 }

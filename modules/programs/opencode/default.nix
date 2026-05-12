@@ -63,7 +63,6 @@ in
       autoupdate = false;
       share = "disabled";
       disabled_providers = providers.disabled;
-      enabled_providers = providers.enabled;
       mcp = mcp;
       inherit (languages) formatter lsp;
     };

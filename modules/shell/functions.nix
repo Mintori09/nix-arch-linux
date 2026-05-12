@@ -43,6 +43,44 @@
           local file=$(fzf)
           [ -n "$file" ] && nvim "$file"
       }
+
+      envf() {
+          local out expect key value
+
+          out="$(
+              env | cut -d= -f1 | sort -u |
+              fzf --height 60% --reverse \
+                  --prompt="ENV> " \
+                  --header="Enter: copy value | Ctrl-Y: copy name" \
+                  --expect=ctrl-y \
+                  --preview 'printenv {} 2>/dev/null' \
+                  --preview-window='right,60%,wrap'
+          )" || return 1
+
+          expect="$(printf %s "$out" | head -n 1)"
+          key="$(printf %s "$out" | tail -n 1)"
+
+          [ -z "$key" ] && return 0
+
+          if [[ "$expect" == "ctrl-y" ]]; then
+              value="$key"
+          else
+              value="$(printenv "$key" 2>/dev/null || true)"
+          fi
+
+          if command -v wl-copy >/dev/null 2>&1; then
+              printf %s "$value" | wl-copy
+          elif command -v xclip >/dev/null 2>&1; then
+              printf %s "$value" | xclip -selection clipboard
+          elif command -v pbcopy >/dev/null 2>&1; then
+              printf %s "$value" | pbcopy
+          else
+              echo "No clipboard tool found (wl-copy/xclip/pbcopy)."
+              return 1
+          fi
+
+          echo "Copied: $key"
+      }
       codex-with() {
         local name="$1"
         shift
@@ -114,6 +152,43 @@
           [ -n "$file" ] && nvim "$file"
       }
 
+      envf() {
+          local out expect key value
+
+          out="$(
+              env | cut -d= -f1 | sort -u |
+              fzf --height 60% --reverse \
+                  --prompt="ENV> " \
+                  --header="Enter: copy value | Ctrl-Y: copy name" \
+                  --expect=ctrl-y \
+                  --preview 'printenv {} 2>/dev/null' \
+                  --preview-window='right,60%,wrap'
+          )" || return 1
+
+          expect="$(printf %s "$out" | head -n 1)"
+          key="$(printf %s "$out" | tail -n 1)"
+
+          [ -z "$key" ] && return 0
+
+          if [ "$expect" = "ctrl-y" ]; then
+              value="$key"
+          else
+              value="$(printenv "$key" 2>/dev/null || true)"
+          fi
+
+          if command -v wl-copy >/dev/null 2>&1; then
+              printf %s "$value" | wl-copy
+          elif command -v xclip >/dev/null 2>&1; then
+              printf %s "$value" | xclip -selection clipboard
+          elif command -v pbcopy >/dev/null 2>&1; then
+              printf %s "$value" | pbcopy
+          else
+              echo "No clipboard tool found (wl-copy/xclip/pbcopy)."
+              return 1
+          fi
+
+          echo "Copied: $key"
+      }
       prefer_nix() {
           local pkg="$1"
 

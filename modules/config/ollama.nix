@@ -2,7 +2,7 @@
   programs.zsh = {
     enable = true;
 
-    initExtra = ''
+    initContent = ''
       # Ollama zsh completions
       #compdef ollama
 

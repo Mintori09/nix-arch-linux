@@ -17,6 +17,16 @@
     enabled = true;
     timeout = 10000;
   };
+  tavily-remote-mcp = {
+    type = "local";
+    command = [
+      "npx"
+      "mcp-remote"
+      "https://mcp.tavily.com/mcp"
+    ];
+    env = { };
+    enabled = true;
+  };
   playwright = {
     type = "local";
     command = [
