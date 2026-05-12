@@ -93,13 +93,53 @@ application/pdf)
 video/*)
 	cache_file=$(get_cache_path "$file" ".jpg")
 	if [[ ! -f "$cache_file" ]]; then
-		if command -v ffmpegthumbnailer >/dev/null; then
-			ffmpegthumbnailer -i "$file" -o "$cache_file" -s 0 -q 5 2>/dev/null
-		else
-			ffmpeg -y -i "$file" -ss 00:00:02 -vframes 1 -an -q:v 5 "$cache_file" >/dev/null 2>&1
+		if command -v ffprobe >/dev/null; then
+			cover_info=$(ffprobe -v error -select_streams v \
+				-show_entries stream=index:stream_tags=title \
+				-of csv=p=0 "$file" 2>/dev/null | grep -im1 "cover\|thumbnail\|poster")
+			if [[ -n "$cover_info" ]]; then
+				stream_idx=$(echo "$cover_info" | cut -d, -f1)
+				ffmpeg -y -i "$file" -map "0:v:${stream_idx}" -frames:v 1 -q:v 3 "$cache_file" 2>/dev/null
+			fi
+		fi
+
+		if [[ ! -f "$cache_file" ]] && command -v ffmpeg >/dev/null; then
+			ffmpeg -y -i "$file" -map 0:t:0 -c copy "$cache_file" 2>/dev/null
+		fi
+
+		if [[ ! -f "$cache_file" ]]; then
+			if command -v ffmpegthumbnailer >/dev/null; then
+				ffmpegthumbnailer -i "$file" -o "$cache_file" -s 0 -q 5 2>/dev/null
+			else
+				ffmpeg -y -i "$file" -ss 00:00:02 -vframes 1 -an -q:v 5 "$cache_file" >/dev/null 2>&1
+			fi
 		fi
 	fi
 	[[ -f "$cache_file" ]] && render_image "$cache_file" || file --brief -- "$file"
+	;;
+
+application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+	cache_file=$(get_cache_path "$file" ".txt")
+	if [[ ! -f "$cache_file" ]]; then
+		cv "$file" "$cache_file" >/dev/null 2>&1
+	fi
+	if [[ -f "$cache_file" ]]; then
+		bat --color=always "$cache_file"
+	else
+		file --brief -- "$file"
+	fi
+	;;
+
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
+	cache_file=$(get_cache_path "$file" ".csv")
+	if [[ ! -f "$cache_file" ]]; then
+		cv "$file" "$cache_file" >/dev/null 2>&1
+	fi
+	if [[ -f "$cache_file" ]]; then
+		column -s, -t <"$cache_file" | head -n "$TERM_HEIGHT" | bat --language=csv --color=always
+	else
+		file --brief -- "$file"
+	fi
 	;;
 
 application/json)

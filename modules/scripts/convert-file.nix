@@ -181,6 +181,7 @@ in
         pkgs.libreoffice
         pkgs.yq-go
         pkgs.python3Packages.weasyprint
+        pkgs.python3Packages.xlsx2csv
       ];
     })
     ++ [ cvCompletion ];

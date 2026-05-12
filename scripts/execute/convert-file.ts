@@ -33,7 +33,8 @@ type ToolName =
   | "pandoc"
   | "soffice"
   | "pdftoppm"
-  | "yq";
+  | "yq"
+  | "xlsx2csv";
 
 type ConvertContext = {
   dryRun: boolean;
@@ -593,6 +594,21 @@ function libreOffice(outExt: string): ToolConverter {
   };
 }
 
+function xlsx2csvConverter(): ToolConverter {
+  return {
+    tool: "xlsx2csv",
+    convert: async (input, output, context) => {
+      const text = await runCommand(
+        ["xlsx2csv", input],
+        { dryRun: context.dryRun, captureStdout: true },
+      );
+      if (!context.dryRun) {
+        await writeFile(output, text);
+      }
+    },
+  };
+}
+
 function yq(inputFormat: string, outputFormat: string): ToolConverter {
   return {
     tool: "yq",
@@ -744,7 +760,9 @@ const ROUTES: Record<string, ToolConverter> = {
 
   // Office
   "docx:pdf": libreOffice("pdf"),
+  "docx:txt": pandoc({ from: "docx", to: "plain" }),
   "xlsx:pdf": libreOffice("pdf"),
+  "xlsx:csv": xlsx2csvConverter(),
   "pptx:pdf": libreOffice("pdf"),
   "odt:pdf": libreOffice("pdf"),
   "ods:pdf": libreOffice("pdf"),

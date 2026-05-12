@@ -12,11 +12,6 @@ let
     package = pkgs.obsidian;
   };
 
-  nautilusWrapped = wrapped.mkWrappedBinary {
-    name = "nautilus";
-    package = pkgs.nautilus;
-  };
-
   vicinaeWrapped = wrapped.mkWrappedBinary {
     name = "vicinae";
     package = pkgs.vicinae;
@@ -35,7 +30,6 @@ let
 in
 
 {
-
   programs.obsidian = {
     enable = true;
     package = obsidianWrapped;
@@ -55,7 +49,6 @@ in
   };
 
   home.packages = [
-    nautilusWrapped
     vicinaeWrapped
     gimpWrapped
     foliateWrapped
@@ -74,23 +67,6 @@ in
         "Utility"
       ];
       icon = "obsidian";
-      startupNotify = true;
-    };
-
-    nautilus = {
-      name = "Files";
-      genericName = "File Manager";
-      comment = "Browse files and folders";
-      exec = "${nautilusWrapped}/bin/nautilus";
-      terminal = false;
-      categories = [
-        "GNOME"
-        "GTK"
-        "Core"
-        "Utility"
-        "FileManager"
-      ];
-      icon = "org.gnome.Nautilus";
       startupNotify = true;
     };
 

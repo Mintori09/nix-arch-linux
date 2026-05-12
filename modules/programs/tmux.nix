@@ -197,10 +197,16 @@
                   # Pane navigation / resize
                   # ---------------------------------------------------------------------
 
+                  bind -r S-h previous-window
+                  bind -r S-j next-window
+
                   bind -r C-h select-pane -L
                   bind -r C-j select-pane -D
                   bind -r C-k select-pane -U
                   bind -r C-l select-pane -R
+
+                  bind -r S-h previous-window
+                  bind -r S-j next-window
 
                   bind -r h resize-pane -L 5
                   bind -r j resize-pane -D 5
@@ -273,6 +279,13 @@
                       tmux new-session -d -s "$SESSION" -c "#{pane_current_path}" "opencode"; \
                       tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
                     fi'
+                  bind -r P run-shell '\
+                    SESSION="pi-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
+                    if [ "#{session_name}" != "$SESSION" ]; then \
+                      tmux has-session -t "$SESSION" 2>/dev/null || \
+                      tmux new-session -d -s "$SESSION" -c "#{pane_current_path}" "pi"; \
+                      tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
+                    fi'
 
                   # ---------------------------------------------------------------------
                   # Appearance not managed by dotbar
@@ -280,6 +293,11 @@
 
                   set -g pane-border-style "fg=red,bg=default"
                   set -g pane-active-border-style "fg=green,bg=default"
+
+                  set -g window-status-current-format \
+                    "#[bg=#1E2633,fg=#BFBDB6,bold] #I:#W \
+                     #[fg=#39BAE6,bg=#1E2633]#{?window_zoomed_flag,󰊓,}\
+                     #[fg=#1E2633,bg=default]"
 
                   setw -g mode-style "bg=black,fg=colour154"
     '';
