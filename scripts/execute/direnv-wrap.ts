@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 
-type Language = "python" | "node" | "go" | "rust" | "ruby" | "java" | "deno";
+type Language = "python" | "node" | "go" | "rust" | "ruby" | "java" | "deno" | "qt" | "gtk" | "wails" | "tauri" | "flutter" | "electron";
 
 type Template = {
   name: string;
   envrc: string;
   scaffold?: string;
   description: string;
+  gui?: boolean;
+  guiVariables?: Record<string, string>;
 };
 
 const TEMPLATES: Record<Language, Template> = {
@@ -18,6 +19,7 @@ const TEMPLATES: Record<Language, Template> = {
     description: "Python with pipenv/pyenv style environment",
     envrc: `use nix
 layout python
+export LD_LIBRARY_PATH=""  # Use system GUI libraries
 `,
     scaffold: `requirements.txt`,
   },
@@ -26,6 +28,7 @@ layout python
     description: "Node.js with npm/yarn/pnpm",
     envrc: `use nix
 layout node
+export LD_LIBRARY_PATH=""  # Use system GUI libraries
 `,
     scaffold: `package.json`,
   },
@@ -35,6 +38,7 @@ layout node
     envrc: `use nix
 export GOPATH=$PWD/.go
 export PATH=$GOPATH/bin:$PATH
+export CGO_ENABLED=1
 `,
   },
   rust: {
@@ -67,6 +71,69 @@ export JAVA_OPTS="-Xmx2g"
 layout deno
 `,
   },
+  qt: {
+    name: "Qt",
+    description: "Qt5/Qt6 application with GUI support (system libs)",
+    gui: true,
+    envrc: `use nix
+# Nix provides tools (compiler, cmake), system provides GUI libs
+export LD_LIBRARY_PATH=""
+export QT_QPA_PLATFORM=xcb
+`,
+    guiVariables: {
+      "QT_QPA_PLATFORMTHEME": "gtk3",
+      "QT_STYLE_OVERRIDE": "gtk3",
+    },
+  },
+  gtk: {
+    name: "GTK",
+    description: "GTK3/GTK4 application with GUI support (system libs)",
+    gui: true,
+    envrc: `use nix
+# Nix provides tools, system provides GUI libs
+export LD_LIBRARY_PATH=""
+export GDK_BACKEND=x11
+`,
+    guiVariables: {
+      "GTK_THEME": "Adwaita:dark",
+    },
+  },
+  wails: {
+    name: "Wails",
+    description: "Wails (Go+WebView) desktop app (system libs)",
+    gui: true,
+    envrc: `use nix
+export CGO_ENABLED=1
+export LD_LIBRARY_PATH=""
+`,
+    guiVariables: {
+      "WEBVIEW_DISABLE_COMPOSITING_MODE": "1",
+    },
+  },
+  tauri: {
+    name: "Tauri",
+    description: "Tauri (Rust+WebView) desktop app (system libs)",
+    gui: true,
+    envrc: `use nix
+export LD_LIBRARY_PATH=""
+`,
+  },
+  flutter: {
+    name: "Flutter",
+    description: "Flutter desktop app (system libs)",
+    gui: true,
+    envrc: `use nix
+export LD_LIBRARY_PATH=""
+`,
+  },
+  electron: {
+    name: "Electron",
+    description: "Electron desktop app (system libs)",
+    gui: true,
+    envrc: `use nix
+export LD_LIBRARY_PATH=""
+`,
+  },
 };
 
 type Args = {
@@ -74,6 +141,7 @@ type Args = {
   language?: Language;
   directory?: string;
   scaffold?: boolean;
+  gui?: boolean;
 };
 
 function parseArgs(): Args {
@@ -102,6 +170,8 @@ function parseArgs(): Args {
       process.exit(0);
     } else if (arg === "--scaffold" || arg === "-s") {
       options.scaffold = true;
+    } else if (arg === "--gui" || arg === "-g") {
+      options.gui = true;
     } else if (arg === "--dir" || arg === "-d") {
       options.directory = args[++i];
     }
@@ -120,12 +190,16 @@ Commands:
 
 Options:
   -s, --scaffold    Create initial project files (package.json, requirements.txt, etc.)
+  -g, --gui         Enable GUI wrapper scripts for desktop applications
   -d, --dir <dir>   Target directory (default: current directory)
   -h, --help        Show this help message
 
-Supported languages:
+Supported languages (GUI-capable):
 ${Object.entries(TEMPLATES)
-  .map(([key, tmpl]) => `  ${key.padEnd(10)} ${tmpl.description}`)
+  .map(([key, tmpl]) => {
+    const gui = tmpl.gui ? " [GUI]" : "";
+    return `  ${key.padEnd(10)} ${tmpl.description}${gui}`;
+  })
   .join("\n")}`);
 }
 
@@ -194,7 +268,40 @@ function createScaffold(language: Language, dir: string): void {
   }
 }
 
-function initEnvironment(language: Language, dir: string, withScaffold: boolean): number {
+function createGuiWrapper(language: Language, dir: string): void {
+  const template = TEMPLATES[language];
+  if (!template.gui) return;
+
+  const wrapperScript = `${dir}/run-gui.sh`;
+  if (existsSync(wrapperScript)) return;
+
+  const guiVars = template.guiVariables || {};
+  const envVars = Object.entries(guiVars)
+    .map(([k, v]) => `export ${k}="${v}"`)
+    .join("\n");
+
+  const content = `#!/bin/bash
+# GUI wrapper for ${template.name} applications
+# Uses SYSTEM libraries for GUI while Nix provides tools
+set -e
+
+# Environment setup for hybrid Nix + system environment
+export DISPLAY=\${DISPLAY:-:0}
+${envVars}
+
+# Preserve system GUI libraries (don't let Nix override)
+export LD_LIBRARY_PATH=""
+
+# Execute the app with system GUI libraries
+echo "🖥️  Running with system GUI libraries"
+exec "$@"
+`;
+
+  writeFileSync(wrapperScript, content);
+  console.log(`  ✓ Created run-gui.sh wrapper for ${template.name}`);
+}
+
+function initEnvironment(language: Language, dir: string, withScaffold: boolean, gui: boolean = false): number {
   const template = TEMPLATES[language];
 
   console.log(`\n🚀 Setting up ${template.name} environment in ${dir}`);
@@ -208,6 +315,29 @@ function initEnvironment(language: Language, dir: string, withScaffold: boolean)
     console.log("  ✓ Created .envrc");
   }
 
+  // Create shell.nix for hybrid setup (tools from Nix, GUI from system)
+  const shellNixPath = `${dir}/shell.nix`;
+  if (!existsSync(shellNixPath)) {
+    const runtimePkgs = getRuntimePkgs(language);
+    const shellNixContent = `{ pkgs ? import <nixpkgs> {} }:
+
+pkgs.mkShell {
+  name = "${language}-dev";
+
+  buildInputs = with pkgs; [
+    ${runtimePkgs}
+  ];
+
+  shellHook = ''
+    echo "🛠️  Nix tools + system GUI libraries (hybrid mode)"
+    export LD_LIBRARY_PATH=""
+  '';
+}
+`;
+    writeFileSync(shellNixPath, shellNixContent);
+    console.log("  ✓ Created shell.nix (hybrid mode)");
+  }
+
   // Create .gitignore entries (language-specific)
   const gitignorePath = `${dir}/.gitignore`;
   const defaultGitignoreEntries = [".direnv", ".devenv"];
@@ -219,6 +349,12 @@ function initEnvironment(language: Language, dir: string, withScaffold: boolean)
     ruby: [".ruby-version", ".bundle", "vendor/bundle"],
     java: [".java-version"],
     deno: [],
+    qt: [],
+    gtk: [],
+    wails: [],
+    tauri: [],
+    flutter: [".dart_tool", "build"],
+    electron: [],
   };
   const gitignoreEntries = [...defaultGitignoreEntries, ...languageGitignore[language]];
 
@@ -239,17 +375,46 @@ function initEnvironment(language: Language, dir: string, withScaffold: boolean)
     createScaffold(language, dir);
   }
 
+  // Create GUI wrapper for GUI apps
+  if (template.gui || gui) {
+    createGuiWrapper(language, dir);
+  }
+
   console.log(`\n✅ Done! Run the following to activate:\n`);
   console.log(`  cd ${dir}`);
   console.log(`  direnv allow`);
+  console.log("  # Hybrid mode: Nix tools + system GUI libraries");
+  if (template.gui) {
+    console.log(`  chmod +x run-gui.sh`);
+    console.log(`  ./run-gui.sh your-app`);
+  }
   console.log("");
 
   return 0;
 }
 
-function addEnvironment(language: Language, dir: string): number {
+function getRuntimePkgs(language: Language): string {
+  const pkgMap: Record<string, string> = {
+    python: "python3",
+    node: "nodejs bun",
+    deno: "deno",
+    go: "go",
+    rust: "rustc cargo",
+    ruby: "ruby",
+    java: "jdk",
+    qt: "qt5.qtbase cmake",
+    gtk: "gtk3 glib pkg-config",
+    wails: "go webkitgtk gtk3",
+    tauri: "rustc cargo webkitgtk gtk3",
+    flutter: "flutter dart",
+    electron: "nodejs bun",
+  };
+  return pkgMap[language] || "nodejs";
+}
+
+function addEnvironment(language: Language, dir: string, gui: boolean = false): number {
   // Similar to init but for existing projects
-  return initEnvironment(language, dir, false);
+  return initEnvironment(language, dir, false, gui);
 }
 
 async function main(): Promise<number> {
@@ -273,7 +438,7 @@ async function main(): Promise<number> {
         printUsage();
         return 1;
       }
-      return initEnvironment(args.language, targetDir, args.scaffold || false);
+      return initEnvironment(args.language, targetDir, args.scaffold || false, args.gui);
 
     case "add":
       if (!args.language) {
@@ -281,7 +446,7 @@ async function main(): Promise<number> {
         printUsage();
         return 1;
       }
-      return addEnvironment(args.language, targetDir);
+      return addEnvironment(args.language, targetDir, args.gui);
 
     default:
       console.error(`Error: Unknown command '${args.command}'`);

@@ -18,6 +18,12 @@ let
         'ruby:Ruby with bundler - scaffold: Gemfile'
         'java:Java with Maven/Gradle - no scaffold'
         'deno:Deno runtime - no scaffold'
+        'qt:Qt5/Qt6 GUI app with xcb platform'
+        'gtk:GTK3/GTK4 GUI app'
+        'wails:Wails (Go+WebView) desktop app'
+        'tauri:Tauri (Rust+WebView) desktop app'
+        'flutter:Flutter desktop application'
+        'electron:Electron desktop application'
       )
 
       _dw_languages() {
