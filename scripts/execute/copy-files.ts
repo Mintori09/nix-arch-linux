@@ -18,6 +18,7 @@ type ParsedArgs = {
   contentPathMode: ContentPathMode;
   dryRun: boolean;
   files: string[];
+  gitUntracked: boolean;
   homeRelative: boolean;
   randomCount: number | null;
   recursive: boolean;
@@ -124,6 +125,7 @@ export function parseArgs(args: string[]): ParsedArgs {
   let homeRelative = false;
   let contentPathMode: ContentPathMode = "none";
   let dryRun = false;
+  let gitUntracked = false;
   const selectors: Selector[] = [];
   const files: string[] = [];
 
@@ -197,6 +199,9 @@ export function parseArgs(args: string[]): ParsedArgs {
       case "--dry-run":
         dryRun = true;
         continue;
+      case "--git-untracked":
+        gitUntracked = true;
+        continue;
       case "-R":
         throw new Error("Flag -R was removed. Use --recursive instead.");
       case "--recursive":
@@ -267,6 +272,7 @@ export function parseArgs(args: string[]): ParsedArgs {
     contentPathMode,
     dryRun,
     files,
+    gitUntracked,
     homeRelative,
     randomCount,
     recursive,
@@ -327,6 +333,28 @@ function shuffleArray<T>(array: T[]): T[] {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+async function collectGitUntrackedFiles(): Promise<string[]> {
+  const proc = Bun.spawn(
+    ["git", "ls-files", "--others", "--exclude-standard"],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+
+  const output = await new Response(proc.stdout).text();
+  const exitCode = await proc.exited;
+
+  if (exitCode !== 0) {
+    return [];
+  }
+
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 async function readFilesFromStdin(): Promise<string[]> {
@@ -420,7 +448,7 @@ function printUsage(): void {
     .join("\n");
 
   console.error(
-    "Usage: bun run copy-files.ts [--separator <value>] [--content] [--home-relative] [--name-only] [--quote] [--all | --type <group> ...] [--recursive] [--random <n>] <file1> [file2] ...",
+    "Usage: bun run copy-files.ts [--separator <value>] [--content] [--home-relative] [--name-only] [--quote] [--all | --type <group> ...] [--recursive] [--random <n>] [--git-untracked] <file1> [file2] ...",
   );
   console.error(
     "       fd ... | bun run copy-files.ts [--separator <value>] [--random <n>]",
@@ -436,6 +464,9 @@ function printUsage(): void {
   );
   console.error(
     "  --dry-run       show content that would be copied without actually copying",
+  );
+  console.error(
+    "  --git-untracked include untracked files from git repository",
   );
   console.error("  --home-relative render paths under $HOME as ~/...");
   console.error(
@@ -475,6 +506,11 @@ async function main() {
   }
 
   files = mergeUniquePaths(files, selectorFiles);
+
+  if (parsedArgs.gitUntracked) {
+    const gitFiles = await collectGitUntrackedFiles();
+    files = mergeUniquePaths(files, gitFiles);
+  }
 
   if (files.length === 0) {
     printUsage();
