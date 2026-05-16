@@ -15,6 +15,7 @@
     ./git.nix
     ./tmux.nix
     ./helix
+    ./nushell.nix
     ./opencode
     ./yt-dlp.nix
     ./neovim.nix
