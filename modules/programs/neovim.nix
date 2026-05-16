@@ -5,6 +5,7 @@
   home.packages = with pkgs; [
     gcc
     gnumake
+    rust-analyzer
     tree-sitter
 
     go

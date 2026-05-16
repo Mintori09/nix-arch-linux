@@ -146,11 +146,11 @@
       unbind t
 
       bind -r t run-shell '\
-        if [ "#{session_name}" != "float" ]; then \
-          tmux has-session -t float 2>/dev/null || \
-          tmux new-session -d -s float -c "#{pane_current_path}"; \
-          tmux display-popup -d "#{pane_current_path}" -w 90% -h 85% \
-            -E "tmux attach-session -t float"; \
+        SESSION="term-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
+        if [ "#{session_name}" != "$SESSION" ]; then \
+          tmux has-session -t "$SESSION" 2>/dev/null || \
+          tmux new-session -d -s "$SESSION" -c "#{pane_current_path}"; \
+          tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
         fi'
             bind p display-popup -w 100% -h 100% -E '
             tmux list-panes -F "#{pane_id} | #I.#P | #{pane_current_command} | #{pane_current_path}" |

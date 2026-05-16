@@ -6,15 +6,26 @@ in
 {
   programs.fish = {
     enable = true;
-    viMode = true;
 
-    plugins = with pkgs; [
-      fishPlugins.fzf
-      fishPlugins.fish-autosuggestion
-      fishPlugins.tide
+    plugins = [
+      {
+        name = "fzf-fish";
+        src = pkgs.fishPlugins.fzf-fish;
+      }
+      {
+        name = "puffer";
+        src = pkgs.fishPlugins.puffer;
+      }
+      {
+        name = "tide";
+        src = pkgs.fishPlugins.tide;
+      }
     ];
 
     interactiveShellInit = ''
+      # Enable vi mode
+      fish_vi_key_bindings
+
       # Vi mode status indicator
       function fish_mode_prompt
         switch $fish_bind_mode
@@ -192,7 +203,6 @@ in
 
       # Development
       abbr -a of 'onefetch --disabled-fields description head pending version dependencies authors last-change url churn license --no-art --no-title --no-color-palette'
-      abbr -a of 'onefetch --disabled-fields description head pending version dependencies authors last-change url churn license --no-art --no-title --no-color-palette'
     '';
 
     loginShellInit = ''
@@ -204,8 +214,5 @@ in
     '';
   };
 
-  # Fish shell aliases for commands used in zsh
-  home.sessionVariables = {
-    SHELL = "/run/current-system/sw/bin/fish";
-  };
+  # Fish is an alternative shell - zsh remains default
 }

@@ -33,20 +33,20 @@ in
     st = "systemctl-tui";
     lock = "loginctl lock-session";
     x11 = "env GDK_BACKEND=x11";
-    cleantrash = "echo -n \"Taking out the trash...\" | pv -qL 10 && rm -rf $HOME/.local/share/Trash/files && fastfetch";
+    cleantrash = "echo -n \"Taking out the trash...\" | pv -qL 10; rm -rf $HOME/.local/share/Trash/files; fastfetch";
     remove_pacman_db_lock = "sudo rm /var/lib/pacman/db.lck";
     update-db = "update-desktop-database $HOME/.local/share/applications/";
     set-wifi-priority = "nmcli connection modify $(nmcli -t -f ACTIVE,SSID dev wifi | grep \"^yes\" | cut -d: -f2) connection.autoconnect-priority 100";
-    reload-anyrun = "killall -9 anyrun && systemctl --user restart anyrun.service";
+    reload-anyrun = "killall -9 anyrun; systemctl --user restart anyrun.service";
 
     # EDITORS & DOTFILES
     vim = "nvim";
-    cfnv = "cd $HOME/.config/nvim && nvim";
-    cfz = "cd $HOME/.config/shell && nvim $HOME/.zshrc && source $HOME/.zshrc";
+    cfnv = "cd $HOME/.config/nvim; nvim";
+    cfz = "cd $HOME/.config/shell; nvim $HOME/.zshrc; source $HOME/.zshrc";
 
     # IDEs
-    code = "code . && exit";
-    zed = "zeditor . && exit";
+    code = "code .; exit";
+    zed = "zeditor .; exit";
 
     # SYNCTHING
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
@@ -65,7 +65,7 @@ in
 
     fkill = "ps -ef | fzf | awk '{print $2}' | xargs kill";
 
-    hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy && echo \"Copied to clipboard: $(wl-paste)\"";
+    hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy; echo \"Copied to clipboard: $(wl-paste)\"";
 
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";

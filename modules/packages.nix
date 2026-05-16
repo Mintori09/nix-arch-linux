@@ -19,7 +19,7 @@
     # Core utilities
     fastfetch
     systemctl-tui
-    magika
+    # magika
     cliphist
     fd
     ripgrep
@@ -28,6 +28,7 @@
     opencode
 
     # CLI tools
+    aichat
     xh
     tdf
     dust

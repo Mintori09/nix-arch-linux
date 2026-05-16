@@ -29,4 +29,7 @@
     "google"
   ];
 
+  enabled = [
+    "opencode-go"
+  ];
 }
