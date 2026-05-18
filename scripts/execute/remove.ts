@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
-import { unlink } from "node:fs/promises";
+import { unlink, rmdir } from "node:fs/promises";
+import { dirname } from "node:path";
 import { fileGroups } from "./file-groups";
 
 const args = Bun.argv.slice(2);
@@ -12,6 +13,8 @@ const validFlags = new Set([
   "--recursive",
   "-n",
   "--dry-run",
+  "-e",
+  "--remove-empty-dirs",
   "-h",
   "--help",
 ]);
@@ -33,9 +36,10 @@ Commands:
 ${commands}
 
 Options:
-  -r, --recursive  Search in subdirectories
-  -n, --dry-run    Show files without deleting
-  -h, --help       Show this help message
+  -r, --recursive         Search in subdirectories
+  -n, --dry-run           Show files without deleting
+  -e, --remove-empty-dirs Remove empty parent directories after deletion
+  -h, --help              Show this help message
 
 Examples:
   remove subtitles
@@ -43,6 +47,7 @@ Examples:
   remove subtitles -n
   remove images --dry-run
   remove text --recursive
+  remove text -e
 `);
 }
 
@@ -96,25 +101,46 @@ async function collectFiles(
     .filter(Boolean);
 }
 
-async function removeFiles(files: string[]) {
-  let removed = 0;
+async function removeFiles(files: string[]): Promise<string[]> {
+  const removed: string[] = [];
   let failed = 0;
 
   for (const file of files) {
     try {
       await unlink(file);
-      removed++;
+      removed.push(file);
     } catch (error) {
       failed++;
       console.error(`Failed to remove: ${file}`);
     }
   }
 
-  console.log(`\nRemoved ${removed} file(s).`);
+  console.log(`\nRemoved ${removed.length} file(s).`);
 
   if (failed > 0) {
     console.error(`Failed to remove ${failed} file(s).`);
     process.exit(1);
+  }
+
+  return removed;
+}
+
+async function removeEmptyParentDirs(files: string[]) {
+  const dirs = new Set(files.map((f) => dirname(f)));
+  let removed = 0;
+
+  for (const dir of dirs) {
+    try {
+      await rmdir(dir);
+      console.log(`Removed empty directory: ${dir}`);
+      removed++;
+    } catch {
+      // Directory not empty or other error — skip silently
+    }
+  }
+
+  if (removed > 0) {
+    console.log(`\nRemoved ${removed} empty director(ies).`);
   }
 }
 
@@ -133,6 +159,7 @@ if (!target) {
 
 const recursive = flags.has("-r") || flags.has("--recursive");
 const dryRun = flags.has("-n") || flags.has("--dry-run");
+const removeEmptyDirs = flags.has("-e") || flags.has("--remove-empty-dirs");
 
 const files = await collectFiles(target.extensions, recursive);
 
@@ -149,6 +176,10 @@ if (dryRun) {
   process.exit(0);
 }
 
-await removeFiles(files);
+const removedFiles = await removeFiles(files);
+
+if (removeEmptyDirs) {
+  await removeEmptyParentDirs(removedFiles);
+}
 
 export {};

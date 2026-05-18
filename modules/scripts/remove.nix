@@ -23,6 +23,8 @@ let
             --recursive[search in subdirectories]
             -n[dry run, do not delete]
             --dry-run[dry run, do not delete]
+            -e[remove empty parent dirs]
+            --remove-empty-dirs[remove empty parent dirs]
             -h[show help]
             --help[show help]
           '
@@ -31,6 +33,8 @@ let
             --recursive[search in subdirectories]
             -n[dry run, do not delete]
             --dry-run[dry run, do not delete]
+            -e[remove empty parent dirs]
+            --remove-empty-dirs[remove empty parent dirs]
             -h[show help]
             --help[show help]
           '
@@ -39,6 +43,8 @@ let
             --recursive[search in subdirectories]
             -n[dry run, do not delete]
             --dry-run[dry run, do not delete]
+            -e[remove empty parent dirs]
+            --remove-empty-dirs[remove empty parent dirs]
             -h[show help]
             --help[show help]
           '
