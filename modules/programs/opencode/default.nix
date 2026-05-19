@@ -1,14 +1,14 @@
-{ pkgs, lib, ... }:
-let
-  languages = import ./_languages.nix { inherit pkgs; };
-  skills = import ./_skills.nix { inherit pkgs; };
-  providers = import ./_providers.nix;
-  mcp = import ./_mcp.nix;
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  languages = import ./_languages.nix {inherit pkgs;};
+  skills = import ./_skills.nix {inherit pkgs;};
+  configJson = import ./_config.nix {inherit pkgs lib;};
 
   inherit (pkgs) opencode;
 
-  # Environment containing only the tools (languages/skills), not opencode itself.
-  # This is safe to reference in the wrapper script.
   toolsEnv = pkgs.buildEnv {
     name = "opencode-tools-env";
     paths = languages.packages ++ skills.packages;
@@ -28,18 +28,16 @@ let
 
   opencodeWrapped =
     pkgs.runCommand "opencode-wrapped"
-      {
-        buildInputs = [ pkgs.makeWrapper ];
-      }
-      ''
-        mkdir -p $out/bin
-        makeWrapper ${opencodeInitScript} $out/bin/opencode \
-          --prefix PATH : ${toolsEnv}/bin \
-          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ]}"
-      '';
+    {
+      buildInputs = [pkgs.makeWrapper];
+    }
+    ''
+      mkdir -p $out/bin
+      makeWrapper ${opencodeInitScript} $out/bin/opencode \
+        --prefix PATH : ${toolsEnv}/bin \
+        --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [pkgs.stdenv.cc.cc.lib]}"
+    '';
 
-  # Final environment containing the wrapped opencode.
-  # opencodeWrapped is placed last so it takes precedence.
   opencodeEnv = pkgs.buildEnv {
     name = "opencode-env";
     paths = [
@@ -49,23 +47,12 @@ let
   };
 
   configFile = "opencode/config.json";
-in
-{
-  # Use hiPrio to ensure this environment takes precedence over any other
-  # packages providing 'opencode' (e.g., dependencies of other tools).
+in {
   home.packages = [
     (lib.hiPrio opencodeEnv)
   ];
   xdg.configFile = {
-    "${configFile}".text = builtins.toJSON {
-      "$schema" = "https://opencode.ai/config.json";
-      "plugin" = [ "superpowers@git+https://github.com/obra/superpowers.git" ];
-      autoupdate = false;
-      share = "disabled";
-      disabled_providers = providers.disabled;
-      mcp = mcp;
-      inherit (languages) formatter lsp;
-    };
+    "${configFile}".text = configJson;
     "opencode/skill".source = skills.skillsSource + "/skill";
   };
 }

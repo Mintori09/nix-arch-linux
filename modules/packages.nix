@@ -29,6 +29,7 @@
 
     # CLI tools
     aichat
+    pv
     xh
     tdf
     dust

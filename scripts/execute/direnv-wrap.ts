@@ -16,18 +16,30 @@ type Template = {
 const TEMPLATES: Record<Language, Template> = {
   python: {
     name: "Python",
-    description: "Python with pipenv/pyenv style environment",
-    envrc: `use nix
-layout python
+    description: "Python with local virtual environment (.venv)",
+    envrc: `# Simple Python venv setup
+if [ ! -d .venv ]; then
+  echo "Creating virtual environment..."
+  python3 -m venv .venv
+fi
+source .venv/bin/activate
+
+# Uncomment to use Nix for tools/libraries
+# use nix
+
 export LD_LIBRARY_PATH=""  # Use system GUI libraries
 `,
     scaffold: `requirements.txt`,
   },
   node: {
     name: "Node.js",
-    description: "Node.js with npm/yarn/pnpm",
-    envrc: `use nix
-layout node
+    description: "Node.js with local node_modules",
+    envrc: `# Simple Node.js setup
+export PATH=$PWD/node_modules/.bin:$PATH
+
+# Uncomment to use Nix for tools/libraries
+# use nix
+
 export LD_LIBRARY_PATH=""  # Use system GUI libraries
 `,
     scaffold: `package.json`,
@@ -35,50 +47,68 @@ export LD_LIBRARY_PATH=""  # Use system GUI libraries
   go: {
     name: "Go",
     description: "Go with local GOPATH",
-    envrc: `use nix
+    envrc: `# Simple Go setup
 export GOPATH=$PWD/.go
 export PATH=$GOPATH/bin:$PATH
 export CGO_ENABLED=1
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   rust: {
     name: "Rust",
     description: "Rust with local CARGO_HOME",
-    envrc: `use nix
+    envrc: `# Simple Rust setup
 export CARGO_HOME=$PWD/.cargo
 export PATH=$CARGO_HOME/bin:$PATH
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   ruby: {
     name: "Ruby",
-    description: "Ruby with bundler",
-    envrc: `use nix
-layout ruby
+    description: "Ruby with local bundle",
+    envrc: `# Simple Ruby setup
+# layout ruby
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
     scaffold: `Gemfile`,
   },
   java: {
     name: "Java",
-    description: "Java with Maven/Gradle",
-    envrc: `use nix
+    description: "Java with local environment",
+    envrc: `# Simple Java setup
 export JAVA_OPTS="-Xmx2g"
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   deno: {
     name: "Deno",
     description: "Deno runtime",
-    envrc: `use nix
-layout deno
+    envrc: `# Simple Deno setup
+# layout deno
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   qt: {
     name: "Qt",
     description: "Qt5/Qt6 application with GUI support (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple Qt setup
 # Nix provides tools (compiler, cmake), system provides GUI libs
 export LD_LIBRARY_PATH=""
 export QT_QPA_PLATFORM=xcb
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
     guiVariables: {
       "QT_QPA_PLATFORMTHEME": "gtk3",
@@ -89,10 +119,13 @@ export QT_QPA_PLATFORM=xcb
     name: "GTK",
     description: "GTK3/GTK4 application with GUI support (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple GTK setup
 # Nix provides tools, system provides GUI libs
 export LD_LIBRARY_PATH=""
 export GDK_BACKEND=x11
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
     guiVariables: {
       "GTK_THEME": "Adwaita:dark",
@@ -102,9 +135,12 @@ export GDK_BACKEND=x11
     name: "Wails",
     description: "Wails (Go+WebView) desktop app (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple Wails setup
 export CGO_ENABLED=1
 export LD_LIBRARY_PATH=""
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
     guiVariables: {
       "WEBVIEW_DISABLE_COMPOSITING_MODE": "1",
@@ -114,24 +150,33 @@ export LD_LIBRARY_PATH=""
     name: "Tauri",
     description: "Tauri (Rust+WebView) desktop app (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple Tauri setup
 export LD_LIBRARY_PATH=""
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   flutter: {
     name: "Flutter",
     description: "Flutter desktop app (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple Flutter setup
 export LD_LIBRARY_PATH=""
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
   electron: {
     name: "Electron",
     description: "Electron desktop app (system libs)",
     gui: true,
-    envrc: `use nix
+    envrc: `# Simple Electron setup
 export LD_LIBRARY_PATH=""
+
+# Uncomment to use Nix for tools/libraries
+# use nix
 `,
   },
 };
@@ -383,7 +428,9 @@ pkgs.mkShell {
   console.log(`\n✅ Done! Run the following to activate:\n`);
   console.log(`  cd ${dir}`);
   console.log(`  direnv allow`);
-  console.log("  # Hybrid mode: Nix tools + system GUI libraries");
+  console.log("\n  # The environment is set up for local development by default.");
+  console.log("  # To use Nix for tools and libraries, uncomment 'use nix' in .envrc");
+
   if (template.gui) {
     console.log(`  chmod +x run-gui.sh`);
     console.log(`  ./run-gui.sh your-app`);

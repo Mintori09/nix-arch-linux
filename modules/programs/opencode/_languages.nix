@@ -1,10 +1,11 @@
-{ pkgs }:
-let
+{pkgs}: let
   formatterBins = {
     alejandra = "${pkgs.alejandra}/bin/alejandra";
     biome = "${pkgs.biome}/bin/biome";
     oxfmt = "${pkgs.oxfmt}/bin/oxfmt";
+    rustfmt = "${pkgs.rustfmt}/bin/rustfmt";
     shfmt = "${pkgs.shfmt}/bin/shfmt";
+    ruff = "${pkgs.ruff}/bin/ruff";
   };
 
   lspBins = {
@@ -12,20 +13,27 @@ let
     biome = "${pkgs.biome}/bin/biome";
     marksman = "${pkgs.marksman}/bin/marksman";
     nil = "${pkgs.nil}/bin/nil";
+    pyright = "${pkgs.pyright}/bin/pyright-langserver";
+    rust-analyzer = "${pkgs.rust-analyzer}/bin/rust-analyzer";
     tailwindcss = "${pkgs.tailwindcss-language-server}/bin/tailwindcss-language-server";
+    typescript = "${pkgs.typescript-language-server}/bin/typescript-language-server";
     volar = "${pkgs.vue-language-server}/bin/vue-language-server";
   };
-in
-{
+in {
   packages = with pkgs; [
     astro-language-server
     biome
     marksman
     nil
+    pyright
+    rust-analyzer
+    rustfmt
     tailwindcss-language-server
+    typescript-language-server
     vue-language-server
     alejandra
     oxfmt
+    ruff
     shfmt
   ];
 
@@ -42,7 +50,7 @@ in
       ];
     };
     oxfmt = {
-      command = [ formatterBins.oxfmt ];
+      command = [formatterBins.oxfmt];
       extensions = [
         "yaml"
         "js"
@@ -63,14 +71,25 @@ in
         "format"
         "--stdin-file-path"
       ];
-      extensions = [ "astro" ];
+      extensions = ["astro"];
     };
     alejandra = {
       command = [
         formatterBins.alejandra
         "-q"
       ];
-      extensions = [ "nix" ];
+      extensions = ["nix"];
+    };
+    rustfmt = {
+      command = [formatterBins.rustfmt];
+      extensions = ["rs"];
+    };
+    ruff = {
+      command = [
+        formatterBins.ruff
+        "format"
+      ];
+      extensions = ["py"];
     };
   };
 
@@ -80,7 +99,7 @@ in
         lspBins.astro-ls
         "--stdio"
       ];
-      extensions = [ "astro" ];
+      extensions = ["astro"];
     };
     biome = {
       command = [
@@ -96,12 +115,12 @@ in
       ];
     };
     nil = {
-      command = [ lspBins.nil ];
-      extensions = [ "nix" ];
+      command = [lspBins.nil];
+      extensions = ["nix"];
     };
     marksman = {
-      command = [ lspBins.marksman ];
-      extensions = [ "md" ];
+      command = [lspBins.marksman];
+      extensions = ["md"];
     };
     tailwindcss = {
       command = [
@@ -113,12 +132,35 @@ in
         "html"
       ];
     };
+    pyright = {
+      command = [
+        lspBins.pyright
+        "--stdio"
+      ];
+      extensions = ["py"];
+    };
+    rust-analyzer = {
+      command = [lspBins.rust-analyzer];
+      extensions = ["rs"];
+    };
+    typescript = {
+      command = [
+        lspBins.typescript
+        "--stdio"
+      ];
+      extensions = [
+        "js"
+        "ts"
+        "jsx"
+        "tsx"
+      ];
+    };
     volar = {
       command = [
         lspBins.volar
         "--stdio"
       ];
-      extensions = [ "vue" ];
+      extensions = ["vue"];
     };
   };
 }

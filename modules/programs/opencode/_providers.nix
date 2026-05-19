@@ -26,6 +26,8 @@
     "xai"
     "zai"
     "zenmux"
+    "nano-gpt"
+    "ollama-cloud"
     "google"
   ];
 
