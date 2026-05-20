@@ -30,11 +30,15 @@
     # CLI tools
     aichat
     pv
+    onefetch
     xh
     tdf
     dust
     aichat
-    btop
+    bottom
+    duf
+    watchexec
+    arp-scan
     bun
     chafa
     ffmpegthumbnailer
