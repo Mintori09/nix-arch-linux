@@ -54,6 +54,26 @@ in
     foliateWrapped
   ];
 
+  systemd.user.services.vicinae = {
+    Unit = {
+      Description = "Vicinae server daemon";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+
+    Service = {
+      Type = "simple";
+      ExecStart = "${vicinaeWrapped}/bin/vicinae server --replace";
+      Restart = "always";
+      RestartSec = 60;
+      KillMode = "process";
+    };
+
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+
   xdg.desktopEntries = {
 
     obsidian = {
