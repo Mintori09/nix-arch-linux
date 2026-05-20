@@ -1,12 +1,14 @@
-{pkgs}: let
-  fetchSkill = {
-    name,
-    owner,
-    repo,
-    rev,
-    path,
-    hash,
-  }:
+{ pkgs }:
+let
+  fetchSkill =
+    {
+      name,
+      owner,
+      repo,
+      rev,
+      path,
+      hash,
+    }:
     pkgs.stdenv.mkDerivation {
       name = "opencode-skill-${name}";
       src = pkgs.fetchFromGitHub {
@@ -24,14 +26,15 @@
       '';
     };
 
-  fetchSkillDir = {
-    name,
-    owner,
-    repo,
-    rev,
-    basePath,
-    hash,
-  }:
+  fetchSkillDir =
+    {
+      name,
+      owner,
+      repo,
+      rev,
+      basePath,
+      hash,
+    }:
     pkgs.stdenv.mkDerivation {
       name = "opencode-skill-${name}";
       src = pkgs.fetchFromGitHub {
@@ -49,10 +52,11 @@
       '';
     };
 
-  localSkill = {
-    name,
-    path,
-  }:
+  localSkill =
+    {
+      name,
+      path,
+    }:
     pkgs.stdenv.mkDerivation {
       name = "opencode-skill-${name}";
       src = path;
@@ -90,14 +94,14 @@
       hash = "sha256-SleLxTUjM7HNHc78YklikuFwix2DPaTDIACUnsSQCrA=";
     };
 
-    flutter-development = fetchSkill {
-      name = "flutter-development";
-      owner = "aj-geddes";
-      repo = "useful-ai-prompts";
-      rev = "ce8c39c22df0e0e64c853817a7f8d79f0ea331e2";
-      path = "skills/flutter-development/SKILL.md";
-      hash = "sha256-BCvO+P2URoTiUOSV8PTq62ckyxXLEHtIml0EkZGRbK8=";
-    };
+    # flutter-development = fetchSkill {
+    #   name = "flutter-development";
+    #   owner = "aj-geddes";
+    #   repo = "useful-ai-prompts";
+    #   rev = "ce8c39c22df0e0e64c853817a7f8d79f0ea331e2";
+    #   path = "skills/flutter-development/SKILL.md";
+    #   hash = "sha256-BCvO+P2URoTiUOSV8PTq62ckyxXLEHtIml0EkZGRbK8=";
+    # };
 
     writing-documentation = fetchSkillDir {
       name = "writing-documentation";
@@ -117,33 +121,60 @@
       hash = "sha256-tSEO0h9J3lPVePFoy7A7c1K6umNNE/21/2RbaJD4Abc=";
     };
 
-    readme-generator = fetchSkill {
-      name = "readme-generator";
-      owner = "Shpigford";
-      repo = "skills";
-      rev = "bdd6f84e38e460246079dd44755c587522ddf60e";
-      path = "readme/SKILL.md";
-      hash = "sha256-M6ZSxwrq9tGkxJi6BVoSRh6+fPlQPUmZVg595wldsNI=";
+    commit-work = fetchSkillDir {
+      name = "commit-work";
+      owner = "softaworks";
+      repo = "agent-toolkit";
+      rev = "3027f20f3181758385a1bb8c022d4041dfb4de84";
+      basePath = "skills/commit-work";
+      hash = "sha256-1q4IP55kvZhJibTLJct0SSifw46lBmAQhp9nSmDzYxs=";
     };
 
     memory-aware-architect = localSkill {
       name = "memory-aware-architect";
       path = ./skills/memory-aware-architect;
     };
+
+    vercel-react-best-practices = fetchSkillDir {
+      name = "vercel-react-best-practices";
+      owner = "vercel-labs";
+      repo = "agent-skills";
+      rev = "b9c8ee0643d87d3c5a953d1e22382ff2ead39229";
+      basePath = "skills/react-best-practices";
+      hash = "sha256-6AGzIGGAMFrfPRZDac3Dtn+K07V6BhpY/td5gTDkRsg=";
+    };
+
+    skill-seekers = fetchSkillDir {
+      name = "skill-seekers";
+      owner = "yusufkaraaslan";
+      repo = "Skill_Seekers";
+      rev = "ff0f832febc8db931e88d401a8d0896aac134159";
+      basePath = "skills/skill-seekers";
+      hash = "sha256-Ht374rBPMDo3ma98vfh5L8JJrJH64oq/TVzb3lE8754=";
+    };
+
+    webapp-testing = fetchSkillDir {
+      name = "webapp-testing";
+      owner = "anthropics";
+      repo = "skills";
+      rev = "6a5bb06904ab164a345e41c381fc9097954b83da";
+      basePath = "skills/webapp-testing";
+      hash = "sha256-GytrPFxw1PC2B0MILR6eNa83qAmxcjvLPkJzHQXT93g=";
+    };
   };
 
-  allSkills = pkgs.runCommand "opencode-skills" {} ''
+  allSkills = pkgs.runCommand "opencode-skills" { } ''
     mkdir -p $out/skill
 
     ${pkgs.lib.concatStringsSep "\n" (
       pkgs.lib.mapAttrsToList (name: skill: ''
         mkdir -p $out/skill/${name}
         cp -r ${skill}/* $out/skill/${name}/
-      '')
-      skills
+      '') skills
     )}
   '';
-in {
-  packages = [];
+in
+{
+  packages = [ ];
   skillsSource = allSkills;
 }

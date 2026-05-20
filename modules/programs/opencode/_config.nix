@@ -8,7 +8,10 @@
 in
   builtins.toJSON {
     "$schema" = "https://opencode.ai/config.json";
-    plugin = ["superpowers@git+https://github.com/obra/superpowers.git"];
+    plugin = [
+      "superpowers@git+https://github.com/obra/superpowers.git"
+      "@tarquinen/opencode-dcp@git+https://github.com/Opencode-DCP/opencode-dynamic-context-pruning.git"
+    ];
     autoupdate = false;
     share = "disabled";
     model = "opencode-go/deepseek-v4-flash";

@@ -1,4 +1,5 @@
-{pkgs}: let
+{ pkgs }:
+let
   formatterBins = {
     alejandra = "${pkgs.alejandra}/bin/alejandra";
     biome = "${pkgs.biome}/bin/biome";
@@ -19,7 +20,8 @@
     typescript = "${pkgs.typescript-language-server}/bin/typescript-language-server";
     volar = "${pkgs.vue-language-server}/bin/vue-language-server";
   };
-in {
+in
+{
   packages = with pkgs; [
     astro-language-server
     biome
@@ -50,7 +52,7 @@ in {
       ];
     };
     oxfmt = {
-      command = [formatterBins.oxfmt];
+      command = [ formatterBins.oxfmt ];
       extensions = [
         "yaml"
         "js"
@@ -71,25 +73,25 @@ in {
         "format"
         "--stdin-file-path"
       ];
-      extensions = ["astro"];
+      extensions = [ "astro" ];
     };
     alejandra = {
       command = [
         formatterBins.alejandra
         "-q"
       ];
-      extensions = ["nix"];
+      extensions = [ "nix" ];
     };
     rustfmt = {
-      command = [formatterBins.rustfmt];
-      extensions = ["rs"];
+      command = [ formatterBins.rustfmt ];
+      extensions = [ "rs" ];
     };
     ruff = {
       command = [
         formatterBins.ruff
         "format"
       ];
-      extensions = ["py"];
+      extensions = [ "py" ];
     };
   };
 
@@ -99,7 +101,7 @@ in {
         lspBins.astro-ls
         "--stdio"
       ];
-      extensions = ["astro"];
+      extensions = [ "astro" ];
     };
     biome = {
       command = [
@@ -115,12 +117,12 @@ in {
       ];
     };
     nil = {
-      command = [lspBins.nil];
-      extensions = ["nix"];
+      command = [ lspBins.nil ];
+      extensions = [ "nix" ];
     };
     marksman = {
-      command = [lspBins.marksman];
-      extensions = ["md"];
+      command = [ lspBins.marksman ];
+      extensions = [ "md" ];
     };
     tailwindcss = {
       command = [
@@ -137,11 +139,11 @@ in {
         lspBins.pyright
         "--stdio"
       ];
-      extensions = ["py"];
+      extensions = [ "py" ];
     };
     rust-analyzer = {
-      command = [lspBins.rust-analyzer];
-      extensions = ["rs"];
+      command = [ lspBins.rust-analyzer ];
+      extensions = [ "rs" ];
     };
     typescript = {
       command = [
@@ -160,7 +162,7 @@ in {
         lspBins.volar
         "--stdio"
       ];
-      extensions = ["vue"];
+      extensions = [ "vue" ];
     };
   };
 }
