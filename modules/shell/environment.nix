@@ -29,7 +29,9 @@ in
     PNPM_HOME = c.pnpmHome;
     OLLAMA_HOST = "127.0.0.1";
     GTK_USE_PORTAL = "1";
-    ZVM_SYSTEM_CLIPBOARD_ENABLED = "1";
+    ZVM_SYSTEM_CLIPBOARD_ENABLED = "true";
+    ZVM_CLIPBOARD_COPY_CMD = c.clipCopy;
+    ZVM_CLIPBOARD_PASTE_CMD = "${c.clipPaste} -n";
     _JAVA_AWT_WM_NONREPARENTING = "1";
     BAT_THEME = "Catppuccin Frappe";
     RCLONE_LOG_FILE = "$HOME/rclone-sync.log";
