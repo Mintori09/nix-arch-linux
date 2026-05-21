@@ -1,8 +1,9 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   programs.nushell = {
     enable = true;
+    shellAliases = lib.mkForce { };
     configFile = {
       text = ''
         $env.config = {
