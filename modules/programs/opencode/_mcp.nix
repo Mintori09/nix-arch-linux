@@ -1,10 +1,10 @@
 {
-  gh_grep = {
-    type = "remote";
-    url = "https://mcp.grep.app/";
-    enabled = true;
-    timeout = 10000;
-  };
+  # gh_grep = {
+  #   type = "remote";
+  #   url = "https://mcp.grep.app/";
+  #   enabled = true;
+  #   timeout = 10000;
+  # };
   deepwiki = {
     type = "remote";
     url = "https://mcp.deepwiki.com/mcp";
