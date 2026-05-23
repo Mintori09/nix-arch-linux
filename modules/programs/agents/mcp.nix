@@ -1,0 +1,77 @@
+{
+  pkgs,
+  config,
+  ...
+}:
+{
+  context7 = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@upstash/context7-mcp"
+      ];
+    };
+    remote = {
+      url = "https://mcp.context7.com/mcp";
+      timeout = 10000;
+    };
+    enabled = true;
+  };
+
+  playwright = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "@playwright/mcp@latest"
+      ];
+    };
+    enabled = true;
+  };
+
+  github = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@modelcontextprotocol/server-github"
+      ];
+      env = {
+        GITHUB_PERSONAL_ACCESS_TOKEN = "$(${pkgs.gh}/bin/gh auth token)";
+      };
+    };
+    enabled = true;
+  };
+
+  filesystem = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@modelcontextprotocol/server-filesystem"
+        "${config.home.homeDirectory}/projects"
+        "${config.home.homeDirectory}/dotfiles"
+      ];
+    };
+    enabled = true;
+  };
+
+  deepwiki = {
+    remote = {
+      url = "https://mcp.deepwiki.com/mcp";
+      timeout = 10000;
+    };
+    enabled = true;
+  };
+
+  tavily = {
+    local = {
+      argv = [
+        "npx"
+        "mcp-remote"
+        "https://mcp.tavily.com/mcp"
+      ];
+    };
+    enabled = false;
+  };
+}

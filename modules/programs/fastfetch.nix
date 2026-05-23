@@ -5,7 +5,7 @@
     package = pkgs.fastfetch;
     settings = {
       logo = {
-        source = "${../../images/bocchi.png}";
+        source = "${../../images/tohru.png}";
         type = "kitty";
         height = 10;
         padding = {

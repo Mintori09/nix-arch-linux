@@ -1,11 +1,13 @@
 {
   pkgs,
   lib,
+  config,
   ...
-}: let
-  languages = import ./_languages.nix {inherit pkgs;};
-  skills = import ./_skills.nix {inherit pkgs;};
-  configJson = import ./_config.nix {inherit pkgs lib;};
+}:
+let
+  languages = import ./languages.nix { inherit pkgs; };
+  skills = import ./skills.nix { inherit pkgs; };
+  configJson = import ./config.nix { inherit pkgs lib config; };
 
   inherit (pkgs) opencode;
 
@@ -28,15 +30,15 @@
 
   opencodeWrapped =
     pkgs.runCommand "opencode-wrapped"
-    {
-      buildInputs = [pkgs.makeWrapper];
-    }
-    ''
-      mkdir -p $out/bin
-      makeWrapper ${opencodeInitScript} $out/bin/opencode \
-        --prefix PATH : ${toolsEnv}/bin \
-        --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [pkgs.stdenv.cc.cc.lib]}"
-    '';
+      {
+        buildInputs = [ pkgs.makeWrapper ];
+      }
+      ''
+        mkdir -p $out/bin
+        makeWrapper ${opencodeInitScript} $out/bin/opencode \
+          --prefix PATH : ${toolsEnv}/bin \
+          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ]}"
+      '';
 
   opencodeEnv = pkgs.buildEnv {
     name = "opencode-env";
@@ -47,7 +49,8 @@
   };
 
   configFile = "opencode/config.json";
-in {
+in
+{
   home.packages = [
     (lib.hiPrio opencodeEnv)
   ];

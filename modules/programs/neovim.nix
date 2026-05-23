@@ -2,45 +2,50 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    gcc
-    gnumake
-    rust-analyzer
-    tree-sitter
+  programs.neovim = {
+    enable = true;
+    sideloadInitLua = true;
 
-    go
-    gopls
-    golangci-lint
-    gomodifytags
-    impl
+    extraPackages = with pkgs; [
+      gcc
+      gnumake
+      rust-analyzer
+      tree-sitter
 
-    bun
-    nodejs_22
-    typescript-language-server
-    vtsls
-    prettier
-    eslint
+      go
+      gopls
+      golangci-lint
+      gomodifytags
+      impl
 
-    (python3.withPackages (
-      ps: with ps; [
-        black
-        isort
-        pyflakes
-      ]
-    ))
-    pyright
-    ruff
+      bun
+      nodejs_22
+      typescript-language-server
+      vtsls
+      prettier
+      eslint
 
-    lua-language-server
-    stylua
+      (python3.withPackages (
+        ps: with ps; [
+          black
+          isort
+          pyflakes
+        ]
+      ))
+      pyright
+      ruff
 
-    ripgrep
-    fd
-    fzf
-    lazygit
-    sqlite
+      lua-language-server
+      stylua
 
-    pandoc
-    marksman
-  ];
+      ripgrep
+      fd
+      fzf
+      lazygit
+      sqlite
+
+      pandoc
+      marksman
+    ];
+  };
 }

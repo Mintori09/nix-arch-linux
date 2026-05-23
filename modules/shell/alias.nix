@@ -6,7 +6,8 @@ in
 {
   home.shellAliases = {
     # RELOAD CONFIG
-    aider = "aider --model openai/zai-org/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
+    # aider = "aider --model opencode-go/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
+    # opencode-go/deepseek-v4-pro
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
 

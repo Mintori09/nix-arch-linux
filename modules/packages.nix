@@ -35,7 +35,8 @@
     tdf
     dust
     aichat
-    bottom
+    btop
+    # aider-chat
     duf
     watchexec
     arp-scan

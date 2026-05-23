@@ -16,7 +16,7 @@
     ./tmux.nix
     ./helix
     ./nushell.nix
-    ./opencode
+    ./agents
     ./yt-dlp.nix
     ./neovim.nix
     ./kitty.nix
