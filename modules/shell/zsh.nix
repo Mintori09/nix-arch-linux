@@ -60,6 +60,9 @@ in
         zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
         zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
 
+        # Use global FZF_DEFAULT_OPTS in fzf-tab
+        zstyle ':fzf-tab:*' use-fzf-default-opts yes
+
         zstyle ':fzf-tab:*' fzf-flags \
           '--layout=reverse' \
           '--info=inline' \
