@@ -50,6 +50,36 @@
       url = "github:vercel-labs/agent-skills";
       flake = false;
     };
+
+    agentic-qe = {
+      url = "github:proffesor-for-testing/agentic-qe";
+      flake = false;
+    };
+
+    nicknisi-dotfiles = {
+      url = "github:nicknisi/dotfiles/f1be3f2b669c8e3401b589141f9a56651e45a1a7";
+      flake = false;
+    };
+
+    ccconfigs = {
+      url = "github:dhruvbaldawa/ccconfigs";
+      flake = false;
+    };
+
+    awesome-claude-skills = {
+      url = "github:composioHQ/awesome-claude-skills";
+      flake = false;
+    };
+
+    agent-toolkit = {
+      url = "github:softaworks/agent-toolkit";
+      flake = false;
+    };
+
+    skill-seekers = {
+      url = "github:yusufkaraaslan/Skill_Seekers";
+      flake = false;
+    };
   };
 
   outputs =
