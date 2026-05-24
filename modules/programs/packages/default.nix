@@ -5,7 +5,7 @@
   ...
 }:
 let
-  wrapped = import ./_nixgl-wrappers.nix { inherit pkgs; };
+  wrapped = import ../_nixgl-wrappers.nix { inherit pkgs; };
 
   obsidianWrapped = wrapped.mkWrappedBinary {
     name = "obsidian";

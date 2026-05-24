@@ -23,7 +23,7 @@
     ./pinta.nix
     ./alacritty.nix
     ./qutebrowser.nix
-    ./packages.nix
+    ./packages
     ./zed
     ./yt-dlp.nix
     ./obs.nix
