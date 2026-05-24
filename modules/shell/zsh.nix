@@ -69,11 +69,7 @@ in
           '--height=80%' \
           '--border=rounded'
 
-        zstyle ':fzf-tab:complete:cd:*' fzf-preview \
-          '${pkgs.eza}/bin/eza -1 --color=always $realpath'
-
-        zstyle ':fzf-tab:complete:*:*' fzf-preview \
-          '${pkgs.bat}/bin/bat --color=always --line-range :50 $realpath'
+        zstyle ':fzf-tab:complete:*:*' fzf-preview 'preview $realpath'
 
         zstyle ':fzf-tab:complete:kill:argument-rest' fzf-preview \
           'ps --pid=$word -o cmd --no-headers'
