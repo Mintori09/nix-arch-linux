@@ -6,14 +6,13 @@
 }:
 let
   languages = import ./languages.nix { inherit pkgs; };
-  skills = import ./skills.nix { inherit pkgs; };
   configJson = import ./config.nix { inherit pkgs lib config; };
 
   inherit (pkgs) opencode;
 
   toolsEnv = pkgs.buildEnv {
     name = "opencode-tools-env";
-    paths = languages.packages ++ skills.packages;
+    paths = languages.packages;
   };
 
   opencodeInitScript = pkgs.writeShellScript "opencode-init" ''
@@ -54,8 +53,5 @@ in
   home.packages = [
     (lib.hiPrio opencodeEnv)
   ];
-  xdg.configFile = {
-    "${configFile}".text = configJson;
-    "opencode/skill".source = skills.skillsSource + "/skill";
-  };
+  xdg.configFile."${configFile}".text = configJson;
 }
