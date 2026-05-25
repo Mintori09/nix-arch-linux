@@ -5,6 +5,8 @@
     zoxide
     fzf
     eza
+    fd
+    bat
   ];
 
   programs.zoxide = {
@@ -40,8 +42,17 @@
       }
 
       nf() {
-          local file=$(fzf)
-          [ -n "$file" ] && nvim "$file"
+          local file
+          file="$(
+              fd -t f -X sh -c '
+                  for f do
+                      case $(file -b --mime-type "$f") in
+                          text/*) printf "%s\0" "$f";;
+                      esac
+                  done
+              ' |
+              fzf --read0 --preview 'bat --color=always --style=numbers {}'
+          )" && [ -n "$file" ] && nvim "$file"
       }
 
       envf() {
@@ -148,8 +159,16 @@
 
       nf() {
           local file
-          file="$(fzf)"
-          [ -n "$file" ] && nvim "$file"
+          file="$(
+              fd -t f -X sh -c '
+                  for f do
+                      case $(file -b --mime-type "$f") in
+                          text/*) printf "%s\0" "$f";;
+                      esac
+                  done
+              ' |
+              fzf --read0 --preview 'preview {}'
+          )" && [ -n "$file" ] && nvim "$file"
       }
 
       envf() {

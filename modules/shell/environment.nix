@@ -19,7 +19,7 @@ in
     XMODIFIERS = "@im=fcitx";
     GLFW_IM_MODULE = "ibus";
     SUDO_EDITOR = "nvim";
-    VISUAL = "zeditor";
+    VISUAL = "nvim";
     TERM = "xterm";
     TERMINAL = "kitty";
     BROWSER = "zen-browser";
