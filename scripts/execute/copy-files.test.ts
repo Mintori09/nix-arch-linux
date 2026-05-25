@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -14,76 +15,62 @@ import {
 } from "./copy-files";
 
 describe("shouldQuotePath", () => {
-  test("returns false for simple shell-safe paths", () => {
-    expect(shouldQuotePath("/tmp/plain-file.txt")).toBe(false);
+  it("returns false for simple shell-safe paths", () => {
+    assert.strictEqual(shouldQuotePath("/tmp/plain-file.txt"), false);
   });
 
-  test("returns true for paths containing whitespace", () => {
-    expect(shouldQuotePath("/tmp/two words.txt")).toBe(true);
+  it("returns true for paths containing whitespace", () => {
+    assert.strictEqual(shouldQuotePath("/tmp/two words.txt"), true);
   });
 
-  test("returns true for paths containing shell-sensitive characters", () => {
-    expect(shouldQuotePath("/tmp/[2] Obsidian/report.md")).toBe(true);
+  it("returns true for paths containing shell-sensitive characters", () => {
+    assert.strictEqual(shouldQuotePath("/tmp/[2] Obsidian/report.md"), true);
   });
 });
 
 describe("formatDisplayPath", () => {
-  test("auto-wraps full paths with whitespace in double quotes", () => {
-    expect(formatDisplayPath("/tmp/two words.txt")).toBe('"/tmp/two words.txt"');
+  it("auto-wraps full paths with whitespace in double quotes", () => {
+    assert.strictEqual(formatDisplayPath("/tmp/two words.txt"), '"/tmp/two words.txt"');
   });
 
-  test("auto-wraps full paths with shell-sensitive characters in double quotes", () => {
-    expect(formatDisplayPath("/tmp/[2] Obsidian/report.md")).toBe(
-      '"/tmp/[2] Obsidian/report.md"',
-    );
+  it("auto-wraps full paths with shell-sensitive characters in double quotes", () => {
+    assert.strictEqual(formatDisplayPath("/tmp/[2] Obsidian/report.md"), '"/tmp/[2] Obsidian/report.md"');
   });
 
-  test("leaves shell-safe paths unquoted by default", () => {
-    expect(formatDisplayPath("/tmp/plain-file.txt")).toBe(
-      "/tmp/plain-file.txt",
-    );
+  it("leaves shell-safe paths unquoted by default", () => {
+    assert.strictEqual(formatDisplayPath("/tmp/plain-file.txt"), "/tmp/plain-file.txt");
   });
 
-  test("always quotes when the explicit quote option is enabled", () => {
-    expect(formatDisplayPath("/tmp/plain-file.txt", { alwaysQuote: true })).toBe(
-      '"/tmp/plain-file.txt"',
-    );
+  it("always quotes when the explicit quote option is enabled", () => {
+    assert.strictEqual(formatDisplayPath("/tmp/plain-file.txt", { alwaysQuote: true }), '"/tmp/plain-file.txt"');
   });
 
-  test("applies the same auto-quote rule in basename mode", () => {
-    expect(formatDisplayPath("deep research report.md")).toBe(
-      '"deep research report.md"',
-    );
+  it("applies the same auto-quote rule in basename mode", () => {
+    assert.strictEqual(formatDisplayPath("deep research report.md"), '"deep research report.md"');
   });
 
-  test("renders home-relative paths without quoting the tilde", () => {
+  it("renders home-relative paths without quoting the tilde", () => {
     const filePath = join(homedir(), "projects/demo.txt");
-    expect(formatDisplayPath(filePath, { homeRelative: true })).toBe(
-      "~/projects/demo.txt",
-    );
+    assert.strictEqual(formatDisplayPath(filePath, { homeRelative: true }), "~/projects/demo.txt");
   });
 
-  test("escapes shell-unsafe characters in home-relative paths", () => {
+  it("escapes shell-unsafe characters in home-relative paths", () => {
     const filePath = join(homedir(), "My Files", "[draft] report.md");
-    expect(formatDisplayPath(filePath, { homeRelative: true })).toBe(
-      "~/My\\ Files/\\[draft\\]\\ report.md",
-    );
+    assert.strictEqual(formatDisplayPath(filePath, { homeRelative: true }), "~/My\\ Files/\\[draft\\]\\ report.md");
   });
 
-  test("renders the home directory itself as a bare tilde", () => {
-    expect(formatDisplayPath(homedir(), { homeRelative: true })).toBe("~");
+  it("renders the home directory itself as a bare tilde", () => {
+    assert.strictEqual(formatDisplayPath(homedir(), { homeRelative: true }), "~");
   });
 
-  test("keeps non-home paths absolute in home-relative mode", () => {
-    expect(formatDisplayPath("/tmp/plain-file.txt", { homeRelative: true })).toBe(
-      "/tmp/plain-file.txt",
-    );
+  it("keeps non-home paths absolute in home-relative mode", () => {
+    assert.strictEqual(formatDisplayPath("/tmp/plain-file.txt", { homeRelative: true }), "/tmp/plain-file.txt");
   });
 });
 
 describe("parseArgs", () => {
-  test("parses repeated type selectors, recursion, and home-relative output", () => {
-    expect(
+  it("parses repeated type selectors, recursion, and home-relative output", () => {
+    assert.deepStrictEqual(
       parseArgs([
         "--type",
         "subtitles",
@@ -93,181 +80,144 @@ describe("parseArgs", () => {
         "--home-relative",
         "movie.mkv",
       ]),
-    ).toEqual({
-      copyContent: false,
-      contentPathMode: "none",
-      dryRun: false,
-      files: ["movie.mkv"],
-      homeRelative: true,
-      randomCount: null,
-      recursive: true,
-      selectors: ["subtitles", "images"],
-      separator: " ",
-      useBasename: false,
-      useQuotes: false,
-    });
-  });
-
-  test("keeps explicit files and all-selector together", () => {
-    expect(parseArgs(["--all", "a.txt", "b.txt"]).selectors).toEqual(["all"]);
-    expect(parseArgs(["--all", "a.txt", "b.txt"]).files).toEqual([
-      "a.txt",
-      "b.txt",
-    ]);
-  });
-
-  test("parses random count after type selector flags", () => {
-    expect(parseArgs(["--type", "text", "--random", "3"]).randomCount).toBe(3);
-  });
-
-  test("rejects invalid random count", () => {
-    expect(() => parseArgs(["--random", "0"])).toThrow(
-      "Invalid number for --random flag: 0",
+      {
+        copyContent: false,
+        contentPathMode: "none",
+        dryRun: false,
+        files: ["movie.mkv"],
+        homeRelative: true,
+        randomCount: null,
+        recursive: true,
+        selectors: ["subtitles", "images"],
+        separator: " ",
+        useBasename: false,
+        useQuotes: false,
+      },
     );
   });
 
-  test("rejects missing random count", () => {
-    expect(() => parseArgs(["--random"])).toThrow(
-      "Usage: --random requires a number argument (e.g., --random 3)",
-    );
+  it("keeps explicit files and all-selector together", () => {
+    assert.deepStrictEqual(parseArgs(["--all", "a.txt", "b.txt"]).selectors, ["all"]);
+    assert.deepStrictEqual(parseArgs(["--all", "a.txt", "b.txt"]).files, ["a.txt", "b.txt"]);
   });
 
-  test("rejects invalid type values with valid groups listed", () => {
-    expect(() => parseArgs(["--type", "unknown"])).toThrow(
-      'Invalid value for --type: unknown. Valid groups: images, subtitles, text',
-    );
+  it("parses random count after type selector flags", () => {
+    assert.strictEqual(parseArgs(["--type", "text", "--random", "3"]).randomCount, 3);
   });
 
-  test("rejects missing type value", () => {
-    expect(() => parseArgs(["--type"])).toThrow(
-      "Usage: --type requires a value (images, subtitles, or text)",
-    );
+  it("rejects invalid random count", () => {
+    assert.throws(() => parseArgs(["--random", "0"]), { message: "Invalid number for --random flag: 0" });
   });
 
-  test("parses newline separator from long flag", () => {
-    expect(parseArgs(["--separator", "\\n"]).separator).toBe("\n");
+  it("rejects missing random count", () => {
+    assert.throws(() => parseArgs(["--random"]), { message: "Usage: --random requires a number argument (e.g., --random 3)" });
   });
 
-  test("rejects empty separator", () => {
-    expect(() => parseArgs(["--separator", ""])).toThrow(
-      "--separator value cannot be empty",
-    );
+  it("rejects invalid type values with valid groups listed", () => {
+    assert.throws(() => parseArgs(["--type", "unknown"]), { message: 'Invalid value for --type: unknown. Valid groups: images, subtitles, text' });
   });
 
-  test("rejects missing separator value", () => {
-    expect(() => parseArgs(["--separator"])).toThrow(
-      "Usage: --separator requires a value (e.g., --separator \"\\n\")",
-    );
+  it("rejects missing type value", () => {
+    assert.throws(() => parseArgs(["--type"]), { message: "Usage: --type requires a value (images, subtitles, or text)" });
   });
 
-  test("enables content mode from long flag", () => {
-    expect(parseArgs(["--content"]).copyContent).toBe(true);
+  it("parses newline separator from long flag", () => {
+    assert.strictEqual(parseArgs(["--separator", "\\n"]).separator, "\n");
   });
 
-  test("enables basename-only mode from long flag", () => {
-    expect(parseArgs(["--name-only"]).useBasename).toBe(true);
+  it("rejects empty separator", () => {
+    assert.throws(() => parseArgs(["--separator", ""]), { message: "--separator value cannot be empty" });
   });
 
-  test("enables quote mode from long flag", () => {
-    expect(parseArgs(["--quote"]).useQuotes).toBe(true);
+  it("rejects missing separator value", () => {
+    assert.throws(() => parseArgs(["--separator"]), { message: 'Usage: --separator requires a value (e.g., --separator "\\n")' });
   });
 
-  test("rejects legacy comma separator flag with migration guidance", () => {
-    expect(() => parseArgs(["-c"])).toThrow(
-      'Flag -c was removed. Use --separator "," instead.',
-    );
+  it("enables content mode from long flag", () => {
+    assert.strictEqual(parseArgs(["--content"]).copyContent, true);
   });
 
-  test("rejects legacy tab separator flag with migration guidance", () => {
-    expect(() => parseArgs(["-t"])).toThrow(
-      'Flag -t was removed. Use --separator "\\t" instead.',
-    );
+  it("enables basename-only mode from long flag", () => {
+    assert.strictEqual(parseArgs(["--name-only"]).useBasename, true);
   });
 
-  test("rejects legacy line separator flag with migration guidance", () => {
-    expect(() => parseArgs(["-l"])).toThrow(
-      'Flag -l was removed. Use --separator "\\n" instead.',
-    );
+  it("enables quote mode from long flag", () => {
+    assert.strictEqual(parseArgs(["--quote"]).useQuotes, true);
   });
 
-  test("rejects removed selector flags with migration guidance", () => {
-    expect(() => parseArgs(["--images"])).toThrow(
-      'Flag --images was removed. Use --type images instead.',
-    );
-    expect(() => parseArgs(["--subtitles"])).toThrow(
-      'Flag --subtitles was removed. Use --type subtitles instead.',
-    );
-    expect(() => parseArgs(["--text"])).toThrow(
-      'Flag --text was removed. Use --type text instead.',
-    );
+  it("rejects legacy comma separator flag with migration guidance", () => {
+    assert.throws(() => parseArgs(["-c"]), { message: 'Flag -c was removed. Use --separator "," instead.' });
   });
 
-  test("rejects removed short flags with migration guidance", () => {
-    expect(() => parseArgs(["-s", "\\t"])).toThrow(
-      "Flag -s was removed. Use --separator instead.",
-    );
-    expect(() => parseArgs(["-C"])).toThrow(
-      "Flag -C was removed. Use --content instead.",
-    );
-    expect(() => parseArgs(["-R"])).toThrow(
-      "Flag -R was removed. Use --recursive instead.",
-    );
-    expect(() => parseArgs(["-H"])).toThrow(
-      "Flag -H was removed. Use --home-relative instead.",
-    );
-    expect(() => parseArgs(["-r", "3"])).toThrow(
-      "Flag -r was removed. Use --random instead.",
-    );
-    expect(() => parseArgs(["-b"])).toThrow(
-      "Flag -b was removed. Use --name-only instead.",
-    );
-    expect(() => parseArgs(["-q"])).toThrow(
-      "Flag -q was removed. Use --quote instead.",
-    );
+  it("rejects legacy tab separator flag with migration guidance", () => {
+    assert.throws(() => parseArgs(["-t"]), { message: 'Flag -t was removed. Use --separator "\\t" instead.' });
+  });
+
+  it("rejects legacy line separator flag with migration guidance", () => {
+    assert.throws(() => parseArgs(["-l"]), { message: 'Flag -l was removed. Use --separator "\\n" instead.' });
+  });
+
+  it("rejects removed selector flags with migration guidance", () => {
+    assert.throws(() => parseArgs(["--images"]), { message: 'Flag --images was removed. Use --type images instead.' });
+    assert.throws(() => parseArgs(["--subtitles"]), { message: 'Flag --subtitles was removed. Use --type subtitles instead.' });
+    assert.throws(() => parseArgs(["--text"]), { message: 'Flag --text was removed. Use --type text instead.' });
+  });
+
+  it("rejects removed short flags with migration guidance", () => {
+    assert.throws(() => parseArgs(["-s", "\\t"]), { message: "Flag -s was removed. Use --separator instead." });
+    assert.throws(() => parseArgs(["-C"]), { message: "Flag -C was removed. Use --content instead." });
+    assert.throws(() => parseArgs(["-R"]), { message: "Flag -R was removed. Use --recursive instead." });
+    assert.throws(() => parseArgs(["-H"]), { message: "Flag -H was removed. Use --home-relative instead." });
+    assert.throws(() => parseArgs(["-r", "3"]), { message: "Flag -r was removed. Use --random instead." });
+    assert.throws(() => parseArgs(["-b"]), { message: "Flag -b was removed. Use --name-only instead." });
+    assert.throws(() => parseArgs(["-q"]), { message: "Flag -q was removed. Use --quote instead." });
   });
 });
 
 describe("decodeSeparatorValue", () => {
-  test("decodes supported escape sequences", () => {
-    expect(decodeSeparatorValue("\\n\\t\\r\\\\")).toBe("\n\t\r\\");
+  it("decodes supported escape sequences", () => {
+    assert.strictEqual(decodeSeparatorValue("\\n\\t\\r\\\\"), "\n\t\r\\");
   });
 
-  test("leaves unknown escape sequences literal", () => {
-    expect(decodeSeparatorValue("\\x\\z")).toBe("\\x\\z");
+  it("leaves unknown escape sequences literal", () => {
+    assert.strictEqual(decodeSeparatorValue("\\x\\z"), "\\x\\z");
   });
 });
 
 describe("buildContentBlocks", () => {
-  test("formats one file as full path, blank line, and content", () => {
-    expect(
+  it("formats one file as full path, blank line, and content", () => {
+    assert.strictEqual(
       buildContentBlocks([
         { resolvedPath: "/tmp/a.txt", fileContent: "alpha\nbeta" },
       ]),
-    ).toBe("/tmp/a.txt\n\nalpha\nbeta");
+      "/tmp/a.txt\n\nalpha\nbeta",
+    );
   });
 
-  test("joins multiple files with blank lines between blocks in order", () => {
-    expect(
+  it("joins multiple files with blank lines between blocks in order", () => {
+    assert.strictEqual(
       buildContentBlocks([
         { resolvedPath: "/tmp/a.txt", fileContent: "alpha" },
         { resolvedPath: "/tmp/b.txt", fileContent: "beta" },
       ]),
-    ).toBe("/tmp/a.txt\n\nalpha\n\n/tmp/b.txt\n\nbeta");
+      "/tmp/a.txt\n\nalpha\n\n/tmp/b.txt\n\nbeta",
+    );
   });
 
-  test("returns just content when path mode is none", () => {
-    expect(
+  it("returns just content when path mode is none", () => {
+    assert.strictEqual(
       buildContentBlocks([
         { resolvedPath: "/tmp/a.txt", fileContent: "alpha" },
         { resolvedPath: "/tmp/b.txt", fileContent: "beta" },
       ], "none"),
-    ).toBe("alpha\n\nbeta");
+      "alpha\n\nbeta",
+    );
   });
 });
 
 describe("validateParsedArgs", () => {
-  test("allows home-relative output on its own", () => {
-    expect(() =>
+  it("allows home-relative output on its own", () => {
+    assert.doesNotThrow(() =>
       validateParsedArgs({
         copyContent: false,
         files: [],
@@ -279,11 +229,11 @@ describe("validateParsedArgs", () => {
         useBasename: false,
         useQuotes: false,
       }),
-    ).not.toThrow();
+    );
   });
 
-  test("rejects home-relative with quote mode", () => {
-    expect(() =>
+  it("rejects home-relative with quote mode", () => {
+    assert.throws(() =>
       validateParsedArgs({
         copyContent: false,
         files: [],
@@ -295,13 +245,12 @@ describe("validateParsedArgs", () => {
         useBasename: false,
         useQuotes: true,
       }),
-    ).toThrow(
-      "--home-relative cannot be combined with --content, --name-only, or --quote",
+      { message: "--home-relative cannot be combined with --content, --name-only, or --quote" },
     );
   });
 
-  test("rejects home-relative with basename mode", () => {
-    expect(() =>
+  it("rejects home-relative with basename mode", () => {
+    assert.throws(() =>
       validateParsedArgs({
         copyContent: false,
         files: [],
@@ -313,13 +262,12 @@ describe("validateParsedArgs", () => {
         useBasename: true,
         useQuotes: false,
       }),
-    ).toThrow(
-      "--home-relative cannot be combined with --content, --name-only, or --quote",
+      { message: "--home-relative cannot be combined with --content, --name-only, or --quote" },
     );
   });
 
-  test("rejects home-relative with content mode", () => {
-    expect(() =>
+  it("rejects home-relative with content mode", () => {
+    assert.throws(() =>
       validateParsedArgs({
         copyContent: true,
         files: [],
@@ -331,35 +279,35 @@ describe("validateParsedArgs", () => {
         useBasename: false,
         useQuotes: false,
       }),
-    ).toThrow(
-      "--home-relative cannot be combined with --content, --name-only, or --quote",
+      { message: "--home-relative cannot be combined with --content, --name-only, or --quote" },
     );
   });
 });
 
 describe("mergeUniquePaths", () => {
-  test("keeps the first occurrence order across explicit and selector files", () => {
-    expect(
+  it("keeps the first occurrence order across explicit and selector files", () => {
+    assert.deepStrictEqual(
       mergeUniquePaths(
         ["./manual-a.srt", "./manual-b.srt"],
         ["./manual-b.srt", "./found-c.srt", "./manual-a.srt"],
       ),
-    ).toEqual(["./manual-a.srt", "./manual-b.srt", "./found-c.srt"]);
+      ["./manual-a.srt", "./manual-b.srt", "./found-c.srt"],
+    );
   });
 });
 
 describe("applyRandomSelection", () => {
-  test("applies random slicing after shuffle", () => {
+  it("applies random slicing after shuffle", () => {
     const result = applyRandomSelection(
       ["a", "b", "c", "d"],
       2,
       (items) => [...items].reverse(),
     );
 
-    expect(result).toEqual(["d", "c"]);
+    assert.deepStrictEqual(result, ["d", "c"]);
   });
 
-  test("returns original items when random mode is disabled", () => {
-    expect(applyRandomSelection(["a", "b"], null)).toEqual(["a", "b"]);
+  it("returns original items when random mode is disabled", () => {
+    assert.deepStrictEqual(applyRandomSelection(["a", "b"], null), ["a", "b"]);
   });
 });

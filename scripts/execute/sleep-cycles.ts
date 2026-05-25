@@ -1,5 +1,6 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 import { parseArgs } from "util";
+import { args, isMain } from "./utils.ts";
 
 const SLEEP_CYCLE_MINUTES = 90;
 const FALL_ASLEEP_MINUTES = 15;
@@ -108,7 +109,7 @@ function showHelp(): void {
   console.log(`
 ${COLORS.CYAN}Sleep Cycle Calculator${COLORS.RESET}
 
-Usage: bun run sleep-cycles.ts [options]
+Usage: sleep-cycles [options]
 
 Options:
   -t, --time <HH:MM>    Time to calculate from (24-hour format)
@@ -116,15 +117,15 @@ Options:
                         Default: "sleep" (calculate wake-up times)
 
 Examples:
-  bun run sleep-cycles.ts -t 23:00           # Calculate wake times if sleeping at 11 PM
-  bun run sleep-cycles.ts -t 23:00 -m sleep  # Same as above (explicit)
-  bun run sleep-cycles.ts -t 07:00 -m wake   # Calculate sleep times to wake at 7 AM
+  sleep-cycles -t 23:00           # Calculate wake times if sleeping at 11 PM
+  sleep-cycles -t 23:00 -m sleep  # Same as above (explicit)
+  sleep-cycles -t 07:00 -m wake   # Calculate sleep times to wake at 7 AM
 `);
 }
 
 function main(): void {
   const { values } = parseArgs({
-    args: Bun.argv.slice(2),
+    args,
     options: {
       time: { type: "string", short: "t" },
       mode: { type: "string", short: "m", default: "sleep" },
@@ -163,4 +164,4 @@ function main(): void {
   }
 }
 
-main();
+if (isMain(import.meta.url)) main();

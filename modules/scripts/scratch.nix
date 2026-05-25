@@ -5,8 +5,8 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "temp";
-    runtime = "${pkgs.bash}/bin/bash";
-    entry = "${../../scripts/execute/scratch.sh}";
+    runtime = "${pkgs.tsx}/bin/tsx";
+    entry = "${../../scripts/execute/scratch.ts}";
     extraPathPackages = [
       pkgs.bash
       # pkgs.magika

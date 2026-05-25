@@ -1,8 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 import fs from "fs";
 import path from "path";
 import process from "process";
 import { spawnSync } from "child_process";
+import { isMain } from "./utils.ts";
 
 interface CommandInfo {
   input: string;
@@ -229,6 +230,6 @@ function main(): void {
   showMetadata(result, target);
 }
 
-if (import.meta.main) {
+if (isMain(import.meta.url)) {
   main();
 }

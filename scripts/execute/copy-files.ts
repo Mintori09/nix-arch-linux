@@ -1,8 +1,11 @@
+#!/usr/bin/env tsx
 import { existsSync, readFileSync, realpathSync } from "fs";
 import { basename, relative } from "path";
 import { homedir } from "os";
+import { spawn } from "node:child_process";
 
 import { fileGroupNames, fileGroups } from "./file-groups";
+import { isMain, readStdin } from "./utils";
 
 const SHELL_UNSAFE_PATH_PATTERN = /[\s"'`$!&;|<>(){}\[\]*?~#]/;
 const HOME_DIR = homedir();
@@ -325,7 +328,6 @@ export function applyRandomSelection(
   return randomizer(files).slice(0, randomCount);
 }
 
-// Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -336,22 +338,19 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 async function collectGitUntrackedFiles(): Promise<string[]> {
-  const proc = Bun.spawn(
-    ["git", "ls-files", "--others", "--exclude-standard"],
-    {
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
+  const child = spawn("git", ["ls-files", "--others", "--exclude-standard"], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  let stdout = "";
+  child.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+  const exitCode = await new Promise<number>((r) => child.on("close", r));
 
   if (exitCode !== 0) {
     return [];
   }
 
-  return output
+  return stdout
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
@@ -364,7 +363,7 @@ async function readFilesFromStdin(): Promise<string[]> {
     return [];
   }
 
-  const stdinText = await Bun.stdin.text();
+  const stdinText = await readStdin();
   return stdinText
     .split("\n")
     .map((line) => line.trim())
@@ -389,19 +388,19 @@ async function collectSelectorFiles(
 
   for (const selector of selectors) {
     if (selector === "all") {
-      const proc = Bun.spawn(fdArgs, {
-        stdout: "pipe",
-        stderr: "inherit",
+      const child = spawn(fdArgs[0], fdArgs.slice(1), {
+        stdio: ["ignore", "pipe", "inherit"],
       });
 
-      const output = await new Response(proc.stdout).text();
-      const code = await proc.exited;
+      let stdout = "";
+      child.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+      const code = await new Promise<number>((r) => child.on("close", r));
 
       if (code !== 0) {
         process.exit(code);
       }
 
-      return output
+      return stdout
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
@@ -412,28 +411,29 @@ async function collectSelectorFiles(
     }
   }
 
-  const proc = Bun.spawn(
+  const child = spawn(
+    fdArgs[0],
     [
-      ...fdArgs,
+      ...fdArgs.slice(1),
       ...Array.from(extensions).flatMap((extension) => [
         "--extension",
         extension,
       ]),
     ],
     {
-      stdout: "pipe",
-      stderr: "inherit",
+      stdio: ["ignore", "pipe", "inherit"],
     },
   );
 
-  const output = await new Response(proc.stdout).text();
-  const code = await proc.exited;
+  let stdout = "";
+  child.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+  const code = await new Promise<number>((r) => child.on("close", r));
 
   if (code !== 0) {
     process.exit(code);
   }
 
-  return output
+  return stdout
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
@@ -448,10 +448,10 @@ function printUsage(): void {
     .join("\n");
 
   console.error(
-    "Usage: bun run copy-files.ts [--separator <value>] [--content] [--home-relative] [--name-only] [--quote] [--all | --type <group> ...] [--recursive] [--random <n>] [--git-untracked] <file1> [file2] ...",
+    "Usage: tsx copy-files.ts [--separator <value>] [--content] [--home-relative] [--name-only] [--quote] [--all | --type <group> ...] [--recursive] [--random <n>] [--git-untracked] <file1> [file2] ...",
   );
   console.error(
-    "       fd ... | bun run copy-files.ts [--separator <value>] [--random <n>]",
+    "       fd ... | tsx copy-files.ts [--separator <value>] [--random <n>]",
   );
   console.error(
     "  --separator     custom separator for full paths; supports \\n, \\t, \\r, \\\\",
@@ -566,13 +566,12 @@ async function main() {
       parsedArgs.contentPathMode,
     );
 
-    const proc = Bun.spawn(["wl-copy"], {
-      stdin: new Response(clipboardContent),
-    });
+    const child = spawn("wl-copy", [], { stdio: ["pipe", "inherit", "inherit"] });
+    child.stdin.write(clipboardContent);
+    child.stdin.end();
+    const exitCode = await new Promise<number>((r) => child.on("close", r));
 
-    await proc.exited;
-
-    if (proc.exitCode === 0) {
+    if (exitCode === 0) {
       console.log(
         `\nCopied content of ${contentEntries.length} file(s) to clipboard`,
       );
@@ -591,18 +590,16 @@ async function main() {
   const clipboardContent = existingFiles.join(parsedArgs.separator);
 
   if (parsedArgs.dryRun) {
-    // console.log(`\n[Dry run] Would copy ${existingFiles.length} path(s):`);
     console.log(clipboardContent);
     return;
   }
 
-  const proc = Bun.spawn(["wl-copy"], {
-    stdin: new Response(clipboardContent),
-  });
+  const child = spawn("wl-copy", [], { stdio: ["pipe", "inherit", "inherit"] });
+  child.stdin.write(clipboardContent);
+  child.stdin.end();
+  const exitCode = await new Promise<number>((r) => child.on("close", r));
 
-  await proc.exited;
-
-  if (proc.exitCode === 0) {
+  if (exitCode === 0) {
     console.log(`\nCopied ${existingFiles.length} path(s) to clipboard`);
     return;
   }
@@ -611,6 +608,6 @@ async function main() {
   process.exit(1);
 }
 
-if (import.meta.main) {
-  await main();
+if (isMain(import.meta.url)) {
+  main().catch((err: unknown) => { console.error(err); process.exit(1); });
 }

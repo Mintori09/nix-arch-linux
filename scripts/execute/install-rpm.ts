@@ -1,7 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import {
   chmod,
   cp,
@@ -18,6 +18,8 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { homedir, tmpdir } from "node:os";
+import { spawn } from "node:child_process";
+import { args, isMain, which } from "./utils";
 
 const COLORS = {
   BLUE: "\x1b[34m",
@@ -55,7 +57,6 @@ type CommandName = "extract" | "install" | "list" | "remove";
 
 type CommandOptions = {
   captureStdout?: boolean;
-  stdin?: ReadableStream | Blob | BufferSource | string;
 };
 
 type ParsedCli = {
@@ -273,7 +274,7 @@ function resolvePath(inputPath: string): string {
 
 export function ensureRequiredTools(
   _install: boolean,
-  toolResolver: (tool: string) => string | null = Bun.which,
+  toolResolver: (tool: string) => string | null = which,
 ): void {
   const missing = REQUIRED_TOOLS.filter((tool) => !toolResolver(tool));
 
@@ -289,23 +290,19 @@ async function runCommand(
   options: CommandOptions = {},
 ): Promise<string> {
   const command = formatCommand(parts);
-  const proc = Bun.spawn(parts, {
+  const proc = spawn(parts[0], parts.slice(1), {
     cwd: process.cwd(),
-    stderr: "pipe",
-    stdin: options.stdin ?? "ignore",
-    stdout: options.captureStdout ? "pipe" : "inherit",
+    stdio: ["ignore", options.captureStdout ? "pipe" : "inherit", "pipe"],
   });
 
-  const stderrPromise = new Response(proc.stderr).text();
-  const stdoutPromise = options.captureStdout
-    ? new Response(proc.stdout).text()
-    : Promise.resolve("");
+  let stderr = "";
+  let stdout = "";
+  proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+  if (options.captureStdout) {
+    proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+  }
 
-  const [exitCode, stderr, stdout] = await Promise.all([
-    proc.exited,
-    stderrPromise,
-    stdoutPromise,
-  ]);
+  const exitCode = await new Promise<number>((resolve) => proc.on("close", resolve));
 
   if (exitCode !== 0) {
     throw new CommandExecutionError(command, exitCode, shortStderr(stderr));
@@ -373,27 +370,27 @@ export function buildExtractCommands(
 }
 
 async function listArchiveEntries(rpmPath: string): Promise<string[]> {
-  const rpmProc = Bun.spawn(["rpm2cpio", rpmPath], {
+  const rpmProc = spawn("rpm2cpio", [rpmPath], {
     cwd: process.cwd(),
-    stderr: "pipe",
-    stdout: "pipe",
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const cpioProc = Bun.spawn(["cpio", "--list"], {
+  const cpioProc = spawn("cpio", ["--list"], {
     cwd: process.cwd(),
-    stderr: "pipe",
-    stdin: rpmProc.stdout,
-    stdout: "pipe",
+    stdio: [rpmProc.stdout, "pipe", "pipe"],
   });
 
-  const [rpmExitCode, cpioExitCode, rpmStderr, cpioStderr, listing] =
-    await Promise.all([
-      rpmProc.exited,
-      cpioProc.exited,
-      new Response(rpmProc.stderr).text(),
-      new Response(cpioProc.stderr).text(),
-      new Response(cpioProc.stdout).text(),
-    ]);
+  let rpmStderr = "";
+  let cpioStderr = "";
+  let listing = "";
+  rpmProc.stderr.on("data", (d: Buffer) => (rpmStderr += d.toString()));
+  cpioProc.stderr.on("data", (d: Buffer) => (cpioStderr += d.toString()));
+  cpioProc.stdout.on("data", (d: Buffer) => (listing += d.toString()));
+
+  const [rpmExitCode, cpioExitCode] = await Promise.all([
+    new Promise<number>((r) => rpmProc.on("close", r)),
+    new Promise<number>((r) => cpioProc.on("close", r)),
+  ]);
 
   if (rpmExitCode !== 0) {
     throw new CommandExecutionError(
@@ -488,24 +485,24 @@ async function extractRpm(rpmPath: string, targetDir: string): Promise<void> {
     `${COLORS.BLUE}info:${COLORS.NC} Extracting ${path.basename(rpmPath)}...`,
   );
 
-  const rpmProc = Bun.spawn(rpm2cpio.argv, {
+  const rpmProc = spawn(rpm2cpio.argv[0], rpm2cpio.argv.slice(1), {
     cwd: rpm2cpio.cwd ?? process.cwd(),
-    stderr: "pipe",
-    stdout: "pipe",
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const cpioProc = Bun.spawn(cpio.argv, {
+  const cpioProc = spawn(cpio.argv[0], cpio.argv.slice(1), {
     cwd: cpio.cwd ?? process.cwd(),
-    stderr: "pipe",
-    stdin: rpmProc.stdout,
-    stdout: "inherit",
+    stdio: [rpmProc.stdout, "inherit", "pipe"],
   });
 
-  const [rpmExitCode, cpioExitCode, rpmStderr, cpioStderr] = await Promise.all([
-    rpmProc.exited,
-    cpioProc.exited,
-    new Response(rpmProc.stderr).text(),
-    new Response(cpioProc.stderr).text(),
+  let rpmStderr = "";
+  let cpioStderr = "";
+  rpmProc.stderr.on("data", (d: Buffer) => (rpmStderr += d.toString()));
+  cpioProc.stderr.on("data", (d: Buffer) => (cpioStderr += d.toString()));
+
+  const [rpmExitCode, cpioExitCode] = await Promise.all([
+    new Promise<number>((r) => rpmProc.on("close", r)),
+    new Promise<number>((r) => cpioProc.on("close", r)),
   ]);
 
   if (rpmExitCode !== 0) {
@@ -875,8 +872,7 @@ function sanitizeInstallId(value: string): string {
 }
 
 async function hashFile(filePath: string): Promise<string> {
-  const file = Bun.file(filePath);
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const buffer = readFileSync(filePath);
   return createHash("sha256").update(buffer).digest("hex");
 }
 
@@ -890,7 +886,7 @@ async function readManifest(manifestPath: string): Promise<InstallManifest> {
 }
 
 export async function listInstalledPackageIds(
-  env: Record<string, string | undefined> = Bun.env,
+  env: Record<string, string | undefined> = process.env,
 ): Promise<string[]> {
   const layout = resolveXdgLayout(env);
   if (!existsSync(layout.manifestsDir)) return [];
@@ -904,7 +900,7 @@ export async function listInstalledPackageIds(
 
 export async function removeInstalledPackage(
   installId: string,
-  env: Record<string, string | undefined> = Bun.env,
+  env: Record<string, string | undefined> = process.env,
 ): Promise<void> {
   const layout = resolveXdgLayout(env);
   const manifestPath = path.join(layout.manifestsDir, `${installId}.json`);
@@ -929,7 +925,7 @@ export async function removeInstalledPackage(
 export async function installExtractedTree(
   options: InstallExtractedTreeOptions,
 ): Promise<InstallExtractedTreeResult> {
-  const env = options.env ?? Bun.env;
+  const env = options.env ?? process.env;
   const layout = resolveXdgLayout(env);
   const installId = options.installId ?? (await buildInstallId(options.rpmPath));
   const manifestPath = path.join(layout.manifestsDir, `${installId}.json`);
@@ -1087,7 +1083,7 @@ async function printInstalledPackages(idsOnly: boolean): Promise<void> {
   }
 }
 
-export async function run(argv = Bun.argv.slice(2)): Promise<void> {
+export async function run(argv = args): Promise<void> {
   const parsed = parseCliArgs(argv);
 
   if (parsed.help) {
@@ -1140,10 +1136,11 @@ export async function run(argv = Bun.argv.slice(2)): Promise<void> {
   }
 }
 
-if (import.meta.main) {
-  try {
-    await run();
-  } catch (err) {
+if (isMain(import.meta.url)) {
+  (async () => {
+    try {
+      await run();
+    } catch (err) {
     if (err instanceof CommandExecutionError) {
       console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`);
       console.error(
@@ -1160,4 +1157,5 @@ if (import.meta.main) {
     console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`, err);
     process.exit(1);
   }
+  })();
 }

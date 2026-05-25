@@ -1,8 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
-import { spawn } from "bun";
+import { spawn } from "node:child_process";
 import { existsSync, statSync } from "fs";
 import { basename, extname } from "path";
+import { args, isMain } from "./utils.ts";
 
 export const DEFAULT_LARGE_TEXT_BYTES = 1024 * 1024;
 
@@ -194,12 +195,15 @@ export function planOpenTarget(options: PlanOpenTargetOptions): OpenPlan {
 }
 
 async function detectMimeType(path: string): Promise<string | null> {
-  const proc = spawn(["file", "--brief", "--mime-type", path], {
-    stderr: "pipe",
-    stdout: "pipe",
+  const child = spawn("file", ["--brief", "--mime-type", path], {
+    stdio: ["inherit", "pipe", "pipe"],
   });
-  const output = (await new Response(proc.stdout).text()).trim();
-  const exitCode = await proc.exited;
+  let output = "";
+  child.stdout.on("data", (d: Buffer) => (output += d.toString()));
+  const exitCode = await new Promise<number>((resolve) => {
+    child.on("close", (c) => resolve(c ?? 0));
+  });
+  output = output.trim();
 
   if (exitCode !== 0 || output === "") {
     return null;
@@ -210,7 +214,7 @@ async function detectMimeType(path: string): Promise<string | null> {
 
 export async function buildOpenCommand(
   target: string,
-  config = parseOpenConfig(Bun.env),
+  config = parseOpenConfig(process.env),
   projectMode = false,
 ): Promise<OpenPlan> {
   if (projectMode) {
@@ -248,7 +252,7 @@ function printUsage(): void {
 }
 
 async function main(): Promise<number> {
-  const parsedArgs = parseArgs(Bun.argv.slice(2));
+  const parsedArgs = parseArgs(args);
 
   if (parsedArgs.targets.length === 0) {
     printUsage();
@@ -258,21 +262,19 @@ async function main(): Promise<number> {
   for (const target of parsedArgs.targets) {
     const plan = await buildOpenCommand(
       target,
-      parseOpenConfig(Bun.env),
+      parseOpenConfig(process.env),
       parsedArgs.projectMode,
     );
-    const proc = spawn(plan.args, {
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "ignore",
+    const child = spawn(plan.args[0], plan.args.slice(1), {
+      stdio: "ignore",
     });
 
-    proc.unref();
+    child.unref();
   }
 
   return 0;
 }
 
-if (import.meta.main) {
-  process.exit(await main());
+if (isMain(import.meta.url)) {
+  main().then((code) => process.exit(code));
 }

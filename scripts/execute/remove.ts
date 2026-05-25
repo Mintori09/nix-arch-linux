@@ -1,10 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 import { unlink, rmdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fileGroups } from "./file-groups";
-
-const args = Bun.argv.slice(2);
+import { spawn, args, isMain } from "./utils.ts";
 const command = args[0];
 const flags = new Set(args.slice(1));
 
@@ -81,21 +80,21 @@ async function collectFiles(
     fdArgs.push("--max-depth", "1");
   }
 
-  const proc = Bun.spawn(fdArgs, {
-    stdout: "pipe",
-    stderr: "inherit",
+  const child = spawn(fdArgs[0], fdArgs.slice(1), {
+    stdio: ["ignore", "pipe", "inherit"],
   });
-
-  const output = await new Response(proc.stdout).arrayBuffer();
-  const code = await proc.exited;
+  let collected = "";
+  child.stdout.on("data", (d: Buffer) => (collected += d.toString()));
+  const code = await new Promise<number>((resolve) => {
+    child.on("close", (c) => resolve(c ?? 0));
+  });
 
   if (code !== 0) {
     console.error("Failed to collect files.");
     process.exit(code);
   }
 
-  return new TextDecoder()
-    .decode(output)
+  return collected
     .split("\0")
     .map((file) => file.trim())
     .filter(Boolean);
@@ -144,42 +143,46 @@ async function removeEmptyParentDirs(files: string[]) {
   }
 }
 
-if (!command || args.includes("-h") || args.includes("--help")) {
-  exitWithHelp(0);
-}
+if (isMain(import.meta.url)) {
+  (async () => {
+    if (!command || args.includes("-h") || args.includes("--help")) {
+      exitWithHelp(0);
+    }
 
-validateFlags();
+    validateFlags();
 
-const target = fileGroups[command];
+    const target = fileGroups[command];
 
-if (!target) {
-  console.error(`Unknown command: ${command}\n`);
-  exitWithHelp(1);
-}
+    if (!target) {
+      console.error(`Unknown command: ${command}\n`);
+      exitWithHelp(1);
+    }
 
-const recursive = flags.has("-r") || flags.has("--recursive");
-const dryRun = flags.has("-n") || flags.has("--dry-run");
-const removeEmptyDirs = flags.has("-e") || flags.has("--remove-empty-dirs");
+    const recursive = flags.has("-r") || flags.has("--recursive");
+    const dryRun = flags.has("-n") || flags.has("--dry-run");
+    const removeEmptyDirs = flags.has("-e") || flags.has("--remove-empty-dirs");
 
-const files = await collectFiles(target.extensions, recursive);
+    const files = await collectFiles(target.extensions, recursive);
 
-if (files.length === 0) {
-  console.log("No files found.");
-  process.exit(0);
-}
+    if (files.length === 0) {
+      console.log("No files found.");
+      process.exit(0);
+    }
 
-console.log(`${dryRun ? "Found" : "Removing"} ${files.length} file(s):\n`);
-console.log(files.join("\n"));
+    console.log(`${dryRun ? "Found" : "Removing"} ${files.length} file(s):\n`);
+    console.log(files.join("\n"));
 
-if (dryRun) {
-  console.log("\nDry run enabled. No files were removed.");
-  process.exit(0);
-}
+    if (dryRun) {
+      console.log("\nDry run enabled. No files were removed.");
+      process.exit(0);
+    }
 
-const removedFiles = await removeFiles(files);
+    const removedFiles = await removeFiles(files);
 
-if (removeEmptyDirs) {
-  await removeEmptyParentDirs(removedFiles);
+    if (removeEmptyDirs) {
+      await removeEmptyParentDirs(removedFiles);
+    }
+  })();
 }
 
 export {};

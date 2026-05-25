@@ -1,6 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { isMain } from "./utils.ts";
 
 type Language = "python" | "node" | "go" | "rust" | "ruby" | "java" | "deno" | "qt" | "gtk" | "wails" | "tauri" | "flutter" | "electron";
 
@@ -502,6 +503,6 @@ async function main(): Promise<number> {
   }
 }
 
-if (import.meta.main) {
-  process.exit(await main());
+if (isMain(import.meta.url)) {
+  main().then((code) => process.exit(code));
 }

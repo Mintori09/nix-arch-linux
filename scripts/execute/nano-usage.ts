@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 const ANSI_COLORS = {
   green: "\x1b[0;32m",

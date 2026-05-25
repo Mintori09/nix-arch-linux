@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "rgf";
-    runtime = "${pkgs.bash}/bin/bash";
-    entry = "${../../scripts/execute/fzf-rg-edit.sh}";
+    runtime = "${pkgs.tsx}/bin/tsx";
+    entry = "${../../scripts/execute/fzf-rg-edit.ts}";
   };
 }

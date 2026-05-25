@@ -114,7 +114,7 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "cpath";
-      runtime = "${pkgs.bun}/bin/bun";
+      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute}/copy-files.ts";
       extraPathPackages = [
         pkgs.fd

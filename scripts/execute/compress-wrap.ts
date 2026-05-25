@@ -1,5 +1,5 @@
-// compress-wrap.ts
-// Simple, safe compression wrapper for Bun using the output filename extension.
+#!/usr/bin/env tsx
+// Simple, safe compression wrapper using the output filename extension.
 
 import {
   accessSync,
@@ -12,6 +12,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { spawnSync } from "node:child_process";
 
 type CompressionType =
   | "zip"
@@ -28,14 +29,14 @@ const PROGRAM_NAME = path.basename(process.argv[1] ?? "compress-wrap.ts");
 
 function usage(): void {
   console.log(`Usage:
-  bun ${PROGRAM_NAME} [-f|--force] OUTPUT INPUT...
+  tsx ${PROGRAM_NAME} [-f|--force] OUTPUT INPUT...
 
 Examples:
-  bun ${PROGRAM_NAME} project.zip src README.md
-  bun ${PROGRAM_NAME} logs.tar.gz logs/
-  bun ${PROGRAM_NAME} backup.7z Documents/
-  bun ${PROGRAM_NAME} file.txt.gz file.txt
-  bun ${PROGRAM_NAME} -f project.zip src/
+  tsx ${PROGRAM_NAME} project.zip src README.md
+  tsx ${PROGRAM_NAME} logs.tar.gz logs/
+  tsx ${PROGRAM_NAME} backup.7z Documents/
+  tsx ${PROGRAM_NAME} file.txt.gz file.txt
+  tsx ${PROGRAM_NAME} -f project.zip src/
 
 Supported output extensions:
   .zip
@@ -287,14 +288,11 @@ function removeFileIfExists(filePath: string): void {
 }
 
 function runCommand(command: string[]): boolean {
-  const result = Bun.spawnSync({
-    cmd: command,
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
+  const result = spawnSync(command[0], command.slice(1), {
+    stdio: "inherit",
   });
 
-  return result.exitCode === 0;
+  return result.status === 0;
 }
 
 function compressArchive(
@@ -332,14 +330,11 @@ function compressSingleFileWithRedirect(
         ? `bzip2 -c -- "$1" > "$2"`
         : `xz -c -- "$1" > "$2"`;
 
-  const result = Bun.spawnSync({
-    cmd: ["sh", "-c", command, "compress-wrap", input, output],
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
+  const result = spawnSync("sh", ["-c", command, "compress-wrap", input, output], {
+    stdio: "inherit",
   });
 
-  return result.exitCode === 0;
+  return result.status === 0;
 }
 
 function parseArgs(args: string[]): {

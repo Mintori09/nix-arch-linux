@@ -1,10 +1,13 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
-import { file, write, argv, spawn } from "bun";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { spawn } from "node:child_process";
 import { parse, stringify } from "yaml";
 import { availableParallelism } from "os";
 import { extname } from "path";
 import { pathToFileURL } from "url";
+import { fileURLToPath } from "url";
+import { isMain, readStdin, sleep } from "./utils";
 
 const EXIT_FAILURE = 1;
 const PRETTIER_WORKER_ARG = "--prettier-worker";
@@ -165,7 +168,7 @@ interface PrettierModule {
 }
 
 async function withLock<T>(fn: () => Promise<T>): Promise<T> {
-  while (outputLock.locked) await Bun.sleep(1);
+  while (outputLock.locked) await sleep(1);
   outputLock.locked = true;
   try {
     return await fn();
@@ -244,7 +247,7 @@ async function getPrettierModule(): Promise<PrettierModule> {
   return prettierModulePromise;
 }
 
-export function isPrettierWorkerMode(args: string[] = argv): boolean {
+export function isPrettierWorkerMode(args: string[] = process.argv): boolean {
   return args.includes(PRETTIER_WORKER_ARG);
 }
 
@@ -258,7 +261,7 @@ export async function formatFileWithPrettier(
     throw new Error(`No Prettier handler for ${filePath}`);
   }
 
-  const originalContent = await file(filePath).text();
+  const originalContent = readFileSync(filePath, "utf-8");
   const processed = handler.preprocess
     ? handler.preprocess(originalContent)
     : originalContent;
@@ -271,14 +274,14 @@ export async function formatFileWithPrettier(
   });
 
   if (formatted !== originalContent) {
-    await write(filePath, formatted);
+    writeFileSync(filePath, formatted, "utf-8");
     return { status: "updated" };
   }
 
   return { status: "unchanged" };
 }
 
-async function runPrettierWorkerCli(args: string[] = argv): Promise<void> {
+async function runPrettierWorkerCli(args: string[] = process.argv): Promise<void> {
   const workerIndex = args.indexOf(PRETTIER_WORKER_ARG);
   const filePath = args[workerIndex + 1];
 
@@ -293,17 +296,17 @@ async function runPrettierWorkerCli(args: string[] = argv): Promise<void> {
 async function formatFileWithPrettierInSubprocess(
   filePath: string,
 ): Promise<PrettierWorkerResult> {
-  const proc = Bun.spawn([process.execPath, import.meta.path, PRETTIER_WORKER_ARG, filePath], {
+  const proc = spawn(process.execPath, [fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
     cwd: process.cwd(),
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  let stdout = "";
+  let stderr = "";
+  proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+  proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+  const exitCode = await new Promise<number>((r) => proc.on("close", r));
 
   if (exitCode !== 0) {
     throw new Error(stderr.trim() || `Prettier worker exited with code ${exitCode}`);
@@ -317,10 +320,10 @@ export async function formatWithPrettierInSubprocess(
 ): Promise<string> {
   const extension = options.parser === "markdown" ? ".md" : ".txt";
   const tempFilePath = `/tmp/format-file-${process.pid}-${Date.now()}${extension}`;
-  await write(tempFilePath, options.content);
+  writeFileSync(tempFilePath, options.content, "utf-8");
   const result = await formatFileWithPrettierInSubprocess(tempFilePath);
   void result;
-  return file(tempFilePath).text();
+  return readFileSync(tempFilePath, "utf-8");
 }
 
 async function main(): Promise<void> {
@@ -329,11 +332,11 @@ async function main(): Promise<void> {
     return;
   }
 
-  const argvFiles = argv.slice(2);
+  const argvFiles = process.argv.slice(2);
   let stdinFiles: string[] = [];
 
   if (!process.stdin.isTTY) {
-    const stdinData = await Bun.stdin.text();
+    const stdinData = await readStdin();
     stdinFiles = stdinData
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -343,9 +346,9 @@ async function main(): Promise<void> {
   const targetFiles = [...new Set([...argvFiles, ...stdinFiles])];
 
   if (targetFiles.length === 0) {
-    console.error("Usage: bun run format.ts <file1> <file2> ...");
-    console.error("   or: cat file-list.txt | bun run format.ts");
-    console.error("   or: find . -name '*.ts' | bun run format.ts");
+    console.error("Usage: tsx format.ts <file1> <file2> ...");
+    console.error("   or: cat file-list.txt | tsx format.ts");
+    console.error("   or: find . -name '*.ts' | tsx format.ts");
     process.exit(EXIT_FAILURE);
   }
 
@@ -410,8 +413,7 @@ async function main(): Promise<void> {
       });
 
       const startTime = performance.now();
-      const handle = file(filePath);
-      const exists = await handle.exists();
+      const exists = existsSync(filePath);
 
       if (!exists) {
         const elapsed = formatElapsedDuration(performance.now() - startTime);
@@ -465,12 +467,12 @@ async function main(): Promise<void> {
         }
       } else if (externalCmd) {
         try {
-          const originalContent = await file(filePath).text();
-          const proc = spawn(externalCmd(filePath));
-          const exitCode = await proc.exited;
-          void exitCode;
+          const originalContent = readFileSync(filePath, "utf-8");
+          const cmd = externalCmd(filePath);
+          const child = spawn(cmd[0], cmd.slice(1), { stdio: "inherit" });
+          await new Promise<number>((r) => child.on("close", r));
 
-          const finalContent = await file(filePath).text();
+          const finalContent = readFileSync(filePath, "utf-8");
           const elapsed = formatElapsedDuration(performance.now() - startTime);
           activeFiles.delete(filePath);
           completedFiles++;
@@ -637,6 +639,6 @@ export function resolvePrettierModuleSpecifier(
   return entrypoint ? pathToFileURL(entrypoint).href : "prettier";
 }
 
-if (import.meta.main) {
+if (isMain(import.meta.url)) {
   main();
 }

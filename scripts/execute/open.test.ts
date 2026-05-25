@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert";
 
 import {
   DEFAULT_LARGE_TEXT_BYTES,
@@ -10,20 +11,20 @@ import {
 } from "./open";
 
 describe("parseArgs", () => {
-  test("parses project mode with long and short flags", () => {
-    expect(parseArgs(["--project", "."])).toEqual({
+  it("parses project mode with long and short flags", () => {
+    assert.deepStrictEqual(parseArgs(["--project", "."]), {
       projectMode: true,
       targets: ["."],
     });
 
-    expect(parseArgs(["-p", "~/src/app"])).toEqual({
+    assert.deepStrictEqual(parseArgs(["-p", "~/src/app"]), {
       projectMode: true,
       targets: ["~/src/app"],
     });
   });
 
-  test("keeps normal targets in non-project mode", () => {
-    expect(parseArgs(["notes.txt", "https://example.com"])).toEqual({
+  it("keeps normal targets in non-project mode", () => {
+    assert.deepStrictEqual(parseArgs(["notes.txt", "https://example.com"]), {
       projectMode: false,
       targets: ["notes.txt", "https://example.com"],
     });
@@ -31,8 +32,8 @@ describe("parseArgs", () => {
 });
 
 describe("parseOpenConfig", () => {
-  test("defaults to nvim for small text and hx for large text", () => {
-    expect(parseOpenConfig({})).toEqual({
+  it("defaults to nvim for small text and hx for large text", () => {
+    assert.deepStrictEqual(parseOpenConfig({}), {
       largeTextBytes: DEFAULT_LARGE_TEXT_BYTES,
       largeTextEditor: "hx",
       projectEditor: "zeditor",
@@ -42,8 +43,8 @@ describe("parseOpenConfig", () => {
     });
   });
 
-  test("allows environment overrides", () => {
-    expect(
+  it("allows environment overrides", () => {
+    assert.deepStrictEqual(
       parseOpenConfig({
         OPEN_LARGE_TEXT_BYTES: "2048",
         OPEN_LARGE_TEXT_EDITOR: "helix",
@@ -52,39 +53,40 @@ describe("parseOpenConfig", () => {
         OPEN_TERMINAL: "alacritty",
         OPEN_XDG_OPEN: "gio open",
       }),
-    ).toEqual({
-      largeTextBytes: 2048,
-      largeTextEditor: "helix",
-      projectEditor: "zed",
-      smallTextEditor: "vim",
-      terminal: "alacritty",
-      xdgOpen: "gio open",
-    });
+      {
+        largeTextBytes: 2048,
+        largeTextEditor: "helix",
+        projectEditor: "zed",
+        smallTextEditor: "vim",
+        terminal: "alacritty",
+        xdgOpen: "gio open",
+      },
+    );
   });
 });
 
 describe("isProbablyTextPath", () => {
-  test("recognizes extensionless text-like names", () => {
-    expect(isProbablyTextPath("README")).toBe(true);
-    expect(isProbablyTextPath(".zshrc")).toBe(true);
+  it("recognizes extensionless text-like names", () => {
+    assert.strictEqual(isProbablyTextPath("README"), true);
+    assert.strictEqual(isProbablyTextPath(".zshrc"), true);
   });
 
-  test("recognizes code and config extensions", () => {
-    expect(isProbablyTextPath("main.ts")).toBe(true);
-    expect(isProbablyTextPath("flake.nix")).toBe(true);
+  it("recognizes code and config extensions", () => {
+    assert.strictEqual(isProbablyTextPath("main.ts"), true);
+    assert.strictEqual(isProbablyTextPath("flake.nix"), true);
   });
 
-  test("does not classify common media extensions as text", () => {
-    expect(isProbablyTextPath("photo.png")).toBe(false);
-    expect(isProbablyTextPath("movie.mkv")).toBe(false);
+  it("does not classify common media extensions as text", () => {
+    assert.strictEqual(isProbablyTextPath("photo.png"), false);
+    assert.strictEqual(isProbablyTextPath("movie.mkv"), false);
   });
 });
 
 describe("planOpenTarget", () => {
   const config = parseOpenConfig({});
 
-  test("opens small text in kitty nvim", () => {
-    expect(
+  it("opens small text in kitty nvim", () => {
+    assert.deepStrictEqual(
       planOpenTarget({
         config,
         isDirectory: false,
@@ -92,16 +94,17 @@ describe("planOpenTarget", () => {
         path: "notes.txt",
         sizeBytes: 1024,
       }),
-    ).toEqual({
-      args: ["kitty", "nvim", "notes.txt"],
-      command: "kitty",
-      detach: true,
-      kind: "terminal-editor",
-    });
+      {
+        args: ["kitty", "nvim", "notes.txt"],
+        command: "kitty",
+        detach: true,
+        kind: "terminal-editor",
+      },
+    );
   });
 
-  test("opens large text in kitty hx", () => {
-    expect(
+  it("opens large text in kitty hx", () => {
+    assert.deepStrictEqual(
       planOpenTarget({
         config,
         isDirectory: false,
@@ -109,49 +112,48 @@ describe("planOpenTarget", () => {
         path: "large.log",
         sizeBytes: DEFAULT_LARGE_TEXT_BYTES,
       }),
-    ).toEqual({
-      args: ["kitty", "hx", "large.log"],
-      command: "kitty",
-      detach: true,
-      kind: "terminal-editor",
-    });
-  });
-
-  test("delegates directories and binary files to xdg-open", () => {
-    expect(
-      planOpenTarget({
-        config,
-        isDirectory: true,
-        mimeType: "inode/directory",
-        path: ".",
-        sizeBytes: 0,
-      }),
-    ).toMatchObject({ args: ["xdg-open", "."], kind: "xdg-open" });
-
-    expect(
-      planOpenTarget({
-        config,
-        isDirectory: false,
-        mimeType: "image/png",
-        path: "photo.png",
-        sizeBytes: 100,
-      }),
-    ).toMatchObject({ args: ["xdg-open", "photo.png"], kind: "xdg-open" });
-  });
-});
-
-describe("buildOpenCommand", () => {
-  test("routes URLs to xdg-open without filesystem checks", async () => {
-    await expect(buildOpenCommand("https://example.com")).resolves.toMatchObject(
       {
-        args: ["xdg-open", "https://example.com"],
-        kind: "xdg-open",
+        args: ["kitty", "hx", "large.log"],
+        command: "kitty",
+        detach: true,
+        kind: "terminal-editor",
       },
     );
   });
 
-  test("routes project mode to zeditor", async () => {
-    await expect(buildOpenCommand(".", parseOpenConfig({}), true)).resolves.toEqual(
+  it("delegates directories and binary files to xdg-open", () => {
+    const r1 = planOpenTarget({
+      config,
+      isDirectory: true,
+      mimeType: "inode/directory",
+      path: ".",
+      sizeBytes: 0,
+    });
+    assert.strictEqual(r1.kind, "xdg-open");
+    assert.deepStrictEqual(r1.args, ["xdg-open", "."]);
+
+    const r2 = planOpenTarget({
+      config,
+      isDirectory: false,
+      mimeType: "image/png",
+      path: "photo.png",
+      sizeBytes: 100,
+    });
+    assert.strictEqual(r2.kind, "xdg-open");
+    assert.deepStrictEqual(r2.args, ["xdg-open", "photo.png"]);
+  });
+});
+
+describe("buildOpenCommand", () => {
+  it("routes URLs to xdg-open without filesystem checks", async () => {
+    const result = await buildOpenCommand("https://example.com");
+    assert.strictEqual(result.kind, "xdg-open");
+    assert.deepStrictEqual(result.args, ["xdg-open", "https://example.com"]);
+  });
+
+  it("routes project mode to zeditor", async () => {
+    assert.deepStrictEqual(
+      await buildOpenCommand(".", parseOpenConfig({}), true),
       {
         args: ["zeditor", "."],
         command: "zeditor",

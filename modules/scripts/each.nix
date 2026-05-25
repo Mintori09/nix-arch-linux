@@ -43,8 +43,8 @@ in
   home.packages =
     helpers.mkScriptPackage {
       name = "each";
-      runtime = "${pkgs.python313}/bin/python3.13";
-      entry = "${../../scripts/execute/each.py}";
+      runtime = "${pkgs.tsx}/bin/tsx";
+      entry = "${../../scripts/execute/each.ts}";
     }
     ++ [
       eachCompletion

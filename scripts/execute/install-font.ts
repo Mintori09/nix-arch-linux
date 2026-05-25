@@ -1,9 +1,10 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
-import { $ } from "bun";
-import { existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, parse } from "node:path";
 import { homedir } from "node:os";
+import { spawnSync } from "node:child_process";
+import { args } from "./utils";
 
 const FONT_DIR = join(homedir(), ".local/share/fonts");
 
@@ -26,13 +27,13 @@ async function downloadFont(url: string, dest: string) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Download failed: ${response.statusText}`);
   const buffer = await response.arrayBuffer();
-  await Bun.write(dest, buffer);
+  writeFileSync(dest, Buffer.from(buffer));
 }
 
 async function copyLocalFont(source: string, dest: string) {
   console.log(`${colors.blue}Copying local font...${colors.reset}`);
   if (!existsSync(source)) throw new Error(`File not found: ${source}`);
-  await $`cp ${source} ${dest}`;
+  copyFileSync(source, dest);
 }
 
 async function extractZip(zipPath: string): Promise<string> {
@@ -42,15 +43,15 @@ async function extractZip(zipPath: string): Promise<string> {
   console.log(`${colors.blue}Extracting to: ${extractDir}${colors.reset}`);
   mkdirSync(extractDir, { recursive: true });
 
-  await $`unzip -o ${zipPath} -d ${extractDir}`.quiet();
-  await $`rm -f ${zipPath}`.quiet();
+  spawnSync("unzip", ["-o", zipPath, "-d", extractDir], { stdio: "ignore" });
+  rmSync(zipPath, { force: true });
 
   return extractDir;
 }
 
 async function refreshFontCache(path: string) {
   console.log(`${colors.blue}Updating font cache...${colors.reset}`);
-  await $`fc-cache -f ${path}`.quiet();
+  spawnSync("fc-cache", ["-f", path], { stdio: "ignore" });
 }
 
 async function installFont(source: string) {
@@ -81,12 +82,17 @@ async function installFont(source: string) {
   }
 }
 
-const fontArg = Bun.argv[2];
+const fontArg = args[0];
 if (!fontArg) {
   console.log(
-    `${colors.yellow}Usage: bun run script.ts <url-or-local-file>${colors.reset}`,
+    `${colors.yellow}Usage: tsx script.ts <url-or-local-file>${colors.reset}`,
   );
   process.exit(1);
 }
 
-await installFont(fontArg);
+if (isMain(import.meta.url)) {
+  installFont(fontArg).catch((err: unknown) => {
+    console.error(`${colors.red}Error:${colors.reset}`, err);
+    process.exit(1);
+  });
+}

@@ -54,7 +54,7 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "open";
-      runtime = "${pkgs.bun}/bin/bun";
+      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute}/open.ts";
     })
     ++ [ openCompletion ];

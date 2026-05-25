@@ -1,7 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   access,
   mkdir,
@@ -12,6 +12,8 @@ import {
 } from "node:fs/promises";
 import { constants as FS_CONSTANTS } from "node:fs";
 import { parseArgs } from "node:util";
+import { spawn } from "node:child_process";
+import { isMain, sleep } from "./utils";
 
 const COLORS = {
   RED: "\x1b[31m",
@@ -183,7 +185,7 @@ async function withSpinner<T>(
 
   const label = buildSpinnerLabel(context.route);
   let frameIndex = 0;
-  let timer: Timer | undefined;
+  let timer: ReturnType<typeof setInterval> | undefined;
 
   const render = () => {
     process.stdout.write(renderSpinnerFrame(frameIndex, label));
@@ -215,21 +217,18 @@ async function runCommand(
     return "";
   }
 
-  const proc = Bun.spawn(parts, {
-    stdout: options.captureStdout ? "pipe" : "inherit",
-    stderr: "pipe",
+  const proc = spawn(parts[0], parts.slice(1), {
+    stdio: ["ignore", options.captureStdout ? "pipe" : "inherit", "pipe"],
   });
 
-  const stderrPromise = new Response(proc.stderr).text();
-  const stdoutPromise = options.captureStdout
-    ? new Response(proc.stdout).text()
-    : Promise.resolve("");
+  let stderr = "";
+  let stdout = "";
+  proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+  if (options.captureStdout) {
+    proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+  }
 
-  const [exitCode, stderr, stdout] = await Promise.all([
-    proc.exited,
-    stderrPromise,
-    stdoutPromise,
-  ]);
+  const exitCode = await new Promise<number>((r) => proc.on("close", r));
 
   if (exitCode !== 0) {
     throw new CommandExecutionError(command, shortStderr(stderr), exitCode);
@@ -247,26 +246,35 @@ function parseDevToolsPort(text: string): number | undefined {
 }
 
 async function waitForDevToolsPort(
-  stream: ReadableStream<Uint8Array>,
+  stream: NodeJS.ReadableStream,
 ): Promise<number> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let stderr = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      stderr += decoder.decode(value, { stream: true });
+  return new Promise((resolve, reject) => {
+    let stderr = "";
+    const onData = (chunk: Buffer) => {
+      stderr += chunk.toString();
       const port = parseDevToolsPort(stderr);
-      if (port) return port;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  throw new CommandExecutionError("chromium", shortStderr(stderr), 1);
+      if (port !== undefined) {
+        cleanup();
+        resolve(port);
+      }
+    };
+    const onEnd = () => {
+      cleanup();
+      reject(new CommandExecutionError("chromium", shortStderr(stderr), 1));
+    };
+    const onError = (err: Error) => {
+      cleanup();
+      reject(err);
+    };
+    const cleanup = () => {
+      stream.removeListener("data", onData);
+      stream.removeListener("end", onEnd);
+      stream.removeListener("error", onError);
+    };
+    stream.on("data", onData);
+    stream.on("end", onEnd);
+    stream.on("error", onError);
+  });
 }
 
 async function waitForPageWebSocketUrl(
@@ -293,7 +301,7 @@ async function waitForPageWebSocketUrl(
       // Chromium may need a moment before the DevTools HTTP endpoint is ready.
     }
 
-    await Bun.sleep(50);
+    await sleep(50);
   }
 
   throw new CommandExecutionError(
@@ -391,7 +399,7 @@ async function waitForDocumentReady(session: DevToolsSession): Promise<void> {
     );
 
     if (result.result.value === "complete") return;
-    await Bun.sleep(50);
+    await sleep(50);
   }
 
   throw new CommandExecutionError(
@@ -426,9 +434,9 @@ async function captureMhtmlScreenshot(
   }
 
   const userDataDir = await mkdtemp(path.join(tmpdir(), "cv-chromium-"));
-  const proc = Bun.spawn(
+  const proc = spawn(
+    "chromium",
     [
-      "chromium",
       "--headless",
       "--disable-gpu",
       "--disable-dev-shm-usage",
@@ -439,10 +447,11 @@ async function captureMhtmlScreenshot(
       pageUrl,
     ],
     {
-      stdout: "ignore",
-      stderr: "pipe",
+      stdio: ["ignore", "ignore", "pipe"],
     },
   );
+
+  const exitedPromise = new Promise<number>((r) => proc.on("close", r));
 
   try {
     const port = await waitForDevToolsPort(proc.stderr);
@@ -490,7 +499,7 @@ async function captureMhtmlScreenshot(
     }
   } finally {
     proc.kill();
-    await proc.exited.catch(() => undefined);
+    await exitedPromise.catch(() => undefined);
     await rm(userDataDir, { recursive: true, force: true });
   }
 }
@@ -682,7 +691,7 @@ function mdToPdf(): ToolConverter {
   return {
     tool: "pandoc",
     convert: async (input, output, context) => {
-      const cssPath = path.join(import.meta.dir, "style.css");
+      const cssPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "style.css");
       const extraParams = ["--pdf-engine=weasyprint"];
 
       if (await pathExists(cssPath)) {
@@ -797,7 +806,7 @@ function printSupportedRoutes(): void {
 
 function printUsage(): void {
   console.log(
-    `${COLORS.YELLOW}Usage:${COLORS.NC} bun cv.ts [--dry-run] [--list] <input_file> <output_file> [...passthrough_args]`,
+    `${COLORS.YELLOW}Usage:${COLORS.NC} tsx cv.ts [--dry-run] [--list] <input_file> <output_file> [...passthrough_args]`,
   );
 }
 
@@ -852,7 +861,7 @@ async function convertOne(
 
 async function run(): Promise<void> {
   const parsed = parseArgs({
-    args: Bun.argv.slice(2),
+    args: process.argv.slice(2),
     allowPositionals: true,
     options: {
       "dry-run": { type: "boolean", default: false },
@@ -883,24 +892,26 @@ async function run(): Promise<void> {
   await convertOne(input, output, passthroughArgs, { dryRun });
 }
 
-if (import.meta.main) {
-  try {
-    await run();
-  } catch (err) {
-    if (err instanceof CommandExecutionError) {
-      console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`);
-      console.error(
-        `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
-      );
+if (isMain(import.meta.url)) {
+  (async () => {
+    try {
+      await run();
+    } catch (err) {
+      if (err instanceof CommandExecutionError) {
+        console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`);
+        console.error(
+          `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
+        );
+        process.exit(1);
+      }
+
+      if (err instanceof CliError) {
+        console.error(err.message);
+        process.exit(err.exitCode);
+      }
+
+      console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`, err);
       process.exit(1);
     }
-
-    if (err instanceof CliError) {
-      console.error(err.message);
-      process.exit(err.exitCode);
-    }
-
-    console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`, err);
-    process.exit(1);
-  }
+  })();
 }

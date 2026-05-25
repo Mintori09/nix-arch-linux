@@ -56,7 +56,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "dw";
-    runtime = "${pkgs.bun}/bin/bun";
+    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute}/direnv-wrap.ts";
   } ++ [ dwCompletion ];
 }

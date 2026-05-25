@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "vd";
-    runtime = "${pkgs.bash}/bin/bash";
-    entry = "${../../scripts/execute/select-and-open-video.sh}";
+    runtime = "${pkgs.tsx}/bin/tsx";
+    entry = "${../../scripts/execute/select-and-open-video.ts}";
   };
 }

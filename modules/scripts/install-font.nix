@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "ifont";
-    runtime = "${pkgs.bun}/bin/bun";
+    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/install-font.ts}";
     extraPathPackages = [
       pkgs.rpm

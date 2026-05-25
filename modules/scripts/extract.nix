@@ -5,8 +5,8 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "extract";
-    runtime = "${pkgs.bash}/bin/bash";
-    entry = "${../../scripts/execute/extract-file.sh}";
+    runtime = "${pkgs.tsx}/bin/tsx";
+    entry = "${../../scripts/execute/extract-file.ts}";
     extraPackages = [
       pkgs.gnutar
       pkgs.bzip2

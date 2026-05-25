@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "telepush";
-    runtime = "${pkgs.bash}/bin/bash";
-    entry = "${../../scripts/execute/telepush.sh}";
+    runtime = "${pkgs.tsx}/bin/tsx";
+    entry = "${../../scripts/execute/telepush.ts}";
   };
 }
