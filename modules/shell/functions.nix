@@ -44,14 +44,17 @@
       nf() {
           local file
           file="$(
-              fd -t f -X sh -c '
-                  for f do
-                      case $(file -b --mime-type "$f") in
-                          text/*) printf "%s\0" "$f";;
-                      esac
-                  done
-              ' |
-              fzf --read0 --preview 'bat --color=always --style=numbers {}'
+              fd -t f \
+                  -E node_modules -E target -E .cache \
+                  -e md -e txt \
+                  -e json -e yaml -e yml -e toml -e xml \
+                  -e html -e css -e js -e ts -e jsx -e tsx -e vue -e svelte \
+                  -e py -e rb -e go -e rs -e java -e c -e h -e cpp -e hpp -e lua \
+                  -e sh -e bash -e zsh -e fish \
+                  -e nix -e cfg -e conf -e ini -e env \
+                  -e sql -e hs -e scala -e clj \
+                  -e lock -e log -e diff -e patch \
+              | fzf --preview 'bat --color=always --style=numbers {}'
           )" && [ -n "$file" ] && nvim "$file"
       }
 
@@ -160,14 +163,17 @@
       nf() {
           local file
           file="$(
-              fd -t f -X sh -c '
-                  for f do
-                      case $(file -b --mime-type "$f") in
-                          text/*) printf "%s\0" "$f";;
-                      esac
-                  done
-              ' |
-              fzf --read0 --preview 'preview {}'
+              fd -t f \
+                  -E node_modules -E target -E .cache \
+                  -e md -e txt \
+                  -e json -e yaml -e yml -e toml -e xml \
+                  -e html -e css -e js -e ts -e jsx -e tsx -e vue -e svelte \
+                  -e py -e rb -e go -e rs -e java -e c -e h -e cpp -e hpp -e lua \
+                  -e sh -e bash -e zsh -e fish \
+                  -e nix -e cfg -e conf -e ini -e env \
+                  -e sql -e hs -e scala -e clj \
+                  -e lock -e log -e diff -e patch \
+              | fzf --preview 'bat --color=always --style=numbers {}'
           )" && [ -n "$file" ] && nvim "$file"
       }
 

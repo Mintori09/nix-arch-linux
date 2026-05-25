@@ -36,6 +36,7 @@
     dust
     aichat
     btop
+
     # aider-chat
     duf
     watchexec
