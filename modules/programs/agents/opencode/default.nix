@@ -6,13 +6,14 @@
 }:
 let
   languages = import ./languages.nix { inherit pkgs; };
+  notifier = import ./notifier.nix { inherit pkgs; };
   configJson = import ./config.nix { inherit pkgs lib config; };
 
   inherit (pkgs) opencode;
 
   toolsEnv = pkgs.buildEnv {
     name = "opencode-tools-env";
-    paths = languages.packages ++ [ pkgs.libnotify ];
+    paths = languages.packages ++ [ pkgs.libnotify ] ++ notifier.packages;
   };
 
   opencodeInitScript = pkgs.writeShellScript "opencode-init" ''
@@ -55,22 +56,5 @@ in
   ];
   xdg.configFile."${configFile}".text = configJson;
 
-  xdg.configFile."opencode/opencode-notifier.json".text = builtins.toJSON {
-    sound = true;
-    notification = true;
-    bell = false;
-    timeout = 5;
-    showProjectName = true;
-    showFullPath = false;
-    showSessionTitle = false;
-    showIcon = true;
-    suppressWhenFocused = true;
-    enableOnDesktop = false;
-    notificationSystem = "osascript";
-    linux.grouping = false;
-    minDuration = 0;
-    command = {
-      enabled = false;
-    };
-  };
+  xdg.configFile."opencode/opencode-notifier.json".text = builtins.toJSON notifier.config;
 }
