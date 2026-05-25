@@ -1,70 +1,103 @@
-# nix-arch-linux
+# Home Manager Configuration
 
-A declarative configuration for Arch Linux using Nix Flakes and Home Manager.
+Declarative desktop environment configuration using Nix Flakes and Home Manager on EndeavourOS.
 
-## Features
+## Prerequisites
 
-- **Declarative Package Management**: Uses `home.packages` and Nix flakes for reproducible software environments.
-- **Shell Configuration**: Zsh configuration with Powerlevel10k theme (`p10k.zsh`).
-- **Custom Scripts**: A collection of utility scripts for file conversion, formatting, and system tasks.
+- Nix with Flakes enabled
+- Home Manager installed in standalone mode
 
-## Refactor Safety
+## Quick Start
 
-Before structural cleanup, use the docs in `docs/refactor/`:
-
-- `module-map.md` for module ownership
-- `parity-checklist.md` for behavior-preserving validation
-- `dead-code-candidates.md` for evidence-backed deletions
-
-## Tools
-
-Located in `tools/mdview/`:
-
-- **mdview**: Go-based CLI markdown viewer/editor with an embedded web frontend. Supports live preview, editing with write token protection, multiple themes (warm, minimal, dark, paper), and Mermaid diagram rendering.
-
-## Scripts
-
-Located in `scripts/execute/`:
-
-- **convert-file.ts**: Converts files between formats using tools like FFmpeg, ImageMagick, Pandoc, LibreOffice, and Yq.
-- **format-file.ts**: Formats source code and files using Prettier and external formatters.
-- **install-font.ts**: Downloads and installs fonts, refreshing the font cache.
-- **install-rpm.ts**: Extracts and installs RPM packages on non-RPM distros (like Arch).
-- **which_file.ts**: Locates commands, checking for executables, symlinks, and zsh functions.
-- **fzf-preview.sh**: Preview script for `fzf` supporting images, PDFs, videos, and more.
-- **fzf-rg-edit.sh**: Integrates `ripgrep` with `fzf` for searching and editing files.
-
-## Programs
-
-Located in `modules/programs/`:
-
-- **yt-dlp**: Configured for downloading video/audio with specific format, metadata, and subtitle settings. Includes a `download-music` alias.
-
-## Usage
-
-### Applying Configuration
-
-To apply the Home Manager configuration:
+Apply the configuration:
 
 ```bash
 hms
 ```
 
-### Downloading Media
+`hms` is an alias for `home-manager switch --flake ~/.config/home-manager`.
 
-Download video (uses config defaults):
+## What's Configured
 
-```bash
-yt-dlp <url>
+### Shell
+
+- **Zsh**: vi-mode, autosuggestions, fast syntax highlighting, fzf-tab, Powerlevel10k prompt
+- **Fish** and **Nushell** also configured
+- Custom `cd` command with fzf directory picker
+- Keyboard shortcuts: `Ctrl+O` for fzf file search into Neovim
+- Aliases for navigation, development, and system management
+
+### Development
+
+- **Editors**: Helix, Neovim, Zed
+- **Git**: Lazygit, Onefetch
+- **Search/Navigation**: fzf, ripgrep, fd, zoxide, yazi
+- **File listing**: bat, eza
+- **Terminal multiplexers**: tmux
+- **Environment**: direnv, mise
+- **Formatters and linters**: gofumpt, hadolint, ruff, shellcheck, shfmt, stylua, taplo
+
+### AI Agents
+
+- **OpenCode**: Providers, MCP servers, language servers, custom skills
+- **Claude Code**: MCP servers and configuration
+- **Integrated skills**: memory-aware-architect, custom agent skills from external repos
+
+### Terminals
+
+- Kitty, Alacritty
+
+### Custom Scripts
+
+- `convert-file`: Convert between formats using FFmpeg, ImageMagick, Pandoc, and others
+- `format-file`: Format source code with Prettier and external formatters
+- `install-font`: Download and install fonts
+- `install-rpm`: Extract and install RPM packages on non-RPM distributions
+- `fzf-rg-edit`: Search with ripgrep, edit with fzf
+- `extract`: Archive extraction helper
+- `which_file`: Locate commands, executables, and zsh functions
+
+### Other
+
+- **Fonts**: SF Pro Display, Inter, JetBrains Mono Nerd Font
+- **Secrets**: sops-nix and JSON-based environment variable injection
+- **Media**: yt-dlp, OBS, spicetify
+- **Browser**: qutebrowser
+- **Local LLMs**: Ollama
+
+## Structure
+
+```
+modules/
+├── programs/        # Application configurations
+│   ├── agents/      # AI agent setups
+│   ├── helix/       # Helix editor
+│   ├── zed/         # Zed editor
+│   └── ...
+├── shell/           # Shell environments and aliases
+│   ├── zsh.nix
+│   ├── fish.nix
+│   └── alias.nix
+├── scripts/         # Custom utility scripts
+├── config/          # System service configs (ollama)
+├── fonts.nix
+└── secrets.nix
 ```
 
-Download music (MP3 format):
+## Usage
+
+Apply configuration after changes:
 
 ```bash
-download-music <url>
+hms
 ```
 
-## Prerequisites
+Update flake inputs and apply:
 
-- Nix with Flakes enabled.
-- Home Manager installed in standalone mode.
+```bash
+nix flake update && hms
+```
+
+## License
+
+MIT
