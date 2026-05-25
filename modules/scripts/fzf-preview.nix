@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "preview";
-    runtime = "${pkgs.tsx}/bin/tsx";
+    runtime = "${pkgs.deno}/bin/deno run -A";
     entry = "${../../scripts/execute/fzf-preview.ts}";
   };
 }

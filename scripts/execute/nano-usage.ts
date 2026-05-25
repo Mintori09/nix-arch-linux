@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
 const ANSI_COLORS = {
   green: "\x1b[0;32m",
@@ -91,7 +91,7 @@ class NanoGptApiClient {
   private readonly baseUrl = "https://nano-gpt.com/api";
 
   constructor() {
-    const key = process.env.NANOGPT_API_KEY;
+    const key = Deno.env.get("NANOGPT_API_KEY");
     if (!key) {
       this.printErrorAndExit("NANOGPT_API_KEY environment variable is not set");
     }
@@ -120,7 +120,7 @@ class NanoGptApiClient {
 
   private printErrorAndExit(message: string): never {
     console.error(`${ANSI_COLORS.red}Error: ${message}${ANSI_COLORS.reset}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 
@@ -496,7 +496,7 @@ class NanoGptUsageApp {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`${ANSI_COLORS.red}Error: ${message}${ANSI_COLORS.reset}`);
-      process.exit(1);
+      Deno.exit(1);
     }
   }
 

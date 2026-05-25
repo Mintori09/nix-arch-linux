@@ -1,11 +1,11 @@
-#!/usr/bin/env tsx
-import { existsSync, readFileSync, realpathSync } from "fs";
-import { basename, relative } from "path";
-import { homedir } from "os";
+#!/usr/bin/env deno run -A
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { basename, relative } from "node:path";
+import { homedir } from "node:os";
 import { spawn } from "node:child_process";
 
-import { fileGroupNames, fileGroups } from "./file-groups";
-import { isMain, readStdin } from "./utils";
+import { fileGroupNames, fileGroups } from "./file-groups.ts";
+import { isMain, readStdin, args } from "./utils.ts";
 
 const SHELL_UNSAFE_PATH_PATTERN = /[\s"'`$!&;|<>(){}\[\]*?~#]/;
 const HOME_DIR = homedir();
@@ -98,7 +98,7 @@ export function decodeSeparatorValue(value: string): string {
 export function buildContentBlocks(
   entries: { fileContent: string; resolvedPath: string }[],
   pathMode: ContentPathMode,
-  cwd: string = process.cwd(),
+  cwd: string = Deno.cwd(),
 ): string {
   return entries
     .map(({ resolvedPath, fileContent }) => {
@@ -359,7 +359,7 @@ async function collectGitUntrackedFiles(): Promise<string[]> {
 async function readFilesFromStdin(): Promise<string[]> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 
-  if (process.stdin.isTTY) {
+  if (Deno.stdin.isTerminal()) {
     return [];
   }
 
@@ -397,7 +397,7 @@ async function collectSelectorFiles(
       const code = await new Promise<number>((r) => child.on("close", r));
 
       if (code !== 0) {
-        process.exit(code);
+        Deno.exit(code);
       }
 
       return stdout
@@ -430,7 +430,7 @@ async function collectSelectorFiles(
   const code = await new Promise<number>((r) => child.on("close", r));
 
   if (code !== 0) {
-    process.exit(code);
+    Deno.exit(code);
   }
 
   return stdout
@@ -487,11 +487,11 @@ async function main() {
   let parsedArgs: ParsedArgs;
 
   try {
-    parsedArgs = parseArgs(process.argv.slice(2));
+    parsedArgs = parseArgs(args);
     validateParsedArgs(parsedArgs);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
+    Deno.exit(1);
   }
 
   let files = parsedArgs.files;
@@ -514,7 +514,7 @@ async function main() {
 
   if (files.length === 0) {
     printUsage();
-    process.exit(1);
+    Deno.exit(1);
   }
 
   files = applyRandomSelection(files, parsedArgs.randomCount);
@@ -558,7 +558,7 @@ async function main() {
   if (parsedArgs.copyContent) {
     if (contentEntries.length === 0) {
       console.error("No valid files read to copy content");
-      process.exit(1);
+      Deno.exit(1);
     }
 
     const clipboardContent = buildContentBlocks(
@@ -579,12 +579,12 @@ async function main() {
     }
 
     console.error("Failed to copy to clipboard");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   if (existingFiles.length === 0) {
     console.error("No existing files to copy to clipboard");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const clipboardContent = existingFiles.join(parsedArgs.separator);
@@ -605,9 +605,9 @@ async function main() {
   }
 
   console.error("Failed to copy to clipboard");
-  process.exit(1);
+  Deno.exit(1);
 }
 
 if (isMain(import.meta.url)) {
-  main().catch((err: unknown) => { console.error(err); process.exit(1); });
+  main().catch((err: unknown) => { console.error(err); Deno.exit(1); });
 }

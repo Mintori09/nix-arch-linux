@@ -1,6 +1,6 @@
-#!/usr/bin/env tsx
-import { spawnSync } from "child_process";
-import { isMain } from "./utils";
+#!/usr/bin/env deno run -A
+import { spawnSync } from "node:child_process";
+import { args, isMain } from "./utils.ts";
 
 function findAndOpenVideo(recursive: boolean): void {
   const fdArgs = ["-t", "f", "-e", "mp4", "-e", "mkv", "-e", "avi", "-e", "mov", "-e", "webm", "-e", "flv"];
@@ -9,7 +9,7 @@ function findAndOpenVideo(recursive: boolean): void {
   const fd = spawnSync("fd", fdArgs, { encoding: "utf-8" });
   if (fd.status !== 0) {
     console.error("fd failed");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const sorted = fd.stdout?.trim() ?? "";
@@ -48,10 +48,10 @@ By default, only searches for videos in the current directory.`);
 }
 
 function main(): void {
-  const args = process.argv.slice(2);
+  const cliArgs = args;
   let recursive = false;
 
-  for (const arg of args) {
+  for (const arg of cliArgs) {
     if (arg === "-r") recursive = true;
     else if (arg === "-h") { showHelp(); return; }
   }

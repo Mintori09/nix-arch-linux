@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -13,7 +13,8 @@ import {
 import { constants as FS_CONSTANTS } from "node:fs";
 import { parseArgs } from "node:util";
 import { spawn } from "node:child_process";
-import { isMain, sleep } from "./utils";
+import { Buffer } from "node:buffer";
+import { isMain, sleep, args } from "./utils.ts";
 
 const COLORS = {
   RED: "\x1b[31m",
@@ -166,7 +167,7 @@ function shouldEnableSpinner(options: {
   isTTY?: boolean;
 }): boolean {
   return (
-    !options.dryRun && options.isTTY === true && process.env.NO_SPINNER !== "1"
+    !options.dryRun && options.isTTY === true && Deno.env.get("NO_SPINNER") !== "1"
   );
 }
 
@@ -177,7 +178,7 @@ async function withSpinner<T>(
   if (
     !shouldEnableSpinner({
       dryRun: context.dryRun,
-      isTTY: process.stdout.isTTY,
+      isTTY: Deno.stdout.isTerminal(),
     })
   ) {
     return task();
@@ -861,7 +862,7 @@ async function convertOne(
 
 async function run(): Promise<void> {
   const parsed = parseArgs({
-    args: process.argv.slice(2),
+    args: args,
     allowPositionals: true,
     options: {
       "dry-run": { type: "boolean", default: false },
@@ -902,16 +903,16 @@ if (isMain(import.meta.url)) {
         console.error(
           `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
         );
-        process.exit(1);
+Deno.exit(1);
       }
 
       if (err instanceof CliError) {
         console.error(err.message);
-        process.exit(err.exitCode);
+        Deno.exit(err.exitCode);
       }
 
       console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`, err);
-      process.exit(1);
+      Deno.exit(1);
     }
   })();
 }

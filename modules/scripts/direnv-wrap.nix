@@ -56,7 +56,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "dw";
-    runtime = "${pkgs.tsx}/bin/tsx";
+    runtime = "${pkgs.deno}/bin/deno run -A";
     entry = "${../../scripts/execute}/direnv-wrap.ts";
   } ++ [ dwCompletion ];
 }

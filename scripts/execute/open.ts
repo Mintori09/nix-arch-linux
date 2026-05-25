@@ -1,8 +1,8 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
 import { spawn } from "node:child_process";
-import { existsSync, statSync } from "fs";
-import { basename, extname } from "path";
+import { existsSync, statSync } from "node:fs";
+import { basename, extname } from "node:path";
 import { args, isMain } from "./utils.ts";
 
 export const DEFAULT_LARGE_TEXT_BYTES = 1024 * 1024;
@@ -214,7 +214,7 @@ async function detectMimeType(path: string): Promise<string | null> {
 
 export async function buildOpenCommand(
   target: string,
-  config = parseOpenConfig(process.env),
+  config = parseOpenConfig(Deno.env.toObject()),
   projectMode = false,
 ): Promise<OpenPlan> {
   if (projectMode) {
@@ -262,7 +262,7 @@ async function main(): Promise<number> {
   for (const target of parsedArgs.targets) {
     const plan = await buildOpenCommand(
       target,
-      parseOpenConfig(process.env),
+      parseOpenConfig(Deno.env.toObject()),
       parsedArgs.projectMode,
     );
     const child = spawn(plan.args[0], plan.args.slice(1), {
@@ -276,5 +276,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => process.exit(code));
+  main().then((code) => Deno.exit(code));
 }

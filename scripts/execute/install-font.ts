@@ -1,10 +1,11 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, parse } from "node:path";
 import { homedir } from "node:os";
 import { spawnSync } from "node:child_process";
-import { args } from "./utils";
+import { Buffer } from "node:buffer";
+import { args, isMain } from "./utils.ts";
 
 const FONT_DIR = join(homedir(), ".local/share/fonts");
 
@@ -78,7 +79,7 @@ async function installFont(source: string) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     console.error(`${colors.red}Error: ${msg}${colors.reset}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 
@@ -87,12 +88,12 @@ if (!fontArg) {
   console.log(
     `${colors.yellow}Usage: tsx script.ts <url-or-local-file>${colors.reset}`,
   );
-  process.exit(1);
+  Deno.exit(1);
 }
 
 if (isMain(import.meta.url)) {
   installFont(fontArg).catch((err: unknown) => {
     console.error(`${colors.red}Error:${colors.reset}`, err);
-    process.exit(1);
+    Deno.exit(1);
   });
 }

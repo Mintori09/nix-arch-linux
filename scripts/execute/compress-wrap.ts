@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 // Simple, safe compression wrapper using the output filename extension.
 
 import {
@@ -11,8 +11,8 @@ import {
   rmSync,
 } from "node:fs";
 import path from "node:path";
-import process from "node:process";
 import { spawnSync } from "node:child_process";
+import { args } from "./utils.ts";
 
 type CompressionType =
   | "zip"
@@ -25,7 +25,7 @@ type CompressionType =
   | "bz2"
   | "xz";
 
-const PROGRAM_NAME = path.basename(process.argv[1] ?? "compress-wrap.ts");
+const PROGRAM_NAME = path.basename(new URL(import.meta.url).pathname);
 
 function usage(): void {
   console.log(`Usage:
@@ -60,7 +60,7 @@ Options:
 
 function die(message: string): never {
   console.error(`Error: ${message}`);
-  process.exit(1);
+  Deno.exit(1);
 }
 
 function isExecutable(filePath: string): boolean {
@@ -77,7 +77,7 @@ function findCommand(command: string): string | null {
     return isExecutable(command) ? command : null;
   }
 
-  const pathDirs = (process.env.PATH ?? "")
+  const pathDirs = (Deno.env.get("PATH") ?? "")
     .split(path.delimiter)
     .filter(Boolean);
 
@@ -277,7 +277,7 @@ function makeTempOutput(output: string, type: CompressionType): string {
   const randomPart = Math.random().toString(16).slice(2);
   return path.join(
     outputDir,
-    `.${outputName}.tmp-${process.pid}-${randomPart}${tempExtension(type)}`,
+    `.${outputName}.tmp-${Deno.pid}-${randomPart}${tempExtension(type)}`,
   );
 }
 
@@ -330,9 +330,13 @@ function compressSingleFileWithRedirect(
         ? `bzip2 -c -- "$1" > "$2"`
         : `xz -c -- "$1" > "$2"`;
 
-  const result = spawnSync("sh", ["-c", command, "compress-wrap", input, output], {
-    stdio: "inherit",
-  });
+  const result = spawnSync(
+    "sh",
+    ["-c", command, "compress-wrap", input, output],
+    {
+      stdio: "inherit",
+    },
+  );
 
   return result.status === 0;
 }
@@ -356,7 +360,7 @@ function parseArgs(args: string[]): {
 
     if (arg === "-h" || arg === "--help") {
       usage();
-      process.exit(0);
+      Deno.exit(0);
     }
 
     if (arg === "--") {
@@ -375,7 +379,7 @@ function parseArgs(args: string[]): {
 
   if (rest.length < 2) {
     usage();
-    process.exit(1);
+    Deno.exit(1);
   }
 
   return {
@@ -386,7 +390,7 @@ function parseArgs(args: string[]): {
 }
 
 function main(): void {
-  const { force, output, inputs } = parseArgs(process.argv.slice(2));
+  const { force, output, inputs } = parseArgs(args);
   const type = detectType(output);
 
   checkDependencies(type);

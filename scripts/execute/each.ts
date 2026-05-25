@@ -1,6 +1,6 @@
-#!/usr/bin/env tsx
-import { spawnSync } from "child_process";
-import { isMain } from "./utils";
+#!/usr/bin/env deno run -A
+import { spawnSync } from "node:child_process";
+import { args, isMain, readStdin } from "./utils.ts";
 
 class Item {
   constructor(
@@ -21,7 +21,7 @@ function parseArgs(): {
   keepEmpty: boolean;
   quiet: boolean;
 } {
-  const args = process.argv.slice(2);
+  const cliArgs = args;
   let command = "";
   const opts: Record<string, string | boolean> = {
     json: false,
@@ -33,11 +33,11 @@ function parseArgs(): {
   };
 
   let i = 0;
-  while (i < args.length) {
-    const arg = args[i];
+  while (i < cliArgs.length) {
+    const arg = cliArgs[i];
     if (arg === "--json") { opts.json = true; i++; continue; }
     if (arg.startsWith("--split=")) { opts.split = arg.split("=")[1]; i++; continue; }
-    if (arg === "--split") { opts.split = args[i + 1]; i += 2; continue; }
+    if (arg === "--split") { opts.split = cliArgs[i + 1]; i += 2; continue; }
     if (arg === "--dry-run") { opts.dryRun = true; i++; continue; }
     if (arg === "--fail-fast") { opts.failFast = true; i++; continue; }
     if (arg === "--keep-empty") { opts.keepEmpty = true; i++; continue; }
@@ -59,21 +59,21 @@ Placeholders in command:
   {raw}   Raw item value (not quoted)
   {n}     1-based item number
   {i}     0-based item number`);
-      process.exit(0);
+      Deno.exit(0);
     }
-    command = args.slice(i).join(" ");
+    command = cliArgs.slice(i).join(" ");
     break;
   }
 
   if (!command) {
     console.error("Error: command template is required");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const validSplits = ["line", "whitespace", "blank", "none"];
   if (!validSplits.includes(opts.split as string)) {
     console.error(`Error: unsupported split mode: ${opts.split}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   return {
@@ -99,11 +99,11 @@ function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty
       value = JSON.parse(text);
     } catch (exc: any) {
       console.error(`Invalid JSON stdin: ${exc.message}`);
-      process.exit(1);
+      Deno.exit(1);
     }
     if (!Array.isArray(value)) {
       console.error("JSON stdin must be an array.");
-      process.exit(1);
+      Deno.exit(1);
     }
     return value.map(stringifyJsonItem);
   }
@@ -121,7 +121,7 @@ function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty
     items = splitByBlankLines(normalized, keepEmpty);
   } else {
     console.error(`Unsupported split mode: ${splitMode}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   if (keepEmpty) return items;
@@ -197,11 +197,7 @@ function runCommands(items: Item[], opts: ReturnType<typeof parseArgs>): number 
 async function main(): Promise<number> {
   const opts = parseArgs();
 
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  const stdinText = Buffer.concat(chunks).toString("utf-8");
+  const stdinText = await readStdin();
 
   const values = parseStdin(stdinText, opts.json, opts.split, opts.keepEmpty);
   const items = makeItems(values);
@@ -209,5 +205,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => process.exit(code));
+  main().then((code) => Deno.exit(code));
 }

@@ -1,9 +1,8 @@
-#!/usr/bin/env tsx
-import fs from "fs";
-import path from "path";
-import process from "process";
-import { spawnSync } from "child_process";
-import { isMain } from "./utils.ts";
+#!/usr/bin/env deno run -A
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { args, isMain } from "./utils.ts";
 
 interface CommandInfo {
   input: string;
@@ -49,7 +48,7 @@ export function findCommandInPath(commandName: string): string | null {
     return fs.existsSync(commandName) ? commandName : null;
   }
 
-  const systemPaths = process.env.PATH?.split(path.delimiter) ?? [];
+  const systemPaths = Deno.env.get("PATH")?.split(path.delimiter) ?? [];
 
   for (const directory of systemPaths) {
     const fullPath = path.join(directory, commandName);
@@ -179,7 +178,7 @@ function showMetadata(result: CommandInfo, target: string) {
 
   if (!result.found) {
     console.log(`${red}${bold}✗ Not found:${reset} ${yellow}${target}${reset}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   console.log(
@@ -218,11 +217,11 @@ function showMetadata(result: CommandInfo, target: string) {
 }
 
 function main(): void {
-  const target = process.argv[2];
+  const target = args[0];
 
   if (!target) {
     console.error("Usage: isx <command>");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const result = inspectCommand(target);

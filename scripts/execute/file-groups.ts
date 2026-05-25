@@ -1,3 +1,4 @@
+#!/usr/bin/env deno run -A
 export type FileGroup = {
   description: string;
   extensions: string[];

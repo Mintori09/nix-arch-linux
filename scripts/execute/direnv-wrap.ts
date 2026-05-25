@@ -1,7 +1,7 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { isMain } from "./utils.ts";
+import { args, isMain } from "./utils.ts";
 
 type Language = "python" | "node" | "go" | "rust" | "ruby" | "java" | "deno" | "qt" | "gtk" | "wails" | "tauri" | "flutter" | "electron";
 
@@ -191,35 +191,35 @@ type Args = {
 };
 
 function parseArgs(): Args {
-  const args = process.argv.slice(2);
+  const cliArgs = args;
 
-  if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
+  if (cliArgs.length === 0 || cliArgs[0] === "--help" || cliArgs[0] === "-h") {
     printUsage();
-    process.exit(0);
+    Deno.exit(0);
   }
 
-  const command = args[0] as Args["command"];
+  const command = cliArgs[0] as Args["command"];
   const options: Args = { command };
 
   // Check if second arg is a language (for init/add commands)
-  if (args.length >= 2) {
-    const potentialLang = args[1] as Language;
+  if (cliArgs.length >= 2) {
+    const potentialLang = cliArgs[1] as Language;
     if (TEMPLATES[potentialLang]) {
       options.language = potentialLang;
     }
   }
 
-  for (let i = 1; i < args.length; i++) {
-    const arg = args[i];
+  for (let i = 1; i < cliArgs.length; i++) {
+    const arg = cliArgs[i];
     if (arg === "--help" || arg === "-h") {
       printUsage();
-      process.exit(0);
+      Deno.exit(0);
     } else if (arg === "--scaffold" || arg === "-s") {
       options.scaffold = true;
     } else if (arg === "--gui" || arg === "-g") {
       options.gui = true;
     } else if (arg === "--dir" || arg === "-d") {
-      options.directory = args[++i];
+      options.directory = cliArgs[++i];
     }
   }
 
@@ -468,7 +468,7 @@ function addEnvironment(language: Language, dir: string, gui: boolean = false): 
 async function main(): Promise<number> {
   const args = parseArgs();
 
-  const targetDir = args.directory || process.cwd();
+  const targetDir = args.directory || Deno.cwd();
 
   // Create directory if it doesn't exist
   if (!existsSync(targetDir)) {
@@ -504,5 +504,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => process.exit(code));
+  main().then((code) => Deno.exit(code));
 }

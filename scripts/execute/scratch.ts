@@ -1,7 +1,7 @@
-#!/usr/bin/env tsx
-import { spawnSync } from "child_process";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
-import { isMain } from "./utils";
+#!/usr/bin/env deno run -A
+import { spawnSync } from "node:child_process";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { isMain, args, readStdin } from "./utils.ts";
 
 const SCRATCH_DIR = "/tmp/my-scratchpads";
 
@@ -18,7 +18,7 @@ const SHEBANG_BY_EXT: Record<string, string> = {
   js: "#!/usr/bin/env node", node: "#!/usr/bin/env node",
   rb: "#!/usr/bin/env ruby", ruby: "#!/usr/bin/env ruby",
   pl: "#!/usr/bin/env perl", perl: "#!/usr/bin/env perl",
-  ts: "#!/usr/bin/env tsx", typescript: "#!/usr/bin/env tsx",
+  ts: "#!/usr/bin/env deno run -A", typescript: "#!/usr/bin/env deno run -A",
   lua: "#!/usr/bin/env lua", php: "#!/usr/bin/env php",
   zsh: "#!/bin/zsh",
 };
@@ -73,7 +73,7 @@ function applyExecutableEnvironment(filePath: string, extension: string): void {
 
 function isStdinPresent(): boolean {
   try {
-    return !process.stdin.isTTY;
+    return !Deno.stdin.isTerminal();
   } catch {
     return false;
   }
@@ -84,12 +84,12 @@ function persistScratchpad(sourcePath: string, originalFilename: string, extensi
     const content = readFileSync(sourcePath, "utf-8");
     if (!content.trim()) return;
 
-    process.stdout.write("\nSave scratch file to current directory? [y/N]: ");
-    const buf = spawnSync("bash", ["-c", "read -n1 ans && echo \"$ans\""], { encoding: "utf-8" });
-    const resp = buf.stdout?.trim() ?? "";
+process.stdout.write("\nSave scratch file to current directory? [y/N]: ");
+  const buf = spawnSync("bash", ["-c", 'read -n1 ans && echo "$ans"'], { encoding: "utf-8" });
+  const resp = buf.stdout?.trim() ?? "";
 
-    if (resp.toLowerCase() === "y") {
-      const cwd = process.cwd();
+  if (resp.toLowerCase() === "y") {
+    const cwd = Deno.cwd();
       let dest = `${cwd}/${sourcePath.split("/").pop()}`;
       if (existsSync(dest)) {
         dest = `${cwd}/${originalFilename}-${Math.floor(Date.now() / 1000)}.${extension}`;
@@ -100,7 +100,7 @@ function persistScratchpad(sourcePath: string, originalFilename: string, extensi
   } catch {}
 }
 
-function main(): void {
+async function main(): Promise<void> {
   mkdirSync(SCRATCH_DIR, { recursive: true });
 
   const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
@@ -109,14 +109,8 @@ function main(): void {
   let scratchPath = "";
 
   if (isStdinPresent()) {
-    const chunks: Buffer[] = [];
-    let chunk: Buffer;
-    while ((chunk = process.stdin.read()) !== null) {
-      chunks.push(chunk);
-    }
-    const content = Buffer.concat(chunks).toString("utf-8");
+    const content = await readStdin();
 
-    const args = process.argv.slice(2);
     if (args[0]) {
       extension = args[0];
     } else {
@@ -130,8 +124,8 @@ function main(): void {
     writeFileSync(scratchPath, content, "utf-8");
     if (extension) applyExecutableEnvironment(scratchPath, extension);
   } else {
-    extension = process.argv[2] || "sh";
-    const customName = process.argv[3] || baseFilename;
+    extension = args[0] || "sh";
+    const customName = args[1] || baseFilename;
     scratchPath = `${SCRATCH_DIR}/${customName}.${extension}`;
 
     const shebang = getShebangByExtension(extension);
@@ -143,15 +137,15 @@ function main(): void {
     }
   }
 
-  process.on("exit", () => {
+  addEventListener("unload", () => {
     persistScratchpad(scratchPath, baseFilename, extension);
     try { unlinkSync(scratchPath); } catch {}
   });
-  process.on("SIGINT", () => process.exit(0));
-  process.on("SIGTERM", () => process.exit(0));
+  Deno.addSignalListener("SIGINT", () => Deno.exit(0));
+  Deno.addSignalListener("SIGTERM", () => Deno.exit(0));
 
-  const editor = process.env.EDITOR || "vim";
+  const editor = Deno.env.get("EDITOR") || "vim";
   spawnSync(editor, [scratchPath], { stdio: "inherit" });
 }
 
-if (isMain(import.meta.url)) main();
+if (isMain(import.meta.url)) await main();

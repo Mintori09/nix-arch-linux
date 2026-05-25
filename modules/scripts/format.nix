@@ -60,7 +60,7 @@ in
   home.packages =
     helpers.mkScriptPackage {
       name = "format";
-      runtime = "${pkgs.tsx}/bin/tsx";
+      runtime = "${pkgs.deno}/bin/deno run -A";
       entry = "${../../scripts/execute/format-file.ts}";
       extraPathPackages = formatterPackages;
       extraEnv = ''

@@ -1,13 +1,12 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { parse, stringify } from "yaml";
-import { availableParallelism } from "os";
-import { extname } from "path";
-import { pathToFileURL } from "url";
-import { fileURLToPath } from "url";
-import { isMain, readStdin, sleep } from "./utils";
+import { parse, stringify } from "npm:yaml";
+import { availableParallelism } from "node:os";
+import { extname } from "node:path";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import { isMain, readStdin, sleep, args } from "./utils.ts";
 
 const EXIT_FAILURE = 1;
 const PRETTIER_WORKER_ARG = "--prettier-worker";
@@ -247,7 +246,7 @@ async function getPrettierModule(): Promise<PrettierModule> {
   return prettierModulePromise;
 }
 
-export function isPrettierWorkerMode(args: string[] = process.argv): boolean {
+export function isPrettierWorkerMode(args: string[] = Deno.args): boolean {
   return args.includes(PRETTIER_WORKER_ARG);
 }
 
@@ -281,7 +280,7 @@ export async function formatFileWithPrettier(
   return { status: "unchanged" };
 }
 
-async function runPrettierWorkerCli(args: string[] = process.argv): Promise<void> {
+async function runPrettierWorkerCli(args: string[] = Deno.args): Promise<void> {
   const workerIndex = args.indexOf(PRETTIER_WORKER_ARG);
   const filePath = args[workerIndex + 1];
 
@@ -296,9 +295,9 @@ async function runPrettierWorkerCli(args: string[] = process.argv): Promise<void
 async function formatFileWithPrettierInSubprocess(
   filePath: string,
 ): Promise<PrettierWorkerResult> {
-  const proc = spawn(process.execPath, [fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
-    cwd: process.cwd(),
-    env: process.env,
+  const proc = spawn(Deno.execPath(), ["run", "-A", fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
+    cwd: Deno.cwd(),
+    env: Deno.env.toObject(),
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -319,7 +318,7 @@ export async function formatWithPrettierInSubprocess(
   options: FormatWithPrettierInSubprocessOptions,
 ): Promise<string> {
   const extension = options.parser === "markdown" ? ".md" : ".txt";
-  const tempFilePath = `/tmp/format-file-${process.pid}-${Date.now()}${extension}`;
+  const tempFilePath = `/tmp/format-file-${Deno.pid}-${Date.now()}${extension}`;
   writeFileSync(tempFilePath, options.content, "utf-8");
   const result = await formatFileWithPrettierInSubprocess(tempFilePath);
   void result;
@@ -332,10 +331,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  const argvFiles = process.argv.slice(2);
+  const argvFiles = args;
   let stdinFiles: string[] = [];
 
-  if (!process.stdin.isTTY) {
+  if (!Deno.stdin.isTerminal()) {
     const stdinData = await readStdin();
     stdinFiles = stdinData
       .split(/\r?\n/)
@@ -349,14 +348,14 @@ async function main(): Promise<void> {
     console.error("Usage: tsx format.ts <file1> <file2> ...");
     console.error("   or: cat file-list.txt | tsx format.ts");
     console.error("   or: find . -name '*.ts' | tsx format.ts");
-    process.exit(EXIT_FAILURE);
+    Deno.exit(EXIT_FAILURE);
   }
 
   const overallStart = performance.now();
   const maxConcurrency = Math.min(availableParallelism(), targetFiles.length);
   const totalFiles = targetFiles.length;
   const activeFiles = new Set<string>();
-  const spinnerEnabled = process.stdout.isTTY;
+  const spinnerEnabled = Deno.stdout.isTerminal();
   let spinnerFrameIndex = 0;
   let spinnerTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -633,7 +632,7 @@ export function isCodeBlock(segment: string): boolean {
 }
 
 export function resolvePrettierModuleSpecifier(
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = Deno.env.toObject(),
 ): string {
   const entrypoint = env[PRETTIER_ENTRYPOINT_ENV];
   return entrypoint ? pathToFileURL(entrypoint).href : "prettier";

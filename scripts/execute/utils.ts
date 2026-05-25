@@ -1,28 +1,26 @@
-import { spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "child_process";
-import { accessSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
-import { fileURLToPath } from "url";
+import { join } from "node:path";
+import { accessSync, constants } from "node:fs";
 
-export const args = process.argv.slice(2);
+export const args = Deno.args;
 
 export function isMain(metaUrl: string): boolean {
-  return process.argv[1] === fileURLToPath(metaUrl);
+  return Deno.mainModule === metaUrl;
 }
 
 export function which(command: string): string | null {
   if (command.includes("/")) {
     try {
-      accessSync(command);
+      accessSync(command, constants.X_OK);
       return command;
     } catch {
       return null;
     }
   }
-  const paths = process.env.PATH?.split(":") ?? [];
+  const paths = Deno.env.get("PATH")?.split(":") ?? [];
   for (const dir of paths) {
     const fullPath = join(dir, command);
     try {
-      accessSync(fullPath);
+      accessSync(fullPath, constants.X_OK);
       return fullPath;
     } catch {
       continue;
@@ -40,56 +38,71 @@ export type SpawnResult = {
 export async function spawnAsync(
   command: string,
   cmdArgs: string[],
-  options?: { cwd?: string; env?: Record<string, string>; stdin?: "ignore" | "pipe" | "inherit" },
+  options?: { cwd?: string; env?: Record<string, string>; stdin?: "ignore" | "pipe" | "inherit" | "piped" },
 ): Promise<SpawnResult> {
-  return new Promise((resolve) => {
-    const child = nodeSpawn(command, cmdArgs, {
-      stdio: [options?.stdin ?? "ignore", "pipe", "pipe"],
-      cwd: options?.cwd,
-      env: options?.env,
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (d: Buffer | string) => (stdout += d.toString()));
-    child.stderr.on("data", (d: Buffer | string) => (stderr += d.toString()));
-    child.on("close", (code) => {
-      resolve({ exitCode: code ?? 0, stdout, stderr });
-    });
+  const cmd = new Deno.Command(command, {
+    args: cmdArgs,
+    stdout: "piped",
+    stderr: "piped",
+    stdin: options?.stdin === "pipe" || options?.stdin === "piped" ? "piped" : options?.stdin ?? "null",
+    cwd: options?.cwd,
+    env: options?.env,
   });
+  const { code, stdout, stderr } = await cmd.output();
+  return {
+    exitCode: code,
+    stdout: new TextDecoder().decode(stdout),
+    stderr: new TextDecoder().decode(stderr),
+  };
 }
 
 export function spawnSyncOutput(
   command: string,
   cmdArgs: string[],
-  options?: { cwd?: string; env?: Record<string, string>; stdin?: "ignore" | "pipe" | "inherit" },
+  options?: { cwd?: string; env?: Record<string, string>; stdin?: "ignore" | "pipe" | "inherit" | "piped"; input?: string },
 ): SpawnResult {
-  const result = nodeSpawnSync(command, cmdArgs, {
-    stdio: [options?.stdin ?? "ignore", "pipe", "pipe"],
-    encoding: "utf-8",
+  const cmd = new Deno.Command(command, {
+    args: cmdArgs,
+    stdout: "piped",
+    stderr: "piped",
+    stdin: options?.stdin === "pipe" || options?.stdin === "piped" ? "piped" : options?.stdin ?? "null",
     cwd: options?.cwd,
     env: options?.env,
   });
+  const { code, stdout, stderr } = cmd.outputSync();
   return {
-    exitCode: result.status ?? 0,
-    stdout: result.stdout?.toString() ?? "",
-    stderr: result.stderr?.toString() ?? "",
+    exitCode: code,
+    stdout: new TextDecoder().decode(stdout),
+    stderr: new TextDecoder().decode(stderr),
   };
 }
 
 export function spawnDetached(command: string, cmdArgs: string[]): void {
-  const child = nodeSpawn(command, cmdArgs, {
-    stdio: "ignore",
-    detached: true,
+  const cmd = new Deno.Command(command, {
+    args: cmdArgs,
+    stdout: "null",
+    stderr: "null",
+    stdin: "null",
   });
-  child.unref();
+  cmd.spawn();
 }
 
 export async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  const chunks: Uint8Array[] = [];
+  const reader = Deno.stdin.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
   }
-  return Buffer.concat(chunks).toString("utf-8");
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return new TextDecoder().decode(result);
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -97,11 +110,11 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export function readFile(path: string): string {
-  return readFileSync(path, "utf-8");
+  return Deno.readTextFileSync(path);
 }
 
 export function writeFile(path: string, data: string): void {
-  writeFileSync(path, data, "utf-8");
+  Deno.writeTextFileSync(path, data);
 }
 
-export { fileURLToPath };
+export { fileURLToPath } from "node:url";

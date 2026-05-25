@@ -1,9 +1,9 @@
-#!/usr/bin/env tsx
-import { spawnSync } from "child_process";
-import { readFileSync, mkdirSync } from "fs";
-import { isMain, which } from "./utils";
+#!/usr/bin/env deno run -A
+import { spawnSync } from "node:child_process";
+import { readFileSync, mkdirSync } from "node:fs";
+import { args, isMain, which } from "./utils.ts";
 
-const CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
+const CACHE_DIR = `${Deno.env.get("XDG_CACHE_HOME") || `${Deno.env.get("HOME")}/.cache`}/fzf-preview`;
 mkdirSync(CACHE_DIR, { recursive: true });
 
 function getCachePath(target: string, ext: string): string {
@@ -12,29 +12,29 @@ function getCachePath(target: string, ext: string): string {
 }
 
 function dim(): string {
-  const cols = parseInt(process.env.FZF_PREVIEW_COLUMNS ?? "", 10) || spawnSync("tput", ["cols"], { encoding: "utf-8" }).stdout?.trim() || "80";
-  const lines = parseInt(process.env.FZF_PREVIEW_LINES ?? "", 10) || spawnSync("tput", ["lines"], { encoding: "utf-8" }).stdout?.trim() || "24";
+  const cols = parseInt(Deno.env.get("FZF_PREVIEW_COLUMNS") ?? "", 10) || spawnSync("tput", ["cols"], { encoding: "utf-8" }).stdout?.trim() || "80";
+  const lines = parseInt(Deno.env.get("FZF_PREVIEW_LINES") ?? "", 10) || spawnSync("tput", ["lines"], { encoding: "utf-8" }).stdout?.trim() || "24";
   return `${cols}x${lines}`;
 }
 
 function renderImage(target: string): void {
   const hasKitten = which("kitten");
 
-  if ((process.env.KITTY_WINDOW_ID || process.env.GHOSTTY_RESOURCES_DIR) && hasKitten) {
+  if ((Deno.env.get("KITTY_WINDOW_ID") || Deno.env.get("GHOSTTY_RESOURCES_DIR")) && hasKitten) {
     spawnSync("kitten", ["icat", "--clear", "--transfer-mode=memory", "--unicode-placeholder", "--stdin=no", `--place=${dim()}@0x0`, target], { stdio: "inherit" });
-    process.stdout.write("\u001b[m");
+    Deno.stdout.writeSync(new TextEncoder().encode("\u001b[m"));
     return;
   }
 
-  if (process.env.TERM_PROGRAM === "WezTerm" && which("wezterm")) {
+  if (Deno.env.get("TERM_PROGRAM") === "WezTerm" && which("wezterm")) {
     spawnSync("wezterm", ["imgcat", target], { stdio: "inherit" });
-    process.stdout.write("\u001b[m");
+    Deno.stdout.writeSync(new TextEncoder().encode("\u001b[m"));
     return;
   }
 
   if (which("chafa")) {
     spawnSync("chafa", ["-s", dim(), target], { stdio: "inherit" });
-    process.stdout.write("\u001b[m");
+    Deno.stdout.writeSync(new TextEncoder().encode("\u001b[m"));
     return;
   }
 
@@ -42,13 +42,13 @@ function renderImage(target: string): void {
 }
 
 function main(): void {
-  const args = process.argv.slice(2);
-  if (args.length !== 1) {
+  const cmdArgs = args;
+  if (cmdArgs.length !== 1) {
     console.error("usage: preview FILENAME[:LINENO][:IGNORED]");
-    process.exit(1);
+    Deno.exit(1);
   }
 
-  let file = args[0].replace(/^~\//, `${process.env.HOME}/`);
+  let file = cmdArgs[0].replace(/^~\//, `${Deno.env.get("HOME")}/`);
   let center = 0;
 
   try {
@@ -61,18 +61,18 @@ function main(): void {
         file = m[1];
         center = parseInt(m[2], 10);
       } catch {
-        process.exit(1);
+        Deno.exit(1);
       }
     } else {
-      process.exit(1);
+      Deno.exit(1);
     }
   }
 
   const mimeResult = spawnSync("file", ["--brief", "--dereference", "--mime-type", file], { encoding: "utf-8" });
-  if (mimeResult.status !== 0) process.exit(1);
+  if (mimeResult.status !== 0) Deno.exit(1);
   const type = mimeResult.stdout?.trim() ?? "";
 
-  const termHeight = parseInt(process.env.FZF_PREVIEW_LINES ?? "", 10) || parseInt(spawnSync("tput", ["lines"], { encoding: "utf-8" }).stdout?.trim() || "24", 10);
+  const termHeight = parseInt(Deno.env.get("FZF_PREVIEW_LINES") ?? "", 10) || parseInt(spawnSync("tput", ["lines"], { encoding: "utf-8" }).stdout?.trim() || "24", 10);
 
   if (type === "inode/directory") {
     if (which("eza")) {
@@ -106,10 +106,10 @@ function main(): void {
         spawnSync("pdftoppm", ["-f", "1", "-l", "1", "-jpeg", "-singlefile", file, cache.replace(/\.jpg$/, "")], { stdio: "ignore" });
       } else {
         console.log("Install poppler/pdftoppm to preview PDFs");
-        process.exit(0);
+        Deno.exit(0);
       }
     }
-    try { readFileSync(cache); renderImage(cache); } catch { process.exit(1); }
+    try { readFileSync(cache); renderImage(cache); } catch { Deno.exit(1); }
     return;
   }
 
@@ -160,7 +160,7 @@ function main(): void {
       const lines = col.stdout?.split("\n").slice(0, termHeight).join("\n") ?? "";
       if (lines) {
         const bat = spawnSync("bat", ["--language=csv", "--color=always"], { input: lines, encoding: "utf-8" });
-        process.stdout.write(bat.stdout ?? lines);
+        Deno.stdout.writeSync(new TextEncoder().encode(bat.stdout ?? lines));
       }
     } catch { spawnSync("file", ["--brief", file], { stdio: "inherit" }); }
     return;
@@ -192,7 +192,7 @@ function main(): void {
       const lines = col.stdout?.split("\n").slice(0, termHeight).join("\n") ?? "";
       if (lines) {
         const bat = spawnSync("bat", ["--language=csv", "--color=always"], { input: lines, encoding: "utf-8" });
-        process.stdout.write(bat.stdout ?? lines);
+        Deno.stdout.writeSync(new TextEncoder().encode(bat.stdout ?? lines));
       }
     } else {
       spawnSync("bat", ["--color=always", file], { stdio: "inherit" });
@@ -228,7 +228,7 @@ function main(): void {
     return;
   }
 
-  if (type.startsWith("text") || type.startsWith("application/")) {
+  if (type.includes("binary") || type.includes("octet-stream")) {
     if (which("hexyl")) {
       spawnSync("hexyl", ["--border", "none", "--length", "1024", file], { stdio: "inherit" });
     } else {
@@ -241,7 +241,7 @@ function main(): void {
   if (batCmd) {
     let startLine = 0;
     if (center > termHeight / 2) startLine = center - Math.floor(termHeight / 2);
-    spawnSync(batCmd, ["--style", process.env.BAT_STYLE || "numbers,changes", "--color=always", "--pager=never", `--highlight-line=${center}`, `--line-range`, `${startLine}:`, file], { stdio: "inherit" });
+    spawnSync(batCmd, ["--style", Deno.env.get("BAT_STYLE") || "numbers,changes", "--color=always", "--pager=never", `--highlight-line=${center}`, `--line-range`, `${startLine}:`, file], { stdio: "inherit" });
   } else {
     spawnSync("cat", [file], { stdio: "inherit" });
   }

@@ -1,5 +1,5 @@
-#!/usr/bin/env tsx
-import { parseArgs } from "util";
+#!/usr/bin/env deno run -A
+import { parseArgs } from "node:util";
 import { args, isMain } from "./utils.ts";
 
 const SLEEP_CYCLE_MINUTES = 90;
@@ -137,13 +137,13 @@ function main(): void {
 
   if (values.help || !values.time) {
     showHelp();
-    process.exit(values.help ? 0 : 1);
+    Deno.exit(values.help ? 0 : 1);
   }
 
   const mode = values.mode as string;
   if (mode !== "sleep" && mode !== "wake") {
     console.error(`Error: mode must be "sleep" or "wake", got "${mode}"`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   try {
@@ -160,7 +160,7 @@ function main(): void {
     console.error(
       `Error: ${error instanceof Error ? error.message : String(error)}`,
     );
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 

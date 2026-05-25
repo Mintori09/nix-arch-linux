@@ -1,8 +1,8 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env deno run -A
 
 import { unlink, rmdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { fileGroups } from "./file-groups";
+import { fileGroups } from "./file-groups.ts";
 import { spawn, args, isMain } from "./utils.ts";
 const command = args[0];
 const flags = new Set(args.slice(1));
@@ -52,7 +52,7 @@ Examples:
 
 function exitWithHelp(code = 0): never {
   help();
-  process.exit(code);
+  Deno.exit(code);
 }
 
 function validateFlags() {
@@ -91,7 +91,7 @@ async function collectFiles(
 
   if (code !== 0) {
     console.error("Failed to collect files.");
-    process.exit(code);
+Deno.exit(code);
   }
 
   return collected
@@ -118,7 +118,7 @@ async function removeFiles(files: string[]): Promise<string[]> {
 
   if (failed > 0) {
     console.error(`Failed to remove ${failed} file(s).`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   return removed;
@@ -166,7 +166,7 @@ if (isMain(import.meta.url)) {
 
     if (files.length === 0) {
       console.log("No files found.");
-      process.exit(0);
+      Deno.exit(0);
     }
 
     console.log(`${dryRun ? "Found" : "Removing"} ${files.length} file(s):\n`);
@@ -174,7 +174,7 @@ if (isMain(import.meta.url)) {
 
     if (dryRun) {
       console.log("\nDry run enabled. No files were removed.");
-      process.exit(0);
+      Deno.exit(0);
     }
 
     const removedFiles = await removeFiles(files);

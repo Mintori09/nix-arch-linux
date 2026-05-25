@@ -171,7 +171,7 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "cv";
-      runtime = "${pkgs.tsx}/bin/tsx";
+      runtime = "${pkgs.deno}/bin/deno run -A";
       entry = "${../../scripts/execute/convert-file.ts}";
       extraPathPackages = [
         pkgs.ffmpeg

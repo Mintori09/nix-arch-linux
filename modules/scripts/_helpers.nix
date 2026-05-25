@@ -1,5 +1,8 @@
 { pkgs }:
 let
+  scriptsDir = ../../scripts/execute;
+  utilsPath = scriptsDir + "/utils.ts";
+
   mkScriptPackage =
     {
       name,
@@ -10,6 +13,12 @@ let
       extraEnv ? "",
     }:
     let
+      entryName = builtins.baseNameOf entry;
+      bundleDir = pkgs.runCommand "${name}-bundle" { } ''
+        mkdir -p $out
+        cp ${utilsPath} $out/utils.ts
+        cp ${entry} "$out/${entryName}"
+      '';
       pathPrefix =
         if extraPathPackages == [ ] then
           ""
@@ -18,7 +27,7 @@ let
       script = pkgs.writeShellScriptBin name ''
         ${pathPrefix}
         ${extraEnv}
-        exec ${runtime} "${entry}" "$@"
+        exec ${runtime} "${bundleDir}/${entryName}" "$@"
       '';
     in
     [ script ] ++ extraPackages;
