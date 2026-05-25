@@ -135,6 +135,10 @@
           set -g @tmux-dotbar-ssh-enabled "true"
           set -g @tmux-dotbar-ssh-icon "󰌘"
           set -g @tmux-dotbar-ssh-icon-only "false"
+
+          set -gq allow-passthrough on
+          set -g visual-activity off
+          set-option -g focus-events on
         '';
       }
     ];
