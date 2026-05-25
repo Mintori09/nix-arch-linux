@@ -12,7 +12,7 @@ let
 
   toolsEnv = pkgs.buildEnv {
     name = "opencode-tools-env";
-    paths = languages.packages;
+    paths = languages.packages ++ [ pkgs.libnotify ];
   };
 
   opencodeInitScript = pkgs.writeShellScript "opencode-init" ''
@@ -54,4 +54,23 @@ in
     (lib.hiPrio opencodeEnv)
   ];
   xdg.configFile."${configFile}".text = configJson;
+
+  xdg.configFile."opencode/opencode-notifier.json".text = builtins.toJSON {
+    sound = true;
+    notification = true;
+    bell = false;
+    timeout = 5;
+    showProjectName = true;
+    showFullPath = false;
+    showSessionTitle = false;
+    showIcon = true;
+    suppressWhenFocused = true;
+    enableOnDesktop = false;
+    notificationSystem = "osascript";
+    linux.grouping = false;
+    minDuration = 0;
+    command = {
+      enabled = false;
+    };
+  };
 }

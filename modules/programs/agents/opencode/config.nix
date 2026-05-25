@@ -13,6 +13,7 @@ builtins.toJSON {
   plugin = [
     "superpowers@git+https://github.com/obra/superpowers.git"
     "@tarquinen/opencode-dcp"
+    "@mohak34/opencode-notifier@latest"
   ];
   autoupdate = false;
   share = "disabled";
