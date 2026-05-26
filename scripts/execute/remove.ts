@@ -1,9 +1,10 @@
 #!/usr/bin/env deno run -A
 
+import { spawn } from "node:child_process";
 import { unlink, rmdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fileGroups } from "./file-groups.ts";
-import { spawn, args, isMain } from "./utils.ts";
+import { args, isMain } from "./utils.ts";
 const command = args[0];
 const flags = new Set(args.slice(1));
 

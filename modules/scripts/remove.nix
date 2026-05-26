@@ -74,6 +74,7 @@ in
       name = "remove";
       runtime = "${pkgs.deno}/bin/deno run -A";
       entry = "${../../scripts/execute}/remove.ts";
+      extraScripts = [ "${../../scripts/execute}/file-groups.ts" ];
       extraPathPackages = [
         pkgs.fd
       ];
