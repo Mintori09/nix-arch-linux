@@ -87,5 +87,9 @@
     # Program
     slack
     signal-desktop
+
+    # Document conversion
+    pandoc
+    imagemagick
   ];
 }

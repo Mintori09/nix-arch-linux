@@ -30,6 +30,7 @@
           black
           isort
           pyflakes
+          pynvim
         ]
       ))
       pyright
@@ -44,9 +45,15 @@
       lazygit
       sqlite
 
-      pandoc
       marksman
-      imagemagick
+
+      clang-tools
+      cmake-language-server
+      dockerfile-language-server-nodejs
+      nodePackages.tailwindcss-language-server
+      nodePackages.intelephense
+      rustc
+      cargo
     ];
   };
 }
