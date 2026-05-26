@@ -50,8 +50,8 @@
       clang-tools
       cmake-language-server
       dockerfile-language-server-nodejs
-      nodePackages.tailwindcss-language-server
-      nodePackages.intelephense
+      tailwindcss-language-server
+      intelephense
       rustc
       cargo
     ];
