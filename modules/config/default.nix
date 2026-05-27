@@ -2,5 +2,6 @@
 {
   imports = [
     ./ollama.nix
+    ./icons.nix
   ];
 }
