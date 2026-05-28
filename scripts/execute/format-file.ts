@@ -297,7 +297,7 @@ async function runPrettierWorkerCli(argv: string[] = args): Promise<void> {
 async function formatFileWithPrettierInSubprocess(
   filePath: string,
 ): Promise<PrettierWorkerResult> {
-  const proc = spawn(process.argv[0], ["run", "-A", fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
+  const proc = spawn(process.argv[0], [fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
     cwd: process.cwd(),
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
