@@ -2,7 +2,9 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { parse, stringify } from "yaml";
+import { createRequire } from "node:module";
+const _require = createRequire(import.meta.url);
+const { parse, stringify } = _require("yaml");
 import { availableParallelism } from "node:os";
 import { extname } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";

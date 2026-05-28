@@ -1,5 +1,8 @@
 { pkgs }:
 let
+  scriptsDir = ../../scripts/execute;
+  utilsPath = scriptsDir + "/utils.ts";
+
   mkScriptPackage =
     {
       name,
@@ -10,9 +13,12 @@ let
       extraScripts ? [ ],
     }:
     let
+      entryName = builtins.baseNameOf entry;
       bundleDir = pkgs.runCommand "${name}-bundle" { buildInputs = [ pkgs.esbuild ]; } ''
         mkdir -p $out
-        esbuild ${entry} --bundle --platform=node --format=cjs --outfile=$out/main.cjs --external:yaml
+        cp ${utilsPath} $out/utils.ts
+        cp ${entry} "$out/${entryName}"
+        esbuild "$out/${entryName}" --bundle --platform=node --format=esm --outfile=$out/main.mjs
       '';
       pathPrefix =
         if extraPathPackages == [ ] then
@@ -22,7 +28,7 @@ let
       script = pkgs.writeShellScriptBin name ''
         ${pathPrefix}
         ${extraEnv}
-        exec ${pkgs.nodejs}/bin/node "${bundleDir}/main.cjs" "$@"
+        exec ${pkgs.nodejs}/bin/node "${bundleDir}/main.mjs" "$@"
       '';
     in
     [ script ] ++ extraPackages;
