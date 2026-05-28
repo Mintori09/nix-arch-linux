@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "extract";
-    runtime = "${pkgs.deno}/bin/deno run -A";
+    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/extract-file.ts}";
     extraPackages = [
       pkgs.gnutar

@@ -1,35 +1,35 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { args, isMain } from "./utils.ts";
 
 async function main(): Promise<void> {
-  const token = Deno.env.get("TELEGRAM_TOKEN_NOVEL_BOT");
-  const chatId = Deno.env.get("TELEGRAM_GROUP_NOVEL_BOT");
+  const token = process.env.TELEGRAM_TOKEN_NOVEL_BOT;
+  const chatId = process.env.TELEGRAM_GROUP_NOVEL_BOT;
   const filePath = args[0];
 
   if (!token) {
     console.error("L\u1ed7i: Bi\u1ebfn m\u00f4i tr\u01b0\u1eddng TELEGRAM_TOKEN_NOVEL_BOT ch\u01b0a \u0111\u01b0\u1ee3c thi\u1ebft l\u1eadp!");
-    Deno.exit(1);
+    process.exit(1);
   }
   if (!chatId) {
     console.error("Lỗi: Biến môi trường TELEGRAM_GROUP_NOVEL_BOT chưa được thiết lập!");
-    Deno.exit(1);
+    process.exit(1);
   }
   if (!filePath) {
     console.error(`Lỗi: Thiếu đường dẫn file. Cách dùng: telepush <file>`);
-    Deno.exit(1);
+    process.exit(1);
   }
 if (!filePath) {
     console.error(`L\u1ed7i: Thi\u1ebfu \u0111\u01b0\u1eddng d\u1eabn file. C\u00e1ch d\u00f9ng: telepush <file>`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   try {
     readFileSync(filePath);
   } catch {
     console.error(`L\u1ed7i: File '${filePath}' kh\u00f4ng t\u1ed3n t\u1ea1i!`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   const stat = spawnSync("stat", ["-c%s", filePath], { encoding: "utf-8" });
@@ -38,7 +38,7 @@ if (!filePath) {
 
   if (fileSize > maxSize) {
     console.error(`C\u1ea3nh b\u00e1o: File l\u1edbn h\u01a1n 50MB. Vui l\u00f2ng d\u00f9ng 'telegram-upload' thay th\u1ebf.`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   console.log(`\u0110ang \u0111\u1ea9y file: ${filePath.split("/").pop()}...`);
@@ -72,11 +72,11 @@ if (!filePath) {
       else if (body.includes('"error_code":429')) console.error("  \u2192 L\u1ed7i 429: G\u1eedi qu\u00e1 nhi\u1ec1u y\u00eau c\u1ea7u");
       else if (body.includes('"error_code":500') || body.includes('"error_code":502')) console.error("  \u2192 L\u1ed7i m\u00e1y ch\u1ee7 Telegram");
 
-      Deno.exit(1);
+      process.exit(1);
     }
   } catch (err: any) {
     console.error("Lỗi kết nối:", err.message);
-    Deno.exit(1);
+    process.exit(1);
   }
 }
 

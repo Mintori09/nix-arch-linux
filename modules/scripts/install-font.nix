@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "ifont";
-    runtime = "${pkgs.deno}/bin/deno run -A";
+    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/install-font.ts}";
     extraPathPackages = [
       pkgs.rpm

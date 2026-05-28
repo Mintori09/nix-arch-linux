@@ -1,5 +1,5 @@
-import { assertEquals, assertStrictEq, assertThrows } from "jsr:@std/assert";
-import { assertRejects } from "jsr:@std/assert";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
@@ -65,51 +65,51 @@ async function makeFakeExtractedTree(root: string): Promise<void> {
   );
 }
 
-Deno.test("cleanup temp dirs", async () => {
+it("cleanup temp dirs", async () => {
   await Promise.all(
     tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
   );
 });
 
-Deno.test("parseCliArgs - parses install subcommand", () => {
+it("parseCliArgs - parses install subcommand", () => {
   const args = parseCliArgs(["install", "--force", "pkg.rpm"]);
-  assertStrictEq(args.command, "install");
-  assertStrictEq(args.force, true);
-  assertStrictEq(args.help, false);
-  assertStrictEq(args.idsOnly, false);
-  assertEquals(args.positionals, ["pkg.rpm"]);
+  assert.strictEqual(args.command, "install");
+  assert.strictEqual(args.force, true);
+  assert.strictEqual(args.help, false);
+  assert.strictEqual(args.idsOnly, false);
+  assert.deepEqual(args.positionals, ["pkg.rpm"]);
 });
 
-Deno.test("parseCliArgs - maps legacy install alias to install command", () => {
+it("parseCliArgs - maps legacy install alias to install command", () => {
   const args = parseCliArgs(["--install", "pkg.rpm"]);
-  assertStrictEq(args.command, "install");
-  assertStrictEq(args.install, true);
-  assertEquals(args.positionals, ["pkg.rpm"]);
+  assert.strictEqual(args.command, "install");
+  assert.strictEqual(args.install, true);
+  assert.deepEqual(args.positionals, ["pkg.rpm"]);
 });
 
-Deno.test("parseCliArgs - parses remove and list commands", () => {
+it("parseCliArgs - parses remove and list commands", () => {
   const removeArgs = parseCliArgs(["remove", "pkg-id"]);
-  assertStrictEq(removeArgs.command, "remove");
-  assertEquals(removeArgs.positionals, ["pkg-id"]);
+  assert.strictEqual(removeArgs.command, "remove");
+  assert.deepEqual(removeArgs.positionals, ["pkg-id"]);
 
   const listArgs = parseCliArgs(["list", "--ids"]);
-  assertStrictEq(listArgs.command, "list");
-  assertStrictEq(listArgs.idsOnly, true);
-  assertEquals(listArgs.positionals, []);
+  assert.strictEqual(listArgs.command, "list");
+  assert.strictEqual(listArgs.idsOnly, true);
+  assert.deepEqual(listArgs.positionals, []);
 });
 
-Deno.test("ensureRequiredTools - does not require sudo in install mode anymore", () => {
+it("ensureRequiredTools - does not require sudo in install mode anymore", () => {
   ensureRequiredTools(true, (tool) =>
     tool === "rpm2cpio" || tool === "cpio" ? `/bin/${tool}` : null,
   );
 });
 
-Deno.test("archive path validation - normalizes leading dot segments", () => {
-  assertStrictEq(normalizeArchiveEntry("./usr/share/app"), "usr/share/app");
+it("archive path validation - normalizes leading dot segments", () => {
+  assert.strictEqual(normalizeArchiveEntry("./usr/share/app"), "usr/share/app");
 });
 
-Deno.test("archive path validation - accepts safe relative entries", () => {
-  assertEquals(
+it("archive path validation - accepts safe relative entries", () => {
+  assert.deepEqual(
     findUnsafeArchiveEntries([
       "usr/bin/example",
       "./usr/share/doc/readme.txt",
@@ -119,8 +119,8 @@ Deno.test("archive path validation - accepts safe relative entries", () => {
   );
 });
 
-Deno.test("archive path validation - rejects absolute and traversal entries", () => {
-  assertEquals(
+it("archive path validation - rejects absolute and traversal entries", () => {
+  assert.deepEqual(
     findUnsafeArchiveEntries([
       "/etc/passwd",
       "../escape",
@@ -130,8 +130,8 @@ Deno.test("archive path validation - rejects absolute and traversal entries", ()
   );
 });
 
-Deno.test("installable path validation - accepts user-space paths", () => {
-  assertEquals(
+it("installable path validation - accepts user-space paths", () => {
+  assert.deepEqual(
     validateInstallableEntries([
       "usr/bin/hello",
       "usr/share/applications/hello.desktop",
@@ -142,8 +142,8 @@ Deno.test("installable path validation - accepts user-space paths", () => {
   );
 });
 
-Deno.test("installable path validation - rejects system-level paths", () => {
-  assertEquals(
+it("installable path validation - rejects system-level paths", () => {
+  assert.deepEqual(
     validateInstallableEntries([
       "etc/profile.d/hello.sh",
       "usr/lib/systemd/user/hello.service",
@@ -157,11 +157,11 @@ Deno.test("installable path validation - rejects system-level paths", () => {
   );
 });
 
-Deno.test("buildExtractCommands - constructs cpio extraction with directory confinement flags", () => {
+it("buildExtractCommands - constructs cpio extraction with directory confinement flags", () => {
   const commands = buildExtractCommands("/tmp/pkg.rpm", "/tmp/out");
 
-  assertEquals(commands.rpm2cpio.argv, ["rpm2cpio", "/tmp/pkg.rpm"]);
-  assertEquals(commands.cpio.argv, [
+  assert.deepEqual(commands.rpm2cpio.argv, ["rpm2cpio", "/tmp/pkg.rpm"]);
+  assert.deepEqual(commands.cpio.argv, [
     "cpio",
     "--extract",
     "--make-directories",
@@ -174,7 +174,7 @@ Deno.test("buildExtractCommands - constructs cpio extraction with directory conf
   ]);
 });
 
-Deno.test("prepareWorkspace - creates a temporary directory for install mode without a target", async () => {
+it("prepareWorkspace - creates a temporary directory for install mode without a target", async () => {
   const tempRoot = await makeTempDir("irpm-rpm-");
   const rpmPath = path.join(tempRoot, "pkg.rpm");
   await writeFile(rpmPath, "rpm");
@@ -187,11 +187,11 @@ Deno.test("prepareWorkspace - creates a temporary directory for install mode wit
 
   tempDirs.push(workspace.targetDir);
 
-  assertStrictEq(workspace.cleanupAfterUse, true);
-  assert.match(path.basename(workspace.targetDir), /^irpm-/);
+  assert.strictEqual(workspace.cleanupAfterUse, true);
+  assert.ok(/^irpm-/.test(path.basename(workspace.targetDir)));
 });
 
-Deno.test("prepareWorkspace - refuses to reuse an existing destination without force", async () => {
+it("prepareWorkspace - refuses to reuse an existing destination without force", async () => {
   const tempRoot = await makeTempDir("irpm-existing-");
   const rpmPath = path.join(tempRoot, "pkg.rpm");
   const destPath = path.join(tempRoot, "out");
@@ -199,7 +199,7 @@ Deno.test("prepareWorkspace - refuses to reuse an existing destination without f
   await mkdir(destPath, { recursive: true });
   await writeFile(path.join(destPath, "marker.txt"), "keep");
 
-  await assertRejects(
+  await assert.rejects(
     () =>
       prepareWorkspace({
         force: false,
@@ -212,48 +212,48 @@ Deno.test("prepareWorkspace - refuses to reuse an existing destination without f
   );
 });
 
-Deno.test("createRunContext - defaults extract mode to extracted_rpm", async () => {
+it("createRunContext - defaults extract mode to extracted_rpm", async () => {
   const tempRoot = await makeTempDir("irpm-context-");
   const rpmPath = path.join(tempRoot, "pkg.rpm");
-  const originalCwd = Deno.cwd();
+  const originalCwd = process.cwd();
   await writeFile(rpmPath, "rpm");
 
-  Deno.chdir(tempRoot);
+  process.chdir(tempRoot);
 
   try {
     const context = await createRunContext(
       parseCliArgs([path.basename(rpmPath)]),
     );
 
-    assertStrictEq(context.command, "extract");
-    assertStrictEq(context.workspaceCleanupAfterUse, false);
-    assertStrictEq(context.targetDir, path.join(tempRoot, "extracted_rpm"));
+    assert.strictEqual(context.command, "extract");
+    assert.strictEqual(context.workspaceCleanupAfterUse, false);
+    assert.strictEqual(context.targetDir, path.join(tempRoot, "extracted_rpm"));
   } finally {
-    Deno.chdir(originalCwd);
+    process.chdir(originalCwd);
   }
 });
 
-Deno.test("auditExtractedTree - rejects symlinks that escape the extracted root", async () => {
+it("auditExtractedTree - rejects symlinks that escape the extracted root", async () => {
   const root = await makeTempDir("irpm-audit-link-");
   await mkdir(path.join(root, "usr/bin"), { recursive: true });
   await symlink("/etc/passwd", path.join(root, "usr/bin/hello"));
 
-  await assertRejects(() => auditExtractedTree(root), Error, "Symlink escapes");
+  await assert.rejects(() => auditExtractedTree(root), Error, "Symlink escapes");
 });
 
-Deno.test("auditExtractedTree - rejects setuid files", async () => {
+it("auditExtractedTree - rejects setuid files", async () => {
   const root = await makeTempDir("irpm-audit-mode-");
   await mkdir(path.join(root, "usr/bin"), { recursive: true });
   const file = path.join(root, "usr/bin/hello");
   await writeFile(file, "echo hi");
   const chmodProc = spawnSync("chmod", ["4755", file]);
-  assertStrictEq(chmodProc.status, 0);
-  assertStrictEq((await lstat(file)).mode & 0o6000, 0o6000);
+  assert.strictEqual(chmodProc.status, 0);
+  assert.strictEqual((await lstat(file)).mode & 0o4000, 0o4000);
 
-  await assertRejects(() => auditExtractedTree(root), Error, "setuid or setgid");
+  await assert.rejects(() => auditExtractedTree(root), Error, "setuid or setgid");
 });
 
-Deno.test("install lifecycle - installs into XDG-managed paths and rewrites desktop entries", async () => {
+it("install lifecycle - installs into XDG-managed paths and rewrites desktop entries", async () => {
   const root = await makeTempDir("irpm-stage-");
   const homeDir = path.join(root, "home");
   const dataHome = path.join(homeDir, ".local/share");
@@ -293,24 +293,24 @@ Deno.test("install lifecycle - installs into XDG-managed paths and rewrites desk
     "irpm/packages/hello-rpm/root/usr/bin/hello-rpm",
   );
 
-  assertStrictEq(result.manifest.id, "hello-rpm");
-  assertStrictEq(existsSync(wrapperPath), true);
-  assertStrictEq(existsSync(desktopPath), true);
-  assertStrictEq(existsSync(manifestPath), true);
+  assert.strictEqual(result.manifest.id, "hello-rpm");
+  assert.strictEqual(existsSync(wrapperPath), true);
+  assert.strictEqual(existsSync(desktopPath), true);
+  assert.strictEqual(existsSync(manifestPath), true);
 
   const wrapperBody = await readFile(wrapperPath, "utf8");
-  assertStrictEq(wrapperBody.includes(stageExecutable), true);
-  assertStrictEq(wrapperBody.includes("LD_LIBRARY_PATH"), true);
+  assert.strictEqual(wrapperBody.includes(stageExecutable), true);
+  assert.strictEqual(wrapperBody.includes("LD_LIBRARY_PATH"), true);
 
   const desktopBody = await readFile(desktopPath, "utf8");
-  assertStrictEq(desktopBody.includes(`Exec=${wrapperPath} --flag`), true);
-  assertStrictEq(desktopBody.includes("# managed-by-irpm hello-rpm"), true);
+  assert.strictEqual(desktopBody.includes(`Exec=${wrapperPath} --flag`), true);
+  assert.strictEqual(desktopBody.includes("# managed-by-irpm hello-rpm"), true);
 
   const iconLink = path.join(dataHome, "pixmaps", "hello-rpm.png");
-  assertStrictEq((await lstat(iconLink)).isSymbolicLink(), true);
+  assert.strictEqual((await lstat(iconLink)).isSymbolicLink(), true);
 });
 
-Deno.test("install lifecycle - list returns install ids from manifest store", async () => {
+it("install lifecycle - list returns install ids from manifest store", async () => {
   const root = await makeTempDir("irpm-list-");
   const homeDir = path.join(root, "home");
   const dataHome = path.join(homeDir, ".local/share");
@@ -333,7 +333,7 @@ Deno.test("install lifecycle - list returns install ids from manifest store", as
     rpmPath,
   });
 
-  assertEquals(
+  assert.deepEqual(
     await listInstalledPackageIds({
       HOME: homeDir,
       XDG_DATA_HOME: dataHome,
@@ -343,7 +343,7 @@ Deno.test("install lifecycle - list returns install ids from manifest store", as
   );
 });
 
-Deno.test("install lifecycle - rejects wrapper collisions owned by another file", async () => {
+it("install lifecycle - rejects wrapper collisions owned by another file", async () => {
   const root = await makeTempDir("irpm-collision-");
   const homeDir = path.join(root, "home");
   const dataHome = path.join(homeDir, ".local/share");
@@ -357,7 +357,7 @@ Deno.test("install lifecycle - rejects wrapper collisions owned by another file"
   await mkdir(binDir, { recursive: true });
   await writeFile(path.join(binDir, "hello-rpm"), "#!/usr/bin/env bash\n");
 
-  await assertRejects(
+  await assert.rejects(
     () =>
       installExtractedTree({
         env: {
@@ -375,7 +375,7 @@ Deno.test("install lifecycle - rejects wrapper collisions owned by another file"
   );
 });
 
-Deno.test("install lifecycle - remove deletes only manifest-owned artifacts", async () => {
+it("install lifecycle - remove deletes only manifest-owned artifacts", async () => {
   const root = await makeTempDir("irpm-remove-");
   const homeDir = path.join(root, "home");
   const dataHome = path.join(homeDir, ".local/share");
@@ -407,7 +407,7 @@ Deno.test("install lifecycle - remove deletes only manifest-owned artifacts", as
     XDG_STATE_HOME: stateHome,
   });
 
-  assertStrictEq(existsSync(path.join(binDir, "hello-rpm")), false);
-  assertStrictEq(existsSync(path.join(binDir, "keep-me")), true);
-  assertStrictEq(existsSync(path.join(stateHome, "irpm/installs/hello-rpm.json")), false);
+  assert.strictEqual(existsSync(path.join(binDir, "hello-rpm")), false);
+  assert.strictEqual(existsSync(path.join(binDir, "keep-me")), true);
+  assert.strictEqual(existsSync(path.join(stateHome, "irpm/installs/hello-rpm.json")), false);
 });

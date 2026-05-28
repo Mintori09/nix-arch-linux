@@ -5,7 +5,7 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "nano-usage";
-    runtime = "${pkgs.deno}/bin/deno run -A";
+    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/nano-usage.ts}";
   };
 }

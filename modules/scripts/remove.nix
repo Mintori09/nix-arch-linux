@@ -72,7 +72,7 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "remove";
-      runtime = "${pkgs.deno}/bin/deno run -A";
+      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute}/remove.ts";
       extraScripts = [ "${../../scripts/execute}/file-groups.ts" ];
       extraPathPackages = [

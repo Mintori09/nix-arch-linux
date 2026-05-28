@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -269,7 +269,7 @@ export function parseCliArgs(argv: string[]): ParsedCli {
 function resolvePath(inputPath: string): string {
   return path.isAbsolute(inputPath)
     ? inputPath
-    : path.resolve(Deno.cwd(), inputPath);
+    : path.resolve(process.cwd(), inputPath);
 }
 
 export function ensureRequiredTools(
@@ -291,15 +291,15 @@ async function runCommand(
 ): Promise<string> {
   const command = formatCommand(parts);
   const proc = spawn(parts[0], parts.slice(1), {
-    cwd: Deno.cwd(),
+    cwd: process.cwd(),
     stdio: ["ignore", options.captureStdout ? "pipe" : "inherit", "pipe"],
   });
 
   let stderr = "";
   let stdout = "";
-  proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+  proc.stderr!.on("data", (d: Buffer) => (stderr += d.toString()));
   if (options.captureStdout) {
-    proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    proc.stdout!.on("data", (d: Buffer) => (stdout += d.toString()));
   }
 
   const exitCode = await new Promise<number>((resolve) => proc.on("close", resolve));
@@ -371,12 +371,12 @@ export function buildExtractCommands(
 
 async function listArchiveEntries(rpmPath: string): Promise<string[]> {
   const rpmProc = spawn("rpm2cpio", [rpmPath], {
-    cwd: Deno.cwd(),
+    cwd: process.cwd(),
     stdio: ["ignore", "pipe", "pipe"],
   });
 
   const cpioProc = spawn("cpio", ["--list"], {
-    cwd: Deno.cwd(),
+    cwd: process.cwd(),
     stdio: [rpmProc.stdout, "pipe", "pipe"],
   });
 
@@ -486,12 +486,12 @@ async function extractRpm(rpmPath: string, targetDir: string): Promise<void> {
   );
 
   const rpmProc = spawn(rpm2cpio.argv[0], rpm2cpio.argv.slice(1), {
-    cwd: rpm2cpio.cwd ?? Deno.cwd(),
+    cwd: rpm2cpio.cwd ?? process.cwd(),
     stdio: ["ignore", "pipe", "pipe"],
   });
 
   const cpioProc = spawn(cpio.argv[0], cpio.argv.slice(1), {
-    cwd: cpio.cwd ?? Deno.cwd(),
+    cwd: cpio.cwd ?? process.cwd(),
     stdio: [rpmProc.stdout, "inherit", "pipe"],
   });
 
@@ -886,7 +886,7 @@ async function readManifest(manifestPath: string): Promise<InstallManifest> {
 }
 
 export async function listInstalledPackageIds(
-  env: Record<string, string | undefined> = Deno.env.toObject(),
+  env: Record<string, string | undefined> = process.env,
 ): Promise<string[]> {
   const layout = resolveXdgLayout(env);
   if (!existsSync(layout.manifestsDir)) return [];
@@ -900,7 +900,7 @@ export async function listInstalledPackageIds(
 
 export async function removeInstalledPackage(
   installId: string,
-  env: Record<string, string | undefined> = Deno.env.toObject(),
+  env: Record<string, string | undefined> = process.env,
 ): Promise<void> {
   const layout = resolveXdgLayout(env);
   const manifestPath = path.join(layout.manifestsDir, `${installId}.json`);
@@ -925,7 +925,7 @@ export async function removeInstalledPackage(
 export async function installExtractedTree(
   options: InstallExtractedTreeOptions,
 ): Promise<InstallExtractedTreeResult> {
-  const env = options.env ?? Deno.env.toObject();
+  const env = options.env ?? process.env;
   const layout = resolveXdgLayout(env);
   const installId = options.installId ?? (await buildInstallId(options.rpmPath));
   const manifestPath = path.join(layout.manifestsDir, `${installId}.json`);
@@ -1146,16 +1146,16 @@ if (isMain(import.meta.url)) {
       console.error(
         `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
       );
-      Deno.exit(1);
+      process.exit(1);
     }
 
     if (err instanceof CliError) {
       console.error(`${COLORS.RED}error:${COLORS.NC} ${err.message}`);
-      Deno.exit(err.exitCode);
+      process.exit(err.exitCode);
     }
 
     console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`, err);
-    Deno.exit(1);
+    process.exit(1);
   }
   })();
 }

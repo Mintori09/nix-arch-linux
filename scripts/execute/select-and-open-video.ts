@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
@@ -9,7 +9,7 @@ function findAndOpenVideo(recursive: boolean): void {
   const fd = spawnSync("fd", fdArgs, { encoding: "utf-8" });
   if (fd.status !== 0) {
     console.error("fd failed");
-    Deno.exit(1);
+    process.exit(1);
   }
 
   const sorted = fd.stdout?.trim() ?? "";

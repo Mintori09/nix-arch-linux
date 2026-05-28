@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { isMain, args, readStdin } from "./utils.ts";
@@ -18,7 +18,7 @@ const SHEBANG_BY_EXT: Record<string, string> = {
   js: "#!/usr/bin/env node", node: "#!/usr/bin/env node",
   rb: "#!/usr/bin/env ruby", ruby: "#!/usr/bin/env ruby",
   pl: "#!/usr/bin/env perl", perl: "#!/usr/bin/env perl",
-  ts: "#!/usr/bin/env deno run -A", typescript: "#!/usr/bin/env deno run -A",
+   ts: "#!/usr/bin/env tsx", typescript: "#!/usr/bin/env tsx",
   lua: "#!/usr/bin/env lua", php: "#!/usr/bin/env php",
   zsh: "#!/bin/zsh",
 };
@@ -73,7 +73,7 @@ function applyExecutableEnvironment(filePath: string, extension: string): void {
 
 function isStdinPresent(): boolean {
   try {
-    return !Deno.stdin.isTerminal();
+    return !process.stdin.isTTY;
   } catch {
     return false;
   }
@@ -89,7 +89,7 @@ process.stdout.write("\nSave scratch file to current directory? [y/N]: ");
   const resp = buf.stdout?.trim() ?? "";
 
   if (resp.toLowerCase() === "y") {
-    const cwd = Deno.cwd();
+    const cwd = process.cwd();
       let dest = `${cwd}/${sourcePath.split("/").pop()}`;
       if (existsSync(dest)) {
         dest = `${cwd}/${originalFilename}-${Math.floor(Date.now() / 1000)}.${extension}`;
@@ -137,14 +137,14 @@ async function main(): Promise<void> {
     }
   }
 
-  addEventListener("unload", () => {
+  process.on("exit", () => {
     persistScratchpad(scratchPath, baseFilename, extension);
     try { unlinkSync(scratchPath); } catch {}
   });
-  Deno.addSignalListener("SIGINT", () => Deno.exit(0));
-  Deno.addSignalListener("SIGTERM", () => Deno.exit(0));
+  process.on("SIGINT", () => process.exit(0));
+  process.on("SIGTERM", () => process.exit(0));
 
-  const editor = Deno.env.get("EDITOR") || "vim";
+  const editor = process.env.EDITOR || "vim";
   spawnSync(editor, [scratchPath], { stdio: "inherit" });
 }
 

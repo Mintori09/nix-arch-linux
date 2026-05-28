@@ -1,4 +1,5 @@
-import { assertEquals, assertStrictEq } from "jsr:@std/assert";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
 import {
   DEFAULT_LARGE_TEXT_BYTES,
@@ -9,27 +10,27 @@ import {
   planOpenTarget,
 } from "./open.ts";
 
-Deno.test("parseArgs - parses project mode with long and short flags", () => {
-  assertEquals(parseArgs(["--project", "."]), {
+it("parseArgs - parses project mode with long and short flags", () => {
+  assert.deepEqual(parseArgs(["--project", "."]), {
     projectMode: true,
     targets: ["."],
   });
 
-  assertEquals(parseArgs(["-p", "~/src/app"]), {
+  assert.deepEqual(parseArgs(["-p", "~/src/app"]), {
     projectMode: true,
     targets: ["~/src/app"],
   });
 });
 
-Deno.test("parseArgs - keeps normal targets in non-project mode", () => {
-  assertEquals(parseArgs(["notes.txt", "https://example.com"]), {
+it("parseArgs - keeps normal targets in non-project mode", () => {
+  assert.deepEqual(parseArgs(["notes.txt", "https://example.com"]), {
     projectMode: false,
     targets: ["notes.txt", "https://example.com"],
   });
 });
 
-Deno.test("parseOpenConfig - defaults to nvim for small text and hx for large text", () => {
-  assertEquals(parseOpenConfig({}), {
+it("parseOpenConfig - defaults to nvim for small text and hx for large text", () => {
+  assert.deepEqual(parseOpenConfig({}), {
     largeTextBytes: DEFAULT_LARGE_TEXT_BYTES,
     largeTextEditor: "hx",
     projectEditor: "zeditor",
@@ -39,8 +40,8 @@ Deno.test("parseOpenConfig - defaults to nvim for small text and hx for large te
   });
 });
 
-Deno.test("parseOpenConfig - allows environment overrides", () => {
-  assertEquals(
+it("parseOpenConfig - allows environment overrides", () => {
+  assert.deepEqual(
     parseOpenConfig({
       OPEN_LARGE_TEXT_BYTES: "2048",
       OPEN_LARGE_TEXT_EDITOR: "helix",
@@ -60,25 +61,25 @@ Deno.test("parseOpenConfig - allows environment overrides", () => {
   );
 });
 
-Deno.test("isProbablyTextPath - recognizes extensionless text-like names", () => {
-  assertStrictEq(isProbablyTextPath("README"), true);
-  assertStrictEq(isProbablyTextPath(".zshrc"), true);
+it("isProbablyTextPath - recognizes extensionless text-like names", () => {
+  assert.strictEqual(isProbablyTextPath("README"), true);
+  assert.strictEqual(isProbablyTextPath(".zshrc"), true);
 });
 
-Deno.test("isProbablyTextPath - recognizes code and config extensions", () => {
-  assertStrictEq(isProbablyTextPath("main.ts"), true);
-  assertStrictEq(isProbablyTextPath("flake.nix"), true);
+it("isProbablyTextPath - recognizes code and config extensions", () => {
+  assert.strictEqual(isProbablyTextPath("main.ts"), true);
+  assert.strictEqual(isProbablyTextPath("flake.nix"), true);
 });
 
-Deno.test("isProbablyTextPath - does not classify common media extensions as text", () => {
-  assertStrictEq(isProbablyTextPath("photo.png"), false);
-  assertStrictEq(isProbablyTextPath("movie.mkv"), false);
+it("isProbablyTextPath - does not classify common media extensions as text", () => {
+  assert.strictEqual(isProbablyTextPath("photo.png"), false);
+  assert.strictEqual(isProbablyTextPath("movie.mkv"), false);
 });
 
-Deno.test("planOpenTarget - opens small text in kitty nvim", () => {
+it("planOpenTarget - opens small text in kitty nvim", () => {
   const config = parseOpenConfig({});
 
-  assertEquals(
+  assert.deepEqual(
     planOpenTarget({
       config,
       isDirectory: false,
@@ -95,10 +96,10 @@ Deno.test("planOpenTarget - opens small text in kitty nvim", () => {
   );
 });
 
-Deno.test("planOpenTarget - opens large text in kitty hx", () => {
+it("planOpenTarget - opens large text in kitty hx", () => {
   const config = parseOpenConfig({});
 
-  assertEquals(
+  assert.deepEqual(
     planOpenTarget({
       config,
       isDirectory: false,
@@ -115,7 +116,7 @@ Deno.test("planOpenTarget - opens large text in kitty hx", () => {
   );
 });
 
-Deno.test("planOpenTarget - delegates directories and binary files to xdg-open", () => {
+it("planOpenTarget - delegates directories and binary files to xdg-open", () => {
   const config = parseOpenConfig({});
 
   const r1 = planOpenTarget({
@@ -125,8 +126,8 @@ Deno.test("planOpenTarget - delegates directories and binary files to xdg-open",
     path: ".",
     sizeBytes: 0,
   });
-  assertStrictEq(r1.kind, "xdg-open");
-  assertEquals(r1.args, ["xdg-open", "."]);
+  assert.strictEqual(r1.kind, "xdg-open");
+  assert.deepEqual(r1.args, ["xdg-open", "."]);
 
   const r2 = planOpenTarget({
     config,
@@ -135,18 +136,18 @@ Deno.test("planOpenTarget - delegates directories and binary files to xdg-open",
     path: "photo.png",
     sizeBytes: 100,
   });
-  assertStrictEq(r2.kind, "xdg-open");
-  assertEquals(r2.args, ["xdg-open", "photo.png"]);
+  assert.strictEqual(r2.kind, "xdg-open");
+  assert.deepEqual(r2.args, ["xdg-open", "photo.png"]);
 });
 
-Deno.test("buildOpenCommand - routes URLs to xdg-open without filesystem checks", async () => {
+it("buildOpenCommand - routes URLs to xdg-open without filesystem checks", async () => {
   const result = await buildOpenCommand("https://example.com");
-  assertStrictEq(result.kind, "xdg-open");
-  assertEquals(result.args, ["xdg-open", "https://example.com"]);
+  assert.strictEqual(result.kind, "xdg-open");
+  assert.deepEqual(result.args, ["xdg-open", "https://example.com"]);
 });
 
-Deno.test("buildOpenCommand - routes project mode to zeditor", async () => {
-  assertEquals(
+it("buildOpenCommand - routes project mode to zeditor", async () => {
+  assert.deepEqual(
     await buildOpenCommand(".", parseOpenConfig({}), true),
     {
       args: ["zeditor", "."],

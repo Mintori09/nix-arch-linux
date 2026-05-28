@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
@@ -24,7 +24,7 @@ function extract(file: string): void {
   for (const [ext, [cmd, cmdArgs]] of Object.entries(cmds)) {
     if (file.endsWith(ext)) {
       const r = spawnSync(cmd, cmdArgs, { stdio: "inherit" });
-      if (r.status !== 0) Deno.exit(r.status ?? 1);
+      if (r.status !== 0) process.exit(r.status ?? 1);
       return;
     }
   }
@@ -35,7 +35,7 @@ function main(): void {
   const files = args;
   if (files.length === 0) {
     console.error(`Usage: extract <file1> [file2 ...]`);
-    Deno.exit(1);
+    process.exit(1);
   }
   for (const file of files) {
     if (spawnSync("test", ["-f", file]).status !== 0) {

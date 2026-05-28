@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { parseArgs } from "node:util";
 import { args, isMain } from "./utils.ts";
 
@@ -14,7 +14,7 @@ const COLORS = {
   RESET: "\x1b[0m",
 };
 
-function parseTime(timeStr: string): Date {
+export function parseTime(timeStr: string): Date {
   const now = new Date();
   const [hours, minutes] = timeStr.split(":").map(Number);
 
@@ -36,7 +36,7 @@ function parseTime(timeStr: string): Date {
   return date;
 }
 
-function formatTime(date: Date): string {
+export function formatTime(date: Date): string {
   return date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -44,7 +44,7 @@ function formatTime(date: Date): string {
   });
 }
 
-function addMinutes(date: Date, minutes: number): Date {
+export function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000);
 }
 
@@ -137,13 +137,13 @@ function main(): void {
 
   if (values.help || !values.time) {
     showHelp();
-    Deno.exit(values.help ? 0 : 1);
+    process.exit(values.help ? 0 : 1);
   }
 
   const mode = values.mode as string;
   if (mode !== "sleep" && mode !== "wake") {
     console.error(`Error: mode must be "sleep" or "wake", got "${mode}"`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   try {
@@ -160,7 +160,7 @@ function main(): void {
     console.error(
       `Error: ${error instanceof Error ? error.message : String(error)}`,
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 }
 

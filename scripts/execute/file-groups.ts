@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 export type FileGroup = {
   description: string;
   extensions: string[];

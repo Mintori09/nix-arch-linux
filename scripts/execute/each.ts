@@ -1,8 +1,8 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { args, isMain, readStdin } from "./utils.ts";
 
-class Item {
+export class Item {
   constructor(
     readonly value: string,
     readonly number: number,
@@ -12,7 +12,7 @@ class Item {
   }
 }
 
-function parseArgs(): {
+export function parseArgs(): {
   command: string;
   json: boolean;
   split: string;
@@ -59,7 +59,7 @@ Placeholders in command:
   {raw}   Raw item value (not quoted)
   {n}     1-based item number
   {i}     0-based item number`);
-      Deno.exit(0);
+      process.exit(0);
     }
     command = cliArgs.slice(i).join(" ");
     break;
@@ -67,13 +67,13 @@ Placeholders in command:
 
   if (!command) {
     console.error("Error: command template is required");
-    Deno.exit(1);
+    process.exit(1);
   }
 
   const validSplits = ["line", "whitespace", "blank", "none"];
   if (!validSplits.includes(opts.split as string)) {
     console.error(`Error: unsupported split mode: ${opts.split}`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   return {
@@ -87,23 +87,23 @@ Placeholders in command:
   };
 }
 
-function stringifyJsonItem(item: unknown): string {
+export function stringifyJsonItem(item: unknown): string {
   if (typeof item === "string") return item;
   return JSON.stringify(item, undefined, undefined);
 }
 
-function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty: boolean): string[] {
+export function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty: boolean): string[] {
   if (useJson) {
     let value: unknown;
     try {
       value = JSON.parse(text);
     } catch (exc: any) {
       console.error(`Invalid JSON stdin: ${exc.message}`);
-      Deno.exit(1);
+      process.exit(1);
     }
     if (!Array.isArray(value)) {
       console.error("JSON stdin must be an array.");
-      Deno.exit(1);
+      process.exit(1);
     }
     return value.map(stringifyJsonItem);
   }
@@ -121,14 +121,14 @@ function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty
     items = splitByBlankLines(normalized, keepEmpty);
   } else {
     console.error(`Unsupported split mode: ${splitMode}`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   if (keepEmpty) return items;
   return items.map((i) => i.trim()).filter((i) => i.length > 0);
 }
 
-function splitByBlankLines(text: string, keepEmpty: boolean): string[] {
+export function splitByBlankLines(text: string, keepEmpty: boolean): string[] {
   const blocks: string[] = [];
   let current: string[] = [];
 
@@ -150,11 +150,11 @@ function splitByBlankLines(text: string, keepEmpty: boolean): string[] {
   return blocks;
 }
 
-function makeItems(values: string[]): Item[] {
+export function makeItems(values: string[]): Item[] {
   return values.map((value, idx) => new Item(value, idx + 1));
 }
 
-function renderCommand(template: string, item: Item): string {
+export function renderCommand(template: string, item: Item): string {
   const quotedValue = `'${item.value.replace(/'/g, "'\\''")}'`;
   let cmd = template.replace("{}", quotedValue);
   cmd = cmd.replace("{raw}", item.value);
@@ -205,5 +205,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => Deno.exit(code));
+  main().then((code) => process.exit(code));
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, relative } from "node:path";
 import { homedir } from "node:os";
@@ -98,7 +98,7 @@ export function decodeSeparatorValue(value: string): string {
 export function buildContentBlocks(
   entries: { fileContent: string; resolvedPath: string }[],
   pathMode: ContentPathMode,
-  cwd: string = Deno.cwd(),
+  cwd: string = process.cwd(),
 ): string {
   return entries
     .map(({ resolvedPath, fileContent }) => {
@@ -359,7 +359,7 @@ async function collectGitUntrackedFiles(): Promise<string[]> {
 async function readFilesFromStdin(): Promise<string[]> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 
-  if (Deno.stdin.isTerminal()) {
+  if (process.stdin.isTTY) {
     return [];
   }
 
@@ -397,7 +397,7 @@ async function collectSelectorFiles(
       const code = await new Promise<number>((r) => child.on("close", r));
 
       if (code !== 0) {
-        Deno.exit(code);
+        process.exit(code);
       }
 
       return stdout
@@ -430,7 +430,7 @@ async function collectSelectorFiles(
   const code = await new Promise<number>((r) => child.on("close", r));
 
   if (code !== 0) {
-    Deno.exit(code);
+    process.exit(code);
   }
 
   return stdout
@@ -491,7 +491,7 @@ async function main() {
     validateParsedArgs(parsedArgs);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    Deno.exit(1);
+    process.exit(1);
   }
 
   let files = parsedArgs.files;
@@ -514,7 +514,7 @@ async function main() {
 
   if (files.length === 0) {
     printUsage();
-    Deno.exit(1);
+    process.exit(1);
   }
 
   files = applyRandomSelection(files, parsedArgs.randomCount);
@@ -558,7 +558,7 @@ async function main() {
   if (parsedArgs.copyContent) {
     if (contentEntries.length === 0) {
       console.error("No valid files read to copy content");
-      Deno.exit(1);
+      process.exit(1);
     }
 
     const clipboardContent = buildContentBlocks(
@@ -579,12 +579,12 @@ async function main() {
     }
 
     console.error("Failed to copy to clipboard");
-    Deno.exit(1);
+    process.exit(1);
   }
 
   if (existingFiles.length === 0) {
     console.error("No existing files to copy to clipboard");
-    Deno.exit(1);
+    process.exit(1);
   }
 
   const clipboardContent = existingFiles.join(parsedArgs.separator);
@@ -605,9 +605,9 @@ async function main() {
   }
 
   console.error("Failed to copy to clipboard");
-  Deno.exit(1);
+  process.exit(1);
 }
 
 if (isMain(import.meta.url)) {
-  main().catch((err: unknown) => { console.error(err); Deno.exit(1); });
+  main().catch((err: unknown) => { console.error(err); process.exit(1); });
 }

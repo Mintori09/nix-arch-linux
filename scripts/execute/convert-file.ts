@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -167,7 +167,7 @@ function shouldEnableSpinner(options: {
   isTTY?: boolean;
 }): boolean {
   return (
-    !options.dryRun && options.isTTY === true && Deno.env.get("NO_SPINNER") !== "1"
+    !options.dryRun && options.isTTY === true && process.env.NO_SPINNER !== "1"
   );
 }
 
@@ -178,7 +178,7 @@ async function withSpinner<T>(
   if (
     !shouldEnableSpinner({
       dryRun: context.dryRun,
-      isTTY: Deno.stdout.isTerminal(),
+      isTTY: process.stdout.isTTY === true,
     })
   ) {
     return task();
@@ -224,9 +224,9 @@ async function runCommand(
 
   let stderr = "";
   let stdout = "";
-  proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+  proc.stderr!.on("data", (d: Buffer) => (stderr += d.toString()));
   if (options.captureStdout) {
-    proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    proc.stdout!.on("data", (d: Buffer) => (stdout += d.toString()));
   }
 
   const exitCode = await new Promise<number>((r) => proc.on("close", r));
@@ -903,16 +903,16 @@ if (isMain(import.meta.url)) {
         console.error(
           `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
         );
-Deno.exit(1);
+process.exit(1);
       }
 
       if (err instanceof CliError) {
         console.error(err.message);
-        Deno.exit(err.exitCode);
+        process.exit(err.exitCode);
       }
 
       console.error(`\n${COLORS.RED}Conversion failed:${COLORS.NC}`, err);
-      Deno.exit(1);
+      process.exit(1);
     }
   })();
 }

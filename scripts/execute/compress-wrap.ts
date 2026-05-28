@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 // Simple, safe compression wrapper using the output filename extension.
 
 import {
@@ -11,8 +11,9 @@ import {
   rmSync,
 } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { args } from "./utils.ts";
+import { args, isMain } from "./utils.ts";
 
 type CompressionType =
   | "zip"
@@ -25,7 +26,7 @@ type CompressionType =
   | "bz2"
   | "xz";
 
-const PROGRAM_NAME = path.basename(new URL(import.meta.url).pathname);
+const PROGRAM_NAME = path.basename(fileURLToPath(import.meta.url));
 
 function usage(): void {
   console.log(`Usage:
@@ -60,7 +61,7 @@ Options:
 
 function die(message: string): never {
   console.error(`Error: ${message}`);
-  Deno.exit(1);
+  process.exit(1);
 }
 
 function isExecutable(filePath: string): boolean {
@@ -77,7 +78,7 @@ function findCommand(command: string): string | null {
     return isExecutable(command) ? command : null;
   }
 
-  const pathDirs = (Deno.env.get("PATH") ?? "")
+  const pathDirs = (process.env.PATH ?? "")
     .split(path.delimiter)
     .filter(Boolean);
 
@@ -107,7 +108,7 @@ function find7z(): string {
   );
 }
 
-function detectType(output: string): CompressionType {
+export function detectType(output: string): CompressionType {
   if (output.endsWith(".tar.gz") || output.endsWith(".tgz")) return "tar.gz";
   if (output.endsWith(".tar.bz2") || output.endsWith(".tbz2")) return "tar.bz2";
   if (output.endsWith(".tar.xz") || output.endsWith(".txz")) return "tar.xz";
@@ -121,7 +122,7 @@ function detectType(output: string): CompressionType {
   die(`cannot detect compression type from output extension: ${output}`);
 }
 
-function tempExtension(type: CompressionType): string {
+export function tempExtension(type: CompressionType): string {
   switch (type) {
     case "zip":
       return ".zip";
@@ -277,7 +278,7 @@ function makeTempOutput(output: string, type: CompressionType): string {
   const randomPart = Math.random().toString(16).slice(2);
   return path.join(
     outputDir,
-    `.${outputName}.tmp-${Deno.pid}-${randomPart}${tempExtension(type)}`,
+    `.${outputName}.tmp-${process.pid}-${randomPart}${tempExtension(type)}`,
   );
 }
 
@@ -341,7 +342,7 @@ function compressSingleFileWithRedirect(
   return result.status === 0;
 }
 
-function parseArgs(args: string[]): {
+export function parseArgs(args: string[]): {
   force: boolean;
   output: string;
   inputs: string[];
@@ -360,7 +361,7 @@ function parseArgs(args: string[]): {
 
     if (arg === "-h" || arg === "--help") {
       usage();
-      Deno.exit(0);
+      process.exit(0);
     }
 
     if (arg === "--") {
@@ -379,7 +380,7 @@ function parseArgs(args: string[]): {
 
   if (rest.length < 2) {
     usage();
-    Deno.exit(1);
+    process.exit(1);
   }
 
   return {
@@ -431,4 +432,6 @@ function main(): void {
   console.log(`Created: ${output}`);
 }
 
-main();
+if (isMain(import.meta.url)) {
+  main();
+}

@@ -114,7 +114,7 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "cpath";
-      runtime = "${pkgs.deno}/bin/deno run -A";
+      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute}/copy-files.ts";
       extraScripts = [ "${../../scripts/execute}/file-groups.ts" ];
       extraPathPackages = [

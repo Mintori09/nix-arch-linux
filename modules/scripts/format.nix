@@ -55,16 +55,26 @@ let
   ++ optionalPkg "dockfmt"
   ++ optionalNestedPkg "phpPackages" "php-cs-fixer";
 
+  yamlSrc = pkgs.fetchurl {
+    url = "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz";
+    hash = "sha256-14ggs4m6rb3wm5mi9s2n6kkgz9h9pymlb81b4zh019qvrc2a53q0";
+  };
+
+  yamlPackage = pkgs.runCommand "yaml-2.9.0" { } ''
+    mkdir -p $out/lib/node_modules/yaml
+    tar -xzf ${yamlSrc} -C $out/lib/node_modules/yaml --strip-components=1
+  '';
 in
 {
   home.packages =
     helpers.mkScriptPackage {
       name = "format";
-      runtime = "${pkgs.deno}/bin/deno run -A";
+      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute/format-file.ts}";
       extraPathPackages = formatterPackages;
       extraEnv = ''
-        export FORMAT_PRETTIER_ENTRYPOINT="${pkgs.prettier}/lib/node_modules/prettier/index.mjs"
+        export NODE_PATH="${yamlPackage}/lib/node_modules:$NODE_PATH"
+        export FORMAT_PRETTIER_ENTRYPOINT="${pkgs.prettier}/lib/node_modules/prettier/index.mjs";
       '';
     }
     ++ formatterPackages;

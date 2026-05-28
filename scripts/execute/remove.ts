@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 
 import { spawn } from "node:child_process";
 import { unlink, rmdir } from "node:fs/promises";
@@ -53,10 +53,10 @@ Examples:
 
 function exitWithHelp(code = 0): never {
   help();
-  Deno.exit(code);
+  process.exit(code);
 }
 
-function validateFlags() {
+export function validateFlags(flags: Set<string>): void {
   const unknownFlags = [...flags].filter((flag) => !validFlags.has(flag));
 
   if (unknownFlags.length > 0) {
@@ -92,7 +92,7 @@ async function collectFiles(
 
   if (code !== 0) {
     console.error("Failed to collect files.");
-Deno.exit(code);
+process.exit(code);
   }
 
   return collected
@@ -119,7 +119,7 @@ async function removeFiles(files: string[]): Promise<string[]> {
 
   if (failed > 0) {
     console.error(`Failed to remove ${failed} file(s).`);
-    Deno.exit(1);
+    process.exit(1);
   }
 
   return removed;
@@ -150,7 +150,7 @@ if (isMain(import.meta.url)) {
       exitWithHelp(0);
     }
 
-    validateFlags();
+    validateFlags(flags);
 
     const target = fileGroups[command];
 
@@ -167,7 +167,7 @@ if (isMain(import.meta.url)) {
 
     if (files.length === 0) {
       console.log("No files found.");
-      Deno.exit(0);
+      process.exit(0);
     }
 
     console.log(`${dryRun ? "Found" : "Removing"} ${files.length} file(s):\n`);
@@ -175,7 +175,7 @@ if (isMain(import.meta.url)) {
 
     if (dryRun) {
       console.log("\nDry run enabled. No files were removed.");
-      Deno.exit(0);
+      process.exit(0);
     }
 
     const removedFiles = await removeFiles(files);

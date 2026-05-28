@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 
 import { spawn } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
@@ -214,7 +214,7 @@ async function detectMimeType(path: string): Promise<string | null> {
 
 export async function buildOpenCommand(
   target: string,
-  config = parseOpenConfig(Deno.env.toObject()),
+  config = parseOpenConfig(process.env),
   projectMode = false,
 ): Promise<OpenPlan> {
   if (projectMode) {
@@ -262,7 +262,7 @@ async function main(): Promise<number> {
   for (const target of parsedArgs.targets) {
     const plan = await buildOpenCommand(
       target,
-      parseOpenConfig(Deno.env.toObject()),
+      parseOpenConfig(process.env),
       parsedArgs.projectMode,
     );
     const child = spawn(plan.args[0], plan.args.slice(1), {
@@ -276,5 +276,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => Deno.exit(code));
+  main().then((code) => process.exit(code));
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { args, isMain } from "./utils.ts";
@@ -190,12 +190,12 @@ type Args = {
   gui?: boolean;
 };
 
-function parseArgs(): Args {
+export function parseArgs(): Args {
   const cliArgs = args;
 
   if (cliArgs.length === 0 || cliArgs[0] === "--help" || cliArgs[0] === "-h") {
     printUsage();
-    Deno.exit(0);
+    process.exit(0);
   }
 
   const command = cliArgs[0] as Args["command"];
@@ -213,7 +213,7 @@ function parseArgs(): Args {
     const arg = cliArgs[i];
     if (arg === "--help" || arg === "-h") {
       printUsage();
-      Deno.exit(0);
+      process.exit(0);
     } else if (arg === "--scaffold" || arg === "-s") {
       options.scaffold = true;
     } else if (arg === "--gui" || arg === "-g") {
@@ -441,7 +441,7 @@ pkgs.mkShell {
   return 0;
 }
 
-function getRuntimePkgs(language: Language): string {
+export function getRuntimePkgs(language: Language): string {
   const pkgMap: Record<string, string> = {
     python: "python3",
     node: "nodejs bun",
@@ -468,7 +468,7 @@ function addEnvironment(language: Language, dir: string, gui: boolean = false): 
 async function main(): Promise<number> {
   const args = parseArgs();
 
-  const targetDir = args.directory || Deno.cwd();
+  const targetDir = args.directory || process.cwd();
 
   // Create directory if it doesn't exist
   if (!existsSync(targetDir)) {
@@ -504,5 +504,5 @@ async function main(): Promise<number> {
 }
 
 if (isMain(import.meta.url)) {
-  main().then((code) => Deno.exit(code));
+  main().then((code) => process.exit(code));
 }

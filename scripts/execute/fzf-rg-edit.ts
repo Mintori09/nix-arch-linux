@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run -A
+#!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
@@ -22,7 +22,7 @@ function fzfRgEdit(initialQuery: string): void {
     "--preview", previewCmd,
     "--preview-window", "up,60%,border-bottom,+{2}+3/3,~3",
   ], {
-    env: { ...Deno.env.toObject(), FZF_DEFAULT_COMMAND: rgCmd },
+    env: { ...process.env, FZF_DEFAULT_COMMAND: rgCmd },
     stdio: [undefined, "pipe", "pipe"],
     encoding: "utf-8",
     input: "",
@@ -41,7 +41,7 @@ function fzfRgEdit(initialQuery: string): void {
   const line = afterFile.slice(0, j);
 
   if (file && line) {
-    const editor = Deno.env.get("EDITOR") || "vim";
+    const editor = process.env.EDITOR || "vim";
     spawnSync(editor, [file, `+${line}`], { stdio: "inherit" });
   }
 }
