@@ -46,7 +46,7 @@
           file="$(
               fd -t f \
                   -E node_modules -E target -E .cache \
-                  -e md -e txt \
+                  -e md -e txt -e ron\
                   -e json -e yaml -e yml -e toml -e xml \
                   -e html -e css -e js -e ts -e jsx -e tsx -e vue -e svelte \
                   -e py -e rb -e go -e rs -e java -e c -e h -e cpp -e hpp -e lua \
@@ -165,7 +165,7 @@
           file="$(
               fd -t f \
                   -E node_modules -E target -E .cache \
-                  -e md -e txt \
+                  -e md -e txt -e ron\
                   -e json -e yaml -e yml -e toml -e xml \
                   -e html -e css -e js -e ts -e jsx -e tsx -e vue -e svelte \
                   -e py -e rb -e go -e rs -e java -e c -e h -e cpp -e hpp -e lua \

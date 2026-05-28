@@ -12,3 +12,4 @@ tools/mdview/network Requests.json
 tools/mdview/vendor/
 plans/
 .antigravitycli/
+node_modules/

@@ -29,6 +29,8 @@
     "nano-gpt"
     "ollama-cloud"
     "google"
+    "kilo"
+    "openrouter"
   ];
 
   enabled = [

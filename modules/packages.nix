@@ -36,6 +36,9 @@
     dust
     aichat
     btop
+    konsave
+    rofi
+    vex-tui
 
     # aider-chat
     duf

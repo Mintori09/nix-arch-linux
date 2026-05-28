@@ -20,5 +20,6 @@
     ./compress-wrap.nix
     ./open.nix
     ./direnv-wrap.nix
+    ./rclone-sync.nix
   ];
 }

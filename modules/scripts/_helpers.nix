@@ -18,6 +18,7 @@ let
         mkdir -p $out
         cp ${utilsPath} $out/utils.ts
         cp ${entry} "$out/${entryName}"
+        ${builtins.concatStringsSep "\n" (map (f: "cp ${f} $out/${builtins.baseNameOf f}") extraScripts)}
         esbuild "$out/${entryName}" --bundle --platform=node --format=esm --outfile=$out/main.mjs
       '';
       pathPrefix =
