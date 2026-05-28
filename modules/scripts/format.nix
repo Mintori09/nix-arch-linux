@@ -57,7 +57,7 @@ let
 
   yamlSrc = pkgs.fetchurl {
     url = "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz";
-    hash = "sha256-14ggs4m6rb3wm5mi9s2n6kkgz9h9pymlb81b4zh019qvrc2a53q0";
+    sha256 = "14ggs4m6rb3wm5mi9s2n6kkgz9h9pymlb81b4zh019qvrc2a53q0";
   };
 
   yamlPackage = pkgs.runCommand "yaml-2.9.0" { } ''
@@ -69,7 +69,6 @@ in
   home.packages =
     helpers.mkScriptPackage {
       name = "format";
-      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute/format-file.ts}";
       extraPathPackages = formatterPackages;
       extraEnv = ''

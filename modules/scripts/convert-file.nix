@@ -171,7 +171,6 @@ in
   home.packages =
     (helpers.mkScriptPackage {
       name = "cv";
-      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute/convert-file.ts}";
       extraPathPackages = [
         pkgs.ffmpeg

@@ -5,7 +5,6 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "compress";
-    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/compress-wrap.ts}";
     extraPackages = [
       pkgs.gnutar

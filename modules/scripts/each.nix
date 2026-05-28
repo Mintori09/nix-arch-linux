@@ -43,7 +43,6 @@ in
   home.packages =
     helpers.mkScriptPackage {
       name = "each";
-      runtime = "${pkgs.tsx}/bin/tsx";
       entry = "${../../scripts/execute/each.ts}";
     }
     ++ [

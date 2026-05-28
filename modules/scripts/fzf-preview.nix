@@ -5,7 +5,6 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "preview";
-    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/fzf-preview.ts}";
   };
 }

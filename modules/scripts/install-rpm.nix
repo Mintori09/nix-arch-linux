@@ -65,7 +65,6 @@ in
 {
   home.packages = helpers.mkScriptPackage {
     name = "irpm";
-    runtime = "${pkgs.tsx}/bin/tsx";
     entry = "${../../scripts/execute/install-rpm.ts}";
     extraPathPackages = [
       pkgs.rpm
