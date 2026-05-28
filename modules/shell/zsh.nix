@@ -185,17 +185,10 @@ in
 
         compdef _fn fn
 
-        # FZF-tab completion for dw - shows scaffold files in preview
-        zstyle ':fzf-tab:complete:dw:*' fzf-preview \
-          'case $word in \
-            python) echo "scaffold: requirements.txt" ;; \
-            node) echo "scaffold: package.json" ;; \
-            ruby) echo "scaffold: Gemfile" ;; \
-            *) echo "no scaffold" ;; \
-          esac'
-        zstyle ':fzf-tab:complete:dw:*' fzf-flags \
-          '--prompt=dw > ' \
-          '--height=40%' \
+        # FZF-tab completion for dvt
+        zstyle ':fzf-tab:complete:dvt:*' fzf-flags \
+          '--prompt=dvt > ' \
+          '--height=60%' \
           '--reverse'
         typeset -U path
         path=(
