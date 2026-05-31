@@ -20,6 +20,11 @@ if command -v powerprofilesctl &>/dev/null; then
     powerprofilesctl set balanced 2>/dev/null || true
 fi
 
+# Set monitor refresh rate to 144Hz when plugged in
+if command -v kscreen-doctor &>/dev/null; then
+    kscreen-doctor output.eDP-1.mode.1920x1080@144 2>/dev/null || true
+fi
+
 # DPMS / screen blank: restore longer timeouts for plugged-in use
 if [[ -n "$DISPLAY" ]] && command -v xset &>/dev/null; then
     xset dpms 300 600 900 2>/dev/null || true

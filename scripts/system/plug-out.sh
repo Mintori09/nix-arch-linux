@@ -20,6 +20,11 @@ if command -v brightnessctl &>/dev/null; then
     brightnessctl set 40% 2>/dev/null || true
 fi
 
+# Set monitor refresh rate to 60Hz on battery
+if command -v kscreen-doctor &>/dev/null; then
+    kscreen-doctor output.eDP-1.mode.1920x1080@60 2>/dev/null || true
+fi
+
 # 5. DPMS / screen blank: suspend after 2 min, switch off after 3 min
 if [[ -n "$DISPLAY" ]] && command -v xset &>/dev/null; then
     xset dpms 120 180 300 2>/dev/null || true
