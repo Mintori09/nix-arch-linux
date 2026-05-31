@@ -4,5 +4,6 @@
     ./ollama.nix
     ./icons.nix
     ./rclone.nix
+    ./mactahoe-kde.nix
   ];
 }

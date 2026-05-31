@@ -27,6 +27,7 @@
     ./zed
     ./yt-dlp.nix
     ./obs.nix
+    ./mcfly.nix
     ./9router.nix
     ./pandoc.nix
   ];

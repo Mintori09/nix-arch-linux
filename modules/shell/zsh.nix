@@ -197,6 +197,10 @@ in
         )
         export PATH
 
+        bindkey -M viins '^R' mcfly-fzf-history-widget
+        bindkey -M vicmd '^R' mcfly-fzf-history-widget
+        bindkey -M emacs '^R' mcfly-fzf-history-widget
+
       '')
     ];
   };

@@ -4,6 +4,11 @@
   home.shellAliases = {
     gst = "${pkgs.git}/bin/git status";
     gcw = "${pkgs.git}/bin/git clone $(${pkgs.wl-clipboard}/bin/wl-paste)";
+    gcwd = ''
+      url="$(${pkgs.wl-clipboard}/bin/wl-paste)"
+      ${pkgs.git}/bin/git clone "$url"
+      cd "$(basename "$url" .git)"
+    '';
     gll = "${pkgs.git}/bin/git log --oneline --color=always  | fzf --ansi --preview 'git show --color=always {1}'";
   };
 

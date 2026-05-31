@@ -5,7 +5,7 @@ let
     owner = "vinceliuice";
     repo = "MacTahoe-kde";
     rev = "4c0ad8fe730d32c892c84ab0dcf9a104a6fd466d";
-    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    hash = "sha256-6saJ9t1KZeIkCwR6ePKSnJxSsba0XRmck8g8/JDuuBE=";
   };
 
   mac-tahoe-aurorae = pkgs.runCommand "mactahoe-aurorae" { } ''
@@ -22,8 +22,8 @@ let
       esac
 
       cp "$auroraeSrc/$themeName"/*.svg "$themeDir/"
-      cp "$auroraeSrc/${color}rc" "$themeDir/$themeName"rc
-      cp "$auroraeSrc/icons-${color}"/*.svg "$themeDir/"
+      cp "$auroraeSrc/''${color}rc" "$themeDir/$themeName"rc
+      cp "$auroraeSrc/icons-''${color}"/*.svg "$themeDir/"
       sed "s/theme_name/$themeName/g" "$auroraeSrc/metadata.desktop" > "$themeDir/metadata.desktop"
       sed "s/theme_name/$themeName/g" "$auroraeSrc/metadata.json" > "$themeDir/metadata.json"
     done
@@ -33,6 +33,7 @@ in
   xdg.configFile."Kvantum/MacTahoe" = {
     source = "${mac-tahoe-src}/Kvantum/MacTahoe";
     recursive = true;
+    force = true;
   };
 
   xdg.dataFile."color-schemes/MacTahoeLight.colors".source =

@@ -60,6 +60,7 @@
       - .config/Antigravity/**
       - .config/Bitwarden/**
       - .config/BraveSoftware/**
+      - .config/zen/**
       - .config/Code/**
       - .config/Folo/**
       - .config/google-chrome/**
@@ -136,6 +137,7 @@
       + .config/kwinoutputconfig.json
       + .config/plasmarc
       + .config/plasmashellrc
+      + .config/powerdevilrc
       + .config/plasma-org.kde.plasma.desktop-appletsrc
       + .config/breezerc
       + .config/dolphinrc
