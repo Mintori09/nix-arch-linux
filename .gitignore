@@ -13,3 +13,5 @@ tools/mdview/vendor/
 plans/
 .antigravitycli/
 node_modules/
+.claude
+.cmd_ai_cache.json
