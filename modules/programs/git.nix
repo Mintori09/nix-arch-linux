@@ -43,6 +43,7 @@
       core = {
         ignorecase = false;
         autocrlf = "input";
+        hooksPath = ".githooks";
       };
 
       color.ui = "auto";
