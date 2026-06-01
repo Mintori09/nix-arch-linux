@@ -328,6 +328,20 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
     return 1;
   }
 
+  const sizeArgs = [
+    "size",
+    OBSIDIAN_SRC,
+    "--fast-list",
+    "--exclude-from",
+    `${OBSIDIAN_SRC}/.rclone-ignore`,
+  ];
+
+  console.log("  Đang kiểm tra dung lượng...");
+  const sizeResult = await spawnAsync("rclone", sizeArgs);
+  if (sizeResult.exitCode === 0) {
+    console.log(`  ${sizeResult.stdout.trim()}`);
+  }
+
   const cmdArgs = [
     "sync",
     OBSIDIAN_SRC,
@@ -349,7 +363,6 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
     "--progress",
     "--stats",
     "5s",
-    "--stats-one-line",
     "--log-file",
     LOG_FILE,
   ];
