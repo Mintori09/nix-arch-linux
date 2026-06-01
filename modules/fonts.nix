@@ -26,5 +26,6 @@ in
   home.packages = with pkgs; [
     inter
     nerd-fonts.jetbrains-mono
+    nerd-fonts.hack
   ];
 }
