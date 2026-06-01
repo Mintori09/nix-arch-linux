@@ -30,5 +30,6 @@
     ./mcfly.nix
     ./9router.nix
     ./pandoc.nix
+    ./neovide.nix
   ];
 }
