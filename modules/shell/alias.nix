@@ -10,6 +10,7 @@ in
     # opencode-go/deepseek-v4-pro
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
+    update-packages = "yay -Syu --ignore voxtype-cuda";
 
     # NAVIGATION & SHELL BASICS
     ".." = "cd ..";
