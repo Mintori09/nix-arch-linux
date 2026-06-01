@@ -130,7 +130,8 @@ function buildExcludeArgs(excludes: string[]): string[] {
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}M`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)}M`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}G`;
 }
 
@@ -332,6 +333,9 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
     OBSIDIAN_SRC,
     OBSIDIAN_DST,
     "--fast-list",
+    "--no-traverse",
+    "--exclude-from",
+    `${OBSIDIAN_SRC}/.rclone-ignore`,
     "--tpslimit",
     "8",
     "--transfers",
@@ -341,14 +345,13 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
     "--drive-chunk-size",
     "64M",
     "--drive-use-trash=false",
+    "--verbose",
     "--progress",
     "--stats",
     "5s",
     "--stats-one-line",
     "--log-file",
     LOG_FILE,
-    "--log-level",
-    "INFO",
   ];
 
   if (dryRun) cmdArgs.push("--dry-run");
