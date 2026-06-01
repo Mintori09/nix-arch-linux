@@ -8,8 +8,8 @@ const ARCHIVES_REMOTE = `${REMOTE_BASE}/archives`;
 const OBSIDIAN_DST = `Drive:[2] Personal/[2] Obsidian`;
 
 const FILTER_DIR = `${HOME}/.config/rclone/filter`;
-const CONFIG_FILTER = `${FILTER_DIR}/config.txt`;
-const FIREFOX_FILTER = `${FILTER_DIR}/firefox profile.txt`;
+// const CONFIG_FILTER = `${FILTER_DIR}/config.txt`;
+// const FIREFOX_FILTER = `${FILTER_DIR}/firefox profile.txt`;
 const LOG_FILE = process.env.RCLONE_LOG_FILE || `${HOME}/rclone-sync.log`;
 const TMP_DIR = "/tmp/rclone-sync";
 
@@ -87,17 +87,17 @@ function printHeader(text: string): void {
 
 function printUsage(): void {
   console.log(`
-rclone-sync - Đồng bộ config lên Google Drive
+rclone-sync - Sync config to Google Drive
 
-Cách dùng:
+Usage:
   rclone-sync --config         Tar & upload ~/.config
   rclone-sync --zen            Tar & upload Zen profiles
   rclone-sync --obsidian       Rclone sync Obsidian vault
   rclone-sync --all            Config + Zen + Obsidian
 
 Modifiers:
-  --dry-run, -n    Preview, không sync thật
-  --help, -h       Hiển thị trợ giúp
+  --dry-run, -n    Preview, don't actually sync
+  --help, -h       Show help
 
 Remote:  ${REMOTE_BASE}
 Log:     ${LOG_FILE}
@@ -106,13 +106,13 @@ Log:     ${LOG_FILE}
 
 async function checkPrerequisites(): Promise<void> {
   if (!which("rclone")) {
-    console.error("Lỗi: rclone chưa được cài đặt!");
+    console.error("Error: rclone is not installed!");
     process.exit(1);
   }
 
   const remoteCheck = await spawnAsync("rclone", ["listremotes"]);
   if (!remoteCheck.stdout.includes("Drive:")) {
-    console.error("Lỗi: Remote 'Drive:' chưa được cấu hình trong rclone!");
+    console.error("Error: Remote 'Drive:' is not configured in rclone!");
     process.exit(1);
   }
 
@@ -139,7 +139,7 @@ async function cleanupOldArchives(
   remotePath: string,
   prefix: string,
 ): Promise<void> {
-  console.log(`\n  Dọn archive cũ (giữ ${KEEP_VERSIONS})...`);
+  console.log(`\n  Clean up old archives (keep ${KEEP_VERSIONS})...`);
 
   const listResult = await spawnAsync("rclone", [
     "lsf",
@@ -159,13 +159,13 @@ async function cleanupOldArchives(
     .reverse();
 
   if (files.length <= KEEP_VERSIONS) {
-    console.log(`  Còn ${files.length} file, chưa cần dọn.`);
+    console.log(`  There are ${files.length} files, no cleanup needed.`);
     return;
   }
 
   const toDelete = files.slice(KEEP_VERSIONS);
   for (const file of toDelete) {
-    console.log(`  Xóa: ${file}`);
+    console.log(`  Deleting: ${file}`);
     await spawnAsync("rclone", ["delete", `${remotePath}/${file}`]);
   }
 }
@@ -196,10 +196,10 @@ async function syncConfig(dryRun: boolean): Promise<number> {
     return 0;
   }
 
-  console.log(`  Đang nén...`);
+  console.log(`  Compressing...`);
   const tarCode = await spawnInherit("tar", tarArgs);
   if (tarCode !== 0) {
-    console.error(`  Lỗi tar (code: ${tarCode})`);
+    console.error(`  Tar error (code: ${tarCode})`);
     return tarCode;
   }
 
@@ -207,11 +207,11 @@ async function syncConfig(dryRun: boolean): Promise<number> {
     const stat = await fs.stat(archivePath);
     console.log(`  Archive: ${archiveName} (${formatSize(stat.size)})`);
   } catch {
-    console.error(`  Lỗi: File không tồn tại: ${archivePath}`);
+    console.error(`  Error: File does not exist: ${archivePath}`);
     return 1;
   }
 
-  console.log(`  Upload lên ${ARCHIVES_REMOTE}/...`);
+  console.log(`  Uploading to ${ARCHIVES_REMOTE}/...`);
   const uploadCode = await spawnInherit("rclone", [
     "copy",
     archivePath,
@@ -224,16 +224,16 @@ async function syncConfig(dryRun: boolean): Promise<number> {
   ]);
 
   if (uploadCode !== 0) {
-    console.error(`  Lỗi upload (code: ${uploadCode})`);
+    console.error(`  Upload error (code: ${uploadCode})`);
     return uploadCode;
   }
 
   await fs.rm(archivePath);
-  console.log(`  Đã xóa archive local.`);
+  console.log(`  Deleted local archive.`);
 
   await cleanupOldArchives(ARCHIVES_REMOTE, "config");
 
-  console.log(`  Hoàn tất: ${archiveName}`);
+  console.log(`  Completed: ${archiveName}`);
   return 0;
 }
 
@@ -246,7 +246,7 @@ async function syncZen(dryRun: boolean): Promise<number> {
     try {
       await fs.stat(profileDir);
     } catch {
-      console.log(`  Bỏ qua profile không tồn tại: ${profileDir}`);
+      console.log(`  Skipping non-existent profile: ${profileDir}`);
       continue;
     }
 
@@ -272,10 +272,10 @@ async function syncZen(dryRun: boolean): Promise<number> {
       continue;
     }
 
-    console.log(`  Đang nén: ${profileName}...`);
+    console.log(`  Compressing: ${profileName}...`);
     const tarCode = await spawnInherit("tar", tarArgs);
     if (tarCode !== 0) {
-      console.error(`  Lỗi tar ${profileName} (code: ${tarCode})`);
+      console.error(`  Tar error for ${profileName} (code: ${tarCode})`);
       exitCode = tarCode;
       continue;
     }
@@ -284,12 +284,12 @@ async function syncZen(dryRun: boolean): Promise<number> {
       const stat = await fs.stat(archivePath);
       console.log(`  Archive: ${archiveName} (${formatSize(stat.size)})`);
     } catch {
-      console.error(`  Lỗi: File không tồn tại: ${archivePath}`);
+      console.error(`  Error: File does not exist: ${archivePath}`);
       exitCode = 1;
       continue;
     }
 
-    console.log(`  Upload lên ${ARCHIVES_REMOTE}/...`);
+    console.log(`  Uploading to ${ARCHIVES_REMOTE}/...`);
     const uploadCode = await spawnInherit("rclone", [
       "copy",
       archivePath,
@@ -302,13 +302,13 @@ async function syncZen(dryRun: boolean): Promise<number> {
     ]);
 
     if (uploadCode !== 0) {
-      console.error(`  Lỗi upload ${profileName} (code: ${uploadCode})`);
+      console.error(`  Upload error for ${profileName} (code: ${uploadCode})`);
       exitCode = uploadCode;
       continue;
     }
 
     await fs.rm(archivePath);
-    console.log(`  Hoàn tất: ${archiveName}`);
+    console.log(`  Completed: ${archiveName}`);
   }
 
   if (exitCode === 0) {
@@ -324,7 +324,7 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
   try {
     await fs.stat(OBSIDIAN_SRC);
   } catch {
-    console.error(`Lỗi: Thư mục Obsidian không tồn tại: ${OBSIDIAN_SRC}`);
+    console.error(`Error: Obsidian directory does not exist: ${OBSIDIAN_SRC}`);
     return 1;
   }
 
@@ -336,7 +336,7 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
     `${OBSIDIAN_SRC}/.rclone-ignore`,
   ];
 
-  console.log("  Đang kiểm tra dung lượng...");
+  console.log("  Checking size...");
   const sizeResult = await spawnAsync("rclone", sizeArgs);
   if (sizeResult.exitCode === 0) {
     console.log(`  ${sizeResult.stdout.trim()}`);
@@ -398,7 +398,7 @@ async function main(): Promise<void> {
   await checkPrerequisites();
 
   const start = Date.now();
-  console.log(`Bắt đầu sync: ${new Date().toLocaleString("vi-VN")}`);
+  console.log(`Starting sync: ${new Date().toLocaleString("en-US")}`);
 
   let exitCode = 0;
 
@@ -419,14 +419,14 @@ async function main(): Promise<void> {
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
-  printHeader("Kết quả");
+  printHeader("Result");
 
   if (exitCode === 0) {
-    console.log(`  Hoàn tất trong ${elapsed}s`);
+    console.log(`  Completed in ${elapsed}s`);
     console.log(`  Log: ${LOG_FILE}`);
   } else {
-    console.error(`  Có lỗi xảy ra (code: ${exitCode})`);
-    console.error(`  Kiểm tra log: ${LOG_FILE}`);
+    console.error(`  An error occurred (code: ${exitCode})`);
+    console.error(`  Check log: ${LOG_FILE}`);
     process.exit(1);
   }
 }
