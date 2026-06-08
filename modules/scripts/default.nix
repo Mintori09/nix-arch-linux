@@ -21,5 +21,6 @@
     ./open.nix
     ./direnv-wrap.nix
     ./rclone-sync.nix
+    ./gemini-bridge.nix
   ];
 }
