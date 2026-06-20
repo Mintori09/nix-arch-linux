@@ -15,12 +15,36 @@ builtins.toJSON {
     "@tarquinen/opencode-dcp"
     "@mohak34/opencode-notifier@latest"
   ];
+  # agent = {
+  #   code-reviewer = {
+  #     description = "Reviews code for best practices and potential issues";
+  #     model = "opencode-go/deepseek-v4-pro";
+  #     prompt = "/using-superpowers You are a code reviewer. Focus on security, performance, and maintainability.";
+  #     tools = {
+  #       write = false;
+  #       edit = false;
+  #     };
+  #   };
+  #
+  #   plan = {
+  #     description = "Architects implementation plans and breaks down complex features";
+  #     model = "opencode-go/deepseek-v4-pro";
+  #     prompt = "/using-superpowers You are a technical project planner. Break down feature requests into step-by-step implementation plans and milestones.";
+  #     tools = {
+  #       write = true;
+  #       edit = true;
+  #     };
+  #   };
+  # };
   autoupdate = false;
   share = "disabled";
-  model = "opencode-go/deepseek-v4-flash";
+  model = "opencode/deepseek-v4-flash-free";
+
   disabled_providers = providers.disabled;
   mcp = mcp;
   permission = {
+    websearch = "allow";
+    question = "allow";
     read = {
       "~/.ssh/**" = "deny";
       "~/.gnupg/**" = "deny";

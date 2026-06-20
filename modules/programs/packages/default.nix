@@ -1,143 +1,23 @@
-{
-  lib,
-  pkgs,
-  spicePkgs,
-  ...
-}:
+{ pkgs, ... }:
 let
-  wrapped = import ../_nixgl-wrappers.nix { inherit pkgs; };
-
-  obsidianWrapped = wrapped.mkWrappedBinary {
-    name = "obsidian";
-    package = pkgs.obsidian;
-  };
-
-  vicinaeWrapped = wrapped.mkWrappedBinary {
-    name = "vicinae";
-    package = pkgs.vicinae;
-  };
-
-  gimpWrapped = wrapped.mkWrappedBinary {
-    name = "gimp";
-    package = pkgs.gimp;
-  };
-
-  foliateWrapped = wrapped.mkWrappedBinary {
-    name = "foliate";
-    package = pkgs.foliate;
-  };
-
+  wrappedPkgs = import ./wrappers.nix { inherit pkgs; };
 in
-
 {
-  programs.obsidian = {
-    enable = true;
-    package = obsidianWrapped;
-  };
-
-  programs.spicetify = {
-    enable = true;
-
-    theme = spicePkgs.themes.catppuccin;
-    colorScheme = "mocha";
-
-    enabledExtensions = with spicePkgs.extensions; [
-      adblockify
-      hidePodcasts
-      shuffle
-    ];
-  };
-
-  home.packages = [
-    vicinaeWrapped
-    gimpWrapped
-    foliateWrapped
+  imports = [
+    ./spicetify.nix
+    ./vicinae.nix
+    ./desktop-entries.nix
   ];
 
-  systemd.user.services.vicinae = {
-    Unit = {
-      Description = "Vicinae server daemon";
-      After = [ "graphical-session.target" ];
-      PartOf = [ "graphical-session.target" ];
-    };
-
-    Service = {
-      Type = "simple";
-      ExecStart = "${vicinaeWrapped}/bin/vicinae server --replace";
-      Restart = "always";
-      RestartSec = 60;
-      KillMode = "process";
-    };
-
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
+  programs.obsidian = {
+    enable = true;
+    package = wrappedPkgs.obsidian;
   };
 
-  xdg.desktopEntries = {
-
-    obsidian = {
-      name = "Obsidian";
-      genericName = "Knowledge Base";
-      comment = "Markdown knowledge base";
-      exec = "${obsidianWrapped}/bin/obsidian";
-      terminal = false;
-      categories = [
-        "Office"
-        "Utility"
-      ];
-      icon = "obsidian";
-      startupNotify = true;
-    };
-
-    vicinae = {
-      name = "Vicinae";
-      genericName = "Utility";
-      comment = "Launch Vicinae through the nixGL wrapper";
-      exec = "${vicinaeWrapped}/bin/vicinae";
-      terminal = false;
-      categories = [ "Utility" ];
-      icon = "vicinae";
-      startupNotify = true;
-    };
-
-    gimp = {
-      name = "GIMP";
-      genericName = "Image Editor";
-      comment = "Create images and edit photographs";
-      exec = "${gimpWrapped}/bin/gimp";
-      terminal = false;
-      categories = [
-        "Graphics"
-        "2DGraphics"
-        "RasterGraphics"
-      ];
-      icon = "gimp";
-      startupNotify = true;
-    };
-
-    foliate = {
-      name = "Foliate";
-      genericName = "E-book Reader";
-      comment = "Read EPUB books";
-      exec = "${foliateWrapped}/bin/foliate";
-      terminal = false;
-      categories = [
-        "Office"
-        "Viewer"
-      ];
-      icon = "foliate";
-      startupNotify = true;
-    };
-  };
-
-  home.activation.updateDesktopDatabase = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    if [ -w "$HOME/.nix-profile/share/applications" ]; then
-      ${pkgs.desktop-file-utils}/bin/update-desktop-database "$HOME/.nix-profile/share/applications"
-    fi
-
-    if [ -w "$HOME/.local/share/applications" ]; then
-      ${pkgs.desktop-file-utils}/bin/update-desktop-database "$HOME/.local/share/applications"
-    fi
-  '';
+  home.packages = with wrappedPkgs; [
+    gimp
+    foliate
+    drawio
+    localsend
+  ];
 }

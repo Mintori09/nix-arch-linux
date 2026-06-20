@@ -26,6 +26,7 @@
     wl-clipboard
     just
     opencode
+    fx
 
     # CLI tools
     aichat

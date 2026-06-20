@@ -345,10 +345,7 @@ class DevToolsSession {
     });
   }
 
-  send<T>(
-    method: string,
-    params: Record<string, unknown> = {},
-  ): Promise<T> {
+  send<T>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     const id = this.nextId;
     this.nextId += 1;
 
@@ -608,10 +605,10 @@ function xlsx2csvConverter(): ToolConverter {
   return {
     tool: "xlsx2csv",
     convert: async (input, output, context) => {
-      const text = await runCommand(
-        ["xlsx2csv", input],
-        { dryRun: context.dryRun, captureStdout: true },
-      );
+      const text = await runCommand(["xlsx2csv", input], {
+        dryRun: context.dryRun,
+        captureStdout: true,
+      });
       if (!context.dryRun) {
         await writeFile(output, text);
       }
@@ -692,7 +689,10 @@ function mdToPdf(): ToolConverter {
   return {
     tool: "pandoc",
     convert: async (input, output, context) => {
-      const cssPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "style.css");
+      const cssPath = path.join(
+        path.dirname(fileURLToPath(import.meta.url)),
+        "style.css",
+      );
       const extraParams = ["--pdf-engine=weasyprint"];
 
       if (await pathExists(cssPath)) {
@@ -746,6 +746,7 @@ const ROUTES: Record<string, ToolConverter> = {
   "webp:jpg": imageMagick(),
   "tiff:png": imageMagick(),
   "bmp:png": imageMagick(),
+  "icns:png": imageMagick(),
   "mhtml:png": mhtmlToImage("png"),
   "mhtml:jpg": mhtmlToImage("jpg"),
   "mhtml:webp": mhtmlToImage("webp"),
@@ -903,7 +904,7 @@ if (isMain(import.meta.url)) {
         console.error(
           `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
         );
-process.exit(1);
+        process.exit(1);
       }
 
       if (err instanceof CliError) {

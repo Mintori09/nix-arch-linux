@@ -33,7 +33,7 @@
           pynvim
         ]
       ))
-      pyright
+      basedpyright
       ruff
 
       lua-language-server
@@ -49,7 +49,7 @@
 
       clang-tools
       cmake-language-server
-      dockerfile-language-server-nodejs
+      dockerfile-language-server
       tailwindcss-language-server
       intelephense
       rustc

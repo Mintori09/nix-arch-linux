@@ -71,6 +71,7 @@ async function collectFiles(
 ): Promise<string[]> {
   const fdArgs = [
     "fd",
+    "--no-ignore",
     "--type",
     "file",
     "--print0",
@@ -92,7 +93,7 @@ async function collectFiles(
 
   if (code !== 0) {
     console.error("Failed to collect files.");
-process.exit(code);
+    process.exit(code);
   }
 
   return collected

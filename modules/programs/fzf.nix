@@ -43,7 +43,7 @@ in
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
-    defaultCommand = "fd --hidden -t f ${excludeArgs}";
+    defaultCommand = "fd --no-ignore --hidden -t f ${excludeArgs}";
     defaultOptions = [
       "--layout=reverse"
       "--info=inline"
