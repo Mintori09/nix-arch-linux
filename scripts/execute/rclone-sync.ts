@@ -45,6 +45,7 @@ const CONFIG_EXCLUDES = [
   ".config/Sigma file manager",
   ".config/YouTube Music",
   ".config/waveterm",
+  ".config/zen",
   ".config/openwarp",
   ".config/noctalia",
   ".config/anyrun/plugins",
@@ -260,6 +261,7 @@ async function syncZen(dryRun: boolean): Promise<number> {
     const tarArgs = [
       "czf",
       archivePath,
+      "--warning=no-file-changed",
       "-C",
       HOME,
       ...excludeArgs,
