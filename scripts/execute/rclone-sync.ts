@@ -171,6 +171,21 @@ async function cleanupOldArchives(
   }
 }
 
+async function verifyArchive(archiveName: string): Promise<void> {
+  console.log(`  Verifying on remote...`);
+  const result = await spawnAsync("rclone", [
+    "lsf",
+    ARCHIVES_REMOTE,
+    "--include",
+    archiveName,
+  ]);
+  if (result.stdout.trim() === archiveName) {
+    console.log(`  Verified ✓`);
+  } else {
+    console.error(`  ⚠ Not found on remote: ${archiveName}`);
+  }
+}
+
 async function syncConfig(dryRun: boolean): Promise<number> {
   printHeader("Sync: Config → Google Drive (tar.gz)");
 
@@ -183,6 +198,7 @@ async function syncConfig(dryRun: boolean): Promise<number> {
   const tarArgs = [
     "czf",
     archivePath,
+    "--warning=no-file-changed",
     "-C",
     HOME,
     ...excludeArgs,
@@ -228,6 +244,8 @@ async function syncConfig(dryRun: boolean): Promise<number> {
     console.error(`  Upload error (code: ${uploadCode})`);
     return uploadCode;
   }
+
+  await verifyArchive(archiveName);
 
   await fs.rm(archivePath);
   console.log(`  Deleted local archive.`);
@@ -276,7 +294,9 @@ async function syncZen(dryRun: boolean): Promise<number> {
 
     console.log(`  Compressing: ${profileName}...`);
     const tarCode = await spawnInherit("tar", tarArgs);
-    if (tarCode !== 0) {
+    if (tarCode === 1) {
+      console.warn(`  ⚠ Tar warnings for ${profileName} (code: 1)`);
+    } else if (tarCode !== 0) {
       console.error(`  Tar error for ${profileName} (code: ${tarCode})`);
       exitCode = tarCode;
       continue;
@@ -308,6 +328,8 @@ async function syncZen(dryRun: boolean): Promise<number> {
       exitCode = uploadCode;
       continue;
     }
+
+    await verifyArchive(archiveName);
 
     await fs.rm(archivePath);
     console.log(`  Completed: ${archiveName}`);
@@ -371,7 +393,26 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
 
   if (dryRun) cmdArgs.push("--dry-run");
 
-  return await spawnInherit("rclone", cmdArgs);
+  const syncCode = await spawnInherit("rclone", cmdArgs);
+
+  if (syncCode === 0 && !dryRun) {
+    console.log("  Verifying sync...");
+    const checkCode = await spawnInherit("rclone", [
+      "check",
+      OBSIDIAN_SRC,
+      OBSIDIAN_DST,
+      "--one-way",
+      "--exclude-from",
+      `${OBSIDIAN_SRC}/.rclone-ignore`,
+    ]);
+    if (checkCode === 0) {
+      console.log("  All synced files match on remote ✓");
+    } else {
+      console.error("  ⚠ Some files may not have synced correctly");
+    }
+  }
+
+  return syncCode;
 }
 
 async function main(): Promise<void> {

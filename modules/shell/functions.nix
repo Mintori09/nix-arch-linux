@@ -38,7 +38,8 @@
               echo "Error: Please add folder's name."
               return 1
           fi
-          mkdir -p "$1" && cd "$1"
+          local dir="$*"
+          mkdir -p "$dir" && cd "$dir"
       }
 
       nf() {
@@ -149,7 +150,8 @@
               echo "Error: Please add folder's name."
               return 1
           fi
-          mkdir -p "$1" && cd "$1"
+          local dir="$*"
+          mkdir -p "$dir" && cd "$dir"
       }
 
       zo() {

@@ -47,7 +47,6 @@ in
     cfz = "cd $HOME/.config/shell; nvim $HOME/.zshrc; source $HOME/.zshrc";
 
     # IDEs
-    code = "code .; exit";
     zed = "zeditor .; exit";
 
     # SYNCTHING
