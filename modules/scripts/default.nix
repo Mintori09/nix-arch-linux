@@ -22,5 +22,6 @@
     ./direnv-wrap.nix
     ./rclone-sync.nix
     ./gemini-bridge.nix
+    ./ai-bridge.nix
   ];
 }

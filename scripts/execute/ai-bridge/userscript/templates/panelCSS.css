@@ -1,0 +1,270 @@
+/* ==========================================================================
+   AI BRIDGE LAYOUT - GEMINI STYLE
+   Tự động đồng bộ Light/Dark Mode theo hệ thống của Gemini 
+   ========================================================================== */
+
+:root {
+  /* Các biến màu fallback nếu không nhận được biến hệ thống của Gemini */
+  --bg-primary: var(--dt-surface-large, #ffffff);
+  --bg-secondary: var(--dt-surface, #f8f9fa);
+  --bg-hover: var(--dt-surface-variant, #f1f3f4);
+  --text-primary: var(--dt-on-surface, #1f1f1f);
+  --text-secondary: var(--dt-on-surface-variant, #444746);
+  --border-color: var(--dt-outline-variant, #c4c7c5);
+  --brand-primary: var(--dt-primary, #1a73e8);
+  --brand-hover: var(--dt-primary-hover, #1b66ca);
+  --brand-on-primary: var(--dt-on-primary, #ffffff);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Ép chế độ tối dựa trên thuộc tính tương thích của Gemini nếu có */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: var(--dt-surface-large, #1e1e1e);
+    --bg-secondary: var(--dt-surface, #131314);
+    --bg-hover: var(--dt-surface-variant, #282a2c);
+    --text-primary: var(--dt-on-surface, #e3e3e3);
+    --text-secondary: var(--dt-on-surface-variant, #c4c7c5);
+    --border-color: var(--dt-outline-variant, #444746);
+    --brand-primary: var(--dt-primary, #a8c7fa);
+    --brand-hover: var(--dt-primary-hover, #7cacf8);
+    --brand-on-primary: var(--dt-on-primary, #04306e);
+  }
+}
+
+/* Toàn bộ wrapper bao quanh */
+#ai-bridge-layout-wrapper {
+  display: flex !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Container chứa Gemini chính */
+#ai-bridge-gemini-container {
+  flex: 1 !important;
+  height: 100% !important;
+  position: relative !important;
+  overflow: auto !important;
+}
+
+/* Panel Sidebar chèn thêm */
+#ai-bridge-inserted-panel {
+  width: 360px !important;
+  height: 100% !important;
+  background-color: var(--bg-primary) !important;
+  border-left: 1px solid var(--border-color) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  z-index: 999998 !important;
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-right 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Khi Sidebar bị ẩn */
+#ai-bridge-inserted-panel.sidebar-hidden {
+  transform: translateX(360px) !important;
+  margin-right: -360px !important;
+  box-shadow: none !important;
+}
+
+/* Nút Toggle đóng mở Sidebar */
+#ai-bridge-toggle-navbar-btn {
+  position: fixed !important;
+  top: 16px !important;
+  right: 376px !important;
+  width: 40px !important;
+  height: 40px !important;
+  background-color: var(--brand-primary) !important;
+  color: var(--brand-on-primary) !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  box-shadow: var(--shadow-md) !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition:
+    right 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s,
+    transform 0.2s !important;
+}
+
+#ai-bridge-toggle-navbar-btn:hover {
+  background-color: var(--brand-hover) !important;
+  transform: scale(1.04) !important;
+}
+
+#ai-bridge-toggle-navbar-btn.btn-collapsed {
+  right: 16px !important;
+}
+
+/* Header của Panel */
+#ai-bridge-panel-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 16px 20px !important;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  font-family: "Google Sans", "Inter", Roboto, sans-serif !important;
+  flex-shrink: 0 !important;
+}
+
+/* Danh sách bên trong Panel */
+#ai-bridge-panel-list {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 12px 8px !important;
+  font-family: "Google Sans", "Inter", Roboto, sans-serif !important;
+  background-color: var(--bg-primary) !important;
+}
+
+/* Từng Item dòng (Turn Item) */
+#ai-bridge-panel-list .turn-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  margin-bottom: 4px !important;
+  cursor: pointer !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid transparent !important;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s !important;
+}
+
+#ai-bridge-panel-list .turn-item:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Đoạn text preview bên trong item */
+#ai-bridge-panel-list .turn-item .turn-preview {
+  flex: 1 !important;
+  font-size: 14px !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.5 !important;
+  word-break: break-word !important;
+}
+
+#ai-bridge-panel-list .turn-item:hover .turn-preview {
+  color: var(--text-primary) !important;
+}
+
+/* Cụm nút hành động của Item */
+#ai-bridge-panel-list .turn-item .turn-actions {
+  display: flex !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Các button hành động nhỏ */
+#ai-bridge-panel-list .turn-item .turn-actions button {
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  color: var(--text-secondary) !important;
+  font-size: 14px !important;
+  padding: 6px !important;
+  border-radius: 8px !important;
+  opacity: 0 !important; /* Ẩn đi mặc định, chỉ hiện khi hover item */
+  transition:
+    opacity 0.2s,
+    background-color 0.15s,
+    color 0.15s !important;
+}
+
+/* Hiển thị nút hành động khi hover vào dòng */
+#ai-bridge-panel-list .turn-item:hover .turn-actions button {
+  opacity: 0.7 !important;
+}
+
+#ai-bridge-panel-list .turn-item .turn-actions button:hover {
+  opacity: 1 !important;
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Hiệu ứng Highlight Pulse đặc trưng kiểu Gemini */
+.gemini-activated-highlight {
+  animation: gemini-highlight-pulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes gemini-highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.5) !important;
+    border-color: var(--brand-primary) !important;
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(26, 115, 232, 0) !important;
+  }
+  100% {
+    box-shadow: none !important;
+  }
+}
+
+/* ==========================================================================
+   ROLE BADGES & ROLE-SPECIFIC STYLES
+   Phân biệt rõ ràng giữa User và Gemini
+   ========================================================================== */
+
+/* Badge chung */
+.turn-role-badge {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  flex-shrink: 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1.4 !important;
+  user-select: none !important;
+}
+
+/* Badge User */
+.turn-role-user {
+  background-color: var(--brand-primary) !important;
+  color: var(--brand-on-primary) !important;
+}
+
+/* Badge Gemini (AI) */
+.turn-role-gemini {
+  background-color: #34a853 !important;
+  color: #ffffff !important;
+}
+
+/* Turn item của User - viền trái xanh */
+.turn-item.turn-user {
+  border-left: 3px solid var(--brand-primary) !important;
+  background-color: var(--bg-primary) !important;
+}
+
+.turn-item.turn-user:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Turn item của Gemini - viền trái xanh lá */
+.turn-item.turn-gemini {
+  border-left: 3px solid #34a853 !important;
+  background-color: var(--bg-primary) !important;
+}
+
+.turn-item.turn-gemini:hover {
+  background-color: var(--bg-hover) !important;
+}
