@@ -75,6 +75,11 @@
       url = "github:yusufkaraaslan/Skill_Seekers";
       flake = false;
     };
+
+    kwin-last-desktop = {
+      url = "github:luisbocanegra/kwin-switch-to-last-used-desktop";
+      flake = false;
+    };
   };
 
   outputs =

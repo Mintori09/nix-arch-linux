@@ -67,11 +67,15 @@ in
       inactive_border_color = "#101014";
       bell_border_color = "#e0af68";
 
-      tab_bar_style = "fade";
+      tab_bar_style = "separator";
       tab_fade = 1;
+      tab_separator = "";
+      tab_bar_min_tabs = 2;
+      tab_title_template = "{fmt.fg._5c6370}{fmt.bg._11111b}{fmt.fg._cdd6f4}{fmt.bg._5c6370} ({index}) {title} {fmt.fg._5c6370}{fmt.bg._11111b} ";
+      active_tab_title_template = "{fmt.fg._BAA0E8}{fmt.bg._11111b}{fmt.fg._1e1e2e}{fmt.bg._BAA0E8} ({index}) {title} {fmt.fg._BAA0E8}{fmt.bg._11111b} ";
+      active_tab_font_style = "bold";
       active_tab_foreground = "#3d59a1";
       active_tab_background = "#16161e";
-      active_tab_font_style = "bold";
       inactive_tab_foreground = "#787c99";
       inactive_tab_background = "#16161e";
       inactive_tab_font_style = "bold";
@@ -131,6 +135,22 @@ in
     keybindings = {
       "ctrl+v" = "paste_from_clipboard";
       "ctrl+f3" = "next_tab";
+
+      "alt+1" = "goto_tab 1";
+      "alt+2" = "goto_tab 2";
+      "alt+3" = "goto_tab 3";
+      "alt+4" = "goto_tab 4";
+      "alt+5" = "goto_tab 5";
+      "alt+6" = "goto_tab 6";
+      "alt+7" = "goto_tab 7";
+      "alt+8" = "goto_tab 8";
+      "alt+9" = "goto_tab 9";
+
+      "ctrl+shift+t" = "new_tab_with_cwd";
+      "ctrl+w" = "close_tab";
+
+      "ctrl+shift+page_up" = "move_tab_backward";
+      "ctrl+shift+page_down" = "move_tab_forward";
     };
 
     extraConfig = ''
