@@ -3,9 +3,6 @@ let
   tomlFormat = pkgs.formats.toml { };
 in
 {
-  imports = [
-    ./config.nix
-  ];
 
   programs.yazi = {
     enable = false;

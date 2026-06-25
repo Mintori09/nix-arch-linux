@@ -213,7 +213,8 @@ function createChatHistoryPanel(adapter) {
         // Copy button
         copyBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          navigator.clipboard.writeText(turn.text);
+          const markdown = htmlToMarkdown(turn.htmlElement);
+          navigator.clipboard.writeText(markdown);
         });
 
         // Download button

@@ -177,6 +177,7 @@ in
         pkgs.chromium
         pkgs.imagemagick
         pkgs.pandoc
+        pkgs.xlsx2csv
         pkgs.libreoffice
         pkgs.yq-go
         pkgs.python3Packages.weasyprint

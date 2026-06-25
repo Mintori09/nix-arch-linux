@@ -147,7 +147,7 @@ in
       "alt+9" = "goto_tab 9";
 
       "ctrl+shift+t" = "new_tab_with_cwd";
-      "ctrl+w" = "close_tab";
+      "ctrl+shift+w" = "close_tab";
 
       "ctrl+shift+page_up" = "move_tab_backward";
       "ctrl+shift+page_down" = "move_tab_forward";
