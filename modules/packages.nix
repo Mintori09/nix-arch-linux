@@ -95,5 +95,6 @@
     # Document conversion
     pandoc
     imagemagick
+    python314Packages.markitdown
   ];
 }

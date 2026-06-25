@@ -75,4 +75,8 @@ in
     ai-rename = "ai-renamer --provider=ollama ---model=gemma3:4b-it-qat --chars 100 --language English";
 
   };
+
+  programs.bash = {
+    shellAliases.hms = "home-manager switch --flake ~/.config/home-manager";
+  };
 }

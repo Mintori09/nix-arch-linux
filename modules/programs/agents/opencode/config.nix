@@ -12,7 +12,7 @@ builtins.toJSON {
   "$schema" = "https://opencode.ai/config.json";
   plugin = [
     "superpowers@git+https://github.com/obra/superpowers.git"
-    "@tarquinen/opencode-dcp"
+    # "@tarquinen/opencode-dcp"
     "@mohak34/opencode-notifier@latest"
   ];
   # agent = {
@@ -40,6 +40,11 @@ builtins.toJSON {
   share = "disabled";
   model = "opencode/deepseek-v4-flash-free";
 
+  skills = {
+    paths = [
+      "~/.config/opencode/skill"
+    ];
+  };
   disabled_providers = providers.disabled;
   mcp = mcp;
   permission = {
