@@ -7,7 +7,7 @@
     ./scripts
     ./systemd
     ./secrets.nix
-    ./fonts.nix
+    ../fonts/default.nix
     ./config
   ];
 }
