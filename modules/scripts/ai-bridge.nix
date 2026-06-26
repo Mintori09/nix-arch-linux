@@ -1,54 +1,74 @@
 { pkgs, ... }:
 let
-  inherit (pkgs) lib;
+  helpers = import ./_helpers.nix { inherit pkgs; };
 
-  aiBridgeSrc = lib.sourceFilesBySuffices ../../scripts/execute/ai-bridge [
-    ".ts"
-    ".json"
-    ".yaml"
-  ];
+  aiBridgePackages = helpers.mkScriptPackage {
+    name = "ai-bridge";
+    entry = "${../../scripts/execute/ai-bridge.js}";
+    extraPathPackages = [
+      pkgs.nodejs
+    ];
+  };
 
-  aiBridgeBundle =
-    pkgs.runCommand "ai-bridge-bundle"
-      {
-        buildInputs = [
-          pkgs.esbuild
-          pkgs.nodejs
-          pkgs.cacert
-        ];
-        SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+  aiBridgePkg = builtins.head aiBridgePackages;
+
+  cvCompletion = pkgs.writeTextFile {
+    name = "ai-bridge-zsh-completion";
+    destination = "/share/zsh/site-functions/_ai-bridge";
+    text = ''
+      #compdef ai-bridge
+      _ai_bridge() {
+          local context state line
+          typeset -A opt_args
+          _arguments -C \
+              '1: :->command' \
+              '*:: :->args'
+          case $state in
+              command)
+                  local -a subcommands
+                  subcommands=(
+                      'clipboard:Interact with the system clipboard'
+                      'queue:View the current job queue'
+                      'clear:Clear all entries from the queue'
+                      'status:Check the status of a specific job ID'
+                      'stats:View system usage statistics'
+                      'health:Check daemon health status'                      'focus:Focus on the current task'
+                      'server:Start the background daemon'
+                      'stop:Stop the running daemon'
+                  )
+                  _describe -t subcommands 'ai-bridge commands' subcommands
+                                    
+                  _arguments \
+                      '-t[Specify a title]:title:_files' \
+                      '--ttl[Specify time-to-live in seconds]:ttl:'
+                  ;;
+              args)
+                  case $line[1] in
+                      clipboard)
+                          _arguments \
+                              '--paste-only[Only paste the current content without reading configuration]' \
+                              '-t[Specify a title]:title:_files' \
+                              '--ttl[Specify time-to-live in seconds]:ttl:'
+                          ;;
+                      status)
+                          _arguments \
+                              '1: :_message "job ID"'
+                          ;;
+                      *)
+                          _arguments \
+                              '-t[Specify a title]:title:_files' \
+                              '--ttl[Specify time-to-live in seconds]:ttl:'
+                          ;;
+                  esac
+                  ;;
+          esac
       }
-      ''
-        mkdir -p $out/build
-
-        cp -r ${aiBridgeSrc}/src $out/build/src
-        cp ${aiBridgeSrc}/package.json $out/build/
-
-        chmod -R +w $out/build
-        cd $out/build
-
-        # Keep only find-process dep, drop tsx/devEngines
-        ${pkgs.nodejs}/bin/node -e "
-          const p = JSON.parse(require('fs').readFileSync('package.json','utf8'));
-          delete p.devEngines;
-          p.dependencies = { 'find-process': p.dependencies['find-process'] };
-          require('fs').writeFileSync('package.json', JSON.stringify(p));
-        "
-
-        HOME="$TMPDIR" npm install --omit=dev --no-audit --no-fund --ignore-scripts
-
-        esbuild src/cli/index.ts --bundle --platform=node --format=cjs --outfile=$out/main.cjs
-
-        rm -rf $out/build
-      '';
-in
-let
-  aiBridgePkg = pkgs.writeShellScriptBin "ai-bridge" ''
-    exec ${pkgs.nodejs}/bin/node "${aiBridgeBundle}/main.cjs" "$@"
-  '';
+      _ai_bridge "$@"
+    '';
+  };
 in
 {
-  home.packages = [ aiBridgePkg ];
+  home.packages = aiBridgePackages ++ [ cvCompletion ];
 
   systemd.user.services."ai-bridge" = {
     Unit = {

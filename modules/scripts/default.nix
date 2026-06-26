@@ -2,6 +2,7 @@
 {
   imports = [
     ./format.nix
+    ./generate_toc.nix
     ./each.nix
     ./which_file.nix
     ./install-font.nix
@@ -21,7 +22,6 @@
     ./open.nix
     ./direnv-wrap.nix
     ./rclone-sync.nix
-    ./gemini-bridge.nix
     ./ai-bridge.nix
   ];
 }

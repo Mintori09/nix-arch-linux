@@ -33,7 +33,29 @@ let
       '';
     in
     [ script ] ++ extraPackages;
+
+  mkPythonScriptPackage =
+    {
+      name,
+      entry,
+      pythonPackages ? (ps: [ ]),
+    }:
+    let
+      customPython = pkgs.python3.withPackages (
+        ps:
+        [
+          ps.python-docx
+          ps.beautifulsoup4
+        ]
+        ++ (pythonPackages ps)
+      );
+
+      script = pkgs.writeShellScriptBin name ''
+        exec ${customPython}/bin/python3 "${entry}" "$@"
+      '';
+    in
+    [ script ];
 in
 {
-  inherit mkScriptPackage;
+  inherit mkScriptPackage mkPythonScriptPackage;
 }
