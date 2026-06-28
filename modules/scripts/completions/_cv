@@ -1,0 +1,278 @@
+#compdef cv
+
+local -A opt_args
+local state line ret=1
+
+_cv_normalize_ext() {
+  local ext="$1"
+  case "$ext" in
+    jpeg) REPLY="jpg" ;;
+    yml) REPLY="yaml" ;;
+    *) REPLY="$ext" ;;
+  esac
+}
+
+typeset -gA _cv_cache_routes
+_cv_load_routes() {
+  (( ${#_cv_cache_routes} > 0 )) && return 0
+  local line route butch in_ext out_ext raw_lines
+
+  raw_lines=("${(f)$(cv --list 2>/dev/null)}")
+  for line in "${raw_lines[@]}"; do
+    [[ "$line" == "- "*:* ]] || continue
+    route=${line#- }
+    in_ext=${route%%:*}
+    out_ext=${route##*:}
+    _cv_normalize_ext "${in_ext:l}"; in_ext="$REPLY"
+    _cv_normalize_ext "${out_ext:l}"; out_ext="$REPLY"
+    _cv_cache_routes[$in_ext]+=" $out_ext"
+  done
+}
+
+_cv_collect_input_exts() {
+  _cv_load_routes
+  (( ${#_cv_cache_routes} == 0 )) && return 1
+  reply=(${(k)_cv_cache_routes})
+}
+
+_cv_collect_output_exts() {
+  local input_ext="$1"
+  _cv_load_routes
+  local -a outs
+  outs=(${(z)_cv_cache_routes[$input_ext]})
+  (( ${#outs} == 0 )) && return 1
+  reply=("${outs[@]}")
+}
+
+_cv_find_input() {
+  local i token
+  for (( i = 2; i < CURRENT; i++ )); do
+    token="${words[i]}"
+    [[ -z "$token" || "$token" == -* ]] && continue
+    # skip tokens following parameter-consuming flags
+    [[ "${words[i-1]}" == --(style|page-size|metadata-file|wrap|extract-media|reference-doc) ]] && continue
+
+    REPLY="$token"
+    return 0
+  done
+  REPLY=""
+  return 1
+}
+
+_cv_detect_route() {
+  local i token in_ext out_ext
+  _cv_find_input; local input_file="$REPLY"
+
+  if [[ -n "$input_file" ]]; then
+    _cv_load_routes
+    in_ext="${input_file##*.}"
+    [[ "$in_ext" == "$input_file" ]] && in_ext=""
+    _cv_normalize_ext "${in_ext:l}"; in_ext="$REPLY"
+
+    for (( i = 2; i < CURRENT; i++ )); do
+      token="${words[i]}"
+      [[ -z "$token" || "$token" == -* || "$token" == "$input_file" ]] && continue
+      [[ "${words[i-1]}" == --(style|page-size|metadata-file|wrap|extract-media|reference-doc) ]] && continue
+
+      out_ext="${token##*.}"
+      if [[ "$out_ext" != "$token" ]]; then
+        _cv_normalize_ext "${out_ext:l}"; out_ext="$REPLY"
+      fi
+      if [[ -n "$out_ext" ]]; then
+        REPLY="${in_ext}:${out_ext}"
+        return 0
+      fi
+    done
+
+    # Under Scenario 2: do NOT guess the route when output file is not specified.
+    REPLY="${in_ext}:"
+  else
+    REPLY=""
+  fi
+  return 0
+}
+
+_cv_route_flags() {
+  local route="$1"
+  case "$route" in
+    md:pdf)
+      reply=(
+        '--page-size=[page size for PDF output]:size:((a3 a4 a5 letter legal))'
+        '--style=[CSS file or config alias]:CSS file:->styles'
+        '--toc[generate table of contents]'
+        '--no-toc[do not generate table of contents]'
+        '--number-sections[number section headings]'
+        '--no-number-sections[do not number section headings]'
+        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
+      )
+      ;;
+    md:docx)
+      reply=(
+        '--reference-doc=[reference DOCX for pandoc style template]:DOCX file:->reference_docs'
+        '--toc[generate table of contents]'
+        '--no-toc[do not generate table of contents]'
+        '--number-sections[number section headings]'
+        '--no-number-sections[do not number section headings]'
+        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
+        '--extract-media=[extract media to directory]:target directory:_files -/'
+      )
+      ;;
+    md:html)
+      reply=(
+        '--style=[CSS file or config alias for pandoc output]:CSS file:->styles'
+        '--toc[generate table of contents]'
+        '--no-toc[do not generate table of contents]'
+        '--number-sections[number section headings]'
+        '--no-number-sections[do not number section headings]'
+        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
+        '--extract-media=[extract media to directory]:target directory:_files -/'
+      )
+      ;;
+    docx:html)
+      reply=(
+        '--style=[CSS file or config alias for pandoc output]:CSS file:->styles'
+        '--extract-media=[extract media to directory]:target directory:_files -/'
+      )
+      ;;
+    md:epub)
+      reply=(
+        '--toc[generate table of contents]'
+        '--no-toc[do not generate table of contents]'
+        '--number-sections[number section headings]'
+        '--no-number-sections[do not number section headings]'
+        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+      )
+      ;;
+    docx:epub)
+      reply=(
+        '--toc[generate table of contents]'
+        '--no-toc[do not generate table of contents]'
+        '--number-sections[number section headings]'
+        '--no-number-sections[do not number section headings]'
+        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+      )
+      ;;
+    docx:md)
+      reply=(
+        '--extract-media=[extract media to directory]:target directory:_files -/'
+        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
+      )
+      ;;
+    *)
+      reply=()
+      ;;
+  esac
+}
+
+local -a argspec
+_cv_find_input
+if [[ -n "$REPLY" ]]; then
+  argspec=(
+    '--dry-run[simulate conversion without running tools]'
+  )
+else
+  argspec=(
+    '--dry-run[simulate conversion without running tools]'
+    '--list[list all supported format conversions]'
+    '(-h --help)'{--help,-h}'[show usage]'
+  )
+fi
+
+_cv_detect_route; local route="$REPLY"
+if [[ -n "$route" ]]; then
+  _cv_route_flags "$route"
+  argspec+=("${reply[@]}")
+fi
+
+argspec+=(
+  '1:command or input file:->cmd_or_input'
+  '2:output file:->output_file'
+)
+
+_arguments "${argspec[@]}" && ret=0
+
+case "$state" in
+  cmd_or_input)
+    _cv_collect_input_exts
+    if [[ $? -eq 0 && ${#reply} -gt 0 ]]; then
+      local input_glob="(#i)*.(${(j:|:)reply})"
+      _alternative \
+        "files:input file:_files -g \"$input_glob\"" \
+        'subcommands:command:compadd init' && ret=0
+    else
+      _alternative \
+        'subcommands:command:compadd init' \
+        'files:input file:_files' && ret=0
+    fi
+    ;;
+  output_file)
+    local input_file input_ext input_base current_word ext
+    current_word="${words[CURRENT]}"
+    _cv_find_input; input_file="$REPLY"
+    if [[ -n "$input_file" ]]; then
+      input_ext="${input_file##*.}"
+      if [[ "$input_ext" != "$input_file" ]]; then
+        _cv_normalize_ext "${input_ext:l}"; input_ext="$REPLY"
+        input_base="${input_file:t:r}"
+      else
+        input_ext=""
+      fi
+
+      _cv_collect_output_exts "$input_ext"
+      if [[ -n "$input_ext" && $? -eq 0 && ${#reply} -gt 0 ]]; then
+        if [[ -z "$current_word" ]]; then
+          local _cvi _pos_cnt=0 _cv_tok
+          for (( _cvi = 2; _cvi < CURRENT; _cvi++ )); do
+            _cv_tok="${words[_cvi]}"
+            [[ -z "$_cv_tok" || "$_cv_tok" == -* ]] && continue
+            [[ "${words[_cvi-1]}" == --(style|page-size|metadata-file|wrap|extract-media|reference-doc) ]] && continue
+            (( _pos_cnt++ ))
+          done
+          if (( _pos_cnt < 2 )); then
+            _wanted base-names expl 'output base name' compadd -- "$input_base" && ret=0
+          fi
+        else
+          local base="${current_word:t}"
+          if [[ "$base" == -* ]]; then
+            :
+          elif [[ "$base" == *.* ]]; then
+            compset -P '*.'
+            _wanted output-extensions expl 'extension' compadd -Q -- "${reply[@]}" && ret=0
+          else
+            compset -P '*'
+            _wanted output-extensions expl 'extension' compadd -P '.' -Q -- "${reply[@]}" && ret=0
+          fi
+        fi
+      else
+        _files && ret=0
+      fi
+    else
+      _files && ret=0
+    fi
+    ;;
+  styles)
+    local config="${HOME}/.config/convert-file/config.json"
+    local -a alias_list
+    if [[ -s "$config" ]]; then
+      alias_list=($(jq -r '.styles | keys[]' "$config" 2>/dev/null))
+    fi
+    _alternative \
+      'config-aliases:style alias:compadd -a alias_list' \
+      'local-styles:local CSS file:_files -g "*.css"' && ret=0
+    ;;
+  reference_docs)
+    local config="${HOME}/.config/convert-file/config.json"
+    local -a alias_list
+    if [[ -s "$config" ]]; then
+      alias_list=($(jq -r '.referenceDocs | keys[]' "$config" 2>/dev/null))
+    fi
+    _alternative \
+      'config-aliases:reference doc alias:compadd -a alias_list' \
+      'local-docx:local DOCX file:_files -g "*.docx"' && ret=0
+    ;;
+esac
+
+return ret
