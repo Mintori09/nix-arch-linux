@@ -146,11 +146,16 @@ in
       "alt+8" = "goto_tab 8";
       "alt+9" = "goto_tab 9";
 
+      "ctrl+shift+enter" = " launch --cwd=current";
       "ctrl+shift+t" = "new_tab_with_cwd";
       "ctrl+shift+w" = "close_tab";
 
       "ctrl+shift+page_up" = "move_tab_backward";
       "ctrl+shift+page_down" = "move_tab_forward";
+      "alt+shift+h" = "neighboring_window left";
+      "alt+shift+j" = "neighboring_window down";
+      "alt+shift+k" = "neighboring_window up";
+      "alt+shift+l" = "neighboring_window right";
     };
 
     extraConfig = ''
