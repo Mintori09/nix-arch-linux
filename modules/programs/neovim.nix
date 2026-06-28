@@ -11,6 +11,7 @@
       gnumake
       rust-analyzer
       tree-sitter
+      yaml-language-server
 
       go
       gopls
