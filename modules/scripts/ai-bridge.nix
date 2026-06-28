@@ -7,6 +7,7 @@ let
     entry = "${../../scripts/execute/ai-bridge.js}";
     extraPathPackages = [
       pkgs.nodejs
+      pkgs.wl-clipboard
     ];
   };
 
@@ -32,7 +33,8 @@ let
                       'clear:Clear all entries from the queue'
                       'status:Check the status of a specific job ID'
                       'stats:View system usage statistics'
-                      'health:Check daemon health status'                      'focus:Focus on the current task'
+                      'health:Check daemon health status'
+                      'focus:Focus on the current task'
                       'server:Start the background daemon'
                       'stop:Stop the running daemon'
                   )
@@ -73,15 +75,23 @@ in
   systemd.user.services."ai-bridge" = {
     Unit = {
       Description = "AI Bridge daemon (Gemini clipboard bridge)";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
+      After = [ "graphical-session.target" ];
+      Wants = [ "graphical-session.target" ];
     };
     Service = {
       Type = "simple";
       ExecStart = "${aiBridgePkg}/bin/ai-bridge server";
+      # Ensure wl-paste, xdg-open, and kdotool are available to the daemon
+      Path = [
+        pkgs.wl-clipboard
+        pkgs.xdg-utils
+        pkgs.kdotool
+        pkgs.nodejs
+      ];
       Restart = "on-failure";
       RestartSec = 5;
     };
-    Install.WantedBy = [ "default.target" ];
+    # Bind to graphical-session to ensure environment variables are populated
+    Install.WantedBy = [ "graphical-session.target" ];
   };
 }
