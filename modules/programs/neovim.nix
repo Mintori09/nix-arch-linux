@@ -8,6 +8,7 @@
 
     extraPackages = with pkgs; [
       gcc
+      live-server
       gnumake
       rust-analyzer
       tree-sitter

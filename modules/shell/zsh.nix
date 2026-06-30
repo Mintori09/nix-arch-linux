@@ -201,6 +201,13 @@ in
         bindkey -M vicmd '^R' mcfly-fzf-history-widget
         bindkey -M emacs '^R' mcfly-fzf-history-widget
 
+        set_cdd() {
+            CDD=$(basename "$PWD")
+        }
+        autoload -Uz add-zsh-hook
+        add-zsh-hook chpwd set_cdd
+        set_cdd
+
       '')
     ];
   };

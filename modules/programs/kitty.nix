@@ -17,6 +17,7 @@ in
     package = kittyWrapped;
 
     settings = {
+      enabled_layouts = "splits,stack";
       font_size = 10.0;
       font_family = "family=\"JetBrainsMonoNL Nerd Font\"";
       bold_font = "auto";
@@ -146,7 +147,6 @@ in
       "alt+8" = "goto_tab 8";
       "alt+9" = "goto_tab 9";
 
-      "ctrl+shift+enter" = " launch --cwd=current";
       "ctrl+shift+t" = "new_tab_with_cwd";
       "ctrl+shift+w" = "close_tab";
 
@@ -156,6 +156,7 @@ in
       "alt+shift+j" = "neighboring_window down";
       "alt+shift+k" = "neighboring_window up";
       "alt+shift+l" = "neighboring_window right";
+      "ctrl+shift+enter" = "launch --cwd=current --location=vsplit";
     };
 
     extraConfig = ''

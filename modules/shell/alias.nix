@@ -11,6 +11,7 @@ in
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
+    ytdl-music = "yt-dlp --no-config -x --audio-format mp3 --audio-quality 0 -o '%(title)s.%(ext)s' -P '.'";
 
     # NAVIGATION & SHELL BASICS
     ".." = "cd ..";
