@@ -1,9 +1,13 @@
 { pkgs, ... }:
 let
-  wrappedPkgs = import ./wrappers.nix { inherit pkgs; };
+  inherit (import ../_nixgl-wrappers.nix { inherit pkgs; }) mkWrappedBinary;
+  vicinae = mkWrappedBinary {
+    name = "vicinae";
+    package = pkgs.vicinae;
+  };
 in
 {
-  home.packages = [ wrappedPkgs.vicinae ];
+  home.packages = [ vicinae ];
 
   systemd.user.services.vicinae = {
     Unit = {
@@ -14,7 +18,7 @@ in
 
     Service = {
       Type = "simple";
-      ExecStart = "${wrappedPkgs.vicinae}/bin/vicinae server --replace";
+      ExecStart = "${vicinae}/bin/vicinae server --replace";
       Restart = "always";
       RestartSec = 60;
       KillMode = "process";
@@ -29,7 +33,7 @@ in
     name = "Vicinae";
     genericName = "Utility";
     comment = "Launch Vicinae through the nixGL wrapper";
-    exec = "${wrappedPkgs.vicinae}/bin/vicinae";
+    exec = "${vicinae}/bin/vicinae";
     terminal = false;
     categories = [ "Utility" ];
     icon = "vicinae";

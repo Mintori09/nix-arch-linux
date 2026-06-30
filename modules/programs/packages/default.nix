@@ -1,23 +1,14 @@
-{ pkgs, ... }:
-let
-  wrappedPkgs = import ./wrappers.nix { inherit pkgs; };
-in
-{
+{ ... }: {
   imports = [
+    ./_desktop-db.nix
     ./spicetify.nix
     ./vicinae.nix
-    ./desktop-entries.nix
-  ];
-
-  programs.obsidian = {
-    enable = true;
-    package = wrappedPkgs.obsidian;
-  };
-
-  home.packages = with wrappedPkgs; [
-    gimp
-    foliate
-    drawio
-    localsend
+    ./obsidian.nix
+    ./gimp.nix
+    ./foliate.nix
+    ./drawio.nix
+    ./localsend.nix
+    ./sioyek.nix
+    ./zathura.nix
   ];
 }

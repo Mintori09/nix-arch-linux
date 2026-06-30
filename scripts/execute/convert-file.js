@@ -740,6 +740,26 @@ function mdToPdf() {
     },
   };
 }
+function epubToPdf() {
+  return {
+    tool: "pandoc",
+    convert: async (input, output, context) => {
+      const extraParams = ["--pdf-engine=weasyprint"];
+      context.flags.pageSize ??= "a4";
+      await pandoc({
+        from: "epub",
+        to: "pdf",
+        params: [
+          ...extraParams,
+          "--highlight-style",
+          "tango",
+          "-V",
+          "geometry:margin=2cm",
+        ],
+      }).convert(input, output, context);
+    },
+  };
+}
 function mdToHtml() {
   return {
     tool: "pandoc",
@@ -817,6 +837,7 @@ var ROUTES = {
       return ["-M", `title:${path5.basename(output).replace(/\.[^/.]+$/, "")}`];
     },
   }),
+  "epub:pdf": epubToPdf(),
   "docx:pdf": libreOffice("pdf"),
   "docx:txt": pandoc({ from: "docx", to: "plain" }),
   "xlsx:pdf": libreOffice("pdf"),
