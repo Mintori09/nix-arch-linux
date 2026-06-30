@@ -1,5 +1,5 @@
 import { readdirSync, writeFileSync } from "node:fs";
-import { isMain, which, spawnSyncOutput, args } from "./utils.ts";
+import { isMain, args } from "./utils.ts";
 
 export function getRuntimePkgs(language: string): string {
   const pkgs: Record<string, string> = {
@@ -201,18 +201,7 @@ function main(): void {
   writeFileSync(".envrc", envrc);
   console.log(`Created .envrc for ${language} (${pkgs})`);
 
-  const direnvPath = which("direnv");
-  if (direnvPath) {
-    const result = spawnSyncOutput(direnvPath, ["allow"]);
-    if (result.exitCode === 0) {
-      console.log("direnv allow: OK");
-    } else {
-      const msg = result.stderr.trim();
-      if (msg) console.error("direnv:", msg);
-    }
-  } else {
-    console.error("direnv not found in PATH");
-  }
+  console.log("Run: direnv allow");
 }
 
 if (isMain(import.meta.url)) {

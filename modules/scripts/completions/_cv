@@ -94,77 +94,75 @@ _cv_detect_route() {
 
 _cv_route_flags() {
   local route="$1"
-  case "$route" in
-    md:pdf)
-      reply=(
-        '--page-size=[page size for PDF output]:size:((a3 a4 a5 letter legal))'
-        '--style=[CSS file or config alias]:CSS file:->styles'
+  local in_ext="${route%%:*}"
+  local out_ext="${route##*:}"
+
+  _cv_normalize_ext "${in_ext:l}"; in_ext="$REPLY"
+  _cv_normalize_ext "${out_ext:l}"; out_ext="$REPLY"
+
+  local -a flags
+
+  # Check if it's a document-to-document route
+  local is_doc_in=0
+  local is_doc_out=0
+  [[ "$in_ext" =~ ^(md|markdown|docx|html|epub|txt|rst|odt)$ ]] && is_doc_in=1
+  [[ "$out_ext" =~ ^(md|markdown|docx|html|epub|txt|rst|odt|pdf)$ ]] && is_doc_out=1
+
+  local is_pandoc=0
+  if (( is_doc_in && is_doc_out )); then
+    if [[ "$out_ext" == "pdf" ]]; then
+      if [[ "$in_ext" =~ ^(md|markdown)$ ]]; then
+        is_pandoc=1
+      fi
+    else
+      is_pandoc=1
+    fi
+  fi
+
+  if (( is_pandoc )); then
+    flags+=(
+      '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
+      '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
+      '--standalone[produce output with an appropriate header and footer]'
+    )
+
+    if [[ "$out_ext" =~ ^(pdf|docx|html|epub|md|markdown)$ ]]; then
+      flags+=(
         '--toc[generate table of contents]'
         '--no-toc[do not generate table of contents]'
         '--number-sections[number section headings]'
         '--no-number-sections[do not number section headings]'
-        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
-        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
       )
-      ;;
-    md:docx)
-      reply=(
+    fi
+
+    if [[ "$in_ext" =~ ^(docx|md|markdown)$ ]]; then
+      flags+=(
+        '--extract-media=[extract media to directory]:target directory:_files -/'
+      )
+    fi
+
+    if [[ "$out_ext" == "docx" ]]; then
+      flags+=(
         '--reference-doc=[reference DOCX for pandoc style template]:DOCX file:->reference_docs'
-        '--toc[generate table of contents]'
-        '--no-toc[do not generate table of contents]'
-        '--number-sections[number section headings]'
-        '--no-number-sections[do not number section headings]'
-        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
-        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
-        '--extract-media=[extract media to directory]:target directory:_files -/'
       )
-      ;;
-    md:html)
-      reply=(
-        '--style=[CSS file or config alias for pandoc output]:CSS file:->styles'
-        '--toc[generate table of contents]'
-        '--no-toc[do not generate table of contents]'
-        '--number-sections[number section headings]'
-        '--no-number-sections[do not number section headings]'
-        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
-        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
-        '--extract-media=[extract media to directory]:target directory:_files -/'
+    fi
+  fi
+
+  if [[ "$out_ext" =~ ^(pdf|html)$ ]]; then
+    if (( is_doc_in )); then
+      flags+=(
+        '--style=[CSS file or config alias]:CSS file:->styles'
       )
-      ;;
-    docx:html)
-      reply=(
-        '--style=[CSS file or config alias for pandoc output]:CSS file:->styles'
-        '--extract-media=[extract media to directory]:target directory:_files -/'
-      )
-      ;;
-    md:epub)
-      reply=(
-        '--toc[generate table of contents]'
-        '--no-toc[do not generate table of contents]'
-        '--number-sections[number section headings]'
-        '--no-number-sections[do not number section headings]'
-        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
-      )
-      ;;
-    docx:epub)
-      reply=(
-        '--toc[generate table of contents]'
-        '--no-toc[do not generate table of contents]'
-        '--number-sections[number section headings]'
-        '--no-number-sections[do not number section headings]'
-        '--metadata-file=[metadata file for pandoc document variables]:metadata file:_files -g "*.{json,yaml,yml}"'
-      )
-      ;;
-    docx:md)
-      reply=(
-        '--extract-media=[extract media to directory]:target directory:_files -/'
-        '--wrap=[text wrapping mode]:wrap mode:(none preserve)'
-      )
-      ;;
-    *)
-      reply=()
-      ;;
-  esac
+    fi
+  fi
+
+  if [[ "$out_ext" == "pdf" && "$in_ext" =~ ^(md|markdown)$ ]]; then
+    flags+=(
+      '--page-size=[page size for PDF output]:size:((a3 a4 a5 letter legal))'
+    )
+  fi
+
+  reply=("${flags[@]}")
 }
 
 local -a argspec
@@ -242,8 +240,7 @@ case "$state" in
             compset -P '*.'
             _wanted output-extensions expl 'extension' compadd -Q -- "${reply[@]}" && ret=0
           else
-            compset -P '*'
-            _wanted output-extensions expl 'extension' compadd -P '.' -Q -- "${reply[@]}" && ret=0
+            _files && ret=0
           fi
         fi
       else
