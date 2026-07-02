@@ -27,6 +27,8 @@ let
               "colon"
             ]
           })" \
+          '--batch[run all items as a single command]' \
+          '--batch=[run N items per command]:batch size' \
           '--print[print commands without executing]' \
           '--fail-fast[stop on first failed command]' \
           '--keep-empty[keep empty items]' \

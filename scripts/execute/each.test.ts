@@ -220,3 +220,28 @@ it("renderCommand case transforms", () => {
     "hello-world helloWorld HelloWorld hello_world hello-world HELLO-WORLD",
   );
 });
+
+// --- batch mode ---
+
+it("batch --print renders all items in one command", () => {
+  const oldArgv = process.argv;
+  process.argv = ["node", "each.ts", "--batch", "--print", "echo"];
+  try {
+    const opts = parseArgs();
+    assert.equal(opts.batch, -1);
+    assert.equal(opts.print, true);
+  } finally {
+    process.argv = oldArgv;
+  }
+});
+
+it("batch=N --print renders N items per command", () => {
+  const oldArgv = process.argv;
+  process.argv = ["node", "each.ts", "--batch=2", "--print", "echo"];
+  try {
+    const opts = parseArgs();
+    assert.equal(opts.batch, 2);
+  } finally {
+    process.argv = oldArgv;
+  }
+});
