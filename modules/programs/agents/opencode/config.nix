@@ -36,7 +36,7 @@ builtins.toJSON {
   #     };
   #   };
   # };
-  autoupdate = false;
+  autoupdate = true;
   share = "disabled";
   model = "opencode/deepseek-v4-flash-free";
 

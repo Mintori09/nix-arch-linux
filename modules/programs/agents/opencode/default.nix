@@ -9,7 +9,7 @@ let
   notifier = import ./notifier.nix { inherit pkgs; };
   configJson = import ./config.nix { inherit pkgs lib config; };
 
-  inherit (pkgs) opencode;
+  opencode = pkgs.llm-agents.opencode;
 
   toolsEnv = pkgs.buildEnv {
     name = "opencode-tools-env";

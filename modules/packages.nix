@@ -25,7 +25,7 @@
     ripgrep
     wl-clipboard
     just
-    opencode
+    # opencode
     fx
 
     # CLI tools
