@@ -34,6 +34,8 @@ Options:
   --print           Print commands without executing
   --fail-fast       Stop on first failure
   --keep-empty      Keep empty items
+  --batch           Run all items as a single command
+  --batch=N         Run N items per command
   --quiet           Hide progress output
   --help            Show this message
   -h                Alias for --help
@@ -72,16 +74,18 @@ export function parseArgs(): {
   json: boolean;
   split: string;
   print: boolean;
+  batch: false | number;
   failFast: boolean;
   keepEmpty: boolean;
   quiet: boolean;
 } {
   const cliArgs = process.argv.slice(2);
   let command = "";
-  const opts: Record<string, string | boolean> = {
+  const opts: Record<string, string | boolean | number> = {
     json: false,
     split: "line",
     print: false,
+    batch: false,
     failFast: false,
     keepEmpty: false,
     quiet: false,
@@ -129,6 +133,22 @@ export function parseArgs(): {
       i++;
       continue;
     }
+    if (arg === "--batch") {
+      opts.batch = -1;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--batch=")) {
+      const val = arg.split("=")[1];
+      const n = parseInt(val, 10);
+      if (isNaN(n) || n < 1) {
+        console.error("each: --batch=N requires a positive integer");
+        process.exit(1);
+      }
+      opts.batch = n;
+      i++;
+      continue;
+    }
     if (arg === "-h") {
       console.log(HELP_TEXT);
       process.exit(0);
@@ -155,6 +175,7 @@ export function parseArgs(): {
     json: opts.json as boolean,
     split: opts.split as string,
     print: opts.print as boolean,
+    batch: opts.batch as number | false,
     failFast: opts.failFast as boolean,
     keepEmpty: opts.keepEmpty as boolean,
     quiet: opts.quiet as boolean,
@@ -307,6 +328,45 @@ export function renderCommand(template: string, item: Item): string {
   return cmd;
 }
 
+export function renderBatchCommand(template: string, items: Item[]): string {
+  let cmd = template;
+  const rp = (ph: string, fn: (i: Item) => string) => {
+    cmd = cmd.replace(ph, items.map(fn).join(" "));
+  };
+  rp("{}", (i) => `'${i.value.replace(/'/g, "'\\''")}'`);
+  rp("{raw}", (i) => i.value);
+  rp("{filename}", (i) => quoteIfNeeded(basename(i.value)));
+  rp("{stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value))));
+  rp("{ext}", (i) => extname(i.value));
+  rp("{kebab}", (i) => toKebab(i.value));
+  rp("{camel}", (i) => toCamel(i.value));
+  rp("{pascal}", (i) => toPascal(i.value));
+  rp("{snake}", (i) => toSnake(i.value));
+  rp("{lower}", (i) => i.value.toLowerCase());
+  rp("{upper}", (i) => i.value.toUpperCase());
+  rp("{kebab-fn}", (i) => toKebab(basename(i.value)));
+  rp("{camel-fn}", (i) => toCamel(basename(i.value)));
+  rp("{pascal-fn}", (i) => toPascal(basename(i.value)));
+  rp("{snake-fn}", (i) => toSnake(basename(i.value)));
+  rp("{lower-fn}", (i) => basename(i.value).toLowerCase());
+  rp("{upper-fn}", (i) => basename(i.value).toUpperCase());
+  rp("{kebab-stem}", (i) => toKebab(basename(i.value, extname(i.value))));
+  rp("{camel-stem}", (i) => toCamel(basename(i.value, extname(i.value))));
+  rp("{pascal-stem}", (i) => toPascal(basename(i.value, extname(i.value))));
+  rp("{snake-stem}", (i) => toSnake(basename(i.value, extname(i.value))));
+  rp("{lower-stem}", (i) => basename(i.value, extname(i.value)).toLowerCase());
+  rp("{upper-stem}", (i) => basename(i.value, extname(i.value)).toUpperCase());
+  rp("{n}", (i) => String(i.number));
+  rp("{i}", (i) => String(i.index));
+  rp("{number}", (i) => String(i.number));
+  rp("{index}", (i) => String(i.index));
+  if (cmd === template) {
+    const q = items.map((i) => `'${i.value.replace(/'/g, "'\\''")}'`).join(" ");
+    cmd = `${template} ${q}`;
+  }
+  return cmd;
+}
+
 function runCommands(
   items: Item[],
   opts: ReturnType<typeof parseArgs>,
@@ -338,6 +398,37 @@ function runCommands(
   return finalCode;
 }
 
+function runBatchCommands(
+  items: Item[],
+  opts: ReturnType<typeof parseArgs>,
+): number {
+  if (items.length === 0) return 0;
+  const batchSize =
+    typeof opts.batch === "number" && opts.batch > 0
+      ? opts.batch
+      : items.length;
+  let finalCode = 0;
+  for (let start = 0; start < items.length; start += batchSize) {
+    const chunk = items.slice(start, start + batchSize);
+    const cmd = renderBatchCommand(opts.command, chunk);
+    if (opts.print) {
+      console.log(cmd);
+      continue;
+    }
+    if (!opts.quiet)
+      console.error(`[${start + 1}-${start + chunk.length}] $ ${cmd}`);
+    const result = spawnSync(cmd, [], { shell: true, stdio: "inherit" });
+    if (result.status !== 0) {
+      finalCode = result.status ?? 1;
+      console.error(
+        `each: command failed for items #${start + 1}-${start + chunk.length} with exit code ${result.status}`,
+      );
+      if (opts.failFast) return result.status ?? 1;
+    }
+  }
+  return finalCode;
+}
+
 async function main(): Promise<number> {
   const opts = parseArgs();
 
@@ -345,6 +436,8 @@ async function main(): Promise<number> {
 
   const values = parseStdin(stdinText, opts.json, opts.split, opts.keepEmpty);
   const items = makeItems(values);
+  if (items.length === 0) return 0;
+  if (opts.batch !== false) return runBatchCommands(items, opts);
   return runCommands(items, opts);
 }
 
