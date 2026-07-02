@@ -1,6 +1,17 @@
 #!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
+import { basename, extname } from "node:path";
 import { args, isMain, readStdin } from "./utils.ts";
+
+const NAMED_DELIMITERS: Record<string, string> = {
+  tab: "\t",
+  backspace: "\b",
+  null: "\0",
+  newline: "\n",
+  space: " ",
+  comma: ",",
+  colon: ":",
+};
 
 export class Item {
   constructor(
@@ -35,19 +46,50 @@ export function parseArgs(): {
   let i = 0;
   while (i < cliArgs.length) {
     const arg = cliArgs[i];
-    if (arg === "--json") { opts.json = true; i++; continue; }
-    if (arg.startsWith("--split=")) { opts.split = arg.split("=")[1]; i++; continue; }
-    if (arg === "--split") { opts.split = cliArgs[i + 1]; i += 2; continue; }
-    if (arg === "--dry-run") { opts.dryRun = true; i++; continue; }
-    if (arg === "--fail-fast") { opts.failFast = true; i++; continue; }
-    if (arg === "--keep-empty") { opts.keepEmpty = true; i++; continue; }
-    if (arg === "--quiet") { opts.quiet = true; i++; continue; }
+    if (arg === "--json") {
+      opts.json = true;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--split=")) {
+      opts.split = arg.split("=")[1];
+      i++;
+      continue;
+    }
+    if (arg === "--split") {
+      opts.split = cliArgs[i + 1];
+      i += 2;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      opts.dryRun = true;
+      i++;
+      continue;
+    }
+    if (arg === "--fail-fast") {
+      opts.failFast = true;
+      i++;
+      continue;
+    }
+    if (arg === "--keep-empty") {
+      opts.keepEmpty = true;
+      i++;
+      continue;
+    }
+    if (arg === "--quiet") {
+      opts.quiet = true;
+      i++;
+      continue;
+    }
     if (arg === "--help") {
       console.log(`Usage: each [options] <command>
 
 Options:
   --json            Parse stdin as JSON array
-  --split MODE      Split mode: line, whitespace, blank, none (default: line)
+  --split MODE|DELIM Split mode or custom delimiter. Built-in: line (default),
+                     whitespace, blank, none. Named delimiters: tab, backspace,
+                     null, newline, space, comma, colon. Any other value used as
+                     literal delimiter string.
   --dry-run         Print commands without executing
   --fail-fast       Stop on first failure
   --keep-empty      Keep empty items
@@ -55,10 +97,31 @@ Options:
   --help            Show this message
 
 Placeholders in command:
-  {}      Shell-quoted item value
-  {raw}   Raw item value (not quoted)
-  {n}     1-based item number
-  {i}     0-based item number`);
+  {}              Shell-quoted item value
+  {raw}           Raw item value (not quoted)
+  {filename}      Basename (file.txt)
+  {stem}          Basename without extension (file)
+  {ext}           Extension with dot (.txt)
+  {kebab}         kebab-case of value
+  {camel}         camelCase of value
+  {pascal}        PascalCase of value
+  {snake}         snake_case of value
+  {lower}         lowercase of value
+  {upper}         UPPERCASE of value
+  {kebab-fn}      kebab-case of filename
+  {camel-fn}      camelCase of filename
+  {pascal-fn}     PascalCase of filename
+  {snake-fn}      snake_case of filename
+  {lower-fn}      lowercase of filename
+  {upper-fn}      UPPERCASE of filename
+  {kebab-stem}    kebab-case of stem
+  {camel-stem}    camelCase of stem
+  {pascal-stem}   PascalCase of stem
+  {snake-stem}    snake_case of stem
+  {lower-stem}    lowercase of stem
+  {upper-stem}    UPPERCASE of stem
+  {n}             1-based item number
+  {i}             0-based item number`);
       process.exit(0);
     }
     command = cliArgs.slice(i).join(" ");
@@ -67,12 +130,6 @@ Placeholders in command:
 
   if (!command) {
     console.error("Error: command template is required");
-    process.exit(1);
-  }
-
-  const validSplits = ["line", "whitespace", "blank", "none"];
-  if (!validSplits.includes(opts.split as string)) {
-    console.error(`Error: unsupported split mode: ${opts.split}`);
     process.exit(1);
   }
 
@@ -92,7 +149,12 @@ export function stringifyJsonItem(item: unknown): string {
   return JSON.stringify(item, undefined, undefined);
 }
 
-export function parseStdin(text: string, useJson: boolean, splitMode: string, keepEmpty: boolean): string[] {
+export function parseStdin(
+  text: string,
+  useJson: boolean,
+  splitMode: string,
+  keepEmpty: boolean,
+): string[] {
   if (useJson) {
     let value: unknown;
     try {
@@ -120,8 +182,8 @@ export function parseStdin(text: string, useJson: boolean, splitMode: string, ke
     const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     items = splitByBlankLines(normalized, keepEmpty);
   } else {
-    console.error(`Unsupported split mode: ${splitMode}`);
-    process.exit(1);
+    const delimiter = NAMED_DELIMITERS[splitMode] ?? splitMode;
+    items = text.split(delimiter);
   }
 
   if (keepEmpty) return items;
@@ -154,10 +216,68 @@ export function makeItems(values: string[]): Item[] {
   return values.map((value, idx) => new Item(value, idx + 1));
 }
 
+function quoteIfNeeded(s: string): string {
+  return s.includes(" ") ? `'${s.replace(/'/g, "'\\''")}'` : s;
+}
+
+function toKebab(s: string): string {
+  return s
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
+}
+
+function toCamel(s: string): string {
+  s = s.replace(/[-_\s]+(.)/g, (_, c) => c.toUpperCase());
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+function toPascal(s: string): string {
+  return s
+    .replace(/[-_\s]+(.)/g, (_, c) => c.toUpperCase())
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function toSnake(s: string): string {
+  return s
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
+    .toLowerCase();
+}
+
 export function renderCommand(template: string, item: Item): string {
   const quotedValue = `'${item.value.replace(/'/g, "'\\''")}'`;
+  const filename = basename(item.value);
+  const stem = basename(item.value, extname(item.value));
+  const ext = extname(item.value);
+
   let cmd = template.replace("{}", quotedValue);
   cmd = cmd.replace("{raw}", item.value);
+  cmd = cmd.replace("{filename}", quoteIfNeeded(filename));
+  cmd = cmd.replace("{stem}", quoteIfNeeded(stem));
+  cmd = cmd.replace("{ext}", ext);
+
+  cmd = cmd.replace("{kebab}", toKebab(item.value));
+  cmd = cmd.replace("{camel}", toCamel(item.value));
+  cmd = cmd.replace("{pascal}", toPascal(item.value));
+  cmd = cmd.replace("{snake}", toSnake(item.value));
+  cmd = cmd.replace("{lower}", item.value.toLowerCase());
+  cmd = cmd.replace("{upper}", item.value.toUpperCase());
+
+  cmd = cmd.replace("{kebab-fn}", toKebab(filename));
+  cmd = cmd.replace("{camel-fn}", toCamel(filename));
+  cmd = cmd.replace("{pascal-fn}", toPascal(filename));
+  cmd = cmd.replace("{snake-fn}", toSnake(filename));
+  cmd = cmd.replace("{lower-fn}", filename.toLowerCase());
+  cmd = cmd.replace("{upper-fn}", filename.toUpperCase());
+
+  cmd = cmd.replace("{kebab-stem}", toKebab(stem));
+  cmd = cmd.replace("{camel-stem}", toCamel(stem));
+  cmd = cmd.replace("{pascal-stem}", toPascal(stem));
+  cmd = cmd.replace("{snake-stem}", toSnake(stem));
+  cmd = cmd.replace("{lower-stem}", stem.toLowerCase());
+  cmd = cmd.replace("{upper-stem}", stem.toUpperCase());
+
   cmd = cmd.replace("{n}", String(item.number));
   cmd = cmd.replace("{i}", String(item.index));
 
@@ -168,7 +288,10 @@ export function renderCommand(template: string, item: Item): string {
   return cmd;
 }
 
-function runCommands(items: Item[], opts: ReturnType<typeof parseArgs>): number {
+function runCommands(
+  items: Item[],
+  opts: ReturnType<typeof parseArgs>,
+): number {
   let finalCode = 0;
 
   for (const item of items) {
@@ -186,7 +309,9 @@ function runCommands(items: Item[], opts: ReturnType<typeof parseArgs>): number 
     const result = spawnSync(cmd, [], { shell: true, stdio: "inherit" });
     if (result.status !== 0) {
       finalCode = result.status ?? 1;
-      console.error(`each: command failed for item #${item.number} with exit code ${result.status}`);
+      console.error(
+        `each: command failed for item #${item.number} with exit code ${result.status}`,
+      );
       if (opts.failFast) return result.status ?? 1;
     }
   }

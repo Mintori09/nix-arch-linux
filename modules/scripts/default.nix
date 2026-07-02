@@ -23,5 +23,6 @@
     ./direnv-wrap.nix
     ./rclone-sync.nix
     ./ai-bridge.nix
+    ./read.nix
   ];
 }

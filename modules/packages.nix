@@ -50,7 +50,8 @@
     ffmpegthumbnailer
     hexyl
     jq
-    mise
+    # mise
+    glow
     nixfmt
     rust-script
     television
@@ -96,6 +97,11 @@
     pandoc
     imagemagick
     python314Packages.markitdown
+    tabiew
+
+    # Custom packages (prebuilt from GitHub)
+    bookokrat
+    sd
   ];
 
 }

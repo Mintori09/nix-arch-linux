@@ -157,6 +157,7 @@ in
       "alt+shift+k" = "neighboring_window up";
       "alt+shift+l" = "neighboring_window right";
       "ctrl+shift+enter" = "launch --cwd=current --location=vsplit";
+      "ctrl+shift+o" = "launch --type=tab --cwd=current opencode .";
     };
 
     extraConfig = ''
