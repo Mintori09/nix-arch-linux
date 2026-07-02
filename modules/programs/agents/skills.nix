@@ -100,6 +100,12 @@ in
         dest = ".codex/skills";
         structure = "link";
       };
+
+      antigravity = {
+        enable = true;
+        dest = ".gemini/skills";
+        structure = "link";
+      };
     };
   };
 }

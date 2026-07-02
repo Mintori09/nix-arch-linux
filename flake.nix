@@ -105,6 +105,9 @@
         overlays = [
           nixgl.overlay
           llm-agents.overlays.default
+          (final: prev: {
+            bookokrat = final.callPackage ./modules/packages/bookokrat.nix { };
+          })
         ];
         config.allowUnfree = true;
       };

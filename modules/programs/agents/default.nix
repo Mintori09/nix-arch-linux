@@ -5,5 +5,6 @@
     ./opencode
     ./claude
     ./oc-go-cc
+    ./antigravity
   ];
 }

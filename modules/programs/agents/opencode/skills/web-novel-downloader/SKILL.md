@@ -779,6 +779,7 @@ Before declaring done, confirm all items:
 - [ ] If the novel has images, spot-check that `<img>` tags were preserved
 
 If any check fails → **fix the issue** (update adapter and re-run) before declaring complete.
+Then add to justfile command to run this scripts or create justfile (if not exist).
 
 ---
 

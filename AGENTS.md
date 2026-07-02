@@ -6,8 +6,8 @@ User: `mintori`, host: `endeavour-desktop`, system: `x86_64-linux`.
 ## Apply config
 
 ```bash
-hms  # alias: home-manager switch --flake ~/.config/home-manager
-nix flake update && hms  # update inputs then apply
+home-manager switch --flake ~/.config/home-manager
+nix flake update && home-manager switch --flake ~/.config/home-manager  # update inputs then apply
 nix-collect-garbage --delete-older-than 2d  # GC cleanup
 ```
 

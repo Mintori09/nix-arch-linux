@@ -4,13 +4,13 @@
 import path7 from "node:path";
 import {
   mkdir,
-  mkdtemp as mkdtemp3,
-  readFile as readFile2,
+  mkdtemp as mkdtemp4,
+  readFile as readFile3,
   writeFile as writeFile4,
-  rm as rm4,
+  rm as rm5,
 } from "node:fs/promises";
 import { existsSync as existsSync2 } from "node:fs";
-import { tmpdir as tmpdir4 } from "node:os";
+import { tmpdir as tmpdir5 } from "node:os";
 import { parseArgs } from "node:util";
 
 // src/utils.ts
@@ -285,6 +285,8 @@ async function withSpinner(context, task) {
 
 // src/routes.ts
 import path5 from "node:path";
+import { tmpdir as tmpdir3 } from "node:os";
+import { mkdtemp as mkdtemp3, rm as rm3 } from "node:fs/promises";
 
 // src/converters/index.ts
 import path3 from "node:path";
@@ -294,6 +296,7 @@ import {
   rename,
   writeFile as writeFile2,
   rm as rm2,
+  readFile,
 } from "node:fs/promises";
 
 // src/core/chromium.ts
@@ -538,6 +541,36 @@ function imageMagick(extraArgs = []) {
       ).then(() => void 0),
   };
 }
+async function sanitizeImagePaths(outputPath, mediaDir, dryRun) {
+  if (dryRun || !mediaDir) return;
+  const ext = path3.extname(outputPath).toLowerCase();
+  if (ext !== ".md" && ext !== ".markdown") return;
+  let content;
+  try {
+    content = await readFile(outputPath, "utf-8");
+  } catch {
+    return;
+  }
+  const imageRegex = /!\[.*?\]\(([^)]+)\)/g;
+  let match;
+  let newContent = content;
+  let modified = false;
+  while ((match = imageRegex.exec(content)) !== null) {
+    const imagePath = match[1];
+    if (!imagePath.includes(" ")) continue;
+    const newPath = imagePath.replace(/ /g, "-");
+    const absOld = path3.resolve(path3.dirname(outputPath), imagePath);
+    const absNew = path3.resolve(path3.dirname(outputPath), newPath);
+    try {
+      await rename(absOld, absNew);
+    } catch {}
+    newContent = newContent.replace(`(${imagePath})`, `(${newPath})`);
+    modified = true;
+  }
+  if (modified) {
+    await writeFile2(outputPath, newContent);
+  }
+}
 function pandoc(options = {}) {
   return {
     tool: "pandoc",
@@ -580,6 +613,7 @@ function pandoc(options = {}) {
         output,
       ];
       await runCommand(args2, { dryRun });
+      await sanitizeImagePaths(output, mediaDir, dryRun);
     },
   };
 }
@@ -817,6 +851,24 @@ var ROUTES = {
   "mhtml:webp": mhtmlToImage("webp"),
   "md:pdf": mdToPdf(),
   "md:docx": pandoc(),
+  "doc:md": {
+    tool: "pandoc",
+    convert: async (input, output, context) => {
+      const tmpDir = await mkdtemp3(path5.join(tmpdir3(), "cv-doc-"));
+      try {
+        const docxPath = path5.join(
+          tmpDir,
+          `${path5.basename(input, path5.extname(input))}.docx`,
+        );
+        await libreOffice("docx").convert(input, docxPath, context);
+        await pandoc().convert(docxPath, output, context);
+        const mdMediaDir = `${output.replace(/\.[^/.]+$/, "")}_media/`;
+        await sanitizeImagePaths(output, mdMediaDir, context.dryRun);
+      } finally {
+        await rm3(tmpDir, { recursive: true, force: true });
+      }
+    },
+  },
   "docx:md": pandoc(),
   "md:html": mdToHtml(),
   "html:md": markitdownConverter(),
@@ -837,6 +889,7 @@ var ROUTES = {
       return ["-M", `title:${path5.basename(output).replace(/\.[^/.]+$/, "")}`];
     },
   }),
+  "epub:md": pandoc({ from: "epub", to: "markdown" }),
   "epub:pdf": epubToPdf(),
   "docx:pdf": libreOffice("pdf"),
   "docx:txt": pandoc({ from: "docx", to: "plain" }),
@@ -865,9 +918,13 @@ var ROUTES = {
 
 // src/converters/mermaid.ts
 import { mkdtempSync } from "node:fs";
-import { readFile, writeFile as writeFile3, rm as rm3 } from "node:fs/promises";
+import {
+  readFile as readFile2,
+  writeFile as writeFile3,
+  rm as rm4,
+} from "node:fs/promises";
 import path6 from "node:path";
-import { tmpdir as tmpdir3 } from "node:os";
+import { tmpdir as tmpdir4 } from "node:os";
 import { spawnSync } from "node:child_process";
 var MERMAID_RE = /^\s*```\s*mermaid\s*$/im;
 var MMDC_CONFIG = {
@@ -890,7 +947,7 @@ async function tryPreprocessMermaid(content, context) {
     console.warn("mmdc not found on PATH; skipping mermaid preprocessing");
     return content;
   }
-  const tmpDir = mkdtempSync(path6.join(tmpdir3(), "cv-mermaid-"));
+  const tmpDir = mkdtempSync(path6.join(tmpdir4(), "cv-mermaid-"));
   try {
     const configPath = path6.join(tmpDir, "mmdc-config.json");
     await writeFile3(configPath, JSON.stringify(MMDC_CONFIG, null, 2));
@@ -908,7 +965,7 @@ async function tryPreprocessMermaid(content, context) {
         ["mmdc", "-i", mmdPath, "-o", svgPath, "-c", configPath],
         { dryRun: false },
       );
-      const svgContent = await readFile(svgPath, "utf-8");
+      const svgContent = await readFile2(svgPath, "utf-8");
       const base64Svg = Buffer.from(svgContent).toString("base64");
       const dataUri = `![](data:image/svg+xml;base64,${base64Svg})`;
       const before = result.slice(0, matchIndex);
@@ -919,7 +976,7 @@ async function tryPreprocessMermaid(content, context) {
     }
     return result;
   } finally {
-    await rm3(tmpDir, { recursive: true, force: true });
+    await rm4(tmpDir, { recursive: true, force: true });
   }
 }
 
@@ -1230,13 +1287,13 @@ async function convertOne(input, output, passthroughArgs, options) {
     );
   let tempInput;
   if (!options.dryRun && (inExt === "md" || inExt === "markdown")) {
-    const content = await readFile2(input, "utf-8");
+    const content = await readFile3(input, "utf-8");
     if (hasMermaidBlocks(content)) {
       const preprocessed = await tryPreprocessMermaid(content, {
         dryRun: false,
       });
       if (preprocessed !== content) {
-        const tdir = await mkdtemp3(path7.join(tmpdir4(), "cv-mermaid-"));
+        const tdir = await mkdtemp4(path7.join(tmpdir5(), "cv-mermaid-"));
         tempInput = path7.join(tdir, "input.md");
         await writeFile4(tempInput, preprocessed);
       }
@@ -1270,7 +1327,7 @@ async function convertOne(input, output, passthroughArgs, options) {
     );
   } finally {
     if (tempInput)
-      await rm4(path7.dirname(tempInput), { recursive: true, force: true });
+      await rm5(path7.dirname(tempInput), { recursive: true, force: true });
   }
   console.log(
     `

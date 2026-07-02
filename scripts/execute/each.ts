@@ -27,7 +27,7 @@ export function parseArgs(): {
   command: string;
   json: boolean;
   split: string;
-  dryRun: boolean;
+  print: boolean;
   failFast: boolean;
   keepEmpty: boolean;
   quiet: boolean;
@@ -37,7 +37,7 @@ export function parseArgs(): {
   const opts: Record<string, string | boolean> = {
     json: false,
     split: "line",
-    dryRun: false,
+    print: false,
     failFast: false,
     keepEmpty: false,
     quiet: false,
@@ -61,8 +61,8 @@ export function parseArgs(): {
       i += 2;
       continue;
     }
-    if (arg === "--dry-run") {
-      opts.dryRun = true;
+    if (arg === "--print") {
+      opts.print = true;
       i++;
       continue;
     }
@@ -90,7 +90,7 @@ Options:
                      whitespace, blank, none. Named delimiters: tab, backspace,
                      null, newline, space, comma, colon. Any other value used as
                      literal delimiter string.
-  --dry-run         Print commands without executing
+  --print           Print commands without executing
   --fail-fast       Stop on first failure
   --keep-empty      Keep empty items
   --quiet           Hide progress output
@@ -137,7 +137,7 @@ Placeholders in command:
     command,
     json: opts.json as boolean,
     split: opts.split as string,
-    dryRun: opts.dryRun as boolean,
+    print: opts.print as boolean,
     failFast: opts.failFast as boolean,
     keepEmpty: opts.keepEmpty as boolean,
     quiet: opts.quiet as boolean,
@@ -297,7 +297,7 @@ function runCommands(
   for (const item of items) {
     const cmd = renderCommand(opts.command, item);
 
-    if (opts.dryRun) {
+    if (opts.print) {
       console.log(cmd);
       continue;
     }
