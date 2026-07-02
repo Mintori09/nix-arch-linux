@@ -23,6 +23,50 @@ export class Item {
   }
 }
 
+const HELP_TEXT = `Usage: each [options] <command>
+
+Options:
+  --json            Parse stdin as JSON array
+  --split MODE|DELIM Split mode or custom delimiter. Built-in: line (default),
+                     whitespace, blank, none. Named delimiters: tab, backspace,
+                     null, newline, space, comma, colon. Any other value used as
+                     literal delimiter string.
+  --print           Print commands without executing
+  --fail-fast       Stop on first failure
+  --keep-empty      Keep empty items
+  --quiet           Hide progress output
+  --help            Show this message
+  -h                Alias for --help
+
+Placeholders in command:
+  {}              Shell-quoted item value
+  {raw}           Raw item value (not quoted)
+  {filename}      Basename (file.txt)
+  {stem}          Basename without extension (file)
+  {ext}           Extension with dot (.txt)
+  {kebab}         kebab-case of value
+  {camel}         camelCase of value
+  {pascal}        PascalCase of value
+  {snake}         snake_case of value
+  {lower}         lowercase of value
+  {upper}         UPPERCASE of value
+  {kebab-fn}      kebab-case of filename
+  {camel-fn}      camelCase of filename
+  {pascal-fn}     PascalCase of filename
+  {snake-fn}      snake_case of filename
+  {lower-fn}      lowercase of filename
+  {upper-fn}      UPPERCASE of filename
+  {kebab-stem}    kebab-case of stem
+  {camel-stem}    camelCase of stem
+  {pascal-stem}   PascalCase of stem
+  {snake-stem}    snake_case of stem
+  {lower-stem}    lowercase of stem
+  {upper-stem}    UPPERCASE of stem
+  {n}             1-based item number
+  {number}        1-based item number (alias for {n})
+  {i}             0-based item number
+  {index}         0-based item number (alias for {i})`;
+
 export function parseArgs(): {
   command: string;
   json: boolean;
@@ -57,6 +101,10 @@ export function parseArgs(): {
       continue;
     }
     if (arg === "--split") {
+      if (!cliArgs[i + 1]) {
+        console.error("each: --split requires an argument");
+        process.exit(1);
+      }
       opts.split = cliArgs[i + 1];
       i += 2;
       continue;
@@ -81,56 +129,25 @@ export function parseArgs(): {
       i++;
       continue;
     }
-    if (arg === "--help") {
-      console.log(`Usage: each [options] <command>
-
-Options:
-  --json            Parse stdin as JSON array
-  --split MODE|DELIM Split mode or custom delimiter. Built-in: line (default),
-                     whitespace, blank, none. Named delimiters: tab, backspace,
-                     null, newline, space, comma, colon. Any other value used as
-                     literal delimiter string.
-  --print           Print commands without executing
-  --fail-fast       Stop on first failure
-  --keep-empty      Keep empty items
-  --quiet           Hide progress output
-  --help            Show this message
-
-Placeholders in command:
-  {}              Shell-quoted item value
-  {raw}           Raw item value (not quoted)
-  {filename}      Basename (file.txt)
-  {stem}          Basename without extension (file)
-  {ext}           Extension with dot (.txt)
-  {kebab}         kebab-case of value
-  {camel}         camelCase of value
-  {pascal}        PascalCase of value
-  {snake}         snake_case of value
-  {lower}         lowercase of value
-  {upper}         UPPERCASE of value
-  {kebab-fn}      kebab-case of filename
-  {camel-fn}      camelCase of filename
-  {pascal-fn}     PascalCase of filename
-  {snake-fn}      snake_case of filename
-  {lower-fn}      lowercase of filename
-  {upper-fn}      UPPERCASE of filename
-  {kebab-stem}    kebab-case of stem
-  {camel-stem}    camelCase of stem
-  {pascal-stem}   PascalCase of stem
-  {snake-stem}    snake_case of stem
-  {lower-stem}    lowercase of stem
-  {upper-stem}    UPPERCASE of stem
-  {n}             1-based item number
-  {i}             0-based item number`);
+    if (arg === "-h") {
+      console.log(HELP_TEXT);
       process.exit(0);
+    }
+    if (arg === "--help") {
+      console.log(HELP_TEXT);
+      process.exit(0);
+    }
+    if (arg.startsWith("-")) {
+      console.error(`each: unrecognized flag: ${arg}`);
+      process.exit(1);
     }
     command = cliArgs.slice(i).join(" ");
     break;
   }
 
   if (!command) {
-    console.error("Error: command template is required");
-    process.exit(1);
+    console.log(HELP_TEXT);
+    process.exit(0);
   }
 
   return {
@@ -279,7 +296,9 @@ export function renderCommand(template: string, item: Item): string {
   cmd = cmd.replace("{upper-stem}", stem.toUpperCase());
 
   cmd = cmd.replace("{n}", String(item.number));
+  cmd = cmd.replace("{number}", String(item.number));
   cmd = cmd.replace("{i}", String(item.index));
+  cmd = cmd.replace("{index}", String(item.index));
 
   if (cmd === template) {
     cmd = `${template} ${quotedValue}`;
