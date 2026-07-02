@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { basename, extname } from "node:path";
 import { isMain, readStdin } from "./utils.ts";
 
@@ -36,6 +36,8 @@ Options:
   --keep-empty      Keep empty items
   --batch           Run all items as a single command
   --batch=N         Run N items per command
+  --parallel        Run all items concurrently
+  --parallel=N      Run at most N items concurrently
   --quiet           Hide progress output
   --help            Show this message
   -h                Alias for --help
@@ -75,6 +77,7 @@ export function parseArgs(): {
   split: string;
   print: boolean;
   batch: false | number;
+  parallel: false | number;
   failFast: boolean;
   keepEmpty: boolean;
   quiet: boolean;
@@ -86,6 +89,7 @@ export function parseArgs(): {
     split: "line",
     print: false,
     batch: false,
+    parallel: false,
     failFast: false,
     keepEmpty: false,
     quiet: false,
@@ -149,6 +153,22 @@ export function parseArgs(): {
       i++;
       continue;
     }
+    if (arg === "--parallel") {
+      opts.parallel = -1;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--parallel=")) {
+      const val = arg.split("=")[1];
+      const n = parseInt(val, 10);
+      if (isNaN(n) || n < 1) {
+        console.error("each: --parallel=N requires a positive integer");
+        process.exit(1);
+      }
+      opts.parallel = n;
+      i++;
+      continue;
+    }
     if (arg === "-h") {
       console.log(HELP_TEXT);
       process.exit(0);
@@ -176,6 +196,7 @@ export function parseArgs(): {
     split: opts.split as string,
     print: opts.print as boolean,
     batch: opts.batch as number | false,
+    parallel: opts.parallel as number | false,
     failFast: opts.failFast as boolean,
     keepEmpty: opts.keepEmpty as boolean,
     quiet: opts.quiet as boolean,
@@ -429,6 +450,66 @@ function runBatchCommands(
   return finalCode;
 }
 
+async function runParallelCommands(
+  items: Item[],
+  opts: ReturnType<typeof parseArgs>,
+): Promise<number> {
+  const maxConcurrency =
+    typeof opts.parallel === "number" && opts.parallel > 0
+      ? opts.parallel
+      : items.length;
+
+  let finalCode = 0;
+  let aborted = false;
+  const children: import("node:child_process").ChildProcess[] = [];
+
+  async function runOne(item: Item): Promise<number> {
+    if (aborted) return 0;
+    const cmd = renderCommand(opts.command, item);
+    if (opts.print) {
+      console.log(cmd);
+      return 0;
+    }
+    if (!opts.quiet) {
+      console.error(`[${item.number}] $ ${cmd}`);
+    }
+    const child = spawn(cmd, [], { shell: true, stdio: "inherit" });
+    children[item.index] = child;
+    const code: number = await new Promise((resolve) =>
+      child.on("close", resolve),
+    );
+    if (code !== 0) {
+      console.error(
+        `each: command failed for item #${item.number} with exit code ${code}`,
+      );
+      if (opts.failFast) {
+        aborted = true;
+        for (const c of children) if (c && !c.killed) c.kill();
+      }
+    }
+    return code;
+  }
+
+  const errors: number[] = [];
+  let idx = 0;
+  const worker = async () => {
+    while (idx < items.length && !aborted) {
+      const i = idx++;
+      const code = await runOne(items[i]);
+      if (code !== 0) {
+        errors.push(code);
+        if (opts.failFast) break;
+      }
+    }
+  };
+
+  const poolSize = Math.min(maxConcurrency, items.length);
+  const workers = Array.from({ length: poolSize }, () => worker());
+  await Promise.allSettled(workers);
+
+  return errors.length > 0 ? errors[0] : 0;
+}
+
 async function main(): Promise<number> {
   const opts = parseArgs();
 
@@ -438,6 +519,7 @@ async function main(): Promise<number> {
   const items = makeItems(values);
   if (items.length === 0) return 0;
   if (opts.batch !== false) return runBatchCommands(items, opts);
+  if (opts.parallel !== false) return runParallelCommands(items, opts);
   return runCommands(items, opts);
 }
 

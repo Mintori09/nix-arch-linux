@@ -57,6 +57,28 @@ it("parseArgs --quiet and --fail-fast flags", () => {
   }
 });
 
+it("parseArgs --parallel flag", () => {
+  const oldArgv = process.argv;
+  process.argv = ["node", "each.ts", "--parallel", "echo"];
+  try {
+    const opts = parseArgs();
+    assert.equal(opts.parallel, -1);
+  } finally {
+    process.argv = oldArgv;
+  }
+});
+
+it("parseArgs --parallel=N flag", () => {
+  const oldArgv = process.argv;
+  process.argv = ["node", "each.ts", "--parallel=4", "echo"];
+  try {
+    const opts = parseArgs();
+    assert.equal(opts.parallel, 4);
+  } finally {
+    process.argv = oldArgv;
+  }
+});
+
 it("parseArgs --keep-empty flag", () => {
   const oldArgv = process.argv;
   process.argv = ["node", "each.ts", "--keep-empty", "echo"];

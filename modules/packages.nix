@@ -102,6 +102,7 @@
     # Custom packages (prebuilt from GitHub)
     bookokrat
     sd
+    watchexec
   ];
 
 }
