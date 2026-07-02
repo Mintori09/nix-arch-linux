@@ -29,6 +29,8 @@ let
           })" \
           '--batch[run all items as a single command]' \
           '--batch=[run N items per command]:batch size' \
+          '--parallel[run all items concurrently]' \
+          '--parallel=[run at most N items concurrently]:concurrency limit' \
           '--print[print commands without executing]' \
           '--fail-fast[stop on first failed command]' \
           '--keep-empty[keep empty items]' \
