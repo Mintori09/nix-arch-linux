@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
 import { basename, extname } from "node:path";
-import { args, isMain, readStdin } from "./utils.ts";
+import { isMain, readStdin } from "./utils.ts";
 
 const NAMED_DELIMITERS: Record<string, string> = {
   tab: "\t",
@@ -32,7 +32,7 @@ export function parseArgs(): {
   keepEmpty: boolean;
   quiet: boolean;
 } {
-  const cliArgs = args;
+  const cliArgs = process.argv.slice(2);
   let command = "";
   const opts: Record<string, string | boolean> = {
     json: false,
