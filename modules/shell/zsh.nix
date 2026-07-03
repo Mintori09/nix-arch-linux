@@ -171,26 +171,6 @@ in
           ${pkgs.fd}/bin/fd --hidden -t d -E .git -E node_modules . "$1"
         }
 
-        # Custom completion: fn
-        _fn() {
-          local -a subcmds
-          subcmds=('new' 'config' 'alias' 'unalias' 'delete' 'edit' 'list')
-
-          if (( CURRENT == 2 )); then
-            _describe 'command' subcmds
-          elif (( CURRENT == 3 )); then
-            case $words[2] in
-              edit|alias)
-                local script_dir="$HOME/.config/shell/scripts"
-                local scripts=($(${pkgs.fd}/bin/fd -t f . "$script_dir" | sed 's!.*/!!'))
-                _describe 'script' scripts
-                ;;
-            esac
-          fi
-        }
-
-        compdef _fn fn
-
         # FZF-tab completion for dvt
         zstyle ':fzf-tab:complete:dvt:*' fzf-flags \
           '--prompt=dvt > ' \
@@ -209,6 +189,23 @@ in
         autoload -Uz add-zsh-hook
         add-zsh-hook chpwd set_cdd
         set_cdd
+
+        # Auto-reload completions when Nix updates them (no zsh reload needed)
+        _zsh_auto_reload_completions() {
+          local f target
+          for f in ~/.local/share/zsh/site-functions/_*(N); do
+            target=$f:A
+            if [[ ! -v _zcomp_cache[$f] ]]; then
+              _zcomp_cache[$f]=$target
+            elif [[ $_zcomp_cache[$f] != $target ]]; then
+              _zcomp_cache[$f]=$target
+              unfunction $f:t 2>/dev/null
+              autoload -Uz $f:t
+            fi
+          done
+        }
+        typeset -gA _zcomp_cache
+        add-zsh-hook precmd _zsh_auto_reload_completions
 
       '')
     ];
