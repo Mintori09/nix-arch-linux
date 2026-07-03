@@ -8,6 +8,7 @@ import {
   Item,
   renderCommand,
   parseArgs,
+  quoteArgForShell,
 } from "./each.ts";
 
 // --- parseArgs (--print) ---
@@ -263,6 +264,31 @@ it("batch=N --print renders N items per command", () => {
   try {
     const opts = parseArgs();
     assert.equal(opts.batch, 2);
+  } finally {
+    process.argv = oldArgv;
+  }
+});
+
+// --- quoteArgForShell ---
+
+it("quoteArgForShell quotes empty strings and special characters, leaving safe ones and placeholders intact", () => {
+  assert.equal(quoteArgForShell(""), "''");
+  assert.equal(quoteArgForShell("sd"), "sd");
+  assert.equal(quoteArgForShell("-A"), "-A");
+  assert.equal(quoteArgForShell("### Chapter.*"), "'### Chapter.*'");
+  assert.equal(quoteArgForShell("{}"), "{}");
+  assert.equal(quoteArgForShell("file-{}.txt"), "file-{}.txt");
+  assert.equal(quoteArgForShell("file name-{}.txt"), "'file name-'{}.txt");
+  assert.equal(quoteArgForShell("|"), "|");
+  assert.equal(quoteArgForShell("&&"), "&&");
+});
+
+it("parseArgs with multiple arguments quotes them correctly", () => {
+  const oldArgv = process.argv;
+  process.argv = ["node", "each.ts", "sd", "-A", "### Chapter.*", "", "{}"];
+  try {
+    const opts = parseArgs();
+    assert.equal(opts.command, "sd -A '### Chapter.*' '' {}");
   } finally {
     process.argv = oldArgv;
   }

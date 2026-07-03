@@ -71,6 +71,50 @@ Placeholders in command:
   {i}             0-based item number
   {index}         0-based item number (alias for {i})`;
 
+const SHELL_OPERATORS = new Set([
+  "|",
+  "&&",
+  "||",
+  ";",
+  "&",
+  ">",
+  "<",
+  ">>",
+  "<<",
+  "2>",
+  "1>",
+  "&1",
+  "2>&1",
+  "|&",
+]);
+
+export function quoteArgForShell(arg: string): string {
+  if (arg === "") return "''";
+  if (SHELL_OPERATORS.has(arg)) return arg;
+
+  // If the argument is a simple safe string, no need to quote
+  if (/^[a-zA-Z0-9_\-\/\.\:\+\=\@\,]+$/.test(arg)) {
+    return arg;
+  }
+
+  const placeholderRegex =
+    /({}|{(?:raw|filename|stem|ext|kebab|camel|pascal|snake|lower|upper|kebab-fn|camel-fn|pascal-fn|snake-fn|lower-fn|upper-fn|kebab-stem|camel-stem|pascal-stem|snake-stem|lower-stem|upper-stem|n|number|i|index)})/g;
+
+  const parts = arg.split(placeholderRegex);
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) {
+        return part;
+      }
+      if (part === "") return "";
+      if (/^[a-zA-Z0-9_\-\/\.\:\+\=\@\,]+$/.test(part)) {
+        return part;
+      }
+      return `'${part.replace(/'/g, "'\\''")}'`;
+    })
+    .join("");
+}
+
 export function parseArgs(): {
   command: string;
   json: boolean;
@@ -181,7 +225,12 @@ export function parseArgs(): {
       console.error(`each: unrecognized flag: ${arg}`);
       process.exit(1);
     }
-    command = cliArgs.slice(i).join(" ");
+    const cmdArgs = cliArgs.slice(i);
+    if (cmdArgs.length === 1) {
+      command = cmdArgs[0];
+    } else if (cmdArgs.length > 1) {
+      command = cmdArgs.map(quoteArgForShell).join(" ");
+    }
     break;
   }
 
