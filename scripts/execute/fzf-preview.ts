@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
-import { readFileSync, mkdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { args, isMain, which } from "./utils.ts";
 
 const CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
@@ -14,7 +15,7 @@ function getCachePath(target: string, ext: string): string {
   return `${CACHE_DIR}/${sum}${ext}`;
 }
 
-function dim(): string {
+function dim(options?: { heightOffset?: number }): string {
   const cols =
     parseInt(process.env.FZF_PREVIEW_COLUMNS ?? "", 10) ||
     spawnSync("tput", ["cols"], { encoding: "utf-8" }).stdout?.trim() ||
@@ -23,11 +24,20 @@ function dim(): string {
     parseInt(process.env.FZF_PREVIEW_LINES ?? "", 10) ||
     spawnSync("tput", ["lines"], { encoding: "utf-8" }).stdout?.trim() ||
     "24";
-  return `${cols}x${lines}`;
+  const adjustedLines = Math.max(
+    1,
+    parseInt(lines.toString(), 10) - (options?.heightOffset ?? 0),
+  );
+  return `${cols}x${adjustedLines}`;
 }
 
-function renderImage(target: string): void {
+function renderImage(
+  target: string,
+  options?: { yOffset?: number; heightOffset?: number },
+): void {
   const hasKitten = which("kitten");
+  const yOffset = options?.yOffset ?? 0;
+  const heightOffset = options?.heightOffset ?? 0;
 
   if (
     (process.env.KITTY_WINDOW_ID || process.env.GHOSTTY_RESOURCES_DIR) &&
@@ -41,7 +51,7 @@ function renderImage(target: string): void {
         "--transfer-mode=memory",
         "--unicode-placeholder",
         "--stdin=no",
-        `--place=${dim()}@0x0`,
+        `--place=${dim({ heightOffset })}@0x${yOffset}`,
         target,
       ],
       { stdio: "inherit" },
@@ -51,13 +61,19 @@ function renderImage(target: string): void {
   }
 
   if (process.env.TERM_PROGRAM === "WezTerm" && which("wezterm")) {
-    spawnSync("wezterm", ["imgcat", target], { stdio: "inherit" });
+    const lines = parseInt(process.env.FZF_PREVIEW_LINES ?? "24", 10);
+    const height = Math.max(1, lines - heightOffset);
+    spawnSync("wezterm", ["imgcat", "--height", height.toString(), target], {
+      stdio: "inherit",
+    });
     process.stdout.write("\u001b[m");
     return;
   }
 
   if (which("chafa")) {
-    spawnSync("chafa", ["-s", dim(), target], { stdio: "inherit" });
+    spawnSync("chafa", ["-s", dim({ heightOffset }), target], {
+      stdio: "inherit",
+    });
     process.stdout.write("\u001b[m");
     return;
   }
@@ -442,35 +458,250 @@ function main(): void {
 
   if (type === "application/epub+zip") {
     const cache = getCachePath(file, ".jpg");
-    if (
-      !(() => {
-        try {
-          readFileSync(cache);
-          return true;
-        } catch {
-          return false;
-        }
-      })()
-    ) {
-      const list = spawnSync("unzip", ["-l", file], { encoding: "utf-8" });
-      const coverLine = list.stdout
-        ?.split("\n")
-        .find((l) => /cover\.(jpg|jpeg|png)/i.test(l));
-      if (coverLine) {
-        const coverPath = coverLine.trim().split(/\s+/).pop() ?? "";
-        if (coverPath)
-          spawnSync("unzip", ["-p", file, coverPath], {
-            stdio: ["ignore", "pipe", "ignore"],
-            encoding: "binary",
-          });
-      }
-    }
+    let hasCover = false;
+    let lineCount = 0;
+
+    const unescapeXml = (str: string): string => {
+      return str
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&#(\d+);/g, (_, dec) =>
+          String.fromCharCode(parseInt(dec, 10)),
+        )
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
+          String.fromCharCode(parseInt(hex, 16)),
+        );
+    };
+
     try {
-      const data = readFileSync(cache);
-      if (data.length > 0) renderImage(cache);
-      else throw new Error("empty");
-    } catch {
-      spawnSync("unzip", ["-l", file], { stdio: "inherit" });
+      const containerRes = spawnSync(
+        "unzip",
+        ["-p", file, "META-INF/container.xml"],
+        {
+          stdio: ["ignore", "pipe", "ignore"],
+          encoding: "utf-8",
+        },
+      );
+      if (containerRes.status === 0 && containerRes.stdout) {
+        const opfPathMatch = containerRes.stdout.match(
+          /<rootfile\s+[^>]*full-path=["']([^"']+)["']/i,
+        );
+        if (opfPathMatch) {
+          const opfPath = decodeURIComponent(opfPathMatch[1]);
+          let opfDir = "";
+          const lastSlash = opfPath.lastIndexOf("/");
+          if (lastSlash !== -1) {
+            opfDir = opfPath.slice(0, lastSlash + 1);
+          }
+
+          const opfRes = spawnSync("unzip", ["-p", file, opfPath], {
+            stdio: ["ignore", "pipe", "ignore"],
+            encoding: "utf-8",
+          });
+          if (opfRes.status === 0 && opfRes.stdout) {
+            const opfContent = opfRes.stdout;
+            const title = unescapeXml(
+              opfContent
+                .match(/<dc:title[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]
+                ?.trim() || "Unknown Title",
+            );
+            const creator = unescapeXml(
+              opfContent
+                .match(/<dc:creator[^>]*>([\s\S]*?)<\/dc:creator>/i)?.[1]
+                ?.trim() || "Unknown Author",
+            );
+            const publisher = unescapeXml(
+              opfContent
+                .match(/<dc:publisher[^>]*>([\s\S]*?)<\/dc:publisher>/i)?.[1]
+                ?.trim() || "",
+            );
+            const date = unescapeXml(
+              opfContent
+                .match(/<dc:date[^>]*>([\s\S]*?)<\/dc:date>/i)?.[1]
+                ?.trim() || "",
+            );
+            const language = unescapeXml(
+              opfContent
+                .match(/<dc:language[^>]*>([\s\S]*?)<\/dc:language>/i)?.[1]
+                ?.trim() || "",
+            );
+
+            console.log(`\x1b[1;36mTitle:      \x1b[0m${title}`);
+            console.log(`\x1b[1;36mAuthor:     \x1b[0m${creator}`);
+            lineCount = 3;
+            if (publisher) {
+              console.log(`\x1b[1;36mPublisher:  \x1b[0m${publisher}`);
+              lineCount++;
+            }
+            if (date) {
+              console.log(`\x1b[1;36mPublished:  \x1b[0m${date.split("T")[0]}`);
+              lineCount++;
+            }
+            if (language) {
+              console.log(`\x1b[1;36mLanguage:   \x1b[0m${language}`);
+              lineCount++;
+            }
+            console.log();
+
+            let coverHref: string | null = null;
+            const epub3CoverMatch =
+              opfContent.match(
+                /<item\s+[^>]*properties=["']cover(?:-image)?["'][^>]*href=["']([^"']+)["']/i,
+              ) ||
+              opfContent.match(
+                /<item\s+[^>]*href=["']([^"']+)["'][^>]*properties=["']cover(?:-image)?["']/i,
+              );
+            if (epub3CoverMatch) {
+              coverHref = epub3CoverMatch[1];
+            }
+
+            if (!coverHref) {
+              const metaCoverMatch =
+                opfContent.match(
+                  /<meta\s+[^>]*name=["']cover["'][^>]*content=["']([^"']+)["']/i,
+                ) ||
+                opfContent.match(
+                  /<meta\s+[^>]*content=["']([^"']+)["'][^>]*name=["']cover["']/i,
+                );
+              if (metaCoverMatch) {
+                const coverId = metaCoverMatch[1];
+                const escapedId = coverId.replace(
+                  /[-\/\\^$*+?.()|[\]{}]/g,
+                  "\\$&",
+                );
+                const itemRegex1 = new RegExp(
+                  `<item\\s+[^>]*id=["']${escapedId}["'][^>]*href=["']([^"']+)["']`,
+                  "i",
+                );
+                const itemRegex2 = new RegExp(
+                  `<item\\s+[^>]*href=["']([^"']+)["'][^>]*id=["']${escapedId}["']`,
+                  "i",
+                );
+                const itemMatch =
+                  opfContent.match(itemRegex1) || opfContent.match(itemRegex2);
+                if (itemMatch) {
+                  coverHref = itemMatch[1];
+                }
+              }
+            }
+
+            if (!coverHref) {
+              const guideCoverMatch =
+                opfContent.match(
+                  /<reference\s+[^>]*type=["']cover["'][^>]*href=["']([^"']+)["']/i,
+                ) ||
+                opfContent.match(
+                  /<reference\s+[^>]*href=["']([^"']+)["'][^>]*type=["']cover["']/i,
+                );
+              if (guideCoverMatch) {
+                coverHref = guideCoverMatch[1];
+              }
+            }
+
+            if (!coverHref) {
+              const fallbackIdMatch =
+                opfContent.match(
+                  /<item\s+[^>]*id=["'](?:cover|cover-image)["'][^>]*href=["']([^"']+)["']/i,
+                ) ||
+                opfContent.match(
+                  /<item\s+[^>]*href=["']([^"']+)["'][^>]*id=["'](?:cover|cover-image)["']/i,
+                );
+              if (fallbackIdMatch) {
+                coverHref = fallbackIdMatch[1];
+              }
+            }
+
+            if (!coverHref) {
+              const fallbackHrefMatch = opfContent.match(
+                /<item\s+[^>]*href=["']([^"']*(?:cover|thumbnail)[^"']*\.(?:jpg|jpeg|png|webp))["']/i,
+              );
+              if (fallbackHrefMatch) {
+                coverHref = fallbackHrefMatch[1];
+              }
+            }
+
+            if (coverHref) {
+              let resolvedCoverPath = opfDir + decodeURIComponent(coverHref);
+
+              if (
+                resolvedCoverPath.toLowerCase().endsWith(".xhtml") ||
+                resolvedCoverPath.toLowerCase().endsWith(".html")
+              ) {
+                const xhtmlRes = spawnSync(
+                  "unzip",
+                  ["-p", file, resolvedCoverPath],
+                  {
+                    stdio: ["ignore", "pipe", "ignore"],
+                    encoding: "utf-8",
+                  },
+                );
+                if (xhtmlRes.status === 0 && xhtmlRes.stdout) {
+                  const xhtmlContent = xhtmlRes.stdout;
+                  const innerImgHref =
+                    xhtmlContent.match(
+                      /<image\s+[^>]*xlink:href=["']([^"']+)["']/i,
+                    )?.[1] ||
+                    xhtmlContent.match(
+                      /<image\s+[^>]*href=["']([^"']+)["']/i,
+                    )?.[1] ||
+                    xhtmlContent.match(
+                      /<img\s+[^>]*src=["']([^"']+)["']/i,
+                    )?.[1];
+                  if (innerImgHref) {
+                    const xhtmlDir = dirname(resolvedCoverPath);
+                    resolvedCoverPath = join(
+                      xhtmlDir,
+                      decodeURIComponent(innerImgHref),
+                    );
+                  }
+                }
+              }
+
+              let cachedExists = false;
+              try {
+                statSync(cache);
+                cachedExists = true;
+              } catch {}
+
+              if (!cachedExists) {
+                const coverRes = spawnSync(
+                  "unzip",
+                  ["-p", file, resolvedCoverPath],
+                  {
+                    stdio: ["ignore", "pipe", "ignore"],
+                    encoding: null,
+                  },
+                );
+                if (
+                  coverRes.status === 0 &&
+                  coverRes.stdout &&
+                  coverRes.stdout.length > 0
+                ) {
+                  writeFileSync(cache, coverRes.stdout);
+                  hasCover = true;
+                }
+              } else {
+                hasCover = true;
+              }
+            }
+          }
+        }
+      }
+    } catch {}
+
+    if (hasCover) {
+      try {
+        renderImage(cache, { yOffset: lineCount, heightOffset: lineCount });
+      } catch {
+        spawnSync("unzip", ["-l", file], { stdio: "inherit" });
+      }
+    } else {
+      if (lineCount === 0) {
+        spawnSync("unzip", ["-l", file], { stdio: "inherit" });
+      }
     }
     return;
   }
