@@ -531,8 +531,6 @@ Each chapter file:
 ```markdown
 # {Chapter Title}
 
-Source: {chapter URL}
-
 {chapter body in markdown}
 ```
 
