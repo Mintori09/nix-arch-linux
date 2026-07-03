@@ -4,7 +4,7 @@ let
 in
 {
   home.packages = helpers.mkPythonScriptPackage {
-    name = "generate_toc";
+    name = "gentoc";
     entry = "${../../scripts/execute/generate_toc.py}";
   };
 }

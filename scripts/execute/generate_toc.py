@@ -1,6 +1,9 @@
 import os
 import re
 import sys
+import zipfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 from docx import Document
@@ -67,6 +70,60 @@ def process_html(file_path):
     return toc
 
 
+def process_epub(file_path):
+    """Scan and extract headings from EPUB file (ZIP with XHTML/HTML content)"""
+    toc = []
+    NS_CONTAINER = "urn:oasis:names:tc:opendocument:xmlns:container"
+
+    with zipfile.ZipFile(file_path, "r") as epub:
+        container_xml = epub.read("META-INF/container.xml")
+        container = ET.fromstring(container_xml)
+
+        rootfile = container.find(f".//{{{NS_CONTAINER}}}rootfile")
+        if rootfile is None:
+            print("❌ Error: Không tìm thấy OPF trong container.xml")
+            return []
+
+        opf_path = rootfile.get("full-path")
+        opf_dir = str(Path(opf_path).parent)
+
+        opf_content = epub.read(opf_path)
+        opf_root = ET.fromstring(opf_content)
+
+        opf_ns = opf_root.tag.split("}")[0].lstrip("{") if "}" in opf_root.tag else ""
+
+        def _tag(t):
+            return f"{{{opf_ns}}}{t}" if opf_ns else t
+
+        manifest = {}
+        for item in opf_root.findall(f".//{_tag('item')}") or []:
+            item_id = item.get("id")
+            href = item.get("href")
+            if item_id and href:
+                manifest[item_id] = href
+
+        spine_hrefs = []
+        for itemref in opf_root.findall(f".//{_tag('itemref')}") or []:
+            idref = itemref.get("idref")
+            if idref and idref in manifest:
+                spine_hrefs.append(manifest[idref])
+
+        for href in spine_hrefs:
+            content_path = str(Path(opf_dir) / href) if opf_dir else href
+            try:
+                data = epub.read(content_path)
+                soup = BeautifulSoup(data, "html.parser")
+                for tag in soup.find_all(re.compile(r"^h[1-6]$")):
+                    level = int(tag.name[1])
+                    title = tag.get_text().strip()
+                    if title:
+                        toc.append((level, title))
+            except KeyError:
+                continue
+
+    return toc
+
+
 def generate_toc(file_path):
     if not os.path.exists(file_path):
         print(f"❌ Error: Không tìm thấy file '{file_path}'")
@@ -84,9 +141,12 @@ def generate_toc(file_path):
     elif ext in [".html", ".htm"]:
         print(f"🌐 Đang xử lý file HTML: {file_path}")
         headings = process_html(file_path)
+    elif ext == ".epub":
+        print(f"📖 Đang xử lý file EPUB: {file_path}")
+        headings = process_epub(file_path)
     else:
         print(
-            "⚠️ Định dạng file không được hỗ trợ! Chỉ nhận file .md, .docx hoặc .html/.htm"
+            "⚠️ Định dạng file không được hỗ trợ! Chỉ nhận file .md, .docx, .html/.htm hoặc .epub"
         )
         return
 
