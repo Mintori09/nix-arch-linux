@@ -101,6 +101,7 @@
 
     # Custom packages (prebuilt from GitHub)
     bookokrat
+    dbx
     sd
     watchexec
   ];

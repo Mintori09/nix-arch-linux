@@ -107,6 +107,7 @@
           llm-agents.overlays.default
           (final: prev: {
             bookokrat = final.callPackage ./modules/packages/bookokrat.nix { };
+            dbx = final.callPackage ./modules/packages/dbx.nix { };
           })
         ];
         config.allowUnfree = true;
