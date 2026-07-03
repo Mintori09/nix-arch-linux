@@ -8,7 +8,7 @@
     ./foliate.nix
     ./drawio.nix
     ./localsend.nix
-    ./sioyek.nix
+    # ./sioyek.nix
     ./zathura.nix
   ];
 }
