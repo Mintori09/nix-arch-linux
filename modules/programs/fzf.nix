@@ -65,5 +65,8 @@ in
       "--bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
       "--preview 'preview {}'"
     ];
+    historyWidgetOptions = [
+      "--no-preview"
+    ];
   };
 }

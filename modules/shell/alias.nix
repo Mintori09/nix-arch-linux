@@ -11,7 +11,6 @@ in
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = "home-manager switch --flake ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
-    ytdl-music = "yt-dlp --no-config -x --audio-format mp3 --audio-quality 0 -o '%(title)s.%(ext)s' -P '.'";
 
     # NAVIGATION & SHELL BASICS
     ".." = "cd ..";
@@ -28,19 +27,13 @@ in
 
     # CLIPBOARD (WAYLAND)
     copy = "${c.clipCopy} -n";
-    pwdc = "pwd | tr -d '\\n' | ${c.clipCopy}";
     paste = c.clipPaste;
-    gcl = "qdbus org.kde.klipper /klipper org.kde.klipper.klipper.clearClipboardContents";
 
     # SYSTEM CONTROL
-    st = "systemctl-tui";
     lock = "loginctl lock-session";
     x11 = "env GDK_BACKEND=x11";
-    cleantrash = "echo -n \"Taking out the trash...\" | pv -qL 10; rm -rf $HOME/.local/share/Trash/files; fastfetch";
     remove_pacman_db_lock = "sudo rm /var/lib/pacman/db.lck";
     update-db = "update-desktop-database $HOME/.local/share/applications/";
-    set-wifi-priority = "nmcli connection modify $(nmcli -t -f ACTIVE,SSID dev wifi | grep \"^yes\" | cut -d: -f2) connection.autoconnect-priority 100";
-    reload-anyrun = "killall -9 anyrun; systemctl --user restart anyrun.service";
 
     # EDITORS & DOTFILES
     vim = "nvim";
@@ -52,7 +45,6 @@ in
 
     # SYNCTHING
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
-    nix-clean = "nix-collect-garbage --delete-older-than 2d --cores 16";
     syncthing-web = "xdg-open http://localhost:8384/#";
     xdgo = "xdg-open";
 
@@ -65,16 +57,12 @@ in
     vii = "trans -t vi -I";
     tt = "taskwarrior-tui";
 
-    fkill = "ps -ef | fzf | awk '{print $2}' | xargs kill";
-
     hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy; echo \"Copied to clipboard: $(wl-paste)\"";
 
     hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
     co = "wl-copy";
     cat = "bat";
-    ai-rename = "ai-renamer --provider=ollama ---model=gemma3:4b-it-qat --chars 100 --language English";
-
   };
 
   programs.bash = {

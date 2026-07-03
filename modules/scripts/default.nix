@@ -24,5 +24,6 @@
     ./rclone-sync.nix
     ./ai-bridge.nix
     ./read.nix
+    ./quick-aliases.nix
   ];
 }

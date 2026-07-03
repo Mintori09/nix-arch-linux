@@ -83,6 +83,7 @@ in
         export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#838ba7'
         export KEYTIMEOUT=1
         export FZF_COMPLETION_TRIGGER='${c.fzfCompletionTrigger}'
+        export FZF_CTRL_R_OPTS="--no-preview"
 
         # History
         setopt appendhistory sharehistory
@@ -150,6 +151,11 @@ in
           zle -N fzf-select
           bindkey -M viins '^O' fzf-select
           zvm_bindkey vicmd '^O' fzf-select
+
+          # Bind Ctrl+R to mcfly-fzf history search (zsh-vi-mode safe)
+          zvm_bindkey viins '^R' mcfly-fzf-history-widget
+          zvm_bindkey vicmd '^R' mcfly-fzf-history-widget
+          bindkey -M emacs '^R' mcfly-fzf-history-widget
         }
 
         function zvm_after_lazy_keybindings() {
@@ -196,10 +202,6 @@ in
           $path
         )
         export PATH
-
-        bindkey -M viins '^R' mcfly-fzf-history-widget
-        bindkey -M vicmd '^R' mcfly-fzf-history-widget
-        bindkey -M emacs '^R' mcfly-fzf-history-widget
 
         set_cdd() {
             CDD=$(basename "$PWD")
