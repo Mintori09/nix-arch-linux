@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
 import { basename, extname } from "node:path";
 import { isMain, readStdin } from "./utils.ts";
 
@@ -32,6 +33,7 @@ Options:
                      null, newline, space, comma, colon. Any other value used as
                      literal delimiter string.
   --print           Print commands without executing
+  --accept          Prompt [Y/n] before running each command
   --fail-fast       Stop on first failure
   --keep-empty      Keep empty items
   --batch           Run all items as a single command
@@ -120,6 +122,7 @@ export function parseArgs(): {
   json: boolean;
   split: string;
   print: boolean;
+  accept: boolean;
   batch: false | number;
   parallel: false | number;
   failFast: boolean;
@@ -132,6 +135,7 @@ export function parseArgs(): {
     json: false,
     split: "line",
     print: false,
+    accept: false,
     batch: false,
     parallel: false,
     failFast: false,
@@ -163,6 +167,11 @@ export function parseArgs(): {
     }
     if (arg === "--print") {
       opts.print = true;
+      i++;
+      continue;
+    }
+    if (arg === "--accept") {
+      opts.accept = true;
       i++;
       continue;
     }
@@ -244,6 +253,7 @@ export function parseArgs(): {
     json: opts.json as boolean,
     split: opts.split as string,
     print: opts.print as boolean,
+    accept: opts.accept as boolean,
     batch: opts.batch as number | false,
     parallel: opts.parallel as number | false,
     failFast: opts.failFast as boolean,
@@ -326,6 +336,45 @@ export function makeItems(values: string[]): Item[] {
 
 function quoteIfNeeded(s: string): string {
   return s.includes(" ") ? `'${s.replace(/'/g, "'\\''")}'` : s;
+}
+
+let _ttyState: string | null = null;
+
+function ttySave(): void {
+  if (_ttyState !== null) return;
+  const r = spawnSync("stty", ["-F", "/dev/tty", "-g"], { encoding: "utf8" });
+  if (r.status === 0 && r.stdout) _ttyState = r.stdout.trim();
+}
+
+function ttyRestore(): void {
+  if (_ttyState) {
+    spawnSync("stty", ["-F", "/dev/tty", _ttyState], { stdio: "pipe" });
+    _ttyState = null;
+  }
+}
+
+function confirm(cmd: string): boolean {
+  process.stderr.write(`\n$ ${cmd}\nAccept? [Y/n] `);
+  let fd: number;
+  try {
+    fd = fs.openSync("/dev/tty", "r+");
+  } catch {
+    return true;
+  }
+  const buf = Buffer.alloc(1);
+  try {
+    ttySave();
+    spawnSync("stty", ["-F", "/dev/tty", "raw", "-echo"], { stdio: "pipe" });
+    fs.readSync(fd, buf, 0, 1, null);
+  } catch {
+    ttyRestore();
+    fs.closeSync(fd);
+    return true;
+  }
+  ttyRestore();
+  fs.closeSync(fd);
+  process.stderr.write("\n");
+  return buf[0] === 0x0a || buf[0] === 0x79 || buf[0] === 0x59;
 }
 
 function toKebab(s: string): string {
@@ -451,6 +500,11 @@ function runCommands(
       continue;
     }
 
+    if (opts.accept && !confirm(cmd)) {
+      if (opts.failFast) return 1;
+      continue;
+    }
+
     if (!opts.quiet) {
       console.error(`[${item.number}] $ ${cmd}`);
     }
@@ -485,6 +539,10 @@ function runBatchCommands(
       console.log(cmd);
       continue;
     }
+    if (opts.accept && !confirm(cmd)) {
+      if (opts.failFast) return 1;
+      continue;
+    }
     if (!opts.quiet)
       console.error(`[${start + 1}-${start + chunk.length}] $ ${cmd}`);
     const result = spawnSync(cmd, [], { shell: true, stdio: "inherit" });
@@ -507,6 +565,13 @@ async function runParallelCommands(
     typeof opts.parallel === "number" && opts.parallel > 0
       ? opts.parallel
       : items.length;
+
+  if (opts.accept && !opts.print) {
+    items = items.filter((item) => {
+      const cmd = renderCommand(opts.command, item);
+      return confirm(cmd);
+    });
+  }
 
   let finalCode = 0;
   let aborted = false;
@@ -561,6 +626,17 @@ async function runParallelCommands(
 
 async function main(): Promise<number> {
   const opts = parseArgs();
+
+  if (opts.accept) {
+    process.on("SIGINT", () => {
+      ttyRestore();
+      process.exit(130);
+    });
+    process.on("SIGTERM", () => {
+      ttyRestore();
+      process.exit(143);
+    });
+  }
 
   const stdinText = await readStdin();
 

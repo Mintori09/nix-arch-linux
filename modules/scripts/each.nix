@@ -32,6 +32,7 @@ let
           '--parallel[run all items concurrently]' \
           '--parallel=[run at most N items concurrently]:concurrency limit' \
           '--print[print commands without executing]' \
+          '--accept[prompt Y/n before running each command]' \
           '--fail-fast[stop on first failed command]' \
           '--keep-empty[keep empty items]' \
           '--quiet[hide progress output]' \

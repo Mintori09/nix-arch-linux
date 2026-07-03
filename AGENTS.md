@@ -73,6 +73,12 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 `compress-wrap`, `direnv-wrap`, `rclone-sync`, `sleep-cycles`, `telepush`, `nano_usage`
 Shared helpers in `_helpers.nix`.
 
+Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging
+and zsh completion in `modules/scripts/<name>.nix`. When adding/modifying
+flags, update both the source and the zsh completion spec in the same PR.
+After editing, rebuild with `home-manager switch` to make changes available
+globally.
+
 ## Shell
 
 - Zsh primary (vi-mode, autosuggestions, fast-syntax-highlighting, fzf-tab, p10k prompt)
