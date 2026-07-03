@@ -268,11 +268,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1782981686,
-        "narHash": "sha256-+u0g5NKXt67e4MxX2hvECg0ArGRbtCJPgbH8tuTNraw=",
+        "lastModified": 1783064987,
+        "narHash": "sha256-uW5Yqg7ygU6NKD8uDuFaK2SdXVEN4bje3/DHFOxASVU=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "cb156ebf811904005c136ca42a467a6f12de6cb8",
+        "rev": "a2430dc43803db87dd99ae8a71fc8df41c5ac03a",
         "type": "github"
       },
       "original": {
@@ -288,11 +288,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782934515,
-        "narHash": "sha256-61JrAVt4UMHzgwlVpYdHJyEeDiiv/pVi50p4uemuMA4=",
+        "lastModified": 1782999098,
+        "narHash": "sha256-J1JY7ao5KLleBM5w4hbT7PPz3B13D6lllawljtWkKhk=",
         "owner": "natsukium",
         "repo": "mcp-servers-nix",
-        "rev": "d8569ee97f135adbf350f2e8d07d23a3c988e226",
+        "rev": "727bd6e871558049ee490a99dbca905270f1670c",
         "type": "github"
       },
       "original": {
@@ -392,11 +392,11 @@
     "skill-seekers": {
       "flake": false,
       "locked": {
-        "lastModified": 1782761491,
-        "narHash": "sha256-6kgAD0wRQhd2Kega3X1JfADhBNysY7YDCjtQsfsBS4U=",
+        "lastModified": 1783029059,
+        "narHash": "sha256-dBxVXyYzMHPtqoEmT6Tpu+9UpMVaeCneWOEMvidsljo=",
         "owner": "yusufkaraaslan",
         "repo": "Skill_Seekers",
-        "rev": "225999f53dc1a1c7d559e2ad48403fadf44e3e63",
+        "rev": "ea7324eea96a414e06ae1dd3673a086725502d6c",
         "type": "github"
       },
       "original": {
