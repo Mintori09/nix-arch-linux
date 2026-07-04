@@ -104,6 +104,7 @@
     dbx
     sd
     watchexec
+    rclone
   ];
 
 }
