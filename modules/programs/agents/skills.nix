@@ -80,6 +80,7 @@ in
       "changelog-generator"
       "commit-work"
       "skill-seekers"
+      "anki-vocab-generator"
     ];
 
     targets = {
