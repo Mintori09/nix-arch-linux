@@ -10,6 +10,14 @@ THUMB_DIR="$OUTPUT_DIR/thumbnails"
 
 mkdir -p "$THUMB_DIR"
 
+declare -A cached_durations
+CACHE_FILE="$THUMB_DIR/durations.cache"
+if [ -f "$CACHE_FILE" ]; then
+	while IFS='|' read -r name dur || [ -n "$name" ]; do
+		[ -n "$name" ] && cached_durations["$name"]="$dur"
+	done < "$CACHE_FILE"
+fi
+
 declare -A current_videos
 shopt -s nocaseglob
 for video in *.{mp4,mkv,avi,mov,flv,wmv}; do
@@ -55,16 +63,20 @@ for video in *.{mp4,mkv,avi,mov,flv,wmv}; do
 	thumb_path_md="thumbnails/${filename_no_ext}.jpg"
 	abs_path=$(realpath "$video")
 
-	duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 -sexagesimal "$video" 2>/dev/null | cut -d'.' -f1)
+	duration="${cached_durations[$filename_no_ext]}"
 	if [ -z "$duration" ]; then
-		duration="N/A"
-	else
-		if [[ $duration =~ ^([0-9]):([0-9]{2}):([0-9]{2})$ ]]; then
-			duration="0${BASH_REMATCH[1]}:${BASH_REMATCH[2]}:${BASH_REMATCH[3]}"
+		duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 -sexagesimal "$video" 2>/dev/null | cut -d'.' -f1)
+		if [ -z "$duration" ]; then
+			duration="N/A"
+		else
+			if [[ $duration =~ ^([0-9]):([0-9]{2}):([0-9]{2})$ ]]; then
+				duration="0${BASH_REMATCH[1]}:${BASH_REMATCH[2]}:${BASH_REMATCH[3]}"
+			fi
+			if [[ $duration == 00:* ]]; then
+				duration="${duration#00:}"
+			fi
 		fi
-		if [[ $duration == 00:* ]]; then
-			duration="${duration#00:}"
-		fi
+		cached_durations["$filename_no_ext"]="$duration"
 	fi
 
 	if [ -f "$thumb_path_real" ]; then
@@ -79,5 +91,13 @@ for video in *.{mp4,mkv,avi,mov,flv,wmv}; do
 	echo "| $filename | $duration | <img src=\"$thumb_path_md\" width=\"120\"> | [Open Video](<file://$abs_path>) |" >>"$OUTPUT_FILE"
 done
 shopt -u nocaseglob
+
+# Save durations for current videos and prune old entries
+rm -f "$CACHE_FILE"
+for name in "${!current_videos[@]}"; do
+	if [ -n "${cached_durations[$name]}" ]; then
+		echo "$name|${cached_durations[$name]}" >> "$CACHE_FILE"
+	fi
+done
 
 echo "Done! Generated output in: $OUTPUT_DIR"
