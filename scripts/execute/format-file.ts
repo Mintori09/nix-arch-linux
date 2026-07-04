@@ -297,11 +297,15 @@ async function runPrettierWorkerCli(argv: string[] = args): Promise<void> {
 async function formatFileWithPrettierInSubprocess(
   filePath: string,
 ): Promise<PrettierWorkerResult> {
-  const proc = spawn(process.argv[0], [fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath], {
-    cwd: process.cwd(),
-    env: process.env,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const proc = spawn(
+    process.argv[0],
+    [fileURLToPath(import.meta.url), PRETTIER_WORKER_ARG, filePath],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
   let stdout = "";
   let stderr = "";
@@ -310,7 +314,9 @@ async function formatFileWithPrettierInSubprocess(
   const exitCode = await new Promise<number>((r) => proc.on("close", r));
 
   if (exitCode !== 0) {
-    throw new Error(stderr.trim() || `Prettier worker exited with code ${exitCode}`);
+    throw new Error(
+      stderr.trim() || `Prettier worker exited with code ${exitCode}`,
+    );
   }
 
   return JSON.parse(stdout) as PrettierWorkerResult;
@@ -421,7 +427,9 @@ async function main(): Promise<void> {
         activeFiles.delete(filePath);
         stats.skipped++;
         completedFiles++;
-        await logResult(renderResultLine("Skipped", elapsed, filePath, "not found"));
+        await logResult(
+          renderResultLine("Skipped", elapsed, filePath, "not found"),
+        );
         continue;
       }
 
@@ -462,7 +470,9 @@ async function main(): Promise<void> {
           await withLock(async () => {
             clearSpinnerLine();
             console.error(error);
-            process.stdout.write(`${renderResultLine("Error", elapsed, filePath)}\n`);
+            process.stdout.write(
+              `${renderResultLine("Error", elapsed, filePath)}\n`,
+            );
             renderSpinner();
           });
         }
@@ -495,7 +505,9 @@ async function main(): Promise<void> {
           await withLock(async () => {
             clearSpinnerLine();
             console.error(error);
-            process.stdout.write(`${renderResultLine("Error", elapsed, filePath)}\n`);
+            process.stdout.write(
+              `${renderResultLine("Error", elapsed, filePath)}\n`,
+            );
             renderSpinner();
           });
         }

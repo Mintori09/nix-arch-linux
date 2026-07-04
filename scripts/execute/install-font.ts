@@ -1,6 +1,12 @@
 #!/usr/bin/env tsx
 
-import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, join, parse } from "node:path";
 import { homedir } from "node:os";
 import { spawnSync } from "node:child_process";

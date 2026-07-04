@@ -11,22 +11,33 @@ function fzfRgEdit(initialQuery: string): void {
     ? "bat --style=numbers --color=always --highlight-line {2} -- {1}"
     : "sed -n '$(( {2} > 5 ? {2} - 5 : 1 )),$(( {2} + 5 ))p' -- {1}";
 
-  const fzf = spawnSync("fzf", [
-    "--ansi",
-    "--disabled",
-    "--query", initialQuery,
-    "--bind", "change:reload:rg --column --line-number --no-heading --color=always --smart-case -- {q} || true",
-    "--bind", "enter:accept",
-    "--delimiter", ":",
-    "--nth", "4..",
-    "--preview", previewCmd,
-    "--preview-window", "up,60%,border-bottom,+{2}+3/3,~3",
-  ], {
-    env: { ...process.env, FZF_DEFAULT_COMMAND: rgCmd },
-    stdio: [undefined, "pipe", "pipe"],
-    encoding: "utf-8",
-    input: "",
-  });
+  const fzf = spawnSync(
+    "fzf",
+    [
+      "--ansi",
+      "--disabled",
+      "--query",
+      initialQuery,
+      "--bind",
+      "change:reload:rg --column --line-number --no-heading --color=always --smart-case -- {q} || true",
+      "--bind",
+      "enter:accept",
+      "--delimiter",
+      ":",
+      "--nth",
+      "4..",
+      "--preview",
+      previewCmd,
+      "--preview-window",
+      "up,60%,border-bottom,+{2}+3/3,~3",
+    ],
+    {
+      env: { ...process.env, FZF_DEFAULT_COMMAND: rgCmd },
+      stdio: [undefined, "pipe", "pipe"],
+      encoding: "utf-8",
+      input: "",
+    },
+  );
 
   result = fzf.stdout?.trim() ?? "";
 

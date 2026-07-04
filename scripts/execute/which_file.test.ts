@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { checkExecutable, checkReadable, findCommandInPath, resolveRealPath } from "./which_file.ts";
+import {
+  checkExecutable,
+  checkReadable,
+  findCommandInPath,
+  resolveRealPath,
+} from "./which_file.ts";
 import { join } from "node:path";
 import { mkdtemp, writeFile, chmod } from "node:fs/promises";
 import { rmSync } from "node:fs";

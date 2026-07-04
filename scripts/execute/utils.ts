@@ -40,11 +40,17 @@ export type SpawnResult = {
 export async function spawnAsync(
   command: string,
   cmdArgs: string[],
-  options?: { cwd?: string; env?: Record<string, string>; stdin?: "pipe" | "inherit" | "piped" },
+  options?: {
+    cwd?: string;
+    env?: Record<string, string>;
+    stdin?: "pipe" | "inherit" | "piped";
+  },
 ): Promise<SpawnResult> {
   const child = spawn(command, cmdArgs, {
     stdio: [
-      options?.stdin === "pipe" || options?.stdin === "piped" ? "pipe" : "ignore",
+      options?.stdin === "pipe" || options?.stdin === "piped"
+        ? "pipe"
+        : "ignore",
       "pipe",
       "pipe",
     ],
@@ -68,11 +74,18 @@ export async function spawnAsync(
 export function spawnSyncOutput(
   command: string,
   cmdArgs: string[],
-  options?: { cwd?: string; env?: Record<string, string>; stdin?: "pipe" | "inherit" | "piped"; input?: string },
+  options?: {
+    cwd?: string;
+    env?: Record<string, string>;
+    stdin?: "pipe" | "inherit" | "piped";
+    input?: string;
+  },
 ): SpawnResult {
   const result = spawnSync(command, cmdArgs, {
     stdio: [
-      options?.stdin === "pipe" || options?.stdin === "piped" ? "pipe" : "ignore",
+      options?.stdin === "pipe" || options?.stdin === "piped"
+        ? "pipe"
+        : "ignore",
       "pipe",
       "pipe",
     ],

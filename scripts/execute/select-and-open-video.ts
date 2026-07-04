@@ -3,7 +3,22 @@ import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
 function findAndOpenVideo(recursive: boolean): void {
-  const fdArgs = ["-t", "f", "-e", "mp4", "-e", "mkv", "-e", "avi", "-e", "mov", "-e", "webm", "-e", "flv"];
+  const fdArgs = [
+    "-t",
+    "f",
+    "-e",
+    "mp4",
+    "-e",
+    "mkv",
+    "-e",
+    "avi",
+    "-e",
+    "mov",
+    "-e",
+    "webm",
+    "-e",
+    "flv",
+  ];
   if (!recursive) fdArgs.push("--max-depth", "1");
 
   const fd = spawnSync("fd", fdArgs, { encoding: "utf-8" });
@@ -18,11 +33,15 @@ function findAndOpenVideo(recursive: boolean): void {
     return;
   }
 
-  const fzf = spawnSync("fzf", ["--style", "full", "--prompt", "Select a video: "], {
-    input: sorted,
-    stdio: ["pipe", "pipe", "pipe"],
-    encoding: "utf-8",
-  });
+  const fzf = spawnSync(
+    "fzf",
+    ["--style", "full", "--prompt", "Select a video: "],
+    {
+      input: sorted,
+      stdio: ["pipe", "pipe", "pipe"],
+      encoding: "utf-8",
+    },
+  );
 
   const file = fzf.stdout?.trim();
   if (!file) {
@@ -53,7 +72,10 @@ function main(): void {
 
   for (const arg of cliArgs) {
     if (arg === "-r") recursive = true;
-    else if (arg === "-h") { showHelp(); return; }
+    else if (arg === "-h") {
+      showHelp();
+      return;
+    }
   }
 
   findAndOpenVideo(recursive);

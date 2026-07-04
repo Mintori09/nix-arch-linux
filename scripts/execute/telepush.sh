@@ -4,22 +4,22 @@ TOKEN=${TELEGRAM_TOKEN_NOVEL_BOT}
 CHAT_ID=${TELEGRAM_GROUP_NOVEL_BOT}
 FILE=$1
 
-if [[ -z "$TOKEN" ]]; then
+if [[ -z $TOKEN ]]; then
 	echo "Lỗi: Biến môi trường TELEGRAM_TOKEN_NOVEL_BOT chưa được thiết lập!"
 	exit 1
 fi
 
-if [[ -z "$CHAT_ID" ]]; then
+if [[ -z $CHAT_ID ]]; then
 	echo "Lỗi: Biến môi trường TELEGRAM_GROUP_NOVEL_BOT chưa được thiết lập!"
 	exit 1
 fi
 
-if [[ -z "$FILE" ]]; then
+if [[ -z $FILE ]]; then
 	echo "Lỗi: Thiếu đường dẫn file. Cách dùng: $0 <file>"
 	exit 1
 fi
 
-if [[ ! -f "$FILE" ]]; then
+if [[ ! -f $FILE ]]; then
 	echo "Lỗi: File '$FILE' không tồn tại!"
 	echo "  Đường dẫn tuyệt đối: $(readlink -f "$FILE" 2>/dev/null || echo 'Không thể xác định')"
 	echo "  Thư mục hiện tại: $(pwd)"

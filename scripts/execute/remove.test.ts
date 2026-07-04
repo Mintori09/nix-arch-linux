@@ -7,7 +7,16 @@ it("validateFlags - accepts valid flags", () => {
 });
 
 it("validateFlags - accepts all valid flags together", () => {
-  validateFlags(new Set(["-r", "--recursive", "-n", "--dry-run", "-e", "--remove-empty-dirs"]));
+  validateFlags(
+    new Set([
+      "-r",
+      "--recursive",
+      "-n",
+      "--dry-run",
+      "-e",
+      "--remove-empty-dirs",
+    ]),
+  );
 });
 
 it("validateFlags - accepts empty set", () => {

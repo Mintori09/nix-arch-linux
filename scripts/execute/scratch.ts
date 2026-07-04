@@ -1,25 +1,52 @@
 #!/usr/bin/env tsx
 import { spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { isMain, args, readStdin } from "./utils.ts";
 
 const SCRATCH_DIR = "/tmp/my-scratchpads";
 
 const EXT_BY_TYPE: Record<string, string> = {
-  javascript: "js", python: "py", bash: "sh", typescript: "ts",
-  ruby: "rb", php: "php", lua: "lua", perl: "pl", zsh: "zsh",
-  json: "json", yaml: "yml", toml: "toml", xml: "xml",
-  html: "html", css: "css", markdown: "md",
+  javascript: "js",
+  python: "py",
+  bash: "sh",
+  typescript: "ts",
+  ruby: "rb",
+  php: "php",
+  lua: "lua",
+  perl: "pl",
+  zsh: "zsh",
+  json: "json",
+  yaml: "yml",
+  toml: "toml",
+  xml: "xml",
+  html: "html",
+  css: "css",
+  markdown: "md",
 };
 
 const SHEBANG_BY_EXT: Record<string, string> = {
-  sh: "#!/bin/bash", bash: "#!/bin/bash",
-  py: "#!/usr/bin/env python3", python: "#!/usr/bin/env python3",
-  js: "#!/usr/bin/env node", node: "#!/usr/bin/env node",
-  rb: "#!/usr/bin/env ruby", ruby: "#!/usr/bin/env ruby",
-  pl: "#!/usr/bin/env perl", perl: "#!/usr/bin/env perl",
-   ts: "#!/usr/bin/env tsx", typescript: "#!/usr/bin/env tsx",
-  lua: "#!/usr/bin/env lua", php: "#!/usr/bin/env php",
+  sh: "#!/bin/bash",
+  bash: "#!/bin/bash",
+  py: "#!/usr/bin/env python3",
+  python: "#!/usr/bin/env python3",
+  js: "#!/usr/bin/env node",
+  node: "#!/usr/bin/env node",
+  rb: "#!/usr/bin/env ruby",
+  ruby: "#!/usr/bin/env ruby",
+  pl: "#!/usr/bin/env perl",
+  perl: "#!/usr/bin/env perl",
+  ts: "#!/usr/bin/env tsx",
+  typescript: "#!/usr/bin/env tsx",
+  lua: "#!/usr/bin/env lua",
+  php: "#!/usr/bin/env php",
   zsh: "#!/bin/zsh",
 };
 
@@ -33,7 +60,8 @@ function getShebangByExtension(ext: string): string {
 
 function detectExtensionFromContent(content: string): string {
   const magika = spawnSync("magika", ["-", "--json"], {
-    input: content, encoding: "utf-8",
+    input: content,
+    encoding: "utf-8",
   });
   if (magika.status === 0) {
     try {
@@ -46,10 +74,12 @@ function detectExtensionFromContent(content: string): string {
     } catch {}
   }
 
-  if (content.includes("<html") || content.includes("<!DOCTYPE html")) return "html";
+  if (content.includes("<html") || content.includes("<!DOCTYPE html"))
+    return "html";
 
   const fileCmd = spawnSync("file", ["--brief", "--extension", "-"], {
-    input: content, encoding: "utf-8",
+    input: content,
+    encoding: "utf-8",
   });
   if (fileCmd.status === 0) {
     const ext = fileCmd.stdout?.trim().split("/")[0] ?? "";
@@ -79,17 +109,23 @@ function isStdinPresent(): boolean {
   }
 }
 
-function persistScratchpad(sourcePath: string, originalFilename: string, extension: string): void {
+function persistScratchpad(
+  sourcePath: string,
+  originalFilename: string,
+  extension: string,
+): void {
   try {
     const content = readFileSync(sourcePath, "utf-8");
     if (!content.trim()) return;
 
-process.stdout.write("\nSave scratch file to current directory? [y/N]: ");
-  const buf = spawnSync("bash", ["-c", 'read -n1 ans && echo "$ans"'], { encoding: "utf-8" });
-  const resp = buf.stdout?.trim() ?? "";
+    process.stdout.write("\nSave scratch file to current directory? [y/N]: ");
+    const buf = spawnSync("bash", ["-c", 'read -n1 ans && echo "$ans"'], {
+      encoding: "utf-8",
+    });
+    const resp = buf.stdout?.trim() ?? "";
 
-  if (resp.toLowerCase() === "y") {
-    const cwd = process.cwd();
+    if (resp.toLowerCase() === "y") {
+      const cwd = process.cwd();
       let dest = `${cwd}/${sourcePath.split("/").pop()}`;
       if (existsSync(dest)) {
         dest = `${cwd}/${originalFilename}-${Math.floor(Date.now() / 1000)}.${extension}`;
@@ -139,7 +175,9 @@ async function main(): Promise<void> {
 
   process.on("exit", () => {
     persistScratchpad(scratchPath, baseFilename, extension);
-    try { unlinkSync(scratchPath); } catch {}
+    try {
+      unlinkSync(scratchPath);
+    } catch {}
   });
   process.on("SIGINT", () => process.exit(0));
   process.on("SIGTERM", () => process.exit(0));

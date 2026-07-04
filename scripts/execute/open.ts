@@ -103,7 +103,9 @@ type PlanOpenTargetOptions = {
   sizeBytes: number;
 };
 
-export function parseOpenConfig(env: Record<string, string | undefined>): OpenConfig {
+export function parseOpenConfig(
+  env: Record<string, string | undefined>,
+): OpenConfig {
   const parsedLargeTextBytes = Number.parseInt(
     env.OPEN_LARGE_TEXT_BYTES ?? "",
     10,
@@ -236,7 +238,9 @@ export async function buildOpenCommand(
   }
 
   const stats = statSync(target);
-  const mimeType = stats.isDirectory() ? "inode/directory" : await detectMimeType(target);
+  const mimeType = stats.isDirectory()
+    ? "inode/directory"
+    : await detectMimeType(target);
 
   return planOpenTarget({
     config,

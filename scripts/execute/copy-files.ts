@@ -566,7 +566,9 @@ async function main() {
       parsedArgs.contentPathMode,
     );
 
-    const child = spawn("wl-copy", [], { stdio: ["pipe", "inherit", "inherit"] });
+    const child = spawn("wl-copy", [], {
+      stdio: ["pipe", "inherit", "inherit"],
+    });
     child.stdin.write(clipboardContent);
     child.stdin.end();
     const exitCode = await new Promise<number>((r) => child.on("close", r));
@@ -609,5 +611,8 @@ async function main() {
 }
 
 if (isMain(import.meta.url)) {
-  main().catch((err: unknown) => { console.error(err); process.exit(1); });
+  main().catch((err: unknown) => {
+    console.error(err);
+    process.exit(1);
+  });
 }

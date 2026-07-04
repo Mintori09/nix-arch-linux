@@ -238,7 +238,11 @@ it("auditExtractedTree - rejects symlinks that escape the extracted root", async
   await mkdir(path.join(root, "usr/bin"), { recursive: true });
   await symlink("/etc/passwd", path.join(root, "usr/bin/hello"));
 
-  await assert.rejects(() => auditExtractedTree(root), Error, "Symlink escapes");
+  await assert.rejects(
+    () => auditExtractedTree(root),
+    Error,
+    "Symlink escapes",
+  );
 });
 
 it("auditExtractedTree - rejects setuid files", async () => {
@@ -250,7 +254,11 @@ it("auditExtractedTree - rejects setuid files", async () => {
   assert.strictEqual(chmodProc.status, 0);
   assert.strictEqual((await lstat(file)).mode & 0o4000, 0o4000);
 
-  await assert.rejects(() => auditExtractedTree(root), Error, "setuid or setgid");
+  await assert.rejects(
+    () => auditExtractedTree(root),
+    Error,
+    "setuid or setgid",
+  );
 });
 
 it("install lifecycle - installs into XDG-managed paths and rewrites desktop entries", async () => {
@@ -278,16 +286,8 @@ it("install lifecycle - installs into XDG-managed paths and rewrites desktop ent
   });
 
   const wrapperPath = path.join(binDir, "hello-rpm");
-  const desktopPath = path.join(
-    dataHome,
-    "applications",
-    "hello-rpm.desktop",
-  );
-  const manifestPath = path.join(
-    stateHome,
-    "irpm/installs",
-    "hello-rpm.json",
-  );
+  const desktopPath = path.join(dataHome, "applications", "hello-rpm.desktop");
+  const manifestPath = path.join(stateHome, "irpm/installs", "hello-rpm.json");
   const stageExecutable = path.join(
     dataHome,
     "irpm/packages/hello-rpm/root/usr/bin/hello-rpm",
@@ -409,5 +409,8 @@ it("install lifecycle - remove deletes only manifest-owned artifacts", async () 
 
   assert.strictEqual(existsSync(path.join(binDir, "hello-rpm")), false);
   assert.strictEqual(existsSync(path.join(binDir, "keep-me")), true);
-  assert.strictEqual(existsSync(path.join(stateHome, "irpm/installs/hello-rpm.json")), false);
+  assert.strictEqual(
+    existsSync(path.join(stateHome, "irpm/installs/hello-rpm.json")),
+    false,
+  );
 });

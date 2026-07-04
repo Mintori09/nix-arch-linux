@@ -242,7 +242,10 @@ export function parseCliArgs(argv: string[]): ParsedCli {
     if (
       positionals.length === 0 &&
       !isFlag(arg) &&
-      (arg === "extract" || arg === "install" || arg === "list" || arg === "remove")
+      (arg === "extract" ||
+        arg === "install" ||
+        arg === "list" ||
+        arg === "remove")
     ) {
       command = arg;
       install = arg === "install";
@@ -302,7 +305,9 @@ async function runCommand(
     proc.stdout!.on("data", (d: Buffer) => (stdout += d.toString()));
   }
 
-  const exitCode = await new Promise<number>((resolve) => proc.on("close", resolve));
+  const exitCode = await new Promise<number>((resolve) =>
+    proc.on("close", resolve),
+  );
 
   if (exitCode !== 0) {
     throw new CommandExecutionError(command, exitCode, shortStderr(stderr));
@@ -330,12 +335,19 @@ export function findUnsafeArchiveEntries(entries: readonly string[]): string[] {
   });
 }
 
-export function validateInstallableEntries(entries: readonly string[]): string[] {
+export function validateInstallableEntries(
+  entries: readonly string[],
+): string[] {
   return entries.filter((entry) => {
     const trimmed = normalizeArchiveEntry(entry.trim());
     if (!trimmed || trimmed === ".") return false;
 
-    if (DENIED_PREFIXES.some((prefix) => trimmed === prefix.slice(0, -1) || trimmed.startsWith(prefix))) {
+    if (
+      DENIED_PREFIXES.some(
+        (prefix) =>
+          trimmed === prefix.slice(0, -1) || trimmed.startsWith(prefix),
+      )
+    ) {
       return true;
     }
 
@@ -555,10 +567,16 @@ async function ensureDir(dir: string): Promise<void> {
 
 function isPathWithin(parent: string, child: string): boolean {
   const relative = path.relative(parent, child);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }
 
-async function walkRelativePaths(root: string, current = ""): Promise<string[]> {
+async function walkRelativePaths(
+  root: string,
+  current = "",
+): Promise<string[]> {
   const absoluteCurrent = path.join(root, current);
   const entries = await readdir(absoluteCurrent, { withFileTypes: true });
   const results: string[] = [];
@@ -629,7 +647,10 @@ async function collectExecutableFiles(root: string): Promise<string[]> {
   return candidates.sort();
 }
 
-async function collectFilesUnder(root: string, relativeDir: string): Promise<string[]> {
+async function collectFilesUnder(
+  root: string,
+  relativeDir: string,
+): Promise<string[]> {
   const absoluteDir = path.join(root, relativeDir);
   if (!existsSync(absoluteDir)) return [];
 
@@ -655,7 +676,9 @@ async function collectDataDirectories(root: string): Promise<string[]> {
     }
   }
 
-  return candidates.filter((dir, index, all) => existsSync(dir) && all.indexOf(dir) === index);
+  return candidates.filter(
+    (dir, index, all) => existsSync(dir) && all.indexOf(dir) === index,
+  );
 }
 
 async function collectLibraryDirectories(root: string): Promise<string[]> {
@@ -676,7 +699,9 @@ async function collectLibraryDirectories(root: string): Promise<string[]> {
     }
   }
 
-  return candidates.filter((dir, index, all) => existsSync(dir) && all.indexOf(dir) === index);
+  return candidates.filter(
+    (dir, index, all) => existsSync(dir) && all.indexOf(dir) === index,
+  );
 }
 
 function buildWrapperScript(options: {
@@ -792,7 +817,9 @@ async function publishDesktopEntries(options: {
   }
 
   await ensureDir(options.layout.applicationsDir);
-  const desktopFiles = (await collectFilesUnder(options.stageDir, "usr/share/applications"))
+  const desktopFiles = (
+    await collectFilesUnder(options.stageDir, "usr/share/applications")
+  )
     .filter((absolute) => absolute.endsWith(".desktop"))
     .sort();
   const desktopEntries: string[] = [];
@@ -833,7 +860,10 @@ async function publishSymlinkTree(options: {
   for (const sourcePath of files) {
     const stats = await lstat(sourcePath);
     if (!stats.isFile() && !stats.isSymbolicLink()) continue;
-    const targetPath = path.join(options.destinationDir, path.basename(sourcePath));
+    const targetPath = path.join(
+      options.destinationDir,
+      path.basename(sourcePath),
+    );
     await ensurePublishTargetAvailable(targetPath);
     await symlink(sourcePath, targetPath);
     published.push(targetPath);
@@ -842,7 +872,11 @@ async function publishSymlinkTree(options: {
   return published;
 }
 
-async function removeFileIfManaged(filePath: string, installId: string, stageDir: string): Promise<void> {
+async function removeFileIfManaged(
+  filePath: string,
+  installId: string,
+  stageDir: string,
+): Promise<void> {
   if (!existsSync(filePath)) return;
 
   const stats = await lstat(filePath);
@@ -857,18 +891,23 @@ async function removeFileIfManaged(filePath: string, installId: string, stageDir
 
   if (stats.isFile()) {
     const body = await readFile(filePath, "utf8").catch(() => "");
-    if (body.startsWith(`${MANAGED_HEADER} ${installId}`) || body.includes(`# managed-by-irpm ${installId}`)) {
+    if (
+      body.startsWith(`${MANAGED_HEADER} ${installId}`) ||
+      body.includes(`# managed-by-irpm ${installId}`)
+    ) {
       await rm(filePath, { force: true });
     }
   }
 }
 
 function sanitizeInstallId(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/\.rpm$/i, "")
-    .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "rpm-package";
+  return (
+    value
+      .toLowerCase()
+      .replace(/\.rpm$/i, "")
+      .replace(/[^a-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "rpm-package"
+  );
 }
 
 async function hashFile(filePath: string): Promise<string> {
@@ -927,7 +966,8 @@ export async function installExtractedTree(
 ): Promise<InstallExtractedTreeResult> {
   const env = options.env ?? process.env;
   const layout = resolveXdgLayout(env);
-  const installId = options.installId ?? (await buildInstallId(options.rpmPath));
+  const installId =
+    options.installId ?? (await buildInstallId(options.rpmPath));
   const manifestPath = path.join(layout.manifestsDir, `${installId}.json`);
   const stageDir = path.join(layout.installStoreDir, installId, "root");
   const entries = await walkRelativePaths(options.extractedRoot);
@@ -1141,21 +1181,21 @@ if (isMain(import.meta.url)) {
     try {
       await run();
     } catch (err) {
-    if (err instanceof CommandExecutionError) {
-      console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`);
-      console.error(
-        `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
-      );
+      if (err instanceof CommandExecutionError) {
+        console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`);
+        console.error(
+          `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}\n${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}\n${COLORS.YELLOW}stderr:${COLORS.NC}\n${err.stderr}`,
+        );
+        process.exit(1);
+      }
+
+      if (err instanceof CliError) {
+        console.error(`${COLORS.RED}error:${COLORS.NC} ${err.message}`);
+        process.exit(err.exitCode);
+      }
+
+      console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`, err);
       process.exit(1);
     }
-
-    if (err instanceof CliError) {
-      console.error(`${COLORS.RED}error:${COLORS.NC} ${err.message}`);
-      process.exit(err.exitCode);
-    }
-
-    console.error(`\n${COLORS.RED}RPM processing failed:${COLORS.NC}`, err);
-    process.exit(1);
-  }
   })();
 }

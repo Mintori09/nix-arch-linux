@@ -49,13 +49,13 @@ detect_extension_from_content() {
 	if command -v magika >/dev/null 2>&1; then
 		local type_label
 		type_label=$(echo "$content" | magika - --json 2>/dev/null | jq -r '.[0].output.ct_label // empty' 2>/dev/null || echo "")
-		if [[ -n "$type_label" && "$type_label" != "null" ]]; then
+		if [[ -n $type_label && $type_label != "null" ]]; then
 			get_extension_by_type "$type_label"
 			return
 		fi
 	fi
 
-	if [[ "$content" =~ "<html" || "$content" =~ "<!DOCTYPE html" ]]; then
+	if [[ $content =~ "<html" || $content =~ "<!DOCTYPE html" ]]; then
 		echo "html"
 		return
 	fi
@@ -63,7 +63,7 @@ detect_extension_from_content() {
 	if command -v file >/dev/null 2>&1; then
 		local file_ext
 		file_ext=$(echo "$content" | file --brief --extension - | cut -d'/' -f1)
-		[[ "$file_ext" != "???" ]] && echo "$file_ext"
+		[[ $file_ext != "???" ]] && echo "$file_ext"
 	fi
 }
 
@@ -73,7 +73,7 @@ apply_executable_environment() {
 	local shebang
 	shebang=$(get_shebang_by_extension "$extension")
 
-	[[ -z "$shebang" ]] && return
+	[[ -z $shebang ]] && return
 
 	if ! head -1 "$file_path" | grep -q "^#!"; then
 		local temp_file
@@ -96,15 +96,15 @@ persist_scratchpad() {
 	local original_filename="$2"
 	local extension="$3"
 
-	if [[ ! -s "$source_path" ]]; then
+	if [[ ! -s $source_path ]]; then
 		return
 	fi
 
 	echo ""
 	read -p "Save scratch file to current directory? [y/N]: " response
-	if [[ "$response" =~ ^[Yy]$ ]]; then
+	if [[ $response =~ ^[Yy]$ ]]; then
 		local destination="./$(basename "$source_path")"
-		if [[ -e "$destination" ]]; then
+		if [[ -e $destination ]]; then
 			destination="./${original_filename}-$(date +%s).${extension}"
 		fi
 		cp "$source_path" "$destination"
@@ -125,20 +125,20 @@ main() {
 		local content
 		content=$(cat)
 
-		if [[ -n "$1" ]]; then
+		if [[ -n $1 ]]; then
 			extension="$1"
 		else
 			extension=$(detect_extension_from_content "$content")
 		fi
 
-		if [[ -n "$extension" ]]; then
+		if [[ -n $extension ]]; then
 			scratch_path="${SCRATCH_DIR}/${base_filename}.${extension}"
 		else
 			scratch_path="${SCRATCH_DIR}/${base_filename}"
 		fi
 
 		echo "$content" >"$scratch_path"
-		[[ -n "$extension" ]] && apply_executable_environment "$scratch_path" "$extension"
+		[[ -n $extension ]] && apply_executable_environment "$scratch_path" "$extension"
 	else
 		extension="${1:-sh}"
 		base_filename="${2:-scratch-$timestamp}"
@@ -146,7 +146,7 @@ main() {
 
 		local shebang
 		shebang=$(get_shebang_by_extension "$extension")
-		if [[ -n "$shebang" ]]; then
+		if [[ -n $shebang ]]; then
 			echo "$shebang" >"$scratch_path"
 			echo "" >>"$scratch_path"
 			chmod +x "$scratch_path"

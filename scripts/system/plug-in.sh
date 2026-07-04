@@ -30,7 +30,7 @@ if command -v kscreen-doctor &>/dev/null && command -v jq &>/dev/null; then
 fi
 
 # DPMS / screen blank: restore longer timeouts for plugged-in use
-if [[ -n "$DISPLAY" ]] && command -v xset &>/dev/null; then
+if [[ -n $DISPLAY ]] && command -v xset &>/dev/null; then
 	xset dpms 300 600 900 2>/dev/null || true
 fi
 

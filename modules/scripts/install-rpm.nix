@@ -63,12 +63,14 @@ let
   };
 in
 {
-  home.packages = helpers.mkScriptPackage {
-    name = "irpm";
-    entry = "${../../scripts/execute/install-rpm.ts}";
-    extraPathPackages = [
-      pkgs.rpm
-      pkgs.cpio
-    ];
-  } ++ [ irpmCompletion ];
+  home.packages =
+    helpers.mkScriptPackage {
+      name = "irpm";
+      entry = "${../../scripts/execute/install-rpm.ts}";
+      extraPathPackages = [
+        pkgs.rpm
+        pkgs.cpio
+      ];
+    }
+    ++ [ irpmCompletion ];
 }

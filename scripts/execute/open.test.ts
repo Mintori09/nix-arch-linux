@@ -147,13 +147,10 @@ it("buildOpenCommand - routes URLs to xdg-open without filesystem checks", async
 });
 
 it("buildOpenCommand - routes project mode to zeditor", async () => {
-  assert.deepEqual(
-    await buildOpenCommand(".", parseOpenConfig({}), true),
-    {
-      args: ["zeditor", "."],
-      command: "zeditor",
-      detach: true,
-      kind: "project-editor",
-    },
-  );
+  assert.deepEqual(await buildOpenCommand(".", parseOpenConfig({}), true), {
+    args: ["zeditor", "."],
+    command: "zeditor",
+    detach: true,
+    kind: "project-editor",
+  });
 });

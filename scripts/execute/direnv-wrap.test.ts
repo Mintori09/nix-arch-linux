@@ -43,5 +43,8 @@ it("getRuntimePkgs - returns nix pkgs for flutter", () => {
 });
 
 it("getRuntimePkgs - falls back to nodejs for unknown language", () => {
-  assert.strictEqual((getRuntimePkgs as (lang: string) => string)("unknown"), "nodejs");
+  assert.strictEqual(
+    (getRuntimePkgs as (lang: string) => string)("unknown"),
+    "nodejs",
+  );
 });

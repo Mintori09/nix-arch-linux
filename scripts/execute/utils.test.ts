@@ -30,7 +30,7 @@ it("spawnSyncOutput - runs echo and captures stdout", () => {
 });
 
 it("spawnSyncOutput - captures stderr output", () => {
-  const result = spawnSyncOutput("sh", ["-c", 'echo error >&2']);
+  const result = spawnSyncOutput("sh", ["-c", "echo error >&2"]);
   assert.strictEqual(result.exitCode, 0);
   assert.strictEqual(result.stderr.trim(), "error");
 });

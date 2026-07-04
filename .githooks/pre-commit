@@ -4,7 +4,7 @@ set -euo pipefail
 staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
 
 if [ -z "$staged_files" ]; then
-    exit 0
+	exit 0
 fi
 
 cd "$(git rev-parse --show-toplevel)"
@@ -12,39 +12,40 @@ cd "$(git rev-parse --show-toplevel)"
 formatted=false
 
 format_file() {
-    local file="$1"
-    case "$file" in
-        *.nix)       nixfmt "$file" 2>/dev/null && return 0 ;;
-        *.py)        ruff format "$file" 2>/dev/null && return 0 ;;
-        *.sh|*.bash) shfmt -w "$file" 2>/dev/null && return 0 ;;
-        *.json|*.yaml|*.yml|*.md|*.ts|*.js|*.tsx|*.jsx|*.css|*.html|*.mjs|*.cjs|*.svelte|*.vue|*.astro)
-                     prettier --write "$file" 2>/dev/null && return 0 ;;
-        *.toml)      taplo format "$file" 2>/dev/null && return 0 ;;
-        *.lua)       stylua "$file" 2>/dev/null && return 0 ;;
-        *.go)        gofumpt -w "$file" 2>/dev/null && return 0 ;;
-        *.rs)        rustfmt "$file" 2>/dev/null && return 0 ;;
-    esac
-    return 1
+	local file="$1"
+	case "$file" in
+	*.nix) nixfmt "$file" 2>/dev/null && return 0 ;;
+	*.py) ruff format "$file" 2>/dev/null && return 0 ;;
+	*.sh | *.bash) shfmt -w "$file" 2>/dev/null && return 0 ;;
+	*.json | *.yaml | *.yml | *.md | *.ts | *.js | *.tsx | *.jsx | *.css | *.html | *.mjs | *.cjs | *.svelte | *.vue | *.astro)
+		prettier --write "$file" 2>/dev/null && return 0
+		;;
+	*.toml) taplo format "$file" 2>/dev/null && return 0 ;;
+	*.lua) stylua "$file" 2>/dev/null && return 0 ;;
+	*.go) gofumpt -w "$file" 2>/dev/null && return 0 ;;
+	*.rs) rustfmt "$file" 2>/dev/null && return 0 ;;
+	esac
+	return 1
 }
 
 for file in $staged_files; do
-    if [ -f "$file" ] && format_file "$file"; then
-        formatted=true
-    fi
+	if [ -f "$file" ] && format_file "$file"; then
+		formatted=true
+	fi
 done
 
 if [ "$formatted" = true ]; then
-    echo "Formatted staged files"
-    # Only re-stage originally staged files, not all modified files
-    for file in $staged_files; do
-        git add "$file"
-    done
+	echo "Formatted staged files"
+	# Only re-stage originally staged files, not all modified files
+	for file in $staged_files; do
+		git add "$file"
+	done
 fi
 
 echo "Running nix flake check..."
 if ! nix flake check 2>&1; then
-    echo "nix flake check failed. Commit aborted."
-    exit 1
+	echo "nix flake check failed. Commit aborted."
+	exit 1
 fi
 
 echo "Pre-commit checks passed"

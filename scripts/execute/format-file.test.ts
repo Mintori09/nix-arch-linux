@@ -38,20 +38,35 @@ it("formatElapsedDuration - switches to seconds for longer operations", () => {
 });
 
 it("buildSpinnerLabel - shows a single active file directly", () => {
-  assert.strictEqual(buildSpinnerLabel(["scripts/execute/format-file.ts"], 0, 1), "1/1 formatting: scripts/execute/format-file.ts");
+  assert.strictEqual(
+    buildSpinnerLabel(["scripts/execute/format-file.ts"], 0, 1),
+    "1/1 formatting: scripts/execute/format-file.ts",
+  );
 });
 
 it("buildSpinnerLabel - summarizes multiple active files into one line", () => {
-  assert.strictEqual(buildSpinnerLabel(["a.ts", "b.ts", "c.ts", "d.ts"], 2, 6), "3/6 formatting: a.ts, b.ts +2");
+  assert.strictEqual(
+    buildSpinnerLabel(["a.ts", "b.ts", "c.ts", "d.ts"], 2, 6),
+    "3/6 formatting: a.ts, b.ts +2",
+  );
 });
 
 it("terminal output helpers - renders a spinner frame with progress label on one line", () => {
-  assert.strictEqual(renderSpinnerFrame(0, ["a.ts", "b.ts"], 0, 2), "\r\x1b[2K\x1b[90m-\x1b[0m 1/2 formatting: a.ts, b.ts");
+  assert.strictEqual(
+    renderSpinnerFrame(0, ["a.ts", "b.ts"], 0, 2),
+    "\r\x1b[2K\x1b[90m-\x1b[0m 1/2 formatting: a.ts, b.ts",
+  );
 });
 
 it("terminal output helpers - renders result lines without the legacy START prefix", () => {
-  assert.strictEqual(renderResultLine("Updated", "12.3ms", "a.ts"), "\x1b[32mUpdated\x1b[0m (12.3ms): a.ts");
-  assert.strictEqual(renderResultLine("Updated", "12.3ms", "a.ts").includes("START"), false);
+  assert.strictEqual(
+    renderResultLine("Updated", "12.3ms", "a.ts"),
+    "\x1b[32mUpdated\x1b[0m (12.3ms): a.ts",
+  );
+  assert.strictEqual(
+    renderResultLine("Updated", "12.3ms", "a.ts").includes("START"),
+    false,
+  );
 });
 
 it("formatWithPrettierInSubprocess - formats markdown in a subprocess so the caller can stay responsive", async () => {
@@ -70,10 +85,14 @@ it("formatFileWithPrettier - formats a markdown file in place and reports unchan
   try {
     await writeFile(filePath, "alpha\nbeta\n");
 
-    assert.deepEqual(await formatFileWithPrettier(filePath), { status: "updated" });
+    assert.deepEqual(await formatFileWithPrettier(filePath), {
+      status: "updated",
+    });
     assert.strictEqual(await readFile(filePath, "utf8"), "alpha\n\nbeta\n");
 
-    assert.deepEqual(await formatFileWithPrettier(filePath), { status: "unchanged" });
+    assert.deepEqual(await formatFileWithPrettier(filePath), {
+      status: "unchanged",
+    });
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
