@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-remove subtitles
+# Remove all subtitle files in the current directory
+shopt -s nocaseglob
+rm -f *.{srt,vtt,ass,ssa,sub} 2>/dev/null
+shopt -u nocaseglob
 
 OUTPUT_DIR=$HOME/"Documents/[2] Obsidian/00_Index"
 OUTPUT_FILE="$OUTPUT_DIR/video_thumbnails.md"
