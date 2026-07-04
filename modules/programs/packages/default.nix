@@ -3,6 +3,7 @@
     ./_desktop-db.nix
     ./spicetify.nix
     ./vicinae.nix
+    ./kcolorchooser.nix
     ./obsidian.nix
     ./gimp.nix
     ./foliate.nix
