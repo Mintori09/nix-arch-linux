@@ -37,6 +37,7 @@ in
       ccconfigs = {
         path = inputs.ccconfigs.outPath;
         subdir = "essentials/skills";
+        filter.nameRegex = "^writing-documentation$";
       };
 
       awesome-claude-skills = {
@@ -54,6 +55,11 @@ in
         subdir = "skills";
       };
 
+      superpowers = {
+        path = inputs.superpowers.outPath;
+        subdir = "skills";
+      };
+
       opencode-local = {
         path = ./opencode/skills;
       };
@@ -67,6 +73,7 @@ in
 
     skills.enableAll = [
       "opencode-local"
+      "superpowers"
     ];
 
     skills.enable = [

@@ -80,6 +80,16 @@
       url = "github:luisbocanegra/kwin-switch-to-last-used-desktop";
       flake = false;
     };
+
+    superpowers = {
+      url = "github:obra/superpowers";
+      flake = false;
+    };
+
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -114,8 +124,22 @@
       };
 
       spicePkgs = spicetify-nix.legacyPackages.${system};
+
+      pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
+        src = ./.;
+        hooks = {
+          ripsecrets.enable = true;
+        };
+      };
     in
     {
+      checks.${system}.pre-commit-check = pre-commit-check;
+
+      devShells.${system}.default = pkgs.mkShell {
+        inherit (pre-commit-check) shellHook;
+        buildInputs = pre-commit-check.enabledPackages;
+      };
+
       homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [
