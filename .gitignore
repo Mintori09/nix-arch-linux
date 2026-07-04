@@ -19,3 +19,5 @@ node_modules/
 *.ttf
 .opencode/
 .pre-commit-config.yaml
+.envrc.local
+.direnv/
