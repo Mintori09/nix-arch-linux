@@ -129,7 +129,7 @@
         src = ./.;
         hooks = {
           ripsecrets.enable = true;
-          nixfmt-rfc-style.enable = true;
+          nixfmt.enable = true;
           shfmt.enable = true;
           prettier.enable = true;
           taplo.enable = true;
