@@ -4,7 +4,7 @@ set -euo pipefail
 DBX_NIX="$HOME/.config/home-manager/modules/packages/dbx.nix"
 
 LATEST=$(curl -sL "https://api.github.com/repos/t8y2/dbx/releases/latest" | jq -r '.tag_name' | sed 's/^v//')
-CURRENT=$(grep '^let version' "$DBX_NIX" | cut -d'"' -f2)
+CURRENT=$(grep 'version = "' "$DBX_NIX" | cut -d'"' -f2)
 
 if [ "$LATEST" = "$CURRENT" ]; then
 	echo "dbx is already at v$LATEST (current)"
@@ -21,7 +21,7 @@ curl -sL -o "$TMP_DEB" "$URL"
 HASH=$(nix hash file "$TMP_DEB" --sri)
 
 # -- update version
-sed -i "s/^let version = \".*\";/let version = \"$LATEST\";/" "$DBX_NIX"
+sed -i "s/version = \".*\";/version = \"$LATEST\";/" "$DBX_NIX"
 
 # -- update hash
 sed -i "s|hash = \"sha256-.*\";|hash = \"$HASH\";|" "$DBX_NIX"

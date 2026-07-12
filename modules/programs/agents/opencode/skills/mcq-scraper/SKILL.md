@@ -447,26 +447,19 @@ mkdir -p mcq-scraper/{domain}
 ### 6B. JSON Format
 
 ```json
-{
-  "source": {
-    "url": "https://...",
-    "title": "Exam title or filename",
-    "totalQuestions": 50
-  },
-  "questions": [
-    {
-      "question": "Câu hỏi (hỗ trợ markdown, code block, ảnh)",
-      "options": {
-        "a": "Đáp án A",
-        "b": "Đáp án B",
-        "c": "Đáp án C",
-        "d": "Đáp án D"
-      },
-      "answer": "a",
-      "explanation": "Giải thích (markdown)"
-    }
-  ]
-}
+[
+  {
+    "question": "Câu hỏi (hỗ trợ markdown, code block, ảnh)",
+    "options": {
+      "a": "Đáp án A",
+      "b": "Đáp án B",
+      "c": "Đáp án C",
+      "d": "Đáp án D"
+    },
+    "answer": "a",
+    "explanation": "Giải thích (markdown)"
+  }
+]
 ```
 
 **For Anki import:** The JSON array can be imported via AnkiConnect or genanki.
