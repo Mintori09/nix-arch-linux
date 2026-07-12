@@ -72,26 +72,34 @@ in
 {
   home.packages = aiBridgePackages ++ [ cvCompletion ];
 
-  systemd.user.services."ai-bridge" = {
+  systemd.user.services.ai-bridge = {
     Unit = {
       Description = "AI Bridge daemon (Gemini clipboard bridge)";
       After = [ "graphical-session.target" ];
       Wants = [ "graphical-session.target" ];
     };
+
     Service = {
       Type = "simple";
       ExecStart = "${aiBridgePkg}/bin/ai-bridge server";
-      # Ensure wl-paste, xdg-open, and kdotool are available to the daemon
+
+      Environment = [
+        "AI_BRIDGE_PROMPTS_DIR='/home/mintori/Documents/[2] Obsidian/06_Script/Prompt'"
+      ];
+
       Path = [
         pkgs.wl-clipboard
         pkgs.xdg-utils
         pkgs.kdotool
         pkgs.nodejs
       ];
+
       Restart = "on-failure";
       RestartSec = 5;
     };
-    # Bind to graphical-session to ensure environment variables are populated
-    Install.WantedBy = [ "graphical-session.target" ];
+
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
   };
 }

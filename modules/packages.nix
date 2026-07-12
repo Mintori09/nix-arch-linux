@@ -105,6 +105,7 @@
     sd
     watchexec
     rclone
+    trashy
   ];
 
 }

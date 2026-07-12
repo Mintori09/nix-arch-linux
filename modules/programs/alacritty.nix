@@ -26,6 +26,7 @@ in
       };
 
       window.opacity = 0.95;
+      window.decorations = "none";
 
       colors = {
         primary = {

@@ -25,5 +25,6 @@
     ./ai-bridge.nix
     ./read.nix
     ./quick-aliases.nix
+    ./anki-tool.nix
   ];
 }

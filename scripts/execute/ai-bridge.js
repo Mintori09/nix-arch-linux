@@ -2,14 +2,14 @@
 
 // src/utils.ts
 function readStdin() {
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     if (process.stdin.isTTY) {
-      resolve("");
+      resolve2("");
       return;
     }
     let data = "";
-    process.stdin.on("data", (chunk) => (data += chunk.toString()));
-    process.stdin.on("end", () => resolve(data.trim()));
+    process.stdin.on("data", (chunk) => data += chunk.toString());
+    process.stdin.on("end", () => resolve2(data.trim()));
   });
 }
 
@@ -17,13 +17,14 @@ function readStdin() {
 var DAEMON_HOST = process.env.DAEMON_HOST ?? "127.0.0.1";
 var DAEMON_PORT = process.env.AI_BRIDGE_PORT ?? "58721";
 var DAEMON_URL = `http://${DAEMON_HOST}:${DAEMON_PORT}`;
+var AI_BRIDGE_PROMPTS_DIR = process.env.AI_BRIDGE_PROMPTS_DIR ?? "~/.config/ai-bridge/prompts/";
 
 // src/cli/commands/enqueue.ts
 async function cmdEnqueue(text, title, ttl) {
   const res = await fetch(`${DAEMON_URL}/enqueue`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, title, ttl }),
+    body: JSON.stringify({ text, title, ttl })
   });
   const data = await res.json();
   if (!res.ok) {
@@ -48,7 +49,7 @@ async function cmdClipboard(opts) {
   const res = await fetch(`${DAEMON_URL}/clipboard`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: opts.title, ttl: opts.ttl }),
+    body: JSON.stringify({ title: opts.title, ttl: opts.ttl })
   });
   const data = await res.json();
   if (!res.ok) {
@@ -131,7 +132,7 @@ function createQueue() {
       title: opts.title ?? "",
       text: opts.text,
       createdAt: Date.now(),
-      ttl: opts.ttl ?? 6e4,
+      ttl: opts.ttl ?? 6e4
     });
     enqueuedCount++;
     return id;
@@ -158,15 +159,14 @@ function createQueue() {
     for (const [, entry] of entries) {
       const remainingTtlMs = Math.max(
         0,
-        entry.ttl - (Date.now() - entry.createdAt),
+        entry.ttl - (Date.now() - entry.createdAt)
       );
-      const textPreview =
-        entry.text.length > 80 ? entry.text.slice(0, 80) + "..." : entry.text;
+      const textPreview = entry.text.length > 80 ? entry.text.slice(0, 80) + "..." : entry.text;
       items.push({
         id: entry.id,
         title: entry.title,
         textPreview,
-        remainingTtlMs,
+        remainingTtlMs
       });
     }
     return items;
@@ -188,7 +188,7 @@ function createQueue() {
       uptimeSec: 0,
       enqueued: enqueuedCount,
       dequeued: dequeuedCount,
-      queueLength: entries.size,
+      queueLength: entries.size
     };
   }
   return { enqueue, dequeue, list, clear, status, stats };
@@ -203,22 +203,27 @@ function detectClipboardCommand() {
   return { cmd: "xclip", args: ["-o", "-selection", "clipboard"] };
 }
 function readClipboard(timeoutMs = 500) {
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     const { cmd, args } = detectClipboardCommand();
-    const child = execFile(cmd, args, { timeout: timeoutMs }, (err, stdout) => {
-      if (err) {
-        if (err.code === "ENOENT") {
-          resolve(null);
+    const child = execFile(
+      cmd,
+      args,
+      { timeout: timeoutMs },
+      (err, stdout) => {
+        if (err) {
+          if (err.code === "ENOENT") {
+            resolve2(null);
+            return;
+          }
+          resolve2("");
           return;
         }
-        resolve("");
-        return;
+        resolve2(stdout);
       }
-      resolve(stdout);
-    });
+    );
     const timer = setTimeout(() => {
       child.kill();
-      resolve("");
+      resolve2("");
     }, timeoutMs);
     child.on("close", () => clearTimeout(timer));
   });
@@ -227,27 +232,23 @@ function readClipboard(timeoutMs = 500) {
 // src/daemon/focus.ts
 import { execFile as execFile2 } from "child_process";
 function openBrowser(url) {
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     execFile2("xdg-open", [url], (err) => {
       if (err && err.code !== "ENOENT") {
         console.warn(`[ai-bridge] xdg-open failed: ${err.message}`);
       }
-      resolve();
+      resolve2();
     });
   });
 }
 function focusBrowser() {
-  return new Promise((resolve) => {
-    execFile2(
-      "kdotool",
-      ["search", "--class", "google-chrome", "windowactivate"],
-      (err) => {
-        if (err && err.code !== "ENOENT") {
-          console.warn(`[ai-bridge] kdotool failed: ${err.message}`);
-        }
-        resolve();
-      },
-    );
+  return new Promise((resolve2) => {
+    execFile2("kdotool", ["search", "--class", "google-chrome", "windowactivate"], (err) => {
+      if (err && err.code !== "ENOENT") {
+        console.warn(`[ai-bridge] kdotool failed: ${err.message}`);
+      }
+      resolve2();
+    });
   });
 }
 
@@ -261,11 +262,7 @@ function handleEnqueue(_req, res, body, queue, openBrowser2, focusBrowser2) {
     res.end(JSON.stringify({ error: "Invalid JSON" }));
     return;
   }
-  if (
-    !parsed.text ||
-    typeof parsed.text !== "string" ||
-    parsed.text.trim().length === 0
-  ) {
+  if (!parsed.text || typeof parsed.text !== "string" || parsed.text.trim().length === 0) {
     res.writeHead(400, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "text is required" }));
     return;
@@ -275,10 +272,7 @@ function handleEnqueue(_req, res, body, queue, openBrowser2, focusBrowser2) {
     res.end(JSON.stringify({ error: "Max 100000 characters" }));
     return;
   }
-  if (
-    parsed.title &&
-    (typeof parsed.title !== "string" || parsed.title.length > 200)
-  ) {
+  if (parsed.title && (typeof parsed.title !== "string" || parsed.title.length > 200)) {
     res.writeHead(400, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "title max 200 characters" }));
     return;
@@ -286,10 +280,12 @@ function handleEnqueue(_req, res, body, queue, openBrowser2, focusBrowser2) {
   const id = queue.enqueue({
     text: parsed.text,
     title: parsed.title ?? "Prompt",
-    ttl: parsed.ttl ?? 6e4,
+    ttl: parsed.ttl ?? 6e4
   });
-  openBrowser2("https://gemini.google.com").catch(() => {});
-  focusBrowser2().catch(() => {});
+  openBrowser2("https://gemini.google.com").catch(() => {
+  });
+  focusBrowser2().catch(() => {
+  });
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ id, ok: true }));
 }
@@ -322,12 +318,7 @@ function handleStatus(_req, res, id, queue) {
 function handleStats(_req, res, queue, startTime) {
   const stats = queue.stats();
   res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(
-    JSON.stringify({
-      ...stats,
-      uptimeSec: Math.floor((Date.now() - startTime) / 1e3),
-    }),
-  );
+  res.end(JSON.stringify({ ...stats, uptimeSec: Math.floor((Date.now() - startTime) / 1e3) }));
 }
 
 // src/daemon/routes/health.ts
@@ -338,39 +329,34 @@ function handleHealth(_req, res, queue) {
 
 // src/daemon/routes/focus.ts
 function handleFocus(_req, res, focusBrowser2) {
-  focusBrowser2().catch(() => {});
+  focusBrowser2().catch(() => {
+  });
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ ok: true }));
 }
 
 // src/daemon/routes/clipboard.ts
-async function handleClipboardPost(
-  _req,
-  res,
-  body,
-  readClipboard2,
-  queue,
-  openBrowser2,
-  focusBrowser2,
-) {
+async function handleClipboardPost(_req, res, body, readClipboard2, queue, openBrowser2, focusBrowser2) {
   let parsed = {};
   try {
     parsed = JSON.parse(body);
-  } catch {}
+  } catch {
+  }
   const text = await readClipboard2();
   if (text === null) {
     res.writeHead(501, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
-        error:
-          "Clipboard tool not found. Install wl-clipboard (Wayland) or xclip (X11).",
-      }),
+        error: "Clipboard tool not found. Install wl-clipboard (Wayland) or xclip (X11)."
+      })
     );
     return;
   }
   const id = queue.enqueue({ text, title: parsed.title, ttl: parsed.ttl });
-  openBrowser2("https://gemini.google.com").catch(() => {});
-  focusBrowser2().catch(() => {});
+  openBrowser2("https://gemini.google.com").catch(() => {
+  });
+  focusBrowser2().catch(() => {
+  });
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ id, ok: true }));
 }
@@ -380,9 +366,8 @@ async function handleClipboardGet(_req, res, readClipboard2) {
     res.writeHead(501, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
-        error:
-          "Clipboard tool not found. Install wl-clipboard (Wayland) or xclip (X11).",
-      }),
+        error: "Clipboard tool not found. Install wl-clipboard (Wayland) or xclip (X11)."
+      })
     );
     return;
   }
@@ -399,12 +384,92 @@ function handleShutdown(_req, res, server) {
   }, 200);
 }
 
+// src/daemon/routes/prompts.ts
+import { readFileSync, readdirSync, statSync, existsSync } from "fs";
+import { resolve, sep } from "path";
+import os from "os";
+function expandHome(dir) {
+  if (dir.startsWith("~")) {
+    return resolve(os.homedir(), dir.slice(1));
+  }
+  return resolve(dir);
+}
+function stripBOM(content) {
+  if (content.charCodeAt(0) === 65279) return content.slice(1);
+  return content;
+}
+function handleListPrompts(_req, res, promptDir) {
+  const dir = expandHome(promptDir);
+  if (!existsSync(dir)) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify([]));
+    return;
+  }
+  try {
+    const entries = readdirSync(dir);
+    const prompts = entries.filter((e) => e.endsWith(".md") && statSync(resolve(dir, e)).isFile()).map((name) => {
+      const content = readFileSync(resolve(dir, name), "utf-8");
+      const clean = stripBOM(content);
+      const preview = clean.replace(/---[\s\S]*?---/, "").slice(0, 80).trim();
+      return {
+        name,
+        title: name.slice(0, -3),
+        preview: preview + (preview.length === 80 ? "..." : "")
+      };
+    });
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(prompts));
+  } catch {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Failed to read prompts directory" }));
+  }
+}
+function handleGetPrompt(_req, res, promptDir, name) {
+  if (name.includes("..") || name.includes(sep)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Invalid prompt name" }));
+    return;
+  }
+  if (!name.endsWith(".md")) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Name must end with .md" }));
+    return;
+  }
+  const dir = expandHome(promptDir);
+  const filePath = resolve(dir, name);
+  if (!filePath.startsWith(dir + sep)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Invalid prompt name" }));
+    return;
+  }
+  if (!existsSync(filePath)) {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Prompt not found" }));
+    return;
+  }
+  try {
+    const content = readFileSync(filePath, "utf-8");
+    const clean = stripBOM(content);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        name,
+        title: name.slice(0, -3),
+        content: clean
+      })
+    );
+  } catch {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Failed to read prompt file" }));
+  }
+}
+
 // src/daemon/server.ts
 function parseBody(req) {
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     let body = "";
-    req.on("data", (chunk) => (body += chunk.toString()));
-    req.on("end", () => resolve(body));
+    req.on("data", (chunk) => body += chunk.toString());
+    req.on("end", () => resolve2(body));
   });
 }
 async function startServer(port = parseInt(DAEMON_PORT, 10)) {
@@ -414,7 +479,7 @@ async function startServer(port = parseInt(DAEMON_PORT, 10)) {
     res.setHeader("Content-Type", "application/json");
     const url = new URL(
       req.url ?? "/",
-      `http://${req.headers.host ?? "localhost"}`,
+      `http://${req.headers.host ?? "localhost"}`
     );
     const pathname = url.pathname;
     const cl = parseInt(req.headers["content-length"] ?? "0", 10);
@@ -463,12 +528,21 @@ async function startServer(port = parseInt(DAEMON_PORT, 10)) {
           readClipboard,
           queue,
           openBrowser,
-          focusBrowser,
+          focusBrowser
         );
         return;
       }
       if (req.method === "GET" && pathname === "/clipboard") {
         await handleClipboardGet(req, res, readClipboard);
+        return;
+      }
+      if (req.method === "GET" && pathname === "/prompts") {
+        handleListPrompts(req, res, AI_BRIDGE_PROMPTS_DIR);
+        return;
+      }
+      if (req.method === "GET" && pathname.startsWith("/prompts/")) {
+        const name = pathname.slice(9);
+        handleGetPrompt(req, res, AI_BRIDGE_PROMPTS_DIR, name);
         return;
       }
       if (req.method === "GET" && pathname === "/health") {
@@ -492,11 +566,11 @@ async function startServer(port = parseInt(DAEMON_PORT, 10)) {
   }
   process.on("SIGTERM", gracefulShutdown);
   process.on("SIGINT", gracefulShutdown);
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     server.listen(port, DAEMON_HOST, () => {
       const addr = server.address();
       const actualPort = typeof addr === "object" && addr ? addr.port : port;
-      resolve({ server, port: actualPort });
+      resolve2({ server, port: actualPort });
     });
   });
 }
@@ -509,14 +583,16 @@ async function cmdServer() {
       console.error("ai-bridge already running");
       process.exit(1);
     }
-  } catch {}
+  } catch {
+  }
   const { port } = await startServer(parseInt(DAEMON_PORT, 10));
   console.log(`ai-bridge daemon listening on 127.0.0.1:${port}`);
 }
 async function cmdStop() {
   try {
     await fetch(`${DAEMON_URL}/shutdown`, { method: "POST" });
-  } catch {}
+  } catch {
+  }
   const start = Date.now();
   while (Date.now() - start < 5e3) {
     try {
@@ -536,7 +612,8 @@ async function ensureDaemon() {
   try {
     const res = await fetch(`${DAEMON_URL}/health`);
     if (res.ok) return;
-  } catch {}
+  } catch {
+  }
   console.error("Daemon not running. Start it with: ai-bridge server");
   process.exit(1);
 }
@@ -622,14 +699,12 @@ async function main() {
   await ensureDaemon();
   await cmdEnqueue(text, title, ttl);
 }
-main()
-  .then(() => {
-    const args = process.argv.slice(2);
-    if (args[0] !== "server") {
-      process.exit(0);
-    }
-  })
-  .catch((err) => {
-    console.error(err.message);
-    process.exit(1);
-  });
+main().then(() => {
+  const args = process.argv.slice(2);
+  if (args[0] !== "server") {
+    process.exit(0);
+  }
+}).catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});

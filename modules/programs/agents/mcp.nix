@@ -74,4 +74,16 @@
     };
     enabled = false;
   };
+
+  figwright = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@figwright/mcp@latest"
+      ];
+    };
+    enabled = true;
+  };
+
 }

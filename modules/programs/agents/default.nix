@@ -6,5 +6,6 @@
     ./claude
     ./oc-go-cc
     ./antigravity
+    ./copilot-cli
   ];
 }

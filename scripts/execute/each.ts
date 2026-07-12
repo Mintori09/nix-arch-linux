@@ -71,7 +71,12 @@ Placeholders in command:
   {n}             1-based item number
   {number}        1-based item number (alias for {n})
   {i}             0-based item number
-  {index}         0-based item number (alias for {i})`;
+  {index}         0-based item number (alias for {i})
+  {today}         Current date YYYY-MM-DD
+  {ipad}          0-based index zero-padded to total width
+  {indexpad}      Alias for {ipad}
+  {npad}          1-based number zero-padded to total width
+  {numberpad}     Alias for {npad}`;
 
 const SHELL_OPERATORS = new Set([
   "|",
@@ -100,7 +105,7 @@ export function quoteArgForShell(arg: string): string {
   }
 
   const placeholderRegex =
-    /({}|{(?:raw|filename|stem|ext|kebab|camel|pascal|snake|lower|upper|kebab-fn|camel-fn|pascal-fn|snake-fn|lower-fn|upper-fn|kebab-stem|camel-stem|pascal-stem|snake-stem|lower-stem|upper-stem|n|number|i|index)})/g;
+    /({}|{(?:raw|filename|stem|ext|kebab|camel|pascal|snake|lower|upper|kebab-fn|camel-fn|pascal-fn|snake-fn|lower-fn|upper-fn|kebab-stem|camel-stem|pascal-stem|snake-stem|lower-stem|upper-stem|n|number|i|index|today|ipad|indexpad|npad|numberpad)})/g;
 
   const parts = arg.split(placeholderRegex);
   return parts
@@ -335,7 +340,15 @@ export function makeItems(values: string[]): Item[] {
 }
 
 function quoteIfNeeded(s: string): string {
-  return s.includes(" ") ? `'${s.replace(/'/g, "'\\''")}'` : s;
+  if (s === "") return "''";
+  if (/^[a-zA-Z0-9_\-\/\.\:\+\=\@\,]+$/.test(s)) return s;
+  return `'${s.replace(/'/g, "'\\''")}'`;
+}
+
+function transformPath(s: string, fn: (s: string) => string): string {
+  const idx = s.lastIndexOf("/");
+  if (idx === -1) return fn(s);
+  return s.slice(0, idx + 1) + fn(s.slice(idx + 1));
 }
 
 let _ttyState: string | null = null;
@@ -402,11 +415,13 @@ function toSnake(s: string): string {
     .toLowerCase();
 }
 
-export function renderCommand(template: string, item: Item): string {
+export function renderCommand(template: string, item: Item, totalItems: number): string {
   const quotedValue = `'${item.value.replace(/'/g, "'\\''")}'`;
   const filename = basename(item.value);
   const stem = basename(item.value, extname(item.value));
   const ext = extname(item.value);
+  const padWidth = String(totalItems).length;
+  const today = new Date().toISOString().slice(0, 10);
 
   let cmd = template.replace("{}", quotedValue);
   cmd = cmd.replace("{raw}", item.value);
@@ -414,31 +429,37 @@ export function renderCommand(template: string, item: Item): string {
   cmd = cmd.replace("{stem}", quoteIfNeeded(stem));
   cmd = cmd.replace("{ext}", ext);
 
-  cmd = cmd.replace("{kebab}", toKebab(item.value));
-  cmd = cmd.replace("{camel}", toCamel(item.value));
-  cmd = cmd.replace("{pascal}", toPascal(item.value));
-  cmd = cmd.replace("{snake}", toSnake(item.value));
-  cmd = cmd.replace("{lower}", item.value.toLowerCase());
-  cmd = cmd.replace("{upper}", item.value.toUpperCase());
+  cmd = cmd.replace("{kebab}", quoteIfNeeded(transformPath(item.value, toKebab)));
+  cmd = cmd.replace("{camel}", quoteIfNeeded(transformPath(item.value, toCamel)));
+  cmd = cmd.replace("{pascal}", quoteIfNeeded(transformPath(item.value, toPascal)));
+  cmd = cmd.replace("{snake}", quoteIfNeeded(transformPath(item.value, toSnake)));
+  cmd = cmd.replace("{lower}", quoteIfNeeded(transformPath(item.value, (s) => s.toLowerCase())));
+  cmd = cmd.replace("{upper}", quoteIfNeeded(transformPath(item.value, (s) => s.toUpperCase())));
 
-  cmd = cmd.replace("{kebab-fn}", toKebab(filename));
-  cmd = cmd.replace("{camel-fn}", toCamel(filename));
-  cmd = cmd.replace("{pascal-fn}", toPascal(filename));
-  cmd = cmd.replace("{snake-fn}", toSnake(filename));
-  cmd = cmd.replace("{lower-fn}", filename.toLowerCase());
-  cmd = cmd.replace("{upper-fn}", filename.toUpperCase());
+  cmd = cmd.replace("{kebab-fn}", quoteIfNeeded(toKebab(filename)));
+  cmd = cmd.replace("{camel-fn}", quoteIfNeeded(toCamel(filename)));
+  cmd = cmd.replace("{pascal-fn}", quoteIfNeeded(toPascal(filename)));
+  cmd = cmd.replace("{snake-fn}", quoteIfNeeded(toSnake(filename)));
+  cmd = cmd.replace("{lower-fn}", quoteIfNeeded(filename.toLowerCase()));
+  cmd = cmd.replace("{upper-fn}", quoteIfNeeded(filename.toUpperCase()));
 
-  cmd = cmd.replace("{kebab-stem}", toKebab(stem));
-  cmd = cmd.replace("{camel-stem}", toCamel(stem));
-  cmd = cmd.replace("{pascal-stem}", toPascal(stem));
-  cmd = cmd.replace("{snake-stem}", toSnake(stem));
-  cmd = cmd.replace("{lower-stem}", stem.toLowerCase());
-  cmd = cmd.replace("{upper-stem}", stem.toUpperCase());
+  cmd = cmd.replace("{kebab-stem}", quoteIfNeeded(toKebab(stem)));
+  cmd = cmd.replace("{camel-stem}", quoteIfNeeded(toCamel(stem)));
+  cmd = cmd.replace("{pascal-stem}", quoteIfNeeded(toPascal(stem)));
+  cmd = cmd.replace("{snake-stem}", quoteIfNeeded(toSnake(stem)));
+  cmd = cmd.replace("{lower-stem}", quoteIfNeeded(stem.toLowerCase()));
+  cmd = cmd.replace("{upper-stem}", quoteIfNeeded(stem.toUpperCase()));
 
   cmd = cmd.replace("{n}", String(item.number));
   cmd = cmd.replace("{number}", String(item.number));
   cmd = cmd.replace("{i}", String(item.index));
   cmd = cmd.replace("{index}", String(item.index));
+
+  cmd = cmd.replace("{today}", today);
+  cmd = cmd.replace("{ipad}", String(item.index).padStart(padWidth, "0"));
+  cmd = cmd.replace("{indexpad}", String(item.index).padStart(padWidth, "0"));
+  cmd = cmd.replace("{npad}", String(item.number).padStart(padWidth, "0"));
+  cmd = cmd.replace("{numberpad}", String(item.number).padStart(padWidth, "0"));
 
   if (cmd === template) {
     cmd = `${template} ${quotedValue}`;
@@ -447,8 +468,10 @@ export function renderCommand(template: string, item: Item): string {
   return cmd;
 }
 
-export function renderBatchCommand(template: string, items: Item[]): string {
+export function renderBatchCommand(template: string, items: Item[], totalItems: number): string {
   let cmd = template;
+  const padWidth = String(totalItems).length;
+  const today = new Date().toISOString().slice(0, 10);
   const rp = (ph: string, fn: (i: Item) => string) => {
     cmd = cmd.replace(ph, items.map(fn).join(" "));
   };
@@ -457,28 +480,38 @@ export function renderBatchCommand(template: string, items: Item[]): string {
   rp("{filename}", (i) => quoteIfNeeded(basename(i.value)));
   rp("{stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value))));
   rp("{ext}", (i) => extname(i.value));
-  rp("{kebab}", (i) => toKebab(i.value));
-  rp("{camel}", (i) => toCamel(i.value));
-  rp("{pascal}", (i) => toPascal(i.value));
-  rp("{snake}", (i) => toSnake(i.value));
-  rp("{lower}", (i) => i.value.toLowerCase());
-  rp("{upper}", (i) => i.value.toUpperCase());
-  rp("{kebab-fn}", (i) => toKebab(basename(i.value)));
-  rp("{camel-fn}", (i) => toCamel(basename(i.value)));
-  rp("{pascal-fn}", (i) => toPascal(basename(i.value)));
-  rp("{snake-fn}", (i) => toSnake(basename(i.value)));
-  rp("{lower-fn}", (i) => basename(i.value).toLowerCase());
-  rp("{upper-fn}", (i) => basename(i.value).toUpperCase());
-  rp("{kebab-stem}", (i) => toKebab(basename(i.value, extname(i.value))));
-  rp("{camel-stem}", (i) => toCamel(basename(i.value, extname(i.value))));
-  rp("{pascal-stem}", (i) => toPascal(basename(i.value, extname(i.value))));
-  rp("{snake-stem}", (i) => toSnake(basename(i.value, extname(i.value))));
-  rp("{lower-stem}", (i) => basename(i.value, extname(i.value)).toLowerCase());
-  rp("{upper-stem}", (i) => basename(i.value, extname(i.value)).toUpperCase());
+  rp("{kebab}", (i) => quoteIfNeeded(transformPath(i.value, toKebab)));
+  rp("{camel}", (i) => quoteIfNeeded(transformPath(i.value, toCamel)));
+  rp("{pascal}", (i) => quoteIfNeeded(transformPath(i.value, toPascal)));
+  rp("{snake}", (i) => quoteIfNeeded(transformPath(i.value, toSnake)));
+  rp("{lower}", (i) => quoteIfNeeded(transformPath(i.value, (s) => s.toLowerCase())));
+  rp("{upper}", (i) => quoteIfNeeded(transformPath(i.value, (s) => s.toUpperCase())));
+  rp("{kebab-fn}", (i) => quoteIfNeeded(toKebab(basename(i.value))));
+  rp("{camel-fn}", (i) => quoteIfNeeded(toCamel(basename(i.value))));
+  rp("{pascal-fn}", (i) => quoteIfNeeded(toPascal(basename(i.value))));
+  rp("{snake-fn}", (i) => quoteIfNeeded(toSnake(basename(i.value))));
+  rp("{lower-fn}", (i) => quoteIfNeeded(basename(i.value).toLowerCase()));
+  rp("{upper-fn}", (i) => quoteIfNeeded(basename(i.value).toUpperCase()));
+  rp("{kebab-stem}", (i) => quoteIfNeeded(toKebab(basename(i.value, extname(i.value)))));
+  rp("{camel-stem}", (i) => quoteIfNeeded(toCamel(basename(i.value, extname(i.value)))));
+  rp("{pascal-stem}", (i) => quoteIfNeeded(toPascal(basename(i.value, extname(i.value)))));
+  rp("{snake-stem}", (i) => quoteIfNeeded(toSnake(basename(i.value, extname(i.value)))));
+  rp("{lower-stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value)).toLowerCase()));
+  rp("{upper-stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value)).toUpperCase()));
   rp("{n}", (i) => String(i.number));
   rp("{i}", (i) => String(i.index));
   rp("{number}", (i) => String(i.number));
   rp("{index}", (i) => String(i.index));
+  cmd = cmd.replace(/{today}/g, today);
+  cmd = cmd.replace(/{ipad}|{indexpad}|{npad}|{numberpad}/g, (match) => {
+    const isOneBased = match === "{npad}" || match === "{numberpad}";
+    return items
+      .map((i) => {
+        const val = isOneBased ? i.number : i.index;
+        return String(val).padStart(padWidth, "0");
+      })
+      .join(" ");
+  });
   if (cmd === template) {
     const q = items.map((i) => `'${i.value.replace(/'/g, "'\\''")}'`).join(" ");
     cmd = `${template} ${q}`;
@@ -493,7 +526,7 @@ function runCommands(
   let finalCode = 0;
 
   for (const item of items) {
-    const cmd = renderCommand(opts.command, item);
+    const cmd = renderCommand(opts.command, item, items.length);
 
     if (opts.print) {
       console.log(cmd);
@@ -534,7 +567,7 @@ function runBatchCommands(
   let finalCode = 0;
   for (let start = 0; start < items.length; start += batchSize) {
     const chunk = items.slice(start, start + batchSize);
-    const cmd = renderBatchCommand(opts.command, chunk);
+    const cmd = renderBatchCommand(opts.command, chunk, items.length);
     if (opts.print) {
       console.log(cmd);
       continue;
@@ -568,7 +601,7 @@ async function runParallelCommands(
 
   if (opts.accept && !opts.print) {
     items = items.filter((item) => {
-      const cmd = renderCommand(opts.command, item);
+      const cmd = renderCommand(opts.command, item, items.length);
       return confirm(cmd);
     });
   }
@@ -579,7 +612,7 @@ async function runParallelCommands(
 
   async function runOne(item: Item): Promise<number> {
     if (aborted) return 0;
-    const cmd = renderCommand(opts.command, item);
+    const cmd = renderCommand(opts.command, item, items.length);
     if (opts.print) {
       console.log(cmd);
       return 0;

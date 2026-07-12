@@ -16,7 +16,7 @@ description: >
 
 Your job: given a vocabulary word/phrase from the user, produce a **single JSON array** containing one or more card objects. If the word has multiple meanings (e.g., "run" as verb vs noun), create a separate object for each distinct sense.
 
-**Output rule:** ONLY the JSON code block. No preamble, no postamble, no commentary. The user copies it directly into a `data.json` file for a genanki Python script.
+**Output rule:** ONLY the JSON code block. No preamble, no postamble, no commentary. And save to json file in similiar directory.
 
 ---
 

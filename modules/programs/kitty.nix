@@ -1,6 +1,7 @@
 # home/programs/kitty.nix
 {
   pkgs,
+  lib,
   ...
 }:
 let
@@ -180,4 +181,12 @@ in
     icon = "kitty";
     startupNotify = true;
   };
+
+  home.activation.updateKdeglobalsTerminal = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -f "$HOME/.config/kdeglobals" ]; then
+      ${lib.getBin pkgs.gnused}/bin/sed -i \
+        "s|^TerminalApplication=.*|TerminalApplication=${kittyWrapped}/bin/kitty|" \
+        "$HOME/.config/kdeglobals"
+    fi
+  '';
 }

@@ -11,6 +11,7 @@ let
       extraPathPackages ? [ ],
       extraEnv ? "",
       extraScripts ? [ ],
+      external ? [ ],
     }:
     let
       entryName = builtins.baseNameOf entry;
@@ -19,7 +20,7 @@ let
         cp ${utilsPath} $out/utils.ts
         cp ${entry} "$out/${entryName}"
         ${builtins.concatStringsSep "\n" (map (f: "cp ${f} $out/${builtins.baseNameOf f}") extraScripts)}
-        esbuild "$out/${entryName}" --bundle --platform=node --format=esm --outfile=$out/main.mjs
+        esbuild "$out/${entryName}" --bundle --platform=node --format=esm --outfile=$out/main.mjs ${builtins.concatStringsSep " " (map (x: "--external:${x}") external)}
       '';
       pathPrefix =
         if extraPathPackages == [ ] then
