@@ -2,15 +2,9 @@
 
 // src/cv.ts
 import path7 from "node:path";
-import {
-  mkdir,
-  mkdtemp as mkdtemp4,
-  readFile as readFile3,
-  writeFile as writeFile4,
-  rm as rm5,
-} from "node:fs/promises";
+import { mkdir, mkdtemp as mkdtemp5, readFile as readFile3, writeFile as writeFile5, rm as rm6 } from "node:fs/promises";
 import { existsSync as existsSync2 } from "node:fs";
-import { tmpdir as tmpdir5 } from "node:os";
+import { tmpdir as tmpdir6 } from "node:os";
 import { parseArgs } from "node:util";
 
 // src/utils.ts
@@ -40,7 +34,7 @@ var COLORS = {
   YELLOW: "\x1B[33m",
   BLUE: "\x1B[34m",
   GRAY: "\x1B[90m",
-  NC: "\x1B[0m",
+  NC: "\x1B[0m"
 };
 
 // src/config.ts
@@ -48,7 +42,7 @@ import path from "node:path";
 import os from "node:os";
 import { existsSync, readFileSync } from "node:fs";
 var BUILTIN_DEFAULTS = {
-  "md:pdf": { pageSize: "a4" },
+  "md:pdf": { pageSize: "a4" }
 };
 var CONFIG_DIR = path.join(os.homedir(), ".config", "convert-file");
 var CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
@@ -65,11 +59,7 @@ function loadReferenceDocConfig(configDir) {
   const data = readJson(cfgPath);
   if (data && typeof data === "object" && data !== null) {
     const d = data;
-    if (
-      d.referenceDocs &&
-      typeof d.referenceDocs === "object" &&
-      !Array.isArray(d.referenceDocs)
-    ) {
+    if (d.referenceDocs && typeof d.referenceDocs === "object" && !Array.isArray(d.referenceDocs)) {
       return d.referenceDocs;
     }
   }
@@ -91,9 +81,7 @@ function resolveAlias(style, aliases) {
   return aliases[style] ?? null;
 }
 function resolveStylePath(style) {
-  const resolved = style.startsWith("~/")
-    ? path.join(os.homedir(), style.slice(2))
-    : style;
+  const resolved = style.startsWith("~/") ? path.join(os.homedir(), style.slice(2)) : style;
   if (path.isAbsolute(resolved)) return existsSync(resolved) ? resolved : null;
   const absolute = path.resolve(process.cwd(), resolved);
   return existsSync(absolute) ? absolute : null;
@@ -120,11 +108,7 @@ function loadDefaults(route, configDir) {
   }
   if (data && typeof data === "object" && data !== null) {
     const d = data;
-    if (
-      d.defaults &&
-      typeof d.defaults === "object" &&
-      !Array.isArray(d.defaults)
-    ) {
+    if (d.defaults && typeof d.defaults === "object" && !Array.isArray(d.defaults)) {
       const routeCfg = d.defaults[route];
       if (routeCfg) {
         if (routeCfg.css && typeof routeCfg.css === "string") {
@@ -198,13 +182,13 @@ async function runCommand(parts, options = { dryRun: false }) {
     console.log(`${COLORS.YELLOW}[run]${COLORS.NC} ${command}`);
   }
   const proc = spawn(parts[0], parts.slice(1), {
-    stdio: ["ignore", options.captureStdout ? "pipe" : "inherit", "pipe"],
+    stdio: ["ignore", options.captureStdout ? "pipe" : "inherit", "pipe"]
   });
   let stderr = "";
   let stdout = "";
-  proc.stderr.on("data", (d) => (stderr += d.toString()));
+  proc.stderr.on("data", (d) => stderr += d.toString());
   if (options.captureStdout) {
-    proc.stdout.on("data", (d) => (stdout += d.toString()));
+    proc.stdout.on("data", (d) => stdout += d.toString());
   }
   const exitCode = await new Promise((r) => proc.on("close", r));
   if (exitCode !== 0) {
@@ -224,7 +208,7 @@ var SPINNER_FRAMES = [
   "\u2826",
   "\u2827",
   "\u2807",
-  "\u280F",
+  "\u280F"
 ];
 var SPINNER_INTERVAL_MS = 80;
 var SPINNER_DELAY_MS = 300;
@@ -236,17 +220,13 @@ function updateLine(content) {
   process.stdout.write(`\r\x1B[2K${content}`);
 }
 function shouldEnableSpinner(options) {
-  return (
-    !options.dryRun && options.isTTY === true && process.env.NO_SPINNER !== "1"
-  );
+  return !options.dryRun && options.isTTY === true && process.env.NO_SPINNER !== "1";
 }
 async function withSpinner(context, task) {
-  if (
-    !shouldEnableSpinner({
-      dryRun: context.dryRun,
-      isTTY: process.stdout.isTTY,
-    })
-  ) {
+  if (!shouldEnableSpinner({
+    dryRun: context.dryRun,
+    isTTY: process.stdout.isTTY
+  })) {
     return task();
   }
   const label = buildSpinnerLabel(context.route);
@@ -269,7 +249,7 @@ async function withSpinner(context, task) {
     const duration = ((performance.now() - startTime) / 1e3).toFixed(2);
     updateLine(
       `${COLORS.GREEN}\u2714${COLORS.NC} ${label} ${COLORS.GRAY}(${duration}s)${COLORS.NC}
-`,
+`
     );
     return result;
   } catch (error) {
@@ -277,7 +257,7 @@ async function withSpinner(context, task) {
     if (timer) clearInterval(timer);
     updateLine(
       `${COLORS.RED}\u2716${COLORS.NC} ${label} ${COLORS.RED}Failed${COLORS.NC}
-`,
+`
     );
     throw error;
   }
@@ -285,19 +265,13 @@ async function withSpinner(context, task) {
 
 // src/routes.ts
 import path5 from "node:path";
-import { tmpdir as tmpdir3 } from "node:os";
-import { mkdtemp as mkdtemp3, rm as rm3 } from "node:fs/promises";
+import { tmpdir as tmpdir4 } from "node:os";
+import { mkdtemp as mkdtemp4, rm as rm4 } from "node:fs/promises";
 
 // src/converters/index.ts
 import path3 from "node:path";
 import { tmpdir as tmpdir2 } from "node:os";
-import {
-  mkdtemp as mkdtemp2,
-  rename,
-  writeFile as writeFile2,
-  rm as rm2,
-  readFile,
-} from "node:fs/promises";
+import { mkdtemp as mkdtemp2, rename, writeFile as writeFile2, rm as rm2, readFile } from "node:fs/promises";
 
 // src/core/chromium.ts
 import path2 from "node:path";
@@ -309,17 +283,17 @@ import { Buffer as Buffer2 } from "node:buffer";
 function calculateViewportSize(metrics) {
   if (!Number.isFinite(metrics.width) || !Number.isFinite(metrics.height)) {
     throw new CliError(
-      `${COLORS.RED}Error:${COLORS.NC} Chromium returned invalid page dimensions.`,
+      `${COLORS.RED}Error:${COLORS.NC} Chromium returned invalid page dimensions.`
     );
   }
   return {
     width: Math.max(1, Math.ceil(metrics.width)),
-    height: Math.max(1, Math.ceil(metrics.height) + 32),
+    height: Math.max(1, Math.ceil(metrics.height) + 32)
   };
 }
 function parseDevToolsPort(text) {
   const match = text.match(
-    /DevTools listening on ws:\/\/(?:127\.0\.0\.1|localhost):(\d+)\//,
+    /DevTools listening on ws:\/\/(?:127\.0\.0\.1|localhost):(\d+)\//
   );
   if (!match) return void 0;
   return Number.parseInt(match[1], 10);
@@ -359,19 +333,21 @@ function waitForPageWebSocketUrl(port, pageUrl) {
   return (async () => {
     while (Date.now() - startedAt < 5e3) {
       try {
-        const targets = await fetch(endpoint).then((r) => r.json());
+        const targets = await fetch(endpoint).then(
+          (r) => r.json()
+        );
         const page = targets.find(
-          (t) =>
-            t.type === "page" && t.url === pageUrl && t.webSocketDebuggerUrl,
+          (t) => t.type === "page" && t.url === pageUrl && t.webSocketDebuggerUrl
         );
         if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;
-      } catch {}
+      } catch {
+      }
       await sleep(50);
     }
     throw new CommandExecutionError(
       "chromium",
       `Timed out waiting for DevTools page target: ${pageUrl}`,
-      1,
+      1
     );
   })();
 }
@@ -410,7 +386,7 @@ async function openDevToolsSession(webSocketUrl) {
     socket.addEventListener(
       "error",
       () => reject(new Error("DevTools WebSocket failed")),
-      { once: true },
+      { once: true }
     );
   });
   return new DevToolsSession(socket);
@@ -418,17 +394,20 @@ async function openDevToolsSession(webSocketUrl) {
 async function waitForDocumentReady(session) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < 5e3) {
-    const result = await session.send("Runtime.evaluate", {
-      expression: "document.readyState",
-      returnByValue: true,
-    });
+    const result = await session.send(
+      "Runtime.evaluate",
+      {
+        expression: "document.readyState",
+        returnByValue: true
+      }
+    );
     if (result.result.value === "complete") return;
     await sleep(50);
   }
   throw new CommandExecutionError(
     "chromium",
     "Timed out waiting for document.readyState=complete",
-    1,
+    1
   );
 }
 async function captureMhtmlScreenshot(input, output, context) {
@@ -444,9 +423,9 @@ async function captureMhtmlScreenshot(input, output, context) {
         "--remote-debugging-port=0",
         "--remote-allow-origins=*",
         ...context.passthroughArgs,
-        pageUrl,
+        pageUrl
       ],
-      { dryRun: true },
+      { dryRun: true }
     );
     return;
   }
@@ -462,9 +441,9 @@ async function captureMhtmlScreenshot(input, output, context) {
       "--remote-allow-origins=*",
       `--user-data-dir=${userDataDir}`,
       ...context.passthroughArgs,
-      pageUrl,
+      pageUrl
     ],
-    { stdio: ["ignore", "ignore", "pipe"] },
+    { stdio: ["ignore", "ignore", "pipe"] }
   );
   const exitedPromise = new Promise((r) => proc.on("close", r));
   try {
@@ -476,27 +455,32 @@ async function captureMhtmlScreenshot(input, output, context) {
       await waitForDocumentReady(session);
       await session.send("Runtime.evaluate", {
         expression: "document.fonts ? document.fonts.ready : Promise.resolve()",
-        awaitPromise: true,
+        awaitPromise: true
       });
-      const metrics = await session.send("Page.getLayoutMetrics");
+      const metrics = await session.send(
+        "Page.getLayoutMetrics"
+      );
       const viewport = calculateViewportSize(metrics.contentSize);
       await session.send("Emulation.setDeviceMetricsOverride", {
         width: viewport.width,
         height: viewport.height,
         deviceScaleFactor: 1,
-        mobile: false,
+        mobile: false
       });
-      const screenshot = await session.send("Page.captureScreenshot", {
-        format: "png",
-        fromSurface: true,
-        clip: {
-          x: 0,
-          y: 0,
-          width: viewport.width,
-          height: viewport.height,
-          scale: 1,
-        },
-      });
+      const screenshot = await session.send(
+        "Page.captureScreenshot",
+        {
+          format: "png",
+          fromSurface: true,
+          clip: {
+            x: 0,
+            y: 0,
+            width: viewport.width,
+            height: viewport.height,
+            scale: 1
+          }
+        }
+      );
       await writeFile(output, Buffer2.from(screenshot.data, "base64"));
     } finally {
       session.close();
@@ -512,33 +496,31 @@ async function captureMhtmlScreenshot(input, output, context) {
 function ffmpeg(args2 = []) {
   return {
     tool: "ffmpeg",
-    convert: (input, output, context) =>
-      runCommand(
-        [
-          "ffmpeg",
-          "-y",
-          "-i",
-          input,
-          ...args2,
-          ...context.passthroughArgs,
-          output,
-        ],
-        {
-          dryRun: context.dryRun,
-        },
-      ).then(() => void 0),
+    convert: (input, output, context) => runCommand(
+      [
+        "ffmpeg",
+        "-y",
+        "-i",
+        input,
+        ...args2,
+        ...context.passthroughArgs,
+        output
+      ],
+      {
+        dryRun: context.dryRun
+      }
+    ).then(() => void 0)
   };
 }
 function imageMagick(extraArgs = []) {
   return {
     tool: "magick",
-    convert: (input, output, context) =>
-      runCommand(
-        ["magick", ...extraArgs, ...context.passthroughArgs, input, output],
-        {
-          dryRun: context.dryRun,
-        },
-      ).then(() => void 0),
+    convert: (input, output, context) => runCommand(
+      ["magick", ...extraArgs, ...context.passthroughArgs, input, output],
+      {
+        dryRun: context.dryRun
+      }
+    ).then(() => void 0)
   };
 }
 async function sanitizeImagePaths(outputPath, mediaDir, dryRun) {
@@ -563,7 +545,8 @@ async function sanitizeImagePaths(outputPath, mediaDir, dryRun) {
     const absNew = path3.resolve(path3.dirname(outputPath), newPath);
     try {
       await rename(absOld, absNew);
-    } catch {}
+    } catch {
+    }
     newContent = newContent.replace(`(${imagePath})`, `(${newPath})`);
     modified = true;
   }
@@ -579,42 +562,38 @@ function pandoc(options = {}) {
       const isPdf = /\.pdf$/i.test(output);
       const isDocx = output.endsWith(".docx");
       const inExt = path3.extname(input).toLowerCase();
-      const mediaDir = flags.extractMedia
-        ? flags.extractMedia
-        : inExt === ".docx" || inExt === ".md"
-          ? `${output.replace(/\.[^/.]+$/, "")}_media/`
-          : null;
+      const userRequestedMedia = !!flags.extractMedia;
+      const mediaDir = flags.extractMedia ? flags.extractMedia : inExt === ".docx" || inExt === ".md" ? `${output.replace(/\.[^/.]+$/, "")}_media/` : null;
       const flagParams = [
         flags.metadataFile ? `--metadata-file=${flags.metadataFile}` : "",
-        flags.referenceDoc && isDocx
-          ? `--reference-doc=${resolveStylePath(flags.referenceDoc)}`
-          : "",
+        flags.referenceDoc && isDocx ? `--reference-doc=${resolveStylePath(flags.referenceDoc)}` : "",
         flags.toc ? "--toc" : "",
         flags.numberSections ? "--number-sections" : "",
         flags.wrap ? `--wrap=${flags.wrap}` : "",
         flags.pageSize && isPdf ? "-V" : "",
         flags.pageSize && isPdf ? `papersize:${flags.pageSize}` : "",
         flags.style && resolveStylePath(flags.style) ? "--css" : "",
-        flags.style && resolveStylePath(flags.style)
-          ? resolveStylePath(flags.style)
-          : "",
-        mediaDir ? `--extract-media=${mediaDir}` : "",
+        flags.style && resolveStylePath(flags.style) ? resolveStylePath(flags.style) : "",
+        mediaDir ? `--extract-media=${mediaDir}` : ""
       ].filter(Boolean);
       const args2 = [
         "pandoc",
         input,
-        ...(options.from ? ["-f", options.from] : []),
-        ...(options.to ? ["-t", options.to] : []),
-        ...(options.params ?? []),
+        ...options.from ? ["-f", options.from] : [],
+        ...options.to ? ["-t", options.to] : [],
+        ...options.params ?? [],
         ...flagParams,
         ...context.passthroughArgs,
-        ...(options.paramsFromContext?.(context, input, output) ?? []),
+        ...options.paramsFromContext?.(context, input, output) ?? [],
         "-o",
-        output,
+        output
       ];
       await runCommand(args2, { dryRun });
       await sanitizeImagePaths(output, mediaDir, dryRun);
-    },
+      if (!userRequestedMedia && mediaDir && !dryRun) {
+        await rm2(mediaDir, { recursive: true, force: true });
+      }
+    }
   };
 }
 function libreOffice(outExt) {
@@ -631,17 +610,17 @@ function libreOffice(outExt) {
           ...context.passthroughArgs,
           input,
           "--outdir",
-          outDir,
+          outDir
         ],
-        { dryRun: context.dryRun },
+        { dryRun: context.dryRun }
       );
       if (context.dryRun) return;
       const generatedFile = path3.join(
         outDir,
-        path3.basename(input, path3.extname(input)) + `.${outExt}`,
+        path3.basename(input, path3.extname(input)) + `.${outExt}`
       );
       if (generatedFile !== output) await rename(generatedFile, output);
-    },
+    }
   };
 }
 function xlsx2csvConverter() {
@@ -652,11 +631,11 @@ function xlsx2csvConverter() {
         ["xlsx2csv", ...context.passthroughArgs, input],
         {
           dryRun: context.dryRun,
-          captureStdout: true,
-        },
+          captureStdout: true
+        }
       );
       if (!context.dryRun) await writeFile2(output, text);
-    },
+    }
   };
 }
 function markitdownConverter() {
@@ -667,8 +646,8 @@ function markitdownConverter() {
         ["markitdown", ...context.passthroughArgs, input],
         {
           dryRun: context.dryRun,
-          captureStdout: true,
-        },
+          captureStdout: true
+        }
       );
       if (text) {
         text = text.replace(/(?<=\S)\r?\n(?=\S)/g, " ");
@@ -676,7 +655,7 @@ function markitdownConverter() {
       if (!context.dryRun) {
         await writeFile2(output, text);
       }
-    },
+    }
   };
 }
 function yq(inputFormat, outputFormat) {
@@ -692,12 +671,12 @@ function yq(inputFormat, outputFormat) {
           outputFormat,
           ...context.passthroughArgs,
           ".",
-          input,
+          input
         ],
-        { dryRun: context.dryRun, captureStdout: true },
+        { dryRun: context.dryRun, captureStdout: true }
       );
       if (!context.dryRun) await writeFile2(output, text);
-    },
+    }
   };
 }
 function pdfToImage(kind, outputExt) {
@@ -712,49 +691,100 @@ function pdfToImage(kind, outputExt) {
           kind === "png" ? "-png" : "-jpeg",
           ...context.passthroughArgs,
           input,
-          output.replace(new RegExp(`\\.${outputExt}$`, "i"), ""),
+          output.replace(new RegExp(`\\.${outputExt}$`, "i"), "")
         ],
-        { dryRun: context.dryRun },
+        { dryRun: context.dryRun }
       );
-    },
+    }
   };
 }
 function mhtmlToImage(outputExt) {
   return {
     tool: "chromium",
     convert: async (input, output, context) => {
-      const tempDir = context.dryRun
-        ? void 0
-        : await mkdtemp2(path3.join(tmpdir2(), "cv-mhtml-"));
-      const screenshotOutput =
-        outputExt === "png"
-          ? output
-          : context.dryRun
-            ? output.replace(new RegExp(`\\.${outputExt}$`, "i"), ".png")
-            : path3.join(tempDir, "screenshot.png");
+      const tempDir = context.dryRun ? void 0 : await mkdtemp2(path3.join(tmpdir2(), "cv-mhtml-"));
+      const screenshotOutput = outputExt === "png" ? output : context.dryRun ? output.replace(new RegExp(`\\.${outputExt}$`, "i"), ".png") : path3.join(tempDir, "screenshot.png");
       try {
         await captureMhtmlScreenshot(input, screenshotOutput, context);
         if (outputExt !== "png")
           await runCommand(["magick", screenshotOutput, output], {
-            dryRun: context.dryRun,
+            dryRun: context.dryRun
           });
       } finally {
         if (tempDir) await rm2(tempDir, { recursive: true, force: true });
       }
-    },
+    }
   };
 }
 
 // src/converters/document.ts
 import path4 from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
+import { writeFile as writeFile3, copyFile, rm as rm3 } from "node:fs/promises";
+import { tmpdir as tmpdir3 } from "node:os";
+import { mkdtemp as mkdtemp3 } from "node:fs/promises";
+function extractTag(xml, tagName) {
+  const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)</${tagName}>`, "i");
+  const match = regex.exec(xml);
+  return match ? match[1].trim() : null;
+}
+function extractAttr(xml, tagName, attr) {
+  const regex = new RegExp(`<${tagName}[^>]*\\s${attr}=["']([^"']*)["']`, "i");
+  const match = regex.exec(xml);
+  return match ? match[1] : null;
+}
+function parseOpfMetadata(opfXml) {
+  const meta = {};
+  const title = extractTag(opfXml, "dc:title");
+  if (title) meta.title = title;
+  const creator = extractTag(opfXml, "dc:creator");
+  if (creator) meta.author = creator;
+  const language = extractTag(opfXml, "dc:language");
+  if (language) meta.language = language;
+  const publisher = extractTag(opfXml, "dc:publisher");
+  if (publisher) meta.publisher = publisher;
+  const description = extractTag(opfXml, "dc:description");
+  if (description) meta.description = description;
+  const pubdate = extractTag(opfXml, "dc:date");
+  if (pubdate) meta.pubdate = pubdate;
+  const idRegex = /<dc:identifier[^>]*>([\s\S]*?)<\/dc:identifier>/gi;
+  let idMatch;
+  let firstId = null;
+  while ((idMatch = idRegex.exec(opfXml)) !== null) {
+    const fullTag = idMatch[0];
+    const value = idMatch[1].trim();
+    const scheme = extractAttr(fullTag, "dc:identifier", "opf:scheme");
+    if (!firstId) firstId = value;
+    if (scheme && /isbn/i.test(scheme)) {
+      meta.isbn = value;
+      break;
+    }
+  }
+  if (!meta.isbn && firstId) meta.isbn = firstId;
+  return meta;
+}
+function findCoverRef(opfXml, opfDir) {
+  const coverMatch = /<meta\s+name=["']cover["']\s+content=["']([^"']+)["']/.exec(opfXml);
+  if (!coverMatch) return null;
+  const coverId = coverMatch[1];
+  const itemRegex = new RegExp(
+    `<item[^>]*\\sid=["']${coverId}["'][^>]*href=["']([^"']+)["'][^>]*media-type=["']image/([^"']+)["']`
+  );
+  const itemMatch = itemRegex.exec(opfXml);
+  if (!itemMatch) return null;
+  const href = itemMatch[1];
+  const rawExt = itemMatch[2];
+  const ext = rawExt === "jpeg" ? "jpg" : rawExt;
+  const zipHref = opfDir ? `${opfDir}/${href}` : href;
+  return { href: zipHref, ext };
+}
 function mdToPdf() {
   return {
     tool: "pandoc",
     convert: async (input, output, context) => {
       const defaultCssPath = path4.join(
         path4.dirname(fileURLToPath2(import.meta.url)),
-        "style.css",
+        "style.css"
       );
       const extraParams = ["--pdf-engine=weasyprint"];
       if (await pathExists(defaultCssPath))
@@ -768,10 +798,10 @@ function mdToPdf() {
           "--highlight-style",
           "tango",
           "-V",
-          "geometry:margin=2cm",
-        ],
+          "geometry:margin=2cm"
+        ]
       }).convert(input, output, context);
-    },
+    }
   };
 }
 function epubToPdf() {
@@ -788,10 +818,10 @@ function epubToPdf() {
           "--highlight-style",
           "tango",
           "-V",
-          "geometry:margin=2cm",
-        ],
+          "geometry:margin=2cm"
+        ]
       }).convert(input, output, context);
-    },
+    }
   };
 }
 function mdToHtml() {
@@ -800,18 +830,116 @@ function mdToHtml() {
     convert: async (input, output, context) => {
       const defaultCssPath = path4.join(
         path4.dirname(fileURLToPath2(import.meta.url)),
-        "style.html.css",
+        "style.html.css"
       );
       const extraParams = ["-s"];
-      if (!context.flags.style && (await pathExists(defaultCssPath)))
+      if (!context.flags.style && await pathExists(defaultCssPath))
         extraParams.push("--css", defaultCssPath);
       await pandoc({
         from: "markdown",
         to: "html",
-        params: extraParams,
+        params: extraParams
       }).convert(input, output, context);
-    },
+    }
   };
+}
+function epubToMd() {
+  return {
+    tool: "pandoc",
+    convert: async (input, output, context) => {
+      const tmpDir = await mkdtemp3(path4.join(tmpdir3(), "cv-epub-"));
+      try {
+        const outBase = output.replace(/\.[^/.]+$/, "");
+        const metadataPath = `${outBase}-metadata.json`;
+        let containerXml = "";
+        let opfPath = "";
+        try {
+          containerXml = await runCommand(
+            ["unzip", "-p", input, "META-INF/container.xml"],
+            { dryRun: context.dryRun, captureStdout: true }
+          );
+          const opfPathMatch = /<rootfile[^>]*full-path=["']([^"']+)["']/.exec(
+            containerXml
+          );
+          if (opfPathMatch) opfPath = opfPathMatch[1];
+        } catch {
+          console.error(
+            "Warning: could not parse container.xml, skipping metadata/cover extraction"
+          );
+        }
+        if (opfPath) {
+          await processEpubAssets(
+            input,
+            opfPath,
+            metadataPath,
+            tmpDir,
+            context
+          );
+        }
+        await pandoc({ from: "epub", to: "markdown" }).convert(
+          input,
+          output,
+          context
+        );
+      } finally {
+        await rm3(tmpDir, { recursive: true, force: true });
+      }
+    }
+  };
+}
+async function processEpubAssets(input, opfPath, metadataPath, tmpDir, context) {
+  let opfXml;
+  try {
+    opfXml = await runCommand(["unzip", "-p", input, opfPath], {
+      dryRun: context.dryRun,
+      captureStdout: true
+    });
+  } catch {
+    console.error(
+      "Warning: could not read OPF file, skipping metadata/cover extraction"
+    );
+    return;
+  }
+  if (!opfXml) return;
+  const metadata = parseOpfMetadata(opfXml);
+  const missingFields = [];
+  for (const key of [
+    "title",
+    "author",
+    "language",
+    "publisher",
+    "isbn",
+    "description",
+    "pubdate"
+  ]) {
+    if (!metadata[key]) missingFields.push(key);
+  }
+  if (missingFields.length > 0) {
+    console.error(
+      `Warning: EPUB metadata missing: ${missingFields.join(", ")}`
+    );
+  }
+  if (!context.dryRun) {
+    await writeFile3(metadataPath, JSON.stringify(metadata, null, 2));
+  }
+  const opfDir = path4.dirname(opfPath);
+  const coverRef = findCoverRef(opfXml, opfDir);
+  if (!coverRef) {
+    console.error("Warning: no cover image found in EPUB metadata");
+    return;
+  }
+  try {
+    await runCommand(["unzip", "-o", input, "-d", tmpDir, coverRef.href], {
+      dryRun: context.dryRun
+    });
+    if (!context.dryRun) {
+      const extracted = path4.join(tmpDir, coverRef.href);
+      const outBase = metadataPath.replace(/-metadata\.json$/, "");
+      await copyFile(extracted, `${outBase}-cover.${coverRef.ext}`);
+    }
+  } catch {
+    console.error("Warning: could not extract cover image");
+  }
 }
 
 // src/routes.ts
@@ -854,20 +982,20 @@ var ROUTES = {
   "doc:md": {
     tool: "pandoc",
     convert: async (input, output, context) => {
-      const tmpDir = await mkdtemp3(path5.join(tmpdir3(), "cv-doc-"));
+      const tmpDir = await mkdtemp4(path5.join(tmpdir4(), "cv-doc-"));
       try {
         const docxPath = path5.join(
           tmpDir,
-          `${path5.basename(input, path5.extname(input))}.docx`,
+          `${path5.basename(input, path5.extname(input))}.docx`
         );
         await libreOffice("docx").convert(input, docxPath, context);
         await pandoc().convert(docxPath, output, context);
         const mdMediaDir = `${output.replace(/\.[^/.]+$/, "")}_media/`;
         await sanitizeImagePaths(output, mdMediaDir, context.dryRun);
       } finally {
-        await rm3(tmpDir, { recursive: true, force: true });
+        await rm4(tmpDir, { recursive: true, force: true });
       }
-    },
+    }
   },
   "docx:md": pandoc(),
   "md:html": mdToHtml(),
@@ -880,16 +1008,16 @@ var ROUTES = {
     to: "epub",
     paramsFromContext: (context, _input, output) => {
       return ["-M", `title:${path5.basename(output).replace(/\.[^/.]+$/, "")}`];
-    },
+    }
   }),
   "docx:epub": pandoc({
     from: "docx",
     to: "epub",
     paramsFromContext: (context, _input, output) => {
       return ["-M", `title:${path5.basename(output).replace(/\.[^/.]+$/, "")}`];
-    },
+    }
   }),
-  "epub:md": pandoc({ from: "epub", to: "markdown" }),
+  "epub:md": epubToMd(),
   "epub:pdf": epubToPdf(),
   "docx:pdf": libreOffice("pdf"),
   "docx:txt": pandoc({ from: "docx", to: "plain" }),
@@ -913,28 +1041,24 @@ var ROUTES = {
   "json:toml": yq("json", "toml"),
   "json:csv": yq("json", "csv"),
   "csv:json": yq("csv", "json"),
-  "xml:json": yq("xml", "json"),
+  "xml:json": yq("xml", "json")
 };
 
 // src/converters/mermaid.ts
 import { mkdtempSync } from "node:fs";
-import {
-  readFile as readFile2,
-  writeFile as writeFile3,
-  rm as rm4,
-} from "node:fs/promises";
+import { readFile as readFile2, writeFile as writeFile4, rm as rm5 } from "node:fs/promises";
 import path6 from "node:path";
-import { tmpdir as tmpdir4 } from "node:os";
+import { tmpdir as tmpdir5 } from "node:os";
 import { spawnSync } from "node:child_process";
 var MERMAID_RE = /^\s*```\s*mermaid\s*$/im;
-var MMDC_CONFIG = {
-  theme: "default",
-  backgroundColor: "white",
-  width: 1200,
-  height: 800,
+var MMDR_CONFIG = {
+  themeVariables: {
+    // mmdr chấp nhận Mermaid-like themeVariables trong file JSON
+    backgroundColor: "white"
+  }
 };
-function mmdcAvailable() {
-  const result = spawnSync("which", ["mmdc"]);
+function mmdrAvailable() {
+  const result = spawnSync("which", ["mmdr"]);
   return result.status === 0;
 }
 function hasMermaidBlocks(content) {
@@ -943,16 +1067,16 @@ function hasMermaidBlocks(content) {
 async function tryPreprocessMermaid(content, context) {
   if (!hasMermaidBlocks(content)) return content;
   if (context.dryRun) return content;
-  if (!mmdcAvailable()) {
-    console.warn("mmdc not found on PATH; skipping mermaid preprocessing");
+  if (!mmdrAvailable()) {
+    console.warn("mmdr not found on PATH; skipping mermaid preprocessing");
     return content;
   }
-  const tmpDir = mkdtempSync(path6.join(tmpdir4(), "cv-mermaid-"));
+  const tmpDir = mkdtempSync(path6.join(tmpdir5(), "cv-mermaid-"));
   try {
-    const configPath = path6.join(tmpDir, "mmdc-config.json");
-    await writeFile3(configPath, JSON.stringify(MMDC_CONFIG, null, 2));
+    const configPath = path6.join(tmpDir, "mmdr-config.json");
+    await writeFile4(configPath, JSON.stringify(MMDR_CONFIG, null, 2));
     const mmdPath = path6.join(tmpDir, "diagram.mmd");
-    const svgPath = path6.join(tmpDir, "diagram.svg");
+    const imgPath = path6.join(tmpDir, "diagram.png");
     const matches = content.matchAll(/```\s*mermaid\s*\n([\s\S]*?)```/gm);
     let result = content;
     let offset = 0;
@@ -960,14 +1084,30 @@ async function tryPreprocessMermaid(content, context) {
       const mermaidCode = match[1].trim();
       const fullMatch = match[0];
       const matchIndex = match.index + offset;
-      await writeFile3(mmdPath, mermaidCode);
+      await writeFile4(mmdPath, mermaidCode);
       await runCommand(
-        ["mmdc", "-i", mmdPath, "-o", svgPath, "-c", configPath],
-        { dryRun: false },
+        [
+          "mmdr",
+          "-i",
+          mmdPath,
+          "-o",
+          imgPath,
+          "-e",
+          "png",
+          "-t",
+          "default",
+          "-w",
+          "1200",
+          "-H",
+          "800",
+          "-c",
+          configPath
+        ],
+        { dryRun: false }
       );
-      const svgContent = await readFile2(svgPath, "utf-8");
-      const base64Svg = Buffer.from(svgContent).toString("base64");
-      const dataUri = `![](data:image/svg+xml;base64,${base64Svg})`;
+      const imgContent = await readFile2(imgPath);
+      const base64Img = Buffer.from(imgContent).toString("base64");
+      const dataUri = `![](data:image/png;base64,${base64Img})`;
       const before = result.slice(0, matchIndex);
       const after = result.slice(matchIndex + fullMatch.length);
       const newLen = dataUri.length - fullMatch.length;
@@ -976,7 +1116,7 @@ async function tryPreprocessMermaid(content, context) {
     }
     return result;
   } finally {
-    await rm4(tmpDir, { recursive: true, force: true });
+    await rm5(tmpDir, { recursive: true, force: true });
   }
 }
 
@@ -1185,7 +1325,7 @@ ol, ul { padding-left: 2em; }
 img { max-width: 100%; height: auto; }
 
 a { color: #0563c1; text-decoration: underline; }
-`,
+`
 };
 async function ensureOutputDir(output) {
   await mkdir(path7.dirname(output), { recursive: true });
@@ -1196,7 +1336,7 @@ async function assertToolAvailable(tool, dryRun) {
     await runCommand(["which", tool], { dryRun: false, captureStdout: true });
   } catch {
     throw new CliError(
-      `${COLORS.RED}Missing dependency:${COLORS.NC} '${tool}' was not found in PATH.`,
+      `${COLORS.RED}Missing dependency:${COLORS.NC} '${tool}' was not found in PATH.`
     );
   }
 }
@@ -1206,10 +1346,10 @@ function printSupportedRoutes() {
 }
 function printUsage() {
   console.log(
-    `${COLORS.YELLOW}Usage:${COLORS.NC} tsx src/index.ts [--dry-run] [--list] [--style=<file.css>] [--metadata-file=<file.json>] [--reference-doc=<file.docx>] [--toc] [--number-sections] [--wrap=<none|preserve>] [--extract-media=<dir>] [--page-size=<a3|a4|a5|letter|legal>] <input_file> <output_file> [...passthrough_args]`,
+    `${COLORS.YELLOW}Usage:${COLORS.NC} tsx src/index.ts [--dry-run] [--list] [--style=<file.css>] [--metadata-file=<file.json>] [--reference-doc=<file.docx>] [--toc] [--number-sections] [--wrap=<none|preserve>] [--extract-media=<dir>] [--page-size=<a3|a4|a5|letter|legal>] <input_file> <output_file> [...passthrough_args]`
   );
   console.log(
-    `       ${COLORS.YELLOW}cv init${COLORS.NC}        Initialize config directory at ${CONFIG_DIR}`,
+    `       ${COLORS.YELLOW}cv init${COLORS.NC}        Initialize config directory at ${CONFIG_DIR}`
   );
 }
 async function cmdInit() {
@@ -1217,15 +1357,15 @@ async function cmdInit() {
   await mkdir(stylesDir, { recursive: true });
   const cfgPath = path7.join(CONFIG_DIR, "config.json");
   if (!existsSync2(cfgPath)) {
-    await writeFile4(
+    await writeFile5(
       cfgPath,
       JSON.stringify(
         {
           styles: {
-            blog: "~/projects/blog/theme.css",
+            blog: "~/projects/blog/theme.css"
           },
           referenceDocs: {
-            modern: "~/templates/modern.docx",
+            modern: "~/templates/modern.docx"
           },
           defaults: {
             "md:pdf": {
@@ -1234,7 +1374,7 @@ async function cmdInit() {
               toc: true,
               numberSections: false,
               metadataFile: "~/metadata.json",
-              wrap: "none",
+              wrap: "none"
             },
             "md:html": {
               css: "~/.config/convert-file/styles/html.css",
@@ -1242,27 +1382,27 @@ async function cmdInit() {
               numberSections: true,
               metadataFile: "~/metadata.json",
               wrap: "none",
-              extractMedia: "./media",
+              extractMedia: "./media"
             },
             "md:epub": {
               toc: true,
               numberSections: false,
-              metadataFile: "~/metadata.json",
+              metadataFile: "~/metadata.json"
             },
             "docx:html": {
               css: "~/.config/convert-file/styles/docx2html.css",
-              extractMedia: "./media",
-            },
-          },
+              extractMedia: "./media"
+            }
+          }
         },
         null,
-        2,
-      ),
+        2
+      )
     );
   }
   for (const [name, content] of Object.entries(DEFAULT_CSS)) {
     const cssPath = path7.join(stylesDir, name);
-    if (!existsSync2(cssPath)) await writeFile4(cssPath, content);
+    if (!existsSync2(cssPath)) await writeFile5(cssPath, content);
   }
   console.log(`${COLORS.GREEN}Config initialized.${COLORS.NC}`);
   console.log(`  Config: ${cfgPath}`);
@@ -1275,27 +1415,27 @@ function extensionOf(filePath) {
   return path7.extname(filePath).slice(1).toLowerCase();
 }
 async function convertOne(input, output, passthroughArgs, options) {
-  if (!(await pathExists(input)))
+  if (!await pathExists(input))
     throw new CliError(
-      `${COLORS.RED}Error:${COLORS.NC} Input file '${input}' not found.`,
+      `${COLORS.RED}Error:${COLORS.NC} Input file '${input}' not found.`
     );
   const inExt = extensionOf(input);
   const outExt = extensionOf(output);
   if (!inExt || !outExt)
     throw new CliError(
-      `${COLORS.RED}Error:${COLORS.NC} Both input and output need file extensions.`,
+      `${COLORS.RED}Error:${COLORS.NC} Both input and output need file extensions.`
     );
   let tempInput;
   if (!options.dryRun && (inExt === "md" || inExt === "markdown")) {
     const content = await readFile3(input, "utf-8");
     if (hasMermaidBlocks(content)) {
       const preprocessed = await tryPreprocessMermaid(content, {
-        dryRun: false,
+        dryRun: false
       });
       if (preprocessed !== content) {
-        const tdir = await mkdtemp4(path7.join(tmpdir5(), "cv-mermaid-"));
+        const tdir = await mkdtemp5(path7.join(tmpdir6(), "cv-mermaid-"));
         tempInput = path7.join(tdir, "input.md");
-        await writeFile4(tempInput, preprocessed);
+        await writeFile5(tempInput, preprocessed);
       }
     }
   }
@@ -1311,27 +1451,28 @@ async function convertOne(input, output, passthroughArgs, options) {
   const routeConfig = ROUTES[route];
   if (!routeConfig)
     throw new CliError(
-      `${COLORS.RED}Unsupported conversion:${COLORS.NC} ${route}`,
+      `${COLORS.RED}Unsupported conversion:${COLORS.NC} ${route}`
     );
   const context = {
     dryRun: options.dryRun,
     passthroughArgs,
     route,
-    flags: options.flags,
+    flags: options.flags
   };
   await assertToolAvailable(routeConfig.tool, options.dryRun);
   await ensureOutputDir(output);
   try {
-    await withSpinner(context, () =>
-      routeConfig.convert(actualInput, output, context),
+    await withSpinner(
+      context,
+      () => routeConfig.convert(actualInput, output, context)
     );
   } finally {
     if (tempInput)
-      await rm5(path7.dirname(tempInput), { recursive: true, force: true });
+      await rm6(path7.dirname(tempInput), { recursive: true, force: true });
   }
   console.log(
     `
-${COLORS.GREEN}Conversion successful:${COLORS.NC} ${output}${options.dryRun ? " (dry-run)" : ""}`,
+${COLORS.GREEN}Conversion successful:${COLORS.NC} ${output}${options.dryRun ? " (dry-run)" : ""}`
   );
 }
 var KNOWN_BOOLEANS = /* @__PURE__ */ new Set([
@@ -1344,7 +1485,7 @@ var KNOWN_BOOLEANS = /* @__PURE__ */ new Set([
   "no-list",
   "no-help",
   "no-toc",
-  "no-number-sections",
+  "no-number-sections"
 ]);
 var KNOWN_STRINGS = /* @__PURE__ */ new Set([
   "style",
@@ -1352,7 +1493,7 @@ var KNOWN_STRINGS = /* @__PURE__ */ new Set([
   "reference-doc",
   "wrap",
   "extract-media",
-  "page-size",
+  "page-size"
 ]);
 function isCvOption(arg) {
   if (arg === "-h") return true;
@@ -1424,12 +1565,12 @@ async function run() {
     "list",
     "help",
     "toc",
-    "number-sections",
+    "number-sections"
   ]);
   const { cvArgs: splitCvArgs, passthroughArgs } = splitArgs(args);
   const { filteredArgs, finalState } = preprocessNegatedFlags(
     splitCvArgs,
-    BOOLEAN_NAMES,
+    BOOLEAN_NAMES
   );
   const parsed = parseArgs({
     args: filteredArgs,
@@ -1445,8 +1586,8 @@ async function run() {
       "number-sections": { type: "boolean" },
       wrap: { type: "string" },
       "extract-media": { type: "string" },
-      "page-size": { type: "string" },
-    },
+      "page-size": { type: "string" }
+    }
   });
   const parsedValues = parsed.values;
   for (const [name, value] of finalState) {
@@ -1476,7 +1617,7 @@ async function run() {
     numberSections: parsed.values["number-sections"],
     wrap: parsed.values["wrap"],
     extractMedia: parsed.values["extract-media"],
-    pageSize: parsed.values["page-size"],
+    pageSize: parsed.values["page-size"]
   };
   const styleAliases = loadStyleConfig();
   if (conversionFlags.style) {
@@ -1494,7 +1635,7 @@ async function run() {
   }
   await convertOne(input, output, passthroughArgs, {
     dryRun,
-    flags: conversionFlags,
+    flags: conversionFlags
   });
 }
 
@@ -1511,7 +1652,7 @@ ${COLORS.RED}Conversion failed:${COLORS.NC}`);
           `${COLORS.YELLOW}Command:${COLORS.NC} ${err.command}
 ${COLORS.YELLOW}Exit code:${COLORS.NC} ${err.exitCode}
 ${COLORS.YELLOW}stderr:${COLORS.NC}
-${err.stderr}`,
+${err.stderr}`
         );
         process.exit(1);
       }
@@ -1519,11 +1660,8 @@ ${err.stderr}`,
         console.error(err.message);
         process.exit(err.exitCode);
       }
-      console.error(
-        `
-${COLORS.RED}Conversion failed:${COLORS.NC}`,
-        err,
-      );
+      console.error(`
+${COLORS.RED}Conversion failed:${COLORS.NC}`, err);
       process.exit(1);
     }
   })();

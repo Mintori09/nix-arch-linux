@@ -122,6 +122,7 @@ export const FORMATTER_COMMANDS: Record<
   ".prisma": (fp) => ["prisma", "format"],
   ".dockerfile": (fp) => ["dockfmt", "format", fp],
   ".proto": (fp) => ["buf", "format", "-w", fp],
+  ".slint": (fp) => ["slint-lsp", "format", "-i", fp],
 };
 
 const COLORS = {

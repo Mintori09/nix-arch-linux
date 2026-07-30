@@ -9,9 +9,10 @@ let
       #compdef extract
 
       _extract() {
-        _files -g '*.tar.bz2' -g '*.tar.gz' -g '*.tar.xz' -g '*.tbz2' -g '*.tgz' \
-               -g '*.tar' -g '*.bz2' -g '*.gz' -g '*.zip' -g '*.7z' -g '*.rar' \
-               -g '*.Z' -g '*.rpm' -g '*.epub' -g '*.deb'
+        _arguments \
+          '-d[extract into target directory]:directory:_files -/' \
+          '--dir[extract into target directory]:directory:_files -/' \
+          '*:archive file:_files -g "*.tar.bz2" -g "*.tar.gz" -g "*.tar.xz" -g "*.tbz2" -g "*.tgz" -g "*.tar" -g "*.bz2" -g "*.gz" -g "*.zip" -g "*.7z" -g "*.rar" -g "*.Z" -g "*.rpm" -g "*.epub" -g "*.deb"'
       }
 
       compdef _extract extract

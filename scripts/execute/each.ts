@@ -423,7 +423,7 @@ export function renderCommand(template: string, item: Item, totalItems: number):
   const padWidth = String(totalItems).length;
   const today = new Date().toISOString().slice(0, 10);
 
-  let cmd = template.replace("{}", quotedValue);
+  let cmd = template.replaceAll("{}", quotedValue);
   cmd = cmd.replace("{raw}", item.value);
   cmd = cmd.replace("{filename}", quoteIfNeeded(filename));
   cmd = cmd.replace("{stem}", quoteIfNeeded(stem));
@@ -473,7 +473,7 @@ export function renderBatchCommand(template: string, items: Item[], totalItems: 
   const padWidth = String(totalItems).length;
   const today = new Date().toISOString().slice(0, 10);
   const rp = (ph: string, fn: (i: Item) => string) => {
-    cmd = cmd.replace(ph, items.map(fn).join(" "));
+    cmd = cmd.replaceAll(ph, items.map(fn).join(" "));
   };
   rp("{}", (i) => `'${i.value.replace(/'/g, "'\\''")}'`);
   rp("{raw}", (i) => i.value);
