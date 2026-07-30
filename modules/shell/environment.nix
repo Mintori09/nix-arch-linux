@@ -42,6 +42,7 @@ in
     FZF_COMPLETION_TRIGGER = c.fzfCompletionTrigger;
     FZF_COMPLETION_DIR_OPTS = "--walker dir,follow";
     INTELLI_HOME = c.intelliHome;
+    MANGOHUD = "1";
   };
 
   home.sessionPath = c.systemPathPriority ++ [

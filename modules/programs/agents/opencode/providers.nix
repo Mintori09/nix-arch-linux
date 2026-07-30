@@ -36,4 +36,5 @@
   enabled = [
     "opencode-go"
   ];
+
 }

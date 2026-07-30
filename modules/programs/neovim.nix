@@ -56,6 +56,7 @@
       intelephense
       rustc
       cargo
+      slint-lsp
     ];
   };
 }
