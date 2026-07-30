@@ -119,36 +119,260 @@ Before probing the site, create a structured plan using writing-plans methodolog
 - [ ] Look for patterns like `/api/series/{id}/chapters`, `/wp-json/wp/v2/posts`
 - [ ] If found, use fetch directly on the API (much faster)
 
-### 1D. Anti-Bot Bypass (Cloudflare / Datadome)
+### 1D. Anti-Bot Bypass (Cloudflare / Datadome / Turnstile)
 
-Signs to look for:
+**First, classify the block type** — this determines which bypass tier to use:
 
-- Response status 403 or 503
-- HTML body: `<title>Just a moment...</title>`, `cf-browser-verification`, `challenge-form`
-- Playwright shows "Checking your browser before accessing..."
+| Dấu hiệu | Loại |
+|----------|------|
+| Status `403` + header `cf-mitigated: challenge` | JS challenge |
+| Status `503` + `<title>Just a moment...</title>` | JS challenge |
+| Body contains `cf-browser-verification`, `challenge-form` | Turnstile / challenge |
+| Connection reset / timeout at TLS handshake | TLS fingerprint block |
+| Status `429` / `1020` / `1015` | Rate limit / WAF rule |
 
-- [ ] **Playwright Stealth approach (try first):**
-  ```ts
-  await playwright_browser_navigate(url);
-  await playwright_browser_wait_for({ time: 5 });
-  const snapshot = await playwright_browser_snapshot();
-  ```
-- [ ] If challenge resolves, proceed normally
-- [ ] **If not, try custom headers via fetch:**
-  ```ts
-  const res = await fetch(url, {
+Use a helper to detect:
+
+```ts
+function isCFChallenge(html: string): boolean {
+  return (
+    html.includes("cf-browser-verification") ||
+    html.includes("challenge-form") ||
+    html.includes("__cf_chl_f_tk") ||
+    html.includes("cf_challenge") ||
+    /<title>Just a moment/i.test(html) ||
+    html.includes("Checking your browser")
+  );
+}
+```
+
+**Then run the bypass pipeline** (4 tiers, tried in order):
+
+---
+
+#### Tier 1 — Enhanced fetch with cookie jar
+
+- [ ] **Use a CookieJar + realistic headers** for all fetch calls. Most Cloudflare blocks at this level are from missing/incorrect headers, not TLS:
+
+```ts
+class CookieJar {
+  private map = new Map<string, string>();
+
+  set(url: string, rawHeaders: string[] | undefined) {
+    if (!rawHeaders) return;
+    const domain = new URL(url).hostname;
+    for (const raw of rawHeaders) {
+      const parts = raw.split(";")[0]; // name=value
+      const eq = parts.indexOf("=");
+      if (eq === -1) continue;
+      const key = `${domain}:${parts.slice(0, eq)}`;
+      this.map.set(key, parts);
+    }
+  }
+
+  getHeader(url: string): string {
+    const domain = new URL(url).hostname;
+    const cookies: string[] = [];
+    for (const [k, v] of this.map) {
+      if (k.startsWith(domain + ":")) cookies.push(v);
+    }
+    return cookies.join("; ");
+  }
+}
+```
+
+- [ ] Build a `fetchWithCookies()` that auto-attaches cookies and saves Set-Cookie:
+
+```ts
+async function fetchWithCookies(
+  url: string,
+  jar: CookieJar,
+  extraHeaders?: Record<string, string>,
+): Promise<Response> {
+  const cookie = jar.getHeader(url);
+  const headers: Record<string, string> = {
+    "User-Agent":
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Dest": "document",
+    ...(cookie ? { Cookie: cookie } : {}),
+    ...extraHeaders,
+  };
+  const res = await fetch(url, { headers });
+  jar.set(url, res.headers.getSetCookie?.());
+  return res;
+}
+```
+
+> If using an older Node.js without `getSetCookie()`, polyfill: `const raw = res.headers.get("set-cookie"); if (raw) jar.set(url, [raw]);`
+
+- [ ] Try Tier 1: `const res = await fetchWithCookies(url, jar);`
+- [ ] If `res.ok` and HTML has actual content → done
+- [ ] If `403`/`503` and `isCFChallenge(html)` → continue to **Tier 2**
+
+---
+
+#### Tier 2 — TLS fingerprint spoofing (impit)
+
+Cloudflare checks JA3/JA4 TLS fingerprints — Node's built-in `fetch` has a distinctive signature. `impit` mimics Chrome's TLS handshake byte-for-byte.
+
+- [ ] `pnpm add impit`
+- [ ] Use impit as the HTTP client:
+
+```ts
+let _impit: any = null;
+async function getImpit() {
+  if (!_impit) {
+    const { Impit } = await import("impit");
+    _impit = new Impit({ browser: "chrome" });
+  }
+  return _impit;
+}
+
+async function fetchWithImpit(
+  url: string,
+  jar: CookieJar,
+): Promise<{ html: string; ok: boolean }> {
+  const impit = await getImpit();
+  const cookie = jar.getHeader(url);
+  const res = await impit.fetch(url, {
     headers: {
       "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9,vi;q=0.8",
-      "Cache-Control": "no-cache",
-      Pragma: "no-cache",
-      Referer: new URL(url).origin + "/",
+      ...(cookie ? { Cookie: cookie } : {}),
     },
   });
+  const html = await res.text();
+  // impit returns headers as a plain object
+  const setCookie = res.headers["set-cookie"];
+  if (setCookie) jar.set(url, Array.isArray(setCookie) ? setCookie : [setCookie]);
+  return { html, ok: res.ok ?? res.status < 400 };
+}
+```
+
+- [ ] If `isCFChallenge(html)` still → continue to **Tier 3**
+
+---
+
+#### Tier 3 — Playwright stealth (headless → headed fallback)
+
+When HTTP-level bypasses fail, use a real browser. The strategy: **start headless, fall back to headed**.
+
+- [ ] Install if missing: `pnpm add playwright`
+- [ ] Launch with anti-detection args:
+
+```ts
+import { chromium } from "playwright";
+
+async function launchStealthBrowser() {
+  const width = 1280 + Math.floor(Math.random() * 200);
+  const height = 720 + Math.floor(Math.random() * 100);
+  return chromium.launch({
+    headless: true,
+    args: [
+      "--disable-blink-features=AutomationControlled",
+      "--no-sandbox",
+      `--window-size=${width},${height}`,
+    ],
+  });
+}
+```
+
+- [ ] **Solve the challenge** — navigate and wait for `cf_clearance` cookie:
+
+```ts
+async function solveChallenge(
+  browser: any,
+  url: string,
+  jar: CookieJar,
+): Promise<boolean> {
+  const context = await browser.newContext({
+    viewport: { width: 1280 + Math.floor(Math.random() * 200), height: 720 + Math.floor(Math.random() * 100) },
+    userAgent:
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    locale: "en-US",
+    geolocation: { latitude: 40.7128, longitude: -74.006 },
+    permissions: ["geolocation"],
+  });
+  const page = await context.newPage();
+
+  try {
+    await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
+    // Wait for cf_clearance cookie (signal that challenge passed)
+    const cfClearance = await page.waitForFunction(
+      () => document.cookie.includes("cf_clearance"),
+      { timeout: 30000 },
+    ).then(() => true).catch(() => false);
+
+    if (cfClearance) {
+      // Save cookies into jar
+      const cookies = await context.cookies();
+      for (const c of cookies) {
+        // set-cookie format: name=value; Domain=...
+        jar.set(url, [`${c.name}=${c.value}`]);
+      }
+      return true;
+    }
+    return false;
+  } finally {
+    await page.close();
+    await context.close();
+  }
+}
+```
+
+- [ ] **Headless attempt:**
+  ```ts
+  const browser = await launchStealthBrowser();
+  const solved = await solveChallenge(browser, url, jar);
+  await browser.close();
   ```
-- [ ] **Fallback:** If all methods fail, tell the user the site has anti-bot protection that couldn't be bypassed. Suggest manual browser access to solve CAPTCHA, then retry.
+- [ ] If solved → Tier 4 (cookie reuse)
+- [ ] **If headless fails → try headed mode:**
+  ```ts
+  const headedBrowser = await chromium.launch({
+    headless: false,  // visible browser window
+    args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"],
+  });
+  const solvedHeaded = await solveChallenge(headedBrowser, url, jar);
+  await headedBrowser.close();
+  ```
+  Headed mode is harder to detect — the browser process has actual window chrome, GPU compositing, and proper screen surface. Some Cloudflare challenges specifically check for headless-only signals.
+- [ ] If still stuck (e.g., Turnstile CAPTCHA requiring manual solve) → tell user to solve manually in the visible window, then press Enter. After manual solve, cookies will be extracted.
+
+---
+
+#### Tier 4 — Cookie reuse (no browser for batch requests)
+
+Once `cf_clearance` is in the jar, subsequent requests can use plain `fetch()` with the cookie — **no browser or impit needed**.
+
+- [ ] The `fetchWithCookies()` from Tier 1 will auto-attach the cookie
+- [ ] `cf_clearance` is typically valid for **15–30 minutes**
+- [ ] For batch chapter downloads, this means only 1 Playwright launch for the whole batch
+
+```ts
+// After solving challenge, fetchChapterUrls and scrapeChapter use fetchWithCookies
+const chapters = await fetchChapterUrls(seriesUrl, jar);  // Tier 4: fast fetch
+for (const ch of chapters) {
+  const data = await scrapeChapter(ch.url, jar);  // Tier 4: fast fetch
+  // ...
+}
+```
+
+**The CookieJar should be passed to all helpers** (`extractSeriesMeta`, `fetchChapterUrls`, `scrapeChapter`) instead of using the bare `UA` object.
+
+---
+
+#### Tier 5 — Manual fallback
+
+- [ ] If all tiers fail: tell the user the site has anti-bot that couldn't be bypassed. Suggest:
+  - Open the URL manually in a regular browser
+  - Solve any CAPTCHA
+  - Copy the page content or use browser devtools to save the HTML
 
 ### ✓ Verification Checkpoint A
 
@@ -237,10 +461,57 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const UA = {
-  "User-Agent":
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
-};
+
+// --- Cookie jar for Cloudflare cf_clearance reuse ---
+
+class CookieJar {
+  private map = new Map<string, string>();
+
+  set(url: string, rawHeaders: string[] | undefined) {
+    if (!rawHeaders) return;
+    const domain = new URL(url).hostname;
+    for (const raw of rawHeaders) {
+      const parts = raw.split(";")[0];
+      const eq = parts.indexOf("=");
+      if (eq === -1) continue;
+      this.map.set(`${domain}:${parts.slice(0, eq)}`, parts);
+    }
+  }
+
+  getHeader(url: string): string {
+    const domain = new URL(url).hostname;
+    const cookies: string[] = [];
+    for (const [k, v] of this.map) {
+      if (k.startsWith(domain + ":")) cookies.push(v);
+    }
+    return cookies.join("; ");
+  }
+}
+
+// --- Cloudflare bypass: Tier 1 — fetch with cookie support ---
+
+async function fetchWithCookies(
+  url: string,
+  jar: CookieJar,
+  extraHeaders?: Record<string, string>,
+): Promise<Response> {
+  const cookie = jar.getHeader(url);
+  const headers: Record<string, string> = {
+    "User-Agent":
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Dest": "document",
+    ...(cookie ? { Cookie: cookie } : {}),
+    ...extraHeaders,
+  };
+  const res = await fetch(url, { headers });
+  // @ts-ignore - getSetCookie available in Node 22+
+  jar.set(url, res.headers.getSetCookie?.());
+  return res;
+}
 
 function slugify(text: string): string {
   return text
@@ -275,8 +546,8 @@ interface NovelMeta {
   freeChapters: number;
 }
 
-async function extractSeriesMeta(seriesUrl: string): Promise<NovelMeta> {
-  const res = await fetch(seriesUrl, { headers: UA });
+async function extractSeriesMeta(seriesUrl: string, jar: CookieJar): Promise<NovelMeta> {
+  const res = await fetchWithCookies(seriesUrl, jar);
   const $ = cheerio.load(await res.text());
   const bodyText = $("body").text();
 
@@ -334,8 +605,8 @@ async function extractSeriesMeta(seriesUrl: string): Promise<NovelMeta> {
 
 // --- SITE-SPECIFIC: customize these two functions ---
 
-async function fetchChapterUrls(seriesUrl: string): Promise<ChapterLink[]> {
-  const res = await fetch(seriesUrl, { headers: UA });
+async function fetchChapterUrls(seriesUrl: string, jar: CookieJar): Promise<ChapterLink[]> {
+  const res = await fetchWithCookies(seriesUrl, jar);
   const $ = cheerio.load(await res.text());
   const links: ChapterLink[] = [];
   $("YOUR-LIST-SELECTOR").each((_, el) => {
@@ -348,8 +619,9 @@ async function fetchChapterUrls(seriesUrl: string): Promise<ChapterLink[]> {
 
 async function scrapeChapter(
   url: string,
+  jar: CookieJar,
 ): Promise<{ title: string; body: string } | null> {
-  const res = await fetch(url, { headers: UA });
+  const res = await fetchWithCookies(url, jar);
   const $ = cheerio.load(await res.text());
 
   // check premium
@@ -372,10 +644,11 @@ async function scrapeChapter(
 async function downloadCover(
   url: string | undefined,
   outDir: string,
+  jar: CookieJar,
 ): Promise<string | null> {
   if (!url) return null;
   try {
-    const res = await fetch(url, { headers: UA });
+    const res = await fetchWithCookies(url, jar);
     if (!res.ok) return null;
     const ct = res.headers.get("content-type") || "";
     const ext = ct.includes("png")
@@ -456,10 +729,11 @@ async function main() {
   }
 
   const domain = domainFromUrl(seriesUrl);
+  const jar = new CookieJar();
 
   // 1. Extract metadata from series page
   console.log("Extracting series metadata...");
-  const meta = await extractSeriesMeta(seriesUrl);
+  const meta = await extractSeriesMeta(seriesUrl, jar);
   console.log(`  Title: ${meta.title}`);
   if (meta.author) console.log(`  Author: ${meta.author}`);
   console.log(
@@ -473,12 +747,12 @@ async function main() {
 
   // 3. Download cover
   const coverFile = meta.coverUrl
-    ? await downloadCover(meta.coverUrl, outDir)
+    ? await downloadCover(meta.coverUrl, outDir, jar)
     : null;
   if (coverFile) console.log(`  Cover saved: ${coverFile}`);
 
-  // 4. Fetch chapter list
-  const chapters = await fetchChapterUrls(seriesUrl);
+  // 4. Fetch chapter list (uses cookies from metadata fetch)
+  const chapters = await fetchChapterUrls(seriesUrl, jar);
   console.log(`Found ${chapters.length} chapters`);
 
   // ... download loop (batching, error handling) ...
@@ -655,10 +929,11 @@ Output directory structure:
   async function downloadCover(
     url: string | undefined,
     outDir: string,
+    jar: CookieJar,
   ): Promise<string | null> {
     if (!url) return null;
     try {
-      const res = await fetch(url, { headers: UA });
+      const res = await fetchWithCookies(url, jar);
       if (!res.ok) return null;
       const ct = res.headers.get("content-type") || "";
       const ext = ct.includes("png")
@@ -834,11 +1109,13 @@ Task 5: Verify Results
 
 ## When Things Go Wrong
 
-- **403 Forbidden**: Add/rotate User-Agent, add `Accept`, `Referer` headers; or try Step 1D anti-bot
-- **503 / Cloudflare challenge**: Go to Step 1D (Playwright stealth, custom headers, proxy as last resort)
+- **403 / 503 (Cloudflare)**: Run the full bypass pipeline (1D) — Tier 1 (cookie jar), Tier 2 (impit TLS spoofing), Tier 3 (Playwright headless → headed)
+- **TLS connection reset / timeout**: Likely TLS fingerprint block → `pnpm add impit` and use Tier 2
+- **Headless Playwright gets blocked → still showing challenge**: Fall back to headed mode (Tier 3b) — real browser window passes more detection signals
+- **`cf_clearance` cookie expires mid-batch**: Re-launch Playwright (Tier 3) once to refresh; batch likely finishes within 15-30 min
 - **Empty content after fetch**: Try Playwright (the site is probably SPA)
 - **Chapter list incomplete**: Check for pagination, "load more" buttons, or API pagination
-- **Rate limited**: Increase `BATCH_DELAY_MS`, reduce `BATCH_SIZE`, add jitter to timing
+- **Rate limited**: Increase `BATCH_DELAY_MS`, reduce `BATCH_SIZE`, add jitter to timing; rotate User-Agent
 - **Can't find content selector**: Use Playwright to inspect the rendered DOM; look for the element with the largest text block
 - **Turndown throws error on HTML**: The content container may not have `innerHTML`; fall back to `$.html()` on a parent element
 

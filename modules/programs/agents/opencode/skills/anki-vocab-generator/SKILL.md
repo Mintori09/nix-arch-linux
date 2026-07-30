@@ -292,3 +292,4 @@ Modified Hepburn system:
 3. **Consistency** — Within a single session, maintain consistent style for IPA, romaji, and field formatting.
 4. **Self-contained output** — The JSON array should require no further editing. The user pastes it into `data.json` and runs their script.
 5. **Context matters** — If the user says "từ này dùng trong kinh doanh", adapt all fields to a business context.
+6. **Don't you subagent-driven**.
