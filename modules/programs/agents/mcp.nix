@@ -43,19 +43,6 @@
     enabled = true;
   };
 
-  filesystem = {
-    local = {
-      argv = [
-        "${pkgs.nodejs}/bin/npx"
-        "-y"
-        "@modelcontextprotocol/server-filesystem"
-        "${config.home.homeDirectory}/projects"
-        "${config.home.homeDirectory}/dotfiles"
-      ];
-    };
-    enabled = true;
-  };
-
   deepwiki = {
     remote = {
       url = "https://mcp.deepwiki.com/mcp";
