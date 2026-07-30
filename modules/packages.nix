@@ -1,7 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 {
   nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
+    inputs.mmdr.packages.${pkgs.system}.default
     # Archive
     atool
     bzip2

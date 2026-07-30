@@ -90,6 +90,8 @@
       url = "github:cachix/pre-commit-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    mmdr.url = "github:1jehuang/mermaid-rs-renderer";
   };
 
   outputs =
@@ -99,6 +101,7 @@
       nixgl,
       spicetify-nix,
       # catppuccin,
+      mmdr,
       sops-nix,
       llm-agents,
       mcp-servers-nix,
@@ -114,7 +117,7 @@
         inherit system;
         overlays = [
           nixgl.overlay
-          llm-agents.overlays.default
+          llm-agents.overlays.shared-nixpkgs
           (final: prev: {
             bookokrat = final.callPackage ./modules/packages/bookokrat.nix { };
             dbx = final.callPackage ./modules/packages/dbx.nix { };
