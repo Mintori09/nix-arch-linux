@@ -103,6 +103,7 @@
     # Custom packages (prebuilt from GitHub)
     bookokrat
     dbx
+    zap
     sd
     watchexec
     rclone
