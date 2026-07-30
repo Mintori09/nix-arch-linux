@@ -108,6 +108,8 @@
     watchexec
     rclone
     trashy
+    gdown
+    proton-vpn
   ];
 
 }
