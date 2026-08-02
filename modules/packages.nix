@@ -110,6 +110,13 @@
     trashy
     gdown
     proton-vpn
+
+    # Typst
+    typstyle
+    typst
+
+    # Rust
+    cargo-deny
   ];
 
 }
