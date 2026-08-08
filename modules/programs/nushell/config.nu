@@ -19,6 +19,25 @@ $env.config = {
   }
 }
 
+# Carapace completion setup
+let carapace_completer = {|spans|
+  carapace $spans.0 nushell ...$spans | from json
+}
+
+$env.config = ($env.config | merge {
+  completions: {
+    case_sensitive: false
+    quick: true
+    partial: true
+    algorithm: "prefix"
+    external: {
+      enable: true
+      max_results: 100
+      completer: $carapace_completer
+    }
+  }
+})
+
 # Interactive cd with FZF and eza preview when called without parameters
 def --env cd [path?: string] {
   if ($path | is-empty) {

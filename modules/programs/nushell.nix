@@ -17,9 +17,15 @@
     enableNushellIntegration = true;
   };
 
+  programs.zoxide = {
+    enable = true;
+    enableNushellIntegration = true;
+  };
+
   home.packages = with pkgs; [
     nushell
     carapace
     starship
+    zoxide
   ];
 }
