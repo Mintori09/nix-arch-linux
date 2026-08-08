@@ -35,22 +35,6 @@ $env.config = ($env.config | merge {
       completer: $carapace_completer
     }
   }
-  menus: [
-    {
-      name: fuzzy_menu
-      only_buffer_difference: false
-      marker: "? "
-      type: {
-        layout: list
-        page_size: 10
-      }
-      style: {
-        text: green
-        selected_text: green_reverse
-        description_text: yellow
-      }
-    }
-  ]
 })
 
 # Interactive directory navigation with FZF + eza preview
@@ -72,18 +56,6 @@ def --env cdi [path?: string] {
 # Keybindings configuration
 $env.config = ($env.config | merge {
   keybindings: [
-    {
-      name: fuzzy_completion
-      modifier: none
-      keycode: tab
-      mode: [emacs, vi_normal, vi_insert]
-      event: {
-        until: [
-          { send: menu name: fuzzy_menu }
-          { send: menu name: completion_menu }
-        ]
-      }
-    }
     {
       name: zoxide_menu
       modifier: alt
