@@ -26,16 +26,17 @@ $env.config = {
   }
 }
 
-# Direnv env_change hook (item 1)
+# Direnv env_change hook
 $env.config = ($env.config | merge {
   hooks: {
     env_change: {
       PWD: [
         {||
-          if (which direnv | is-empty) { return }
-          direnv export json | from json | default {} | load-env
-          if ($env.PATH | describe | str contains "string") {
-            $env.PATH = ($env.PATH | split row (char esep))
+          if (which direnv | is-not-empty) {
+            direnv export json | from json | default {} | load-env
+            if ($env.PATH | describe | str contains "string") {
+              $env.PATH = ($env.PATH | split row (char esep))
+            }
           }
         }
       ]
@@ -43,8 +44,14 @@ $env.config = ($env.config | merge {
   }
 })
 
-# Carapace completion setup
-let carapace_completer = {|spans|
+# Carapace & Fallback completion setup
+let external_completer = {|spans|
+  let expanded_alias = (scope aliases | where name == $spans.0 | get -i 0.expansion)
+  let spans = (if $expanded_alias != null {
+    $spans | skip 1 | prepend ($expanded_alias | split row ' ')
+  } else {
+    $spans })
+
   carapace $spans.0 nushell ...$spans | from json
 }
 
@@ -57,7 +64,7 @@ $env.config = ($env.config | merge {
     external: {
       enable: true
       max_results: 100
-      completer: $carapace_completer
+      completer: $external_completer
     }
   }
 })
@@ -67,6 +74,26 @@ use nu_scripts/custom-completions/git/git-completions.nu *
 use nu_scripts/custom-completions/cargo/cargo-completions.nu *
 use nu_scripts/custom-completions/nix/nix-completions.nu *
 use nu_scripts/custom-completions/bat/bat-completions.nu *
+
+# Quick Utility Aliases
+alias ll = eza -l --icons --git
+alias la = eza -la --icons --git
+alias lt = eza --tree --level=2 --icons
+alias cat = bat
+alias g = git
+alias hms = home-manager switch --flake ~/.config/home-manager
+
+# Dynamic fzf workspace directory search
+def --env cdp [] {
+  let target = (
+    fd --hidden --type d --max-depth 3 . ~/projects ~/dotfiles
+    | fzf --height=40% --reverse --preview 'eza -la --icons --group-directories-first {}'
+    | str trim
+  )
+  if not ($target | is-empty) {
+    cd $target
+  }
+}
 
 # Interactive directory navigation with FZF + eza preview
 def --env cdi [path?: string] {
