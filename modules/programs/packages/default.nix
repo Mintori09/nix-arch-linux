@@ -6,7 +6,7 @@
     ./kcolorchooser.nix
     ./obsidian.nix
     ./gimp.nix
-    ./foliate.nix
+    # ./foliate.nix
     ./drawio.nix
     ./localsend.nix
     # ./sioyek.nix

@@ -22,9 +22,7 @@
     ./kitty.nix
     ./pinta.nix
     ./alacritty.nix
-    ./qutebrowser.nix
     ./packages
-    ./zed
     ./yt-dlp.nix
     ./obs.nix
     ./mcfly.nix
