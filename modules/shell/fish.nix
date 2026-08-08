@@ -193,7 +193,7 @@ in
       abbr -a c 'clear'
 
       # System
-      abbr -a hms 'home-manager switch --flake ~/.config/home-manager'
+      abbr -a hms 'home-manager switch --flake ~/.config/home-manager -j 1'
       abbr -a st 'systemctl-tui'
       abbr -a lock 'loginctl lock-session'
 

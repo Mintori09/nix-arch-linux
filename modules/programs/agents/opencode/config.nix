@@ -15,6 +15,16 @@ builtins.toJSON {
     # "@tarquinen/opencode-dcp"
     "@mohak34/opencode-notifier@latest"
   ];
+  agent = {
+    yolo = {
+      description = "Allow all permission";
+      model = "opencode/deepseek-v4-flash-free";
+      prompt = "";
+      permission = {
+        "*" = "allow";
+      };
+    };
+  };
   # agent = {
   #   code-reviewer = {
   #     description = "Reviews code for best practices and potential issues";

@@ -9,7 +9,7 @@ in
     # aider = "aider --model opencode-go/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
     # opencode-go/deepseek-v4-pro
     reload = "source $HOME/.config/zsh/.zshrc";
-    hms = "home-manager switch --flake ~/.config/home-manager";
+    hms = "home-manager switch --flake ~/.config/home-manager -j 1";
     update-packages = "yay -Syu --ignore voxtype-cuda";
 
     # NAVIGATION & SHELL BASICS
@@ -63,9 +63,12 @@ in
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
     co = "wl-copy";
     cat = "bat";
+    torlink = "npx torlnk";
+    nls = "nu -c ls";
+    l = "nu -c 'ls | sort-by type | table --expand --icons'";
   };
 
   programs.bash = {
-    shellAliases.hms = "home-manager switch --flake ~/.config/home-manager";
+    shellAliases.hms = "home-manager switch --flake ~/.config/home-manager -j 1";
   };
 }

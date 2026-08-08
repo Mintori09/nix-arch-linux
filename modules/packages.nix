@@ -62,7 +62,6 @@
     lazydocker
     spicetify-cli
     rclone
-    codex
 
     brotab
     navi
@@ -114,9 +113,13 @@
     # Typst
     typstyle
     typst
+    tinymist
+    websocat
 
     # Rust
     cargo-deny
+    charm-freeze
+    tsx
   ];
 
 }

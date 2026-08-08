@@ -114,6 +114,12 @@ in
         dest = ".gemini/skills";
         structure = "link";
       };
+
+      copilot = {
+        enable = true;
+        dest = ".copilot/skills";
+        structure = "link";
+      };
     };
   };
 }
