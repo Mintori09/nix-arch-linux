@@ -156,6 +156,28 @@ in
           zvm_bindkey viins '^R' mcfly-fzf-history-widget
           zvm_bindkey vicmd '^R' mcfly-fzf-history-widget
           bindkey -M emacs '^R' mcfly-fzf-history-widget
+
+          # Alt+Z: zoxide interactive picker via fzf
+          zoxide-fzf() {
+            local dir
+            dir="$(${pkgs.zoxide}/bin/zoxide query --interactive)" || return
+            [[ -n "$dir" ]] && builtin cd -- "$dir"
+            redraw-prompt
+          }
+
+          # p10k không re-tính prompt trên reset-prompt nên phải chạy lại
+          # precmd rồi buộc p10k vẽ lại toàn bộ (dir, vcs, ...)
+          redraw-prompt() {
+            local f
+            for f in chpwd "''${chpwd_functions[@]}" precmd "''${precmd_functions[@]}"; do
+              [[ "''${+functions[$f]}" == 0 ]] || "$f" &>/dev/null || true
+            done
+            p10k display -r
+          }
+          zle -N zoxide-fzf
+          zvm_bindkey viins '\ez' zoxide-fzf
+          zvm_bindkey vicmd '\ez' zoxide-fzf
+          bindkey -M emacs '\ez' zoxide-fzf
         }
 
         function zvm_after_lazy_keybindings() {

@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 
 {
   programs.nushell = {
@@ -16,6 +16,8 @@
             reset_application_mode: true
           }
         }
+
+        def lsi [] { ls | table --expand --icons }
       '';
     };
   };
