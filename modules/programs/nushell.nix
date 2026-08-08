@@ -3,6 +3,7 @@
 {
   programs.nushell = {
     enable = true;
+    shellAliases = lib.mkForce { };
     configFile.source = ./nushell/config.nu;
     envFile.source = ./nushell/env.nu;
   };
