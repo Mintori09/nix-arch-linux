@@ -11,6 +11,12 @@ $env.config = {
   table: {
     mode: rounded
   }
+  history: {
+    file_format: "sqlite"
+    max_results: 10000
+    sync_on_enter: true
+    isolation: false
+  }
 }
 
 # Interactive cd with FZF and eza preview when called without parameters
@@ -42,6 +48,26 @@ $env.config = ($env.config | merge {
       event: {
         send: executehostcommand
         cmd: "let dir = (zoxide query --interactive | str trim); if not ($dir | is-empty) { cd $dir }"
+      }
+    }
+    {
+      name: fzf_find_file
+      modifier: control
+      keycode: char_o
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        send: executehostcommand
+        cmd: "let file = (rg -l '.*' --hidden --glob '!.git' --glob '!.venv' --glob '!node_modules' --glob '!target' | fzf --height=80% --reverse --preview 'bat --color=always --line-range :50 {}' | str trim); if not ($file | is-empty) { nvim $file }"
+      }
+    }
+    {
+      name: fzf_history
+      modifier: control
+      keycode: char_r
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        send: executehostcommand
+        cmd: "let cmd = (history | get command | reverse | uniq | str join (char newline) | fzf --height=40% --reverse --no-preview | str trim); if not ($cmd | is-empty) { commandline edit --insert $cmd }"
       }
     }
   ]
