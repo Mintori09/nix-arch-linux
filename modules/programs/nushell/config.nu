@@ -19,7 +19,6 @@ $env.config = {
     file_format: "sqlite"
     sync_on_enter: true
     isolation: false
-    max_results: 10000
   }
   rm: {
     always_trash: false
@@ -46,7 +45,7 @@ $env.config = ($env.config | merge {
 
 # Carapace & Fallback completion setup
 let external_completer = {|spans|
-  let expanded_alias = (scope aliases | where name == $spans.0 | get -i 0.expansion)
+  let expanded_alias = (scope aliases | where name == $spans.0 | get -o 0.expansion)
   let spans = (if $expanded_alias != null {
     $spans | skip 1 | prepend ($expanded_alias | split row ' ')
   } else {
