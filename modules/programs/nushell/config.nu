@@ -37,8 +37,8 @@ $env.config = ($env.config | merge {
   }
 })
 
-# Interactive cd with FZF and eza preview when called without parameters
-def --env cd [path?: string] {
+# Interactive directory navigation with FZF + eza preview
+def --env cdi [path?: string] {
   if ($path | is-empty) {
     let target = (
       fd --hidden --type d --exclude .git --exclude node_modules --exclude .venv . .
