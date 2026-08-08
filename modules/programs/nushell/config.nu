@@ -13,7 +13,6 @@ $env.config = {
   }
   history: {
     file_format: "sqlite"
-    max_results: 10000
     sync_on_enter: true
     isolation: false
   }
