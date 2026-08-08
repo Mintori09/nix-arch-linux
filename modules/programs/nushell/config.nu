@@ -18,6 +18,23 @@ $env.config = {
   }
 }
 
+# Direnv env_change hook (item 1)
+$env.config = ($env.config | merge {
+  hooks: {
+    env_change: {
+      PWD: [
+        {||
+          if (which direnv | is-empty) { return }
+          direnv export json | from json | default {} | load-env
+          if ($env.PATH | describe | str contains "string") {
+            $env.PATH = ($env.PATH | split row (char esep))
+          }
+        }
+      ]
+    }
+  }
+})
+
 # Carapace completion setup
 let carapace_completer = {|spans|
   carapace $spans.0 nushell ...$spans | from json
@@ -36,6 +53,12 @@ $env.config = ($env.config | merge {
     }
   }
 })
+
+# Custom completions from nu_scripts (item 2)
+use nu_scripts/custom-completions/git/git-completions.nu *
+use nu_scripts/custom-completions/cargo/cargo-completions.nu *
+use nu_scripts/custom-completions/nix/nix-completions.nu *
+use nu_scripts/custom-completions/bat/bat-completions.nu *
 
 # Interactive directory navigation with FZF + eza preview
 def --env cdi [path?: string] {

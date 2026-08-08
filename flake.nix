@@ -92,6 +92,11 @@
     };
 
     mmdr.url = "github:1jehuang/mermaid-rs-renderer";
+
+    nu-scripts = {
+      url = "github:nushell/nu_scripts";
+      flake = false;
+    };
   };
 
   outputs =

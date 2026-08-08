@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, inputs, ... }:
 
 {
   programs.nushell = {
@@ -7,6 +7,8 @@
     configFile.source = ./nushell/config.nu;
     envFile.source = ./nushell/env.nu;
   };
+
+  xdg.configFile."nushell/nu_scripts".source = inputs.nu-scripts;
 
   programs.starship = {
     enable = true;
@@ -28,5 +30,6 @@
     carapace
     starship
     zoxide
+    direnv
   ];
 }
