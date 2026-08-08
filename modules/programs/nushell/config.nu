@@ -2,6 +2,7 @@
 $env.config = {
   show_banner: false
   edit_mode: "vi"
+  use_kitty_protocol: true
   shell_integration: {
     osc2: true
     osc7: true
@@ -10,11 +11,18 @@ $env.config = {
   }
   table: {
     mode: rounded
+    index_mode: always
+    show_empty: true
+    padding: { left: 1, right: 1 }
   }
   history: {
     file_format: "sqlite"
     sync_on_enter: true
     isolation: false
+    max_results: 10000
+  }
+  rm: {
+    always_trash: false
   }
 }
 
