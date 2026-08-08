@@ -47,11 +47,9 @@ def --env cd [path?: string] {
       | str trim
     )
     if not ($target | is-empty) {
-      std repeat null | ignore
       cd $target
     }
   } else {
-    std repeat null | ignore
     cd $path
   }
 }
