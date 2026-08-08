@@ -3,26 +3,23 @@
 {
   programs.nushell = {
     enable = true;
-    shellAliases = lib.mkForce { };
-    configFile = {
-      text = ''
-        $env.config = {
-          show_banner: false
-          edit_mode: "vi"
-          shell_integration: {
-            osc2: true
-            osc7: true
-            osc133: true
-            reset_application_mode: true
-          }
-        }
+    configFile.source = ./nushell/config.nu;
+    envFile.source = ./nushell/env.nu;
+  };
 
-        def lsi [] { ls | table --expand --icons }
-      '';
-    };
+  programs.starship = {
+    enable = true;
+    enableNushellIntegration = true;
+  };
+
+  programs.carapace = {
+    enable = true;
+    enableNushellIntegration = true;
   };
 
   home.packages = with pkgs; [
     nushell
+    carapace
+    starship
   ];
 }
