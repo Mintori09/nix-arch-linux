@@ -127,6 +127,7 @@
             bookokrat = final.callPackage ./modules/packages/bookokrat.nix { };
             dbx = final.callPackage ./modules/packages/dbx.nix { };
             zap = final.callPackage ./modules/packages/zap.nix { };
+            anyflip-downloader = final.callPackage ./modules/packages/anyflip-downloader.nix { };
           })
         ];
         config.allowUnfree = true;
