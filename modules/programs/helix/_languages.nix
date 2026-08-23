@@ -139,11 +139,12 @@ toTOML "languages.toml" {
       auto-format = true;
       language-servers = [ "marksman" ];
       formatter = {
-        command = "biome";
+        command = "prettier";
         args = [
-          "format"
-          "--stdin-file-path"
-          "file.md"
+          "--parser"
+          "markdown"
+          "--prose-wrap"
+          "never"
         ];
       };
     }

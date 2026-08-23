@@ -73,4 +73,21 @@
     enabled = true;
   };
 
+  firefox-devtools = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@mozilla/firefox-devtools-mcp@latest"
+        "--headless"
+        "--viewport"
+        "1280x720"
+      ];
+      env = {
+        START_URL = "about:blank";
+      };
+    };
+    enabled = true;
+  };
+
 }

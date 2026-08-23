@@ -103,6 +103,7 @@
     bookokrat
     dbx
     zap
+    anyflip-downloader
     sd
     watchexec
     rclone
@@ -120,6 +121,11 @@
     cargo-deny
     charm-freeze
     tsx
+
+    # git
+    gitleaks
+
+    foliate
   ];
 
 }
