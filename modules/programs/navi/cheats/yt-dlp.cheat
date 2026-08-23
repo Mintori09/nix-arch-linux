@@ -1,0 +1,10 @@
+% yt-dlp, audio, download, youtube
+
+# Download video as MP3 (ignoring current config file)
+yt-dlp --no-config --no-playlist --audio-format mp3 --audio-quality 0 "<url>"
+
+# Download an entire playlist as MP3s with numbered tracks (ignoring current config)
+yt-dlp --no-config --audio-format mp3 --audio-quality 0 -o "%(playlist_index)s - %(title)s.%(ext)s" "<url>"
+
+# Auto get url from wl-clipboard
+$ url: wl-paste

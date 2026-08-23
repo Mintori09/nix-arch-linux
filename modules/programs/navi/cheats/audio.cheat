@@ -1,0 +1,12 @@
+% ffmpeg, audio
+
+# Open music shuffle
+mpv --vo=null -shuffle .
+
+# Convert selected video to MP3 using fd
+ffmpeg -i "<video>" -vn -c:a libmp3lame -q:a <quality> "<output_mp3>"
+
+$ video: fd -e mp4 -e mkv -e mov -e avi -e webm -e flv -e wmv -e m4v | fzf --prompt="Select Video: "
+$ quality: echo -e "2 (High ~190k)\n0 (Best ~245k)\n4 (Medium ~165k)\n6 (Low ~115k)" | cut -d' ' -f1
+$ output_mp3: echo "${video%.*}.mp3"
+

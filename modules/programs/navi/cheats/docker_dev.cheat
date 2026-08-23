@@ -1,0 +1,14 @@
+% docker, container, dev
+
+# docker - Prune unused docker containers, images, volumes, and networks
+docker system prune -a --volumes
+
+# docker - Follow logs for a running docker container
+docker logs -f --tail 100 <container_name>
+
+$ container_name: docker ps --format '{{.Names}}\t{{.ID}}\t{{.Image}}' --- --column 1
+
+# docker - Execute interactive bash/sh inside a running container
+docker exec -it <container_name> /bin/sh
+
+$ container_name: docker ps --format '{{.Names}}\t{{.ID}}\t{{.Image}}' --- --column 1

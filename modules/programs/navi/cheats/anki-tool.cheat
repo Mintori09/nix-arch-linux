@@ -1,0 +1,23 @@
+% anki-tool
+
+# Create anki apkg file for vocabulary
+anki-tool --type vocab "<json_file>"
+
+# Create anki apkg file for mcq
+anki-tool --type mcq "<json_file>"
+
+# Create anki apkg file for mcq with shuffled options
+anki-tool --type mcq-shuffle "<json_file>"
+
+# Create anki apkg file for basic question
+anki-tool --type basic "<json_file>"
+
+# Create anki apkg file for Japanese grammar
+anki-tool --type jp_grammar "<json_file>"
+
+# Extract apkg file
+anki-tool --export "<apkg_file>"
+
+# Auto get url from wl-clipboard
+$ json_file: fd -e json | fzf
+$ apkg_file: fd -e apkg | fzf

@@ -1,0 +1,16 @@
+% network, curl, ip, ssl
+
+# curl - Check public IP address and geolocation info
+curl -s https://ipinfo.io | jq .
+
+# ss - List all listening ports and associated processes
+ss -tulpn
+
+# openssl - Check SSL certificate expiration date for a domain
+openssl s_client -connect <domain>:443 -servername <domain> 2>/dev/null | openssl x509 -noout -dates
+
+# ssh - Start ssh-agent and add default ED25519 key
+eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_ed25519
+
+# ssh-keygen - Print fingerprint of an SSH public key
+ssh-keygen -l -f ~/.ssh/id_ed25519.pub

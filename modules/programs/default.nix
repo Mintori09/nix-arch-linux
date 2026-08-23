@@ -27,5 +27,6 @@
     ./obs.nix
     ./mcfly.nix
     ./pandoc.nix
+    ./navi
   ];
 }

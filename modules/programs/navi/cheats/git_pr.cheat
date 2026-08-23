@@ -1,0 +1,24 @@
+% git, github, pr
+
+# Checkout a Pull Request to local branch (with interactive PR selector)
+gh pr checkout <pr_number>
+
+$ pr_number: gh pr list --limit 30 | awk '{print $1, $2, $3}' --- --column 1 --header-lines 1
+
+# List open Pull Requests
+gh pr list
+
+# View details of a Pull Request
+gh pr view <pr_number>
+
+# Fetch and checkout a Pull Request using Git Refspec (Pure Git)
+git fetch origin pull/<pr_id>/head:pr-<pr_id> && git checkout pr-<pr_id>
+
+# Checkout PR branch from a contributor's fork repository
+git remote add <contributor_name> https://github.com/<contributor_name>/<repo_name>.git && git fetch <contributor_name> && git checkout -b pr-<pr_id> <contributor_name>/<branch_name>
+
+# Configure Git to automatically fetch all PR refspecs on git fetch
+git config --add remote.origin.fetch "+refs/pull/*/head:refs/remotes/origin/pr/*" && git fetch origin
+
+# List all remote PR refspecs via git ls-remote
+git ls-remote origin "pull/*/head"

@@ -1,0 +1,38 @@
+% freeze, charm, code-screenshot
+
+# Generate an image from a code file
+freeze <file> -o <output>
+
+# Capture ANSI output from a terminal command
+freeze --execute "<command>" -o <output>
+
+# Apply syntax theme and show line numbers
+freeze <file> --theme <theme> --show-line-numbers -o <output>
+
+# Capture a specific range of line numbers
+freeze <file> --show-line-numbers --lines <start_line>,<end_line> -o <output>
+
+# Capture code using a predefined config/template (full, base, user)
+freeze -c <config> <file> -o <output>
+
+# Capture TUI output from a tmux pane
+tmux capture-pane -pet <pane_id> | freeze -c <config> -o <output>
+
+# Customize font family, size, and line height
+freeze <file> --font.family "<font_family>" --font.size <font_size> --line-height <line_height> -o <output>
+
+# Add window controls, border radius, border outline, and shadow
+freeze <file> --window --border.radius 8 --border.width 1 --border.color "#515151" --shadow.blur 20 --shadow.y 10 -o <output>
+
+# Open interactive TUI mode to adjust settings visually
+freeze --interactive <file>
+
+$ file: ls -A
+$ output: echo "output.png output.svg output.webp" | tr ' ' '\n'
+$ theme: echo "dracula catppuccin nord monokai solarized-dark gruvbox catppuccin-mocha" | tr ' ' '\n'
+$ config: echo "full base user" | tr ' ' '\n'
+$ pane_id: tmux list-panes -F '#P'
+$ font_family: echo "JetBrains Mono;Fira Code;Hack;SF Mono;Cascadia Code" | tr ';' '\n'
+$ font_size: echo "12 14 16 18 20" | tr ' ' '\n'
+$ line_height: echo "1.0 1.2 1.4 1.5" | tr ' ' '\n'
+

@@ -1,0 +1,85 @@
+% xh
+
+# send a GET request
+
+xh <url>
+
+# send an HTTP request with a specific method
+
+xh <method> <url>
+
+# send an authenticated request using Basic Auth
+
+xh -a <username>:<password> <method> <url>
+
+# send a request with a JSON body
+
+xh <method> <url> <key>=<value>
+
+# send a request with form data
+
+xh -f <method> <url> <key>=<value>
+
+# send a request and show both the request and response
+
+xh -v <method> <url>
+
+# send a request body from a file
+
+xh <method> <url> < <file>
+
+# send a request body from stdin
+
+cat <file> | xh <method> <url>
+
+# send a request with a custom header
+
+xh <method> <url> <header-name>:<header-value>
+
+# send multiple headers
+
+xh <method> <url>
+Header1:value1
+Header2:value2
+
+# send query parameters
+
+xh GET <url> param==value
+
+# upload a file as multipart/form-data
+
+xh POST <url> file@<path>
+
+# send JSON from a file
+
+xh <method> <url> @data.json
+
+# follow redirects
+
+xh --follow <url>
+
+# download a file
+
+xh --download <url>
+
+# save the response to a file
+
+xh <url> -o <file>
+
+# show only response headers
+
+xh -h <url>
+
+# show only response body
+
+xh -b <url>
+
+# disable TLS certificate verification
+
+xh --verify=no <url>
+
+$ file: ls
+
+$ method: echo -e 'GET\nPOST\nPUT\nDELETE\nPATCH'
+
+

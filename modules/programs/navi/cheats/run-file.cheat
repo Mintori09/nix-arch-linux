@@ -1,0 +1,6 @@
+% run scripts file
+
+# Run bash file
+bash "<bash_file>"
+
+$ bash_file: fd -e sh | fzf

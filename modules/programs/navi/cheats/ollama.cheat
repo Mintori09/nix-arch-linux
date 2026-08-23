@@ -1,0 +1,7 @@
+% ollama, ai
+
+# Chọn và xóa hàng loạt model Ollama (Sử dụng Tab để chọn nhiều)
+echo "<model_names>" | xargs ollama rm
+
+$ model_names: ollama list | tail -n +2 | awk '{print $1}' --- --multi --preview "ollama show {}" --preview-window right:50%
+

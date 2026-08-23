@@ -1,0 +1,20 @@
+% system, arch, pacman, systemd
+
+# pacman - Clean pacman cache & unneeded orphan dependencies
+sudo pacman -Sc --noconfirm && sudo pacman -Qdtq | sudo pacman -Rs -
+
+# systemctl - View user systemd service status and recent logs
+systemctl --user status <user_service>
+
+$ user_service: systemctl --user list-unit-files --type=service | awk '{print $1}' --- --column 1
+
+# journalctl - Follow logs for a user systemd service
+journalctl --user -u <user_service> -f -n 100
+
+$ user_service: systemctl --user list-unit-files --type=service | awk '{print $1}' --- --column 1
+
+# nix - Collect garbage & delete generations older than 2 days
+nix-collect-garbage --delete-older-than 2d
+
+# home-manager - Rebuild and apply Home Manager configuration
+home-manager switch --flake ~/.config/home-manager
