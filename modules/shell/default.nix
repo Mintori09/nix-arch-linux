@@ -7,5 +7,6 @@
     ./zsh.nix
     ./functions.nix
     ./fish.nix
+    ./autostart.nix
   ];
 }

@@ -157,6 +157,12 @@ in
           zvm_bindkey vicmd '^R' mcfly-fzf-history-widget
           bindkey -M emacs '^R' mcfly-fzf-history-widget
 
+          # Bind Ctrl+G to navi cheatsheet search (zsh-vi-mode safe)
+          eval "$(${pkgs.navi}/bin/navi widget zsh)"
+          zvm_bindkey viins '^G' _navi_widget
+          zvm_bindkey vicmd '^G' _navi_widget
+          bindkey -M emacs '^G' _navi_widget
+
           # Alt+Z: zoxide interactive picker via fzf
           zoxide-fzf() {
             local dir
@@ -229,6 +235,11 @@ in
         typeset -gA _zcomp_cache
         add-zsh-hook precmd _zsh_auto_reload_completions
 
+      '')
+
+      (lib.mkAfter ''
+        # Unload buggy fzf-tab binary module after plugins load (fixes quote evaluation bug in -ftb-generate-complist)
+        zmodload -u aloxaf/fzftab >/dev/null 2>&1 || true
       '')
     ];
   };

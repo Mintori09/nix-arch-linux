@@ -66,6 +66,10 @@ in
     torlink = "npx torlnk";
     nls = "nu -c ls";
     l = "nu -c 'ls | sort-by type | table --expand --icons'";
+    packettracer = "~/.local/bin/packettracer";
+    gdc = "git diff | wl-copy";
+    catc = "cpath --content";
+    cpf = "fzf | each --batch cpath";
   };
 
   programs.bash = {

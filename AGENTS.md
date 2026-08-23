@@ -86,6 +86,7 @@ globally.
 - Custom `cd` with fzf directory picker
 - `Ctrl+O` for fzf/rg file search → Neovim
 - `Ctrl+R` for mcfly-fzf history search
+- `Ctrl+G` for navi cheatsheet search
 - zsh-vi-mode with clipboard yank on `y`
 - Shell functions in `shell/functions.nix`, constants in `shell/_constants.nix`
 
