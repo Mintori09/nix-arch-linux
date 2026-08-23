@@ -5,5 +5,6 @@
     ./icons.nix
     ./rclone.nix
     ./mactahoe-kde.nix
+    ./mime.nix
   ];
 }
