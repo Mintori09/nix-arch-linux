@@ -1,0 +1,15 @@
+#compdef anki-tool node\ src/index.js node\ dist/index.js
+
+_anki_tool() {
+    local context state state_descr line
+    typeset -A opt_args
+
+    _arguments -C -s -S \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-type,--type}'[Specify parsing strategy mode]:parser type:(vocab grammar mcq mcq-shuffle mcq-listening basic jp_vocab jp_grammar)' \
+        '(-type --type -prompt --prompt -autocomplete --autocomplete)'{-export,--export}'[Specify package deconstruction mode]:anki deck:_files -g "*.apkg"' \
+        '(-type --type -export --export -autocomplete --autocomplete)'{-prompt,--prompt}'[Output specified prompt template or list all]:prompt name:(anki-flashcard-english-vocab mcq-creation)' \
+        '(-type --type -export --export -prompt --prompt)'{-autocomplete,--autocomplete}'[Output the ZSH completion script to stdout]' \
+        '*:json files:_files -g "*.json"'
+}
+
+_anki_tool "$@" 2>/dev/null || true
