@@ -1,0 +1,33 @@
+% date, time, format
+
+# Get current date as YYYY-MM-DD (ISO 8601)
+date +%F
+
+# Get current date as YYYY-MM-DD (explicit format)
+date +%Y-%m-%d
+
+# Get current UTC/GMT date as YYYY-MM-DD
+date -u +%F
+
+# Get current timestamp with date and time (YYYY-MM-DD HH:MM:SS)
+date '+%Y-%m-%d %H:%M:%S'
+
+# Get date relative to today (e.g., yesterday, next week)
+date -d "<relative_offset>" +%Y-%m-%d
+
+# Format an epoch timestamp into YYYY-MM-DD
+date -d "@<epoch_seconds>" +%Y-%m-%d
+
+# Get current Unix epoch timestamp in seconds
+date +%s
+
+# macOS / BSD: Get current date as YYYY-MM-DD
+date +%Y-%m-%d
+
+# macOS / BSD: Get date relative to today
+date -v<bsd_offset> +%Y-%m-%d
+
+$ relative_offset: echo -e "yesterday\ntomorrow\n7 days ago\n1 month ago\nnext month"
+$ bsd_offset: echo -e "-1d\n+1d\n-7d\n-1m\n+1m"
+$ epoch_seconds: echo -e "1700000000\n$(date +%s)"
+
