@@ -21,6 +21,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
     agent-skills-nix = {
       url = "github:Kyure-A/agent-skills-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -158,6 +164,7 @@
         inherit pkgs;
         modules = [
           ./home.nix
+          inputs.plasma-manager.homeModules.plasma-manager
           spicetify-nix.homeManagerModules.spicetify
           # catppuccin.homeModules.catppuccin
           sops-nix.homeManagerModules.sops

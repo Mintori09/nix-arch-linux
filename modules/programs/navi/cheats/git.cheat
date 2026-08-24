@@ -1,0 +1,4 @@
+% git, clipboard
+
+# Clone repository from clipboard and change directory
+url="$(wl-paste | tr -d '[:space:]')"; if [[ "$url" =~ ^(https?://|git@|ssh://|git://) ]]; then git clone "$url" && cd "$(basename "$url" .git)"; else echo "Invalid Git URL in clipboard: '$url'" >&2; fi

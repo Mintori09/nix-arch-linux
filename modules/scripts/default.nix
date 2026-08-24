@@ -26,5 +26,8 @@
     ./read.nix
     ./quick-aliases.nix
     ./anki-tool.nix
+    ./caffeinate.nix
+    ./cleartext-wifi.nix
+    ./nix-rebuild.nix
   ];
 }
