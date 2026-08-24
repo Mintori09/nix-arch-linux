@@ -19,7 +19,6 @@
 
     # Core utilities
     fastfetch
-    systemctl-tui
     # magika
     cliphist
     fd
@@ -117,15 +116,35 @@
     tinymist
     websocat
 
-    # Rust
-    cargo-deny
     charm-freeze
     tsx
+
+    # Rust
+    cargo-deny # Lints dependencies for security advisories, license compliance, duplicate crates, and bans
+
+    # Testing & Coverage
+    cargo-nextest # Next-generation test runner that executes tests in parallel with fast, clean output
+    cargo-llvm-cov # Measures source-based code coverage using LLVM instrumentation (highly accurate and cross-platform)
+    cargo-tarpaulin # Native code coverage tool for Rust projects (primarily designed for Linux/x86_64)
+
+    # Dependency & Analysis
+    cargo-audit # Audits Cargo.lock for crates with known security vulnerabilities via the RustSec Advisory Database
+    cargo-edit # Utilities to manage Cargo.toml dependencies via CLI (`cargo add`, `cargo rm`, `cargo upgrade`)
+    cargo-semver-checks # Lints Rust crates for SemVer compliance and breaking API changes before publishing
+    cargo-bloat # Analyzes executable binaries to find what functions and crates take up the most space
+    cargo-machete # Fast tool to detect and clean up unused dependencies in Cargo.toml
+    cargo-watch # Watches source files for changes and automatically re-runs commands (e.g., check, test, run)
+
+    # Performance & Binary Analysis
+    cargo-flamegraph # Profiles performance and generates interactive SVG flame graphs (pkgs.cargo-flamegraph)
+    cargo-bloat # Analyzes executable binaries to find what functions and crates take up the most space (pkgs.cargo-bloat)
+    cargo-show-asm # Shows the generated assembly, LLVM-IR, or MIR for specific Rust functions (`cargo asm`)
 
     # git
     gitleaks
 
     foliate
+    aspell
   ];
 
 }
