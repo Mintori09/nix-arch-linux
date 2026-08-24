@@ -37,9 +37,12 @@ in
     genericName = "Apply Nix configuration";
     comment = "Switch to latest home-manager generation";
     icon = "system-software-update";
-    exec = "ghostty --wait-after-command=true -e nix-rebuild";
+    exec = "${pkgs.kitty}/bin/kitty --hold -e ${rebuildPkg}/bin/nix-rebuild";
     terminal = false;
     type = "Application";
-    categories = [ "Utility" "Settings" ];
+    categories = [
+      "Utility"
+      "Settings"
+    ];
   };
 }
