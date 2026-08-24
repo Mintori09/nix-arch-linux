@@ -9,7 +9,9 @@
     # ./foliate.nix
     ./drawio.nix
     ./localsend.nix
+    ./systemctl-tui.nix
     # ./sioyek.nix
     ./zathura.nix
+    ./packettracer.nix
   ];
 }
