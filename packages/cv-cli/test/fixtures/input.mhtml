@@ -1,0 +1,10 @@
+From: test
+Subject: test
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary="----=_NextPart_001"
+
+------=_NextPart_001
+Content-Type: text/html
+
+<html><body>hello</body></html>
+------=_NextPart_001--

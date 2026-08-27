@@ -1,0 +1,36 @@
+{
+  "name": "cv-cli",
+  "version": "1.0.0",
+  "description": "Modular, zero-dependency CLI format converter tool using system binaries",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "node --import tsx --test 'src/**/*.test.ts' 'test/**/*.test.ts'",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "build": "pnpm run typecheck && pnpm run clean && esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js",
+    "prod": "node dist/index.js",
+    "fmt": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "cli",
+    "converter",
+    "typescript"
+  ],
+  "author": "Mintori09",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.21.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {}
+}
