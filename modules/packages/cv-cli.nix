@@ -23,7 +23,15 @@ pkgs.stdenv.mkDerivation {
 
   src = ../../packages/cv-cli;
 
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [
+    pkgs.makeWrapper
+    pkgs.esbuild
+  ];
+
+  buildPhase = ''
+    mkdir -p dist
+    esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js
+  '';
 
   installPhase = ''
     mkdir -p $out/bin $out/lib/cv $out/share/zsh/site-functions

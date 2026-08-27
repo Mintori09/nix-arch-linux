@@ -66,7 +66,19 @@ pkgs.stdenv.mkDerivation {
 
   src = ../../packages/ai-bridge;
 
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [
+    pkgs.makeWrapper
+    pkgs.esbuild
+    pkgs.nodejs
+  ];
+
+  buildPhase = ''
+    mkdir -p dist
+    esbuild src/cli/index.ts --bundle --platform=node --format=esm --outfile=dist/ai-bridge.js
+    if [ -f userscript/build.mjs ]; then
+      node userscript/build.mjs
+    fi
+  '';
 
   installPhase = ''
     mkdir -p $out/bin $out/share/ai-bridge $out/share/zsh/site-functions
