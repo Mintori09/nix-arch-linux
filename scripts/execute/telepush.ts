@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { spawnSync, spawn } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { args, isMain } from "./utils.ts";
 

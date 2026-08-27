@@ -15,7 +15,7 @@ CACHE_FILE="$THUMB_DIR/durations.cache"
 if [ -f "$CACHE_FILE" ]; then
 	while IFS='|' read -r name dur || [ -n "$name" ]; do
 		[ -n "$name" ] && cached_durations["$name"]="$dur"
-	done < "$CACHE_FILE"
+	done <"$CACHE_FILE"
 fi
 
 declare -A current_videos
@@ -96,7 +96,7 @@ shopt -u nocaseglob
 rm -f "$CACHE_FILE"
 for name in "${!current_videos[@]}"; do
 	if [ -n "${cached_durations[$name]}" ]; then
-		echo "$name|${cached_durations[$name]}" >> "$CACHE_FILE"
+		echo "$name|${cached_durations[$name]}" >>"$CACHE_FILE"
 	fi
 done
 

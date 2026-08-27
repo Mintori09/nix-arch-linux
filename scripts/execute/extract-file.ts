@@ -110,7 +110,9 @@ function main(): void {
       console.error(`> '${file}' is not a valid file!`);
       continue;
     }
-    console.log(`Extracting '${file}' into '${path.relative(process.cwd(), dir) || "."}'...`);
+    console.log(
+      `Extracting '${file}' into '${path.relative(process.cwd(), dir) || "."}'...`,
+    );
     extract(resolvedFile, dir);
   }
 }

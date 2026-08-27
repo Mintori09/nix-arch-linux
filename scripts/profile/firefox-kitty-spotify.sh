@@ -5,7 +5,7 @@ CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 kfocus() {
     local class="$1"
 
-    if [[ -z "$class" ]]; then
+    if [[ -z $class ]]; then
         echo "Usage: kfocus <window-class>"
         return 1
     fi
@@ -13,7 +13,7 @@ kfocus() {
     local wid
     wid=$(kdotool search --class "$class" 2>/dev/null | head -n1)
 
-    if [[ -n "$wid" ]]; then
+    if [[ -n $wid ]]; then
         kdotool windowactivate "$wid"
     else
         echo "No window found with class: $class"

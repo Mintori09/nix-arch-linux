@@ -415,7 +415,11 @@ function toSnake(s: string): string {
     .toLowerCase();
 }
 
-export function renderCommand(template: string, item: Item, totalItems: number): string {
+export function renderCommand(
+  template: string,
+  item: Item,
+  totalItems: number,
+): string {
   const quotedValue = `'${item.value.replace(/'/g, "'\\''")}'`;
   const filename = basename(item.value);
   const stem = basename(item.value, extname(item.value));
@@ -429,12 +433,30 @@ export function renderCommand(template: string, item: Item, totalItems: number):
   cmd = cmd.replace("{stem}", quoteIfNeeded(stem));
   cmd = cmd.replace("{ext}", ext);
 
-  cmd = cmd.replace("{kebab}", quoteIfNeeded(transformPath(item.value, toKebab)));
-  cmd = cmd.replace("{camel}", quoteIfNeeded(transformPath(item.value, toCamel)));
-  cmd = cmd.replace("{pascal}", quoteIfNeeded(transformPath(item.value, toPascal)));
-  cmd = cmd.replace("{snake}", quoteIfNeeded(transformPath(item.value, toSnake)));
-  cmd = cmd.replace("{lower}", quoteIfNeeded(transformPath(item.value, (s) => s.toLowerCase())));
-  cmd = cmd.replace("{upper}", quoteIfNeeded(transformPath(item.value, (s) => s.toUpperCase())));
+  cmd = cmd.replace(
+    "{kebab}",
+    quoteIfNeeded(transformPath(item.value, toKebab)),
+  );
+  cmd = cmd.replace(
+    "{camel}",
+    quoteIfNeeded(transformPath(item.value, toCamel)),
+  );
+  cmd = cmd.replace(
+    "{pascal}",
+    quoteIfNeeded(transformPath(item.value, toPascal)),
+  );
+  cmd = cmd.replace(
+    "{snake}",
+    quoteIfNeeded(transformPath(item.value, toSnake)),
+  );
+  cmd = cmd.replace(
+    "{lower}",
+    quoteIfNeeded(transformPath(item.value, (s) => s.toLowerCase())),
+  );
+  cmd = cmd.replace(
+    "{upper}",
+    quoteIfNeeded(transformPath(item.value, (s) => s.toUpperCase())),
+  );
 
   cmd = cmd.replace("{kebab-fn}", quoteIfNeeded(toKebab(filename)));
   cmd = cmd.replace("{camel-fn}", quoteIfNeeded(toCamel(filename)));
@@ -468,7 +490,11 @@ export function renderCommand(template: string, item: Item, totalItems: number):
   return cmd;
 }
 
-export function renderBatchCommand(template: string, items: Item[], totalItems: number): string {
+export function renderBatchCommand(
+  template: string,
+  items: Item[],
+  totalItems: number,
+): string {
   let cmd = template;
   const padWidth = String(totalItems).length;
   const today = new Date().toISOString().slice(0, 10);
@@ -484,20 +510,36 @@ export function renderBatchCommand(template: string, items: Item[], totalItems: 
   rp("{camel}", (i) => quoteIfNeeded(transformPath(i.value, toCamel)));
   rp("{pascal}", (i) => quoteIfNeeded(transformPath(i.value, toPascal)));
   rp("{snake}", (i) => quoteIfNeeded(transformPath(i.value, toSnake)));
-  rp("{lower}", (i) => quoteIfNeeded(transformPath(i.value, (s) => s.toLowerCase())));
-  rp("{upper}", (i) => quoteIfNeeded(transformPath(i.value, (s) => s.toUpperCase())));
+  rp("{lower}", (i) =>
+    quoteIfNeeded(transformPath(i.value, (s) => s.toLowerCase())),
+  );
+  rp("{upper}", (i) =>
+    quoteIfNeeded(transformPath(i.value, (s) => s.toUpperCase())),
+  );
   rp("{kebab-fn}", (i) => quoteIfNeeded(toKebab(basename(i.value))));
   rp("{camel-fn}", (i) => quoteIfNeeded(toCamel(basename(i.value))));
   rp("{pascal-fn}", (i) => quoteIfNeeded(toPascal(basename(i.value))));
   rp("{snake-fn}", (i) => quoteIfNeeded(toSnake(basename(i.value))));
   rp("{lower-fn}", (i) => quoteIfNeeded(basename(i.value).toLowerCase()));
   rp("{upper-fn}", (i) => quoteIfNeeded(basename(i.value).toUpperCase()));
-  rp("{kebab-stem}", (i) => quoteIfNeeded(toKebab(basename(i.value, extname(i.value)))));
-  rp("{camel-stem}", (i) => quoteIfNeeded(toCamel(basename(i.value, extname(i.value)))));
-  rp("{pascal-stem}", (i) => quoteIfNeeded(toPascal(basename(i.value, extname(i.value)))));
-  rp("{snake-stem}", (i) => quoteIfNeeded(toSnake(basename(i.value, extname(i.value)))));
-  rp("{lower-stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value)).toLowerCase()));
-  rp("{upper-stem}", (i) => quoteIfNeeded(basename(i.value, extname(i.value)).toUpperCase()));
+  rp("{kebab-stem}", (i) =>
+    quoteIfNeeded(toKebab(basename(i.value, extname(i.value)))),
+  );
+  rp("{camel-stem}", (i) =>
+    quoteIfNeeded(toCamel(basename(i.value, extname(i.value)))),
+  );
+  rp("{pascal-stem}", (i) =>
+    quoteIfNeeded(toPascal(basename(i.value, extname(i.value)))),
+  );
+  rp("{snake-stem}", (i) =>
+    quoteIfNeeded(toSnake(basename(i.value, extname(i.value)))),
+  );
+  rp("{lower-stem}", (i) =>
+    quoteIfNeeded(basename(i.value, extname(i.value)).toLowerCase()),
+  );
+  rp("{upper-stem}", (i) =>
+    quoteIfNeeded(basename(i.value, extname(i.value)).toUpperCase()),
+  );
   rp("{n}", (i) => String(i.number));
   rp("{i}", (i) => String(i.index));
   rp("{number}", (i) => String(i.number));

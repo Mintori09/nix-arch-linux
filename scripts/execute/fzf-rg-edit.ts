@@ -52,7 +52,7 @@ function fzfRgEdit(initialQuery: string): void {
   const line = afterFile.slice(0, j);
 
   if (file && line) {
-    const editor = process.env.EDITOR || "vim";
+    const editor = "nvim";
     spawnSync(editor, [file, `+${line}`], { stdio: "inherit" });
   }
 }
