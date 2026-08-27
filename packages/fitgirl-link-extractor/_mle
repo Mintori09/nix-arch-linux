@@ -1,0 +1,17 @@
+#compdef main.py mle multilinkextractor python
+
+_mle_completion() {
+    local context state state_descr line
+    typeset -A opt_args
+
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help message and exit]' \
+        '(-f --file)'{-f,--file}'[Read URLs from file]:input file:_files' \
+        '(-o --output)'{-o,--output}'[Save extracted direct links to file]:output file:_files' \
+        '(-d --dest)'{-d,--dest}'[Destination directory for downloaded files]:destination directory:_files -/' \
+        '(-e --extract-only --no-download)'{-e,--extract-only,--no-download}'[Extract direct links only without downloading]' \
+        '--completion[Print shell completion script]:shell:(zsh bash)' \
+        '*:URL:_urls'
+}
+
+_mle_completion "$@"

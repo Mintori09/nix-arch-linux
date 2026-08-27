@@ -1,0 +1,9 @@
+.venv
+.direnv
+__pycache__/
+*.pyc
+outputs_links_*.txt
+*.rar
+*.zip
+*.7z
+.playwright-mcp/
