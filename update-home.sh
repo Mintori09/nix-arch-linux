@@ -3,7 +3,7 @@ set -euo pipefail
 
 GITHUB_TOKEN=$(gh auth token 2>/dev/null || true)
 if [ -n "$GITHUB_TOKEN" ]; then
-    export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"
+	export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"
 fi
 
 echo "  [INFO] Updating flake inputs..."

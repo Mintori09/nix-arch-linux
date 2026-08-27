@@ -2,14 +2,16 @@
 
 let
   cleartextWifiPkg = pkgs.writeShellScriptBin "cleartext-wifi" ''
-    export PATH="${pkgs.lib.makeBinPath [
-      pkgs.networkmanager
-      pkgs.gnugrep
-      pkgs.gnused
-      pkgs.coreutils
-      pkgs.libnotify
-      pkgs.wl-clipboard
-    ]}:$PATH"
+    export PATH="${
+      pkgs.lib.makeBinPath [
+        pkgs.networkmanager
+        pkgs.gnugrep
+        pkgs.gnused
+        pkgs.coreutils
+        pkgs.libnotify
+        pkgs.wl-clipboard
+      ]
+    }:$PATH"
 
     CON_NAME=$(nmcli -t -f ACTIVE,TYPE,NAME connection show | grep '^yes:802-11-wireless:' | sed 's/^yes:802-11-wireless://')
 
@@ -39,6 +41,9 @@ in
     exec = "${cleartextWifiPkg}/bin/cleartext-wifi";
     terminal = false;
     type = "Application";
-    categories = [ "Utility" "Network" ];
+    categories = [
+      "Utility"
+      "Network"
+    ];
   };
 }

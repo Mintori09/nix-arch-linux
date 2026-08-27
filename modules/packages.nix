@@ -103,6 +103,11 @@
     dbx
     zap
     anyflip-downloader
+    cv-cli
+    anki-tool
+    ai-bridge
+    generate-toc
+    fitgirl-link-extractor
     sd
     watchexec
     rclone
@@ -145,6 +150,6 @@
 
     foliate
     aspell
+    kdePackages.kamoso
   ];
-
 }

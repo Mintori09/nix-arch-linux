@@ -2,12 +2,10 @@
 {
   imports = [
     ./format.nix
-    ./generate_toc.nix
     ./each.nix
     ./which_file.nix
     ./install-font.nix
     ./install-rpm.nix
-    ./convert-file.nix
     ./fzf-rg-edit.nix
     ./fzf-preview.nix
     ./extract.nix
@@ -25,7 +23,6 @@
     ./ai-bridge.nix
     ./read.nix
     ./quick-aliases.nix
-    ./anki-tool.nix
     ./caffeinate.nix
     ./cleartext-wifi.nix
     ./nix-rebuild.nix

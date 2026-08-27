@@ -21,12 +21,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    plasma-manager = {
-      url = "github:nix-community/plasma-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
-
     agent-skills-nix = {
       url = "github:Kyure-A/agent-skills-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -82,11 +76,6 @@
       flake = false;
     };
 
-    kwin-last-desktop = {
-      url = "github:luisbocanegra/kwin-switch-to-last-used-desktop";
-      flake = false;
-    };
-
     superpowers = {
       url = "github:obra/superpowers";
       flake = false;
@@ -134,6 +123,11 @@
             dbx = final.callPackage ./modules/packages/dbx.nix { };
             zap = final.callPackage ./modules/packages/zap.nix { };
             anyflip-downloader = final.callPackage ./modules/packages/anyflip-downloader.nix { };
+            cv-cli = final.callPackage ./modules/packages/cv-cli.nix { };
+            anki-tool = final.callPackage ./modules/packages/anki-tool.nix { };
+            ai-bridge = final.callPackage ./modules/packages/ai-bridge.nix { };
+            generate-toc = final.callPackage ./modules/packages/generate-toc.nix { };
+            fitgirl-link-extractor = final.callPackage ./modules/packages/fitgirl-link-extractor.nix { };
           })
         ];
         config.allowUnfree = true;
@@ -164,7 +158,6 @@
         inherit pkgs;
         modules = [
           ./home.nix
-          inputs.plasma-manager.homeModules.plasma-manager
           spicetify-nix.homeManagerModules.spicetify
           # catppuccin.homeModules.catppuccin
           sops-nix.homeManagerModules.sops

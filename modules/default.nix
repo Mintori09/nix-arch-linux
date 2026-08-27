@@ -3,7 +3,6 @@
   imports = [
     ./programs
     ./shell
-    ./kwin
     ./scripts
     ./systemd
     ./secrets.nix

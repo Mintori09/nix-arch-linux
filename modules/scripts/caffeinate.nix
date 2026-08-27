@@ -55,6 +55,9 @@ in
     exec = "${caffeinatePkg}/bin/caffeinate toggle";
     terminal = false;
     type = "Application";
-    categories = [ "Utility" "Settings" ];
+    categories = [
+      "Utility"
+      "Settings"
+    ];
   };
 }
