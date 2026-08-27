@@ -1,0 +1,41 @@
+{
+  "name": "ai-bridge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:daemon": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --outfile=dist/ai-bridge.js",
+    "build:userscript": "pnpm --prefix userscript build",
+    "build": "pnpm build:daemon && pnpm build:userscript",
+    "run:clipboard": "./dist/ai-bridge.js clipboard",
+    "typecheck": "pnpm --filter . exec tsc --noEmit && pnpm --filter userscript exec tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "server": "pnpm build:daemon && ./dist/ai-bridge.js server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.5.3",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "bin": {
+    "ai-bridge": "src/cli/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "dependencies": {
+    "find-process": "^2.1.1",
+    "tsx": "^4.22.4"
+  }
+}
