@@ -1,0 +1,163 @@
+{{#Question}}
+<div class="card">
+  <div class="question">{{Question}}</div>
+  <div class="options" id="options"></div>
+  <hr />
+  <div class="answer-label"></div>
+  <div class="explanation">{{Explanation}}</div>
+</div>
+
+<script>
+  setTimeout(function () {
+    var optionsEl = document.getElementById("options");
+    if (!optionsEl) return;
+
+    function parseB64Json(value) {
+      try {
+        var binary = atob(value);
+        var bytes = [];
+        for (var i = 0; i < binary.length; i++) {
+          bytes.push("%" + ("00" + binary.charCodeAt(i).toString(16)).slice(-2));
+        }
+        return JSON.parse(decodeURIComponent(bytes.join("")));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderInline(text) {
+      text = escapeHtml(text);
+      text = text.replace(/(\*\*\*|___)(.*?)\1/g, "<strong><em>$2</em></strong>");
+      text = text.replace(/(\*\*|__)(.*?)\1/g, "<strong>$2</strong>");
+      text = text.replace(/(\*|_)(.*?)\1/g, "<em>$2</em>");
+      text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+      return text.replace(/`([^`]+)`/g, "<code>$1</code>");
+    }
+
+    var options = parseB64Json("{{OptionsB64}}");
+    var correctAnswers = parseB64Json("{{CorrectAnswersB64}}");
+    var selectedAnswers = [];
+
+    try {
+      selectedAnswers = JSON.parse(sessionStorage.getItem("mcq_selected") || "[]");
+    } catch (e) {
+      selectedAnswers = [];
+    }
+
+    var isMultiple = correctAnswers.length > 1;
+    var correctSet = {};
+    var selectedSet = {};
+    var labels = {};
+
+    correctAnswers.forEach(function (k) {
+      correctSet[String(k).trim().toLowerCase()] = true;
+    });
+
+    selectedAnswers.forEach(function (k) {
+      selectedSet[String(k).trim().toLowerCase()] = true;
+    });
+
+    options.forEach(function (opt) {
+      var key = String(opt.key || "")
+        .trim()
+        .toLowerCase();
+      var label = String(opt.label || key.toUpperCase());
+      var text = String(opt.text || "");
+
+      if (!key) return;
+
+      labels[key] = label;
+
+      var el = document.createElement("div");
+      el.className = isMultiple ? "option-btn multi" : "option-btn";
+      el.id = "opt-" + key;
+      el.innerHTML = escapeHtml(label) + ". " + renderInline(text);
+
+      var isCorrect = !!correctSet[key];
+      var isSelected = !!selectedSet[key];
+
+      if (isMultiple) {
+        if (isCorrect && isSelected) {
+          el.classList.add("correct-selected");
+          el.innerHTML += '<span class="result-note">✓ Bạn chọn đúng</span>';
+        } else if (isCorrect && !isSelected) {
+          el.classList.add("correct-missed");
+          el.innerHTML += '<span class="result-note">Đáp án đúng - bạn chưa chọn</span>';
+        } else if (!isCorrect && isSelected) {
+          el.classList.add("wrong-selected");
+          el.innerHTML += '<span class="result-note">✗ Bạn chọn sai</span>';
+        }
+      } else {
+        if (isCorrect) {
+          el.classList.add("correct");
+        } else if (isSelected) {
+          el.classList.add("wrong");
+        }
+      }
+
+      optionsEl.appendChild(el);
+    });
+
+    function labelList(keys) {
+      return keys
+        .map(function (k) {
+          return labels[k] || String(k).toUpperCase();
+        })
+        .join(", ");
+    }
+
+    function normalizeKeys(keys) {
+      return keys
+        .map(function (k) {
+          return String(k).trim().toLowerCase();
+        })
+        .sort();
+    }
+
+    function sameSet(a, b) {
+      var aa = normalizeKeys(a);
+      var bb = normalizeKeys(b);
+
+      if (aa.length !== bb.length) return false;
+
+      for (var i = 0; i < aa.length; i++) {
+        if (aa[i] !== bb[i]) return false;
+      }
+
+      return true;
+    }
+
+    var ansLabel = document.querySelector(".answer-label");
+
+    if (ansLabel) {
+      if (selectedAnswers.length === 0) {
+        ansLabel.className = "answer-label summary-bad";
+        ansLabel.textContent = "Bạn chưa chọn đáp án • Đáp án đúng: " + labelList(correctAnswers);
+      } else if (sameSet(selectedAnswers, correctAnswers)) {
+        ansLabel.className = "answer-label summary-ok";
+        ansLabel.textContent = "Chính xác ✓ • Đáp án: " + labelList(correctAnswers);
+      } else {
+        ansLabel.className = "answer-label summary-bad";
+        ansLabel.textContent =
+          "Chưa chính xác • Đáp án đúng: " +
+          labelList(correctAnswers) +
+          " • Bạn chọn: " +
+          labelList(selectedAnswers);
+      }
+    }
+
+    try {
+      sessionStorage.removeItem("mcq_selected");
+    } catch (e) {}
+  }, 0);
+</script>
+{{/Question}}

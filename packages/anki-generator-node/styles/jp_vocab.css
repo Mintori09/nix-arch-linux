@@ -1,0 +1,174 @@
+/* 1. Light Mode (Default) */
+:root {
+  --jp-text: #1e293b;
+  --jp-kanji: #0f172a;
+  --jp-ruby: #2563eb;
+  --jp-badge-bg: #e0f2fe;
+  --jp-badge-text: #0369a1;
+  --jp-card-bg: #ffffff;
+  --jp-card-border: #e2e8f0;
+  --jp-card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --jp-cloze: #d97706;
+  --jp-cloze-bg: #fef3c7;
+  --jp-note-bg: #f8fafc;
+  --jp-note-border: #cbd5e1;
+}
+
+/* 2. Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --jp-text: #f1f5f9;
+    --jp-kanji: #ffffff;
+    --jp-ruby: #60a5fa;
+    --jp-badge-bg: #1e3a8a;
+    --jp-badge-text: #bfdbfe;
+    --jp-card-bg: #0f172a;
+    --jp-card-border: #334155;
+    --jp-card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    --jp-cloze: #fbbf24;
+    --jp-cloze-bg: #78350f;
+    --jp-note-bg: #1e293b;
+    --jp-note-border: #475569;
+  }
+}
+
+.night_mode {
+  --jp-text: #f1f5f9;
+  --jp-kanji: #ffffff;
+  --jp-ruby: #60a5fa;
+  --jp-badge-bg: #1e3a8a;
+  --jp-badge-text: #bfdbfe;
+  --jp-card-bg: #0f172a;
+  --jp-card-border: #334155;
+  --jp-card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  --jp-cloze: #fbbf24;
+  --jp-cloze-bg: #78350f;
+  --jp-note-bg: #1e293b;
+  --jp-note-border: #475569;
+}
+
+.card-container {
+  font-family: "Hiragino Kaku Gothic Pro", "Meiryo", "Segoe UI", system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--jp-text);
+  max-width: 620px;
+  margin: 24px auto;
+  padding: 32px;
+  border: 1px solid var(--jp-card-border);
+  border-radius: 16px;
+  box-shadow: var(--jp-card-shadow);
+  background: var(--jp-card-bg);
+  text-align: center;
+}
+
+.main-kanji {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--jp-kanji);
+  margin: 16px 0;
+  letter-spacing: 2px;
+}
+
+.furigana-reading {
+  font-size: 24px;
+  color: var(--jp-ruby);
+  margin-bottom: 12px;
+}
+
+ruby rt {
+  font-size: 0.6em;
+  color: var(--jp-ruby);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.jlpt-badge {
+  background: var(--jp-badge-bg);
+  color: var(--jp-badge-text);
+}
+
+.pos-badge {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--jp-ruby);
+  background: var(--jp-note-bg);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--jp-note-border);
+  margin: 10px 0;
+}
+
+.pitch-accent-tag {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--jp-text);
+  margin-bottom: 8px;
+}
+
+.pitch-num {
+  font-weight: 700;
+  color: var(--jp-ruby);
+}
+
+.meaning-box {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 16px 0;
+}
+
+.cloze-sentence,
+.full-sentence {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.cloze {
+  color: var(--jp-cloze);
+  background-color: var(--jp-cloze-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.sentence-translation {
+  font-size: 16px;
+  color: var(--jp-text);
+  opacity: 0.85;
+  margin-bottom: 16px;
+}
+
+.context-box {
+  margin: 16px 0;
+}
+
+.divider {
+  border: none;
+  border-top: 1px dashed var(--jp-note-border);
+  margin: 20px 0;
+}
+
+.note-box {
+  text-align: left;
+  background: var(--jp-note-bg);
+  border-left: 4px solid var(--jp-ruby);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.note-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}

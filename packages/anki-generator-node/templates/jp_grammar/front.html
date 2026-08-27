@@ -1,0 +1,9 @@
+<div class="card_inline">
+  {{#JLPT_Level}}<span class="badge">{{JLPT_Level}}</span>{{/JLPT_Level}}
+  <div class="word">{{Pattern}}</div>
+  {{#Reading}}
+  <div class="ipa">Reading: {{Reading}}</div>
+  {{/Reading}} {{#Formula}}
+  <div class="formula"><code>{{Formula}}</code></div>
+  {{/Formula}} {{Pattern_Audio}}
+</div>

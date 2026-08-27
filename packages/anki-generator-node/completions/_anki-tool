@@ -1,0 +1,19 @@
+#compdef anki-tool node\ src/index.js node\ dist/index.js
+
+_anki_tool() {
+    local context state state_descr line
+    typeset -A opt_args
+
+    _arguments -C -s -S \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-type,--type}'[Specify parsing strategy mode]:parser type:(vocab grammar mcq mcq-shuffle mcq-listening basic jp_vocab jp_grammar)' \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-deck-name,--deck-name,-d}'[Specify custom deck name or root hierarchy]:deck name:' \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-watch,--watch,-w}'[Watch input files and auto rebuild APKG on change]' \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-preview,--preview,-p}'[Start local web preview server in browser]' \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)--port[Specify port for preview server]:port number:' \
+        '(-type --type -prompt --prompt -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port)'{-export,--export}'[Specify package deconstruction mode]:anki deck:_files -g "*.apkg"' \
+        '(-type --type -export --export -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port)'{-prompt,--prompt}'[Output specified prompt template or list all]:prompt name:(anki-flashcard-english-vocab mcq-creation)' \
+        '(-type --type -export --export -prompt --prompt --watch -w --preview -p --deck-name -d --port)'{-autocomplete,--autocomplete}'[Output the ZSH completion script to stdout]' \
+        '*:json files:_files -g "*.json"'
+}
+
+_anki_tool "$@" 2>/dev/null || true

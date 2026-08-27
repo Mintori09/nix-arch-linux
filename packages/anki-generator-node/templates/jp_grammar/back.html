@@ -1,0 +1,50 @@
+<div class="card_inline">
+  {{Image_Hint}} {{#JLPT_Level}}<span class="badge">{{JLPT_Level}}</span>{{/JLPT_Level}}
+  <div class="word">{{Pattern}}</div>
+  {{#Reading}}
+  <div class="ipa">Reading: {{Reading}}</div>
+  {{/Reading}}
+  <div class="ipa">{{Pattern_Audio}}</div>
+
+  <div class="section-title">Công thức</div>
+  <div class="content"><code>{{Formula}}</code></div>
+
+  <div class="section-title">Ý nghĩa / Meaning</div>
+  <div class="content">
+    {{#Meaning_VI}}
+    <div>🇻🇳 {{Meaning_VI}}</div>
+    {{/Meaning_VI}} {{#Meaning_EN}}
+    <div>🇬🇧 {{Meaning_EN}}</div>
+    {{/Meaning_EN}} {{#Meaning_JP}}
+    <div>🇯🇵 {{Meaning_JP}}</div>
+    {{/Meaning_JP}}
+  </div>
+
+  {{#Explanation}}
+  <div class="section-title">Giải thích</div>
+  <div class="content">{{Explanation}}</div>
+  {{/Explanation}}
+
+  <hr />
+
+  {{#Sentence_JP}}
+  <div class="section-title">Ví dụ</div>
+  <div class="content">
+    <div class="example-en">{{Sentence_Furigana_HTML}} {{Sentence_Audio}}</div>
+    {{#Sentence_Translation}}
+    <div class="example-translation">🇻🇳 {{Sentence_Translation}}</div>
+    {{/Sentence_Translation}} {{#Sentence_Translation_EN}}
+    <div class="example-translation">🇬🇧 {{Sentence_Translation_EN}}</div>
+    {{/Sentence_Translation_EN}}
+  </div>
+  {{/Sentence_JP}} {{#Usage_Notes}}
+  <div class="section-title">Lưu ý sử dụng (VN)</div>
+  <div class="content collocations">{{Usage_Notes}}</div>
+  {{/Usage_Notes}} {{#Usage_Notes_EN}}
+  <div class="section-title">Usage Notes (EN)</div>
+  <div class="content collocations">{{Usage_Notes_EN}}</div>
+  {{/Usage_Notes_EN}} {{#Related_Grammar}}
+  <div class="section-title">Ngữ pháp liên quan</div>
+  <div class="content">{{Related_Grammar}}</div>
+  {{/Related_Grammar}}
+</div>

@@ -1,0 +1,50 @@
+default:
+    @just --list
+
+# Cài đặt dependencies
+install:
+    pnpm install
+
+# Build bundle vào dist/
+build:
+    pnpm run build
+
+# Typecheck toàn bộ TypeScript
+check:
+    pnpm run typecheck
+
+# Format toàn bộ code
+fmt:
+    pnpm format
+
+# Chạy toàn bộ test suite
+test:
+    pnpm test
+
+# Build và chạy với file JSON chỉ định
+# Ví dụ: just run --type vocab input.json
+run *args:
+    node dist/index.js {{args}}
+
+# Giải nén một .apkg ra thư mục
+# Ví dụ: just export deck.apkg ./out
+export apkg out:
+    node dist/index.js --export {{apkg}} {{out}}
+
+# Dọn dẹp thư mục build
+clean:
+    rm -rf dist/*
+
+# Cài completion zsh vào ~/.zsh/completions/
+install-completion:
+    mkdir -p ~/.zsh/completions
+    cp completions/_anki-tool ~/.zsh/completions/
+    @echo "Completion installed."
+    @echo "Thêm vào ~/.zshrc nếu chưa có:"
+    @echo "  fpath=(~/.zsh/completions \$fpath)"
+    @echo "  autoload -Uz compinit && compinit"
+
+# Copy _anki-tool sang home-manager và rebuild
+sync-hm:
+    ./scripts/sync-hm-completion.sh
+

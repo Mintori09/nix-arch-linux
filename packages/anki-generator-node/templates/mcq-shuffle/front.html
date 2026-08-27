@@ -1,0 +1,140 @@
+{{#Question}}
+<div id="mcq-card">
+  <div class="question">{{Question}}</div>
+  <div class="options" id="options"></div>
+  <button class="check-btn" id="check-btn" style="display: none">Kiểm tra đáp án</button>
+  <div class="hint" id="hint">Chọn đáp án</div>
+</div>
+
+<script>
+  setTimeout(function () {
+    var optionsEl = document.getElementById("options");
+    var checkBtn = document.getElementById("check-btn");
+    var hintEl = document.getElementById("hint");
+
+    if (!optionsEl) return;
+
+    function parseB64Json(value) {
+      try {
+        var binary = atob(value);
+        var bytes = [];
+        for (var i = 0; i < binary.length; i++) {
+          bytes.push("%" + ("00" + binary.charCodeAt(i).toString(16)).slice(-2));
+        }
+        return JSON.parse(decodeURIComponent(bytes.join("")));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderInline(text) {
+      text = escapeHtml(text);
+      text = text.replace(/(\*\*\*|___)(.*?)\1/g, "<strong><em>$2</em></strong>");
+      text = text.replace(/(\*\*|__)(.*?)\1/g, "<strong>$2</strong>");
+      text = text.replace(/(\*|_)(.*?)\1/g, "<em>$2</em>");
+      text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+      return text.replace(/`([^`]+)`/g, "<code>$1</code>");
+    }
+
+    function shuffleArray(arr) {
+      var shuffled = arr.slice();
+      for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+      }
+      return shuffled;
+    }
+
+    var rawOptions = parseB64Json("{{OptionsB64}}");
+    var options = shuffleArray(rawOptions);
+    var correctAnswers = parseB64Json("{{CorrectAnswersB64}}");
+
+    var isMultiple = correctAnswers.length > 1;
+    var answered = false;
+    var selected = {};
+
+    if (isMultiple) {
+      if (checkBtn) checkBtn.style.display = "block";
+      if (hintEl) hintEl.textContent = "Chọn một hoặc nhiều đáp án, rồi bấm Kiểm tra đáp án";
+    } else {
+      if (hintEl) hintEl.textContent = "Chọn đáp án";
+    }
+
+    var shuffledKeys = options
+      .map(function (opt) {
+        return String(opt.key || "")
+          .trim()
+          .toLowerCase();
+      })
+      .filter(function (k) {
+        return !!k;
+      });
+
+    try {
+      sessionStorage.setItem("mcq_shuffled_keys", JSON.stringify(shuffledKeys));
+    } catch (e) {}
+
+    function saveAndShowAnswer() {
+      var selectedKeys = Object.keys(selected).filter(function (k) {
+        return selected[k];
+      });
+
+      try {
+        sessionStorage.setItem("mcq_selected", JSON.stringify(selectedKeys));
+        sessionStorage.setItem("mcq_shuffled_keys", JSON.stringify(shuffledKeys));
+      } catch (e) {}
+
+      pycmd("ans");
+    }
+
+    options.forEach(function (opt, idx) {
+      var key = String(opt.key || "")
+        .trim()
+        .toLowerCase();
+      var label = String.fromCharCode(65 + idx);
+      var text = String(opt.text || "");
+
+      if (!key) return;
+
+      var el = document.createElement("div");
+      el.className = isMultiple ? "option-btn multi" : "option-btn";
+      el.id = "opt-" + key;
+      el.innerHTML = escapeHtml(label) + ". " + renderInline(text);
+
+      el.addEventListener("click", function () {
+        if (answered) return;
+
+        if (isMultiple) {
+          selected[key] = !selected[key];
+          el.classList.toggle("selected", selected[key]);
+        } else {
+          answered = true;
+          selected[key] = true;
+          saveAndShowAnswer();
+        }
+      });
+
+      optionsEl.appendChild(el);
+    });
+
+    if (checkBtn) {
+      checkBtn.addEventListener("click", function () {
+        if (answered) return;
+        answered = true;
+        saveAndShowAnswer();
+      });
+    }
+  }, 0);
+</script>
+{{/Question}}

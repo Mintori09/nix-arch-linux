@@ -1,0 +1,26 @@
+<div class="card-container recognition-card">
+  <div class="main-kanji">{{Kanji_Expression}}</div>
+  <div class="furigana-reading">{{Furigana_HTML}}</div>
+  {{#Pitch_Accent}}
+  <div class="pitch-accent-tag">Pitch: <span class="pitch-num">{{Pitch_Accent}}</span></div>
+  {{/Pitch_Accent}}
+  <div class="pos-badge">{{Part_Of_Speech}}</div>
+  <div class="meaning-box">{{Meaning_VI}}</div>
+  <div class="audio-container">{{Word_Audio}}</div>
+  {{#Sentence_Furigana_HTML}}
+  <hr class="divider" />
+  <div class="context-box">
+    <div class="full-sentence">{{Sentence_Furigana_HTML}}</div>
+    {{#Sentence_Translation}}
+    <div class="sentence-translation">{{Sentence_Translation}}</div>
+    {{/Sentence_Translation}} {{#Sentence_Audio}}
+    <div class="audio-container">{{Sentence_Audio}}</div>
+    {{/Sentence_Audio}}
+  </div>
+  {{/Sentence_Furigana_HTML}} {{#Mnemonic}}
+  <div class="note-box mnemonic">
+    <div class="note-title">💡 Mnemonic</div>
+    <div>{{Mnemonic}}</div>
+  </div>
+  {{/Mnemonic}}
+</div>

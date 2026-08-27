@@ -1,0 +1,17 @@
+<div class="card-container context-card">
+  <div class="full-sentence">{{Sentence_Furigana_HTML}}</div>
+  <div class="sentence-translation">{{Sentence_Translation}}</div>
+  <div class="audio-container">{{Sentence_Audio}}</div>
+  <hr class="divider" />
+  <div class="target-word-info">
+    <span class="word-target">{{Furigana_HTML}}</span>
+    {{#Pitch_Accent}}<span class="pitch-num">[{{Pitch_Accent}}]</span>{{/Pitch_Accent}}
+    <div class="meaning-short">{{Meaning_VI}}</div>
+  </div>
+  {{#Nuance}}
+  <div class="note-box nuance">
+    <div class="note-title">🔍 Nuance & Context</div>
+    <div>{{Nuance}}</div>
+  </div>
+  {{/Nuance}}
+</div>
