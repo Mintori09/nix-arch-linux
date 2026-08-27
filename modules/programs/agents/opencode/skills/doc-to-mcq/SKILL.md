@@ -14,6 +14,7 @@ Convert study materials, lecture notes, textbook excerpts, or documents into a s
 ## When triggered
 
 When the user provides a document or text and asks for multiple-choice questions:
+
 1. **Read & Analyze** the source content to identify key concepts, definitions, rules, facts, or problem-solving patterns.
 2. **Formulate High-Quality Questions**:
    - Clear and unambiguous question stem.
@@ -50,6 +51,7 @@ The output MUST be a JSON array of objects with 4 fields: `question`, `options`,
 ### Multiple-Choice Example with Multiple Correct Answers
 
 For questions with multiple correct choices:
+
 - Set `answer` to comma-separated keys (e.g., `"a, c"` or `"a, b, d"`).
 - The explanation must clearly explain each correct option as well as why the incorrect options are excluded.
 

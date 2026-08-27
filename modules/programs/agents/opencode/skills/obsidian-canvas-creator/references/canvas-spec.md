@@ -39,9 +39,11 @@ All nodes share these required attributes:
 Store plain text with Markdown formatting.
 
 **Required Attributes:**
+
 - `text` (string): Content in Markdown syntax
 
 **Example:**
+
 ```json
 {
   "id": "abc123",
@@ -60,12 +62,15 @@ Store plain text with Markdown formatting.
 Reference other files or attachments (images, PDFs, etc.).
 
 **Required Attributes:**
+
 - `file` (string): Path to file in the vault
 
 **Optional Attributes:**
+
 - `subpath` (string): Link to specific heading/block (starts with `#`)
 
 **Example:**
+
 ```json
 {
   "id": "def456",
@@ -79,6 +84,7 @@ Reference other files or attachments (images, PDFs, etc.).
 ```
 
 **With Subpath:**
+
 ```json
 {
   "id": "ghi789",
@@ -97,9 +103,11 @@ Reference other files or attachments (images, PDFs, etc.).
 Reference external URLs.
 
 **Required Attributes:**
+
 - `url` (string): Full URL including protocol
 
 **Example:**
+
 ```json
 {
   "id": "jkl012",
@@ -118,6 +126,7 @@ Reference external URLs.
 Visual containers for organizing related nodes.
 
 **Optional Attributes:**
+
 - `label` (string): Text label for the group (recommended)
 - `background` (string): Path to background image
 - `backgroundStyle` (string): Image rendering style
@@ -126,6 +135,7 @@ Visual containers for organizing related nodes.
   - `repeat`: Tile as pattern
 
 **Example:**
+
 ```json
 {
   "id": "group1",
@@ -140,6 +150,7 @@ Visual containers for organizing related nodes.
 ```
 
 **With Background:**
+
 ```json
 {
   "id": "group2",
@@ -157,10 +168,12 @@ Visual containers for organizing related nodes.
 ## Z-Index and Layering
 
 Nodes are displayed in array order:
+
 - **First node**: Bottom layer (rendered below others)
 - **Last node**: Top layer (rendered above others)
 
 **Best Practice Order:**
+
 1. Group nodes (backgrounds)
 2. Sub-groups
 3. Regular nodes (text, file, link)
@@ -172,11 +185,13 @@ This ensures groups appear behind content.
 Edges connect nodes with lines.
 
 **Required Attributes:**
+
 - `id` (required, string): Unique identifier
 - `fromNode` (required, string): Starting node ID
 - `toNode` (required, string): Ending node ID
 
 **Optional Attributes:**
+
 - `fromSide` (string): Starting edge side
   - Values: `top`, `right`, `bottom`, `left`
 - `fromEnd` (string): Start endpoint shape
@@ -189,6 +204,7 @@ Edges connect nodes with lines.
 - `label` (string): Text label on edge
 
 **Example - Simple Connection:**
+
 ```json
 {
   "id": "edge1",
@@ -198,6 +214,7 @@ Edges connect nodes with lines.
 ```
 
 **Example - Fully Specified:**
+
 ```json
 {
   "id": "edge2",
@@ -232,6 +249,7 @@ Use string numbers `"1"` through `"6"`:
 Use hex format: `"#RRGGBB"`
 
 **Examples:**
+
 - `"#4A90E2"` (blue)
 - `"#50E3C2"` (teal)
 - `"#F5A623"` (orange)
@@ -338,32 +356,42 @@ When creating canvas files, ensure:
 ## Common Issues and Solutions
 
 ### Issue: Canvas won't open in Obsidian
+
 **Solutions:**
+
 - Validate JSON syntax (use JSON validator)
 - Check all IDs are unique
 - Verify all edge references exist
 - Ensure required fields present
 
 ### Issue: Nodes appear overlapped
+
 **Solutions:**
+
 - Increase spacing between coordinates
 - Account for node dimensions in positioning
 - Use minimum spacing: 320px horizontal, 200px vertical
 
 ### Issue: Groups don't show properly
+
 **Solutions:**
+
 - Ensure groups appear before content nodes in array
 - Add explicit `label` to all groups
 - Check group dimensions encompass child nodes
 
 ### Issue: Colors don't match expectations
+
 **Solutions:**
+
 - Use consistent color format (all hex OR all presets)
 - Remember presets adapt to theme
 - Test in both light and dark mode if using custom colors
 
 ### Issue: Text appears truncated
+
 **Solutions:**
+
 - Increase node dimensions
 - Break long text into multiple nodes
 - Use file nodes for lengthy content
@@ -377,6 +405,7 @@ When canvas contains Chinese text, apply these transformations:
 - English double quotes must be escaped: `\"`
 
 **Example:**
+
 ```json
 {
   "text": "『核心概念』包含:「子概念A」和「子概念B」"
@@ -395,6 +424,7 @@ This prevents JSON parsing errors with mixed-language content.
 ## Future Extensions
 
 This specification may be extended with:
+
 - Additional node types
 - More edge styling options
 - Animation properties

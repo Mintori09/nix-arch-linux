@@ -19,6 +19,7 @@ Transform text content into structured Obsidian Canvas files with support for Mi
 ### 1. Analyze Content
 
 Read and understand the input content:
+
 - Identify main topics and hierarchical relationships
 - Extract key points, facts, and supporting details
 - Note any existing structure (headings, lists, sections)
@@ -28,12 +29,14 @@ Read and understand the input content:
 Ask user to choose or infer from context:
 
 **MindMap Layout:**
+
 - Radial structure from center
 - Parent-child relationships
 - Clear hierarchy
 - Good for: brainstorming, topic exploration, hierarchical content
 
 **Freeform Layout:**
+
 - Custom positioning
 - Flexible relationships
 - Multiple connection types
@@ -42,12 +45,14 @@ Ask user to choose or infer from context:
 ### 3. Plan Structure
 
 **For MindMap:**
+
 - Identify central concept (root node)
 - Map primary branches (main topics)
 - Organize secondary branches (subtopics)
 - Position leaf nodes (details)
 
 **For Freeform:**
+
 - Group related concepts
 - Identify connection patterns
 - Plan spatial zones
@@ -58,18 +63,21 @@ Ask user to choose or infer from context:
 Create JSON following the Canvas specification:
 
 **Node Creation:**
+
 - Assign unique 8-12 character hex IDs
 - Set appropriate dimensions based on content length
 - Apply consistent color schemes
 - Ensure no coordinate overlaps
 
 **Edge Creation:**
+
 - Connect parent-child relationships
 - Use appropriate arrow styles
 - Add labels for complex relationships
 - Choose line styles (straight for hierarchy, curved for cross-references)
 
 **Grouping (Optional):**
+
 - Create visual containers for related nodes
 - Use subtle background colors
 - Add descriptive labels
@@ -97,6 +105,7 @@ Refer to `references/layout-algorithms.md` for detailed algorithms. Key principl
 Before outputting:
 
 **Validation Checklist:**
+
 - All nodes have unique IDs
 - No coordinate overlaps (check distance > node dimensions + spacing)
 - All edges reference valid node IDs
@@ -105,6 +114,7 @@ Before outputting:
 - JSON is properly escaped (Chinese quotes: 『』 for double, 「」 for single)
 
 **Output Format:**
+
 - Complete, valid JSON Canvas file
 - No additional explanation text
 - Directly importable into Obsidian
@@ -112,14 +122,16 @@ Before outputting:
 ## Node Sizing Guidelines
 
 **Text Length-Based Sizing:**
+
 - Short text (<30 chars): 220 × 100 px
-- Medium text (30-60 chars): 260 × 120 px  
+- Medium text (30-60 chars): 260 × 120 px
 - Long text (60-100 chars): 320 × 140 px
 - Very long text (>100 chars): 320 × 180 px
 
 ## Color Schemes
 
 **Preset Colors (Recommended):**
+
 - `"1"` - Red (warnings, important)
 - `"2"` - Orange (action items)
 - `"3"` - Yellow (questions, notes)
@@ -163,9 +175,11 @@ Use for brand consistency or specific themes. Always use uppercase format: `"#4A
 ## Examples
 
 ### Simple MindMap Request
+
 User: "Create a mind map about solar system planets"
 
 Process:
+
 1. Identify center: "Solar System"
 2. Primary branches: Inner Planets, Outer Planets, Dwarf Planets
 3. Secondary nodes: Individual planets with key facts
@@ -173,9 +187,11 @@ Process:
 5. Generate JSON with proper spacing
 
 ### Freeform Content Request
+
 User: "Turn this article into a canvas" + [article text]
 
 Process:
+
 1. Extract article structure (intro, body sections, conclusion)
 2. Identify key concepts and relationships
 3. Group related sections spatially
@@ -188,6 +204,7 @@ Process:
 - **Layout Algorithms**: `references/layout-algorithms.md` - Detailed positioning algorithms for both layout types
 
 Load these references when:
+
 - Need specification details for edge cases
 - Implementing complex layout calculations
 - Troubleshooting validation errors

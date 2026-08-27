@@ -10,10 +10,12 @@ Use this skill to clean up, format, and analyze test/exam result documents in Ma
 ## Workflow
 
 ### 1. Identify Mistakes and Structure
+
 Scan the document to understand the question blocks (e.g., numbered headings or bold numbers like `**101**`).
 Identify which questions were answered incorrectly. A question is incorrect if it has a flag such as `Đáp án đúng: [Letter]` under the options (which typically indicates a system-corrected answer), or if it contains user-submitted incorrect answers.
 
 ### 2. Format Each Question
+
 Re-write each question block using the following clean, standard Markdown structure:
 
 - **Heading**:
@@ -21,11 +23,14 @@ Re-write each question block using the following clean, standard Markdown struct
   - For incorrect questions: `### Câu [Số] ❌ *(Làm sai)*`
 - **Question text**: Wrap in a blockquote: `> **Đề bài:** [Question Text]`
 - **Options**: List choices using bullet points:
+
   ```markdown
   **Lựa chọn:**
+
   - A. [Option A]
   - B. [Option B]
   ```
+
 - **Correct Answer / Warning callout**:
   - If correct: `**Đáp án đúng:** [Letter] “[Answer Text]”`
   - If incorrect: Use a GitHub warning block:
@@ -40,6 +45,7 @@ Re-write each question block using the following clean, standard Markdown struct
 - **References**: Keep the original reference links (e.g. `*[Giải thích chi tiết đáp án](#...)*`) at the bottom of the question block.
 
 ### 3. Generate Weakness Review & Assessment
+
 At the very end of the file, append a section titled `## 📊 BÀI ĐÁNH GIÁ & RÚT KINH NGHIỆM`. This section must contain:
 
 1. **Thống kê kết quả (Statistics)**:

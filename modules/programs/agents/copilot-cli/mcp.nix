@@ -17,6 +17,7 @@ let
         url = def.remote.url;
         timeout = def.remote.timeout or 10000;
       }
+      // (if def.remote ? headers then { headers = def.remote.headers; } else { })
     else if def ? local then
       {
         type = "local";

@@ -123,13 +123,13 @@ Before probing the site, create a structured plan using writing-plans methodolog
 
 **First, classify the block type** — this determines which bypass tier to use:
 
-| Dấu hiệu | Loại |
-|----------|------|
-| Status `403` + header `cf-mitigated: challenge` | JS challenge |
-| Status `503` + `<title>Just a moment...</title>` | JS challenge |
+| Dấu hiệu                                                  | Loại                  |
+| --------------------------------------------------------- | --------------------- |
+| Status `403` + header `cf-mitigated: challenge`           | JS challenge          |
+| Status `503` + `<title>Just a moment...</title>`          | JS challenge          |
 | Body contains `cf-browser-verification`, `challenge-form` | Turnstile / challenge |
-| Connection reset / timeout at TLS handshake | TLS fingerprint block |
-| Status `429` / `1020` / `1015` | Rate limit / WAF rule |
+| Connection reset / timeout at TLS handshake               | TLS fingerprint block |
+| Status `429` / `1020` / `1015`                            | Rate limit / WAF rule |
 
 Use a helper to detect:
 
@@ -249,7 +249,8 @@ async function fetchWithImpit(
   const html = await res.text();
   // impit returns headers as a plain object
   const setCookie = res.headers["set-cookie"];
-  if (setCookie) jar.set(url, Array.isArray(setCookie) ? setCookie : [setCookie]);
+  if (setCookie)
+    jar.set(url, Array.isArray(setCookie) ? setCookie : [setCookie]);
   return { html, ok: res.ok ?? res.status < 400 };
 }
 ```
@@ -291,7 +292,10 @@ async function solveChallenge(
   jar: CookieJar,
 ): Promise<boolean> {
   const context = await browser.newContext({
-    viewport: { width: 1280 + Math.floor(Math.random() * 200), height: 720 + Math.floor(Math.random() * 100) },
+    viewport: {
+      width: 1280 + Math.floor(Math.random() * 200),
+      height: 720 + Math.floor(Math.random() * 100),
+    },
     userAgent:
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
     locale: "en-US",
@@ -303,10 +307,12 @@ async function solveChallenge(
   try {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
     // Wait for cf_clearance cookie (signal that challenge passed)
-    const cfClearance = await page.waitForFunction(
-      () => document.cookie.includes("cf_clearance"),
-      { timeout: 30000 },
-    ).then(() => true).catch(() => false);
+    const cfClearance = await page
+      .waitForFunction(() => document.cookie.includes("cf_clearance"), {
+        timeout: 30000,
+      })
+      .then(() => true)
+      .catch(() => false);
 
     if (cfClearance) {
       // Save cookies into jar
@@ -335,7 +341,7 @@ async function solveChallenge(
 - [ ] **If headless fails → try headed mode:**
   ```ts
   const headedBrowser = await chromium.launch({
-    headless: false,  // visible browser window
+    headless: false, // visible browser window
     args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"],
   });
   const solvedHeaded = await solveChallenge(headedBrowser, url, jar);
@@ -356,9 +362,9 @@ Once `cf_clearance` is in the jar, subsequent requests can use plain `fetch()` w
 
 ```ts
 // After solving challenge, fetchChapterUrls and scrapeChapter use fetchWithCookies
-const chapters = await fetchChapterUrls(seriesUrl, jar);  // Tier 4: fast fetch
+const chapters = await fetchChapterUrls(seriesUrl, jar); // Tier 4: fast fetch
 for (const ch of chapters) {
-  const data = await scrapeChapter(ch.url, jar);  // Tier 4: fast fetch
+  const data = await scrapeChapter(ch.url, jar); // Tier 4: fast fetch
   // ...
 }
 ```
@@ -546,7 +552,10 @@ interface NovelMeta {
   freeChapters: number;
 }
 
-async function extractSeriesMeta(seriesUrl: string, jar: CookieJar): Promise<NovelMeta> {
+async function extractSeriesMeta(
+  seriesUrl: string,
+  jar: CookieJar,
+): Promise<NovelMeta> {
   const res = await fetchWithCookies(seriesUrl, jar);
   const $ = cheerio.load(await res.text());
   const bodyText = $("body").text();
@@ -605,7 +614,10 @@ async function extractSeriesMeta(seriesUrl: string, jar: CookieJar): Promise<Nov
 
 // --- SITE-SPECIFIC: customize these two functions ---
 
-async function fetchChapterUrls(seriesUrl: string, jar: CookieJar): Promise<ChapterLink[]> {
+async function fetchChapterUrls(
+  seriesUrl: string,
+  jar: CookieJar,
+): Promise<ChapterLink[]> {
   const res = await fetchWithCookies(seriesUrl, jar);
   const $ = cheerio.load(await res.text());
   const links: ChapterLink[] = [];

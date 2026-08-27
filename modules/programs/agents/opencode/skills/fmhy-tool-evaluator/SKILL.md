@@ -58,12 +58,14 @@ markdown đã được dán sẵn.
 ### Bước 3 — Chấm điểm từng công cụ (khung 10đ)
 
 **Trục A — Khả thi (tối đa 4đ):** còn hoạt động, không bị nền tảng chặn, có bảo trì.
+
 - Còn chạy ổn, không bị API/ToS chặn: 2đ
 - Không dựa vào API nền tảng đã chết (X/Twitter trả phí, Pushshift bị gỡ, ...): 1đ
 - Có bảo trì (commit/release gần, tác giả phản hồi): 1đ
 
 **Trục W — Giá trị workflow (tối đa 6đ):** khi dùng thật, nó tăng năng suất/thuận tiện hơn
 như thế nào so với làm tay hoặc công cụ mặc định.
+
 - **5–6đ — Tăng năng suất mạnh:** tự động hóa tác vụ lặp lại (tải/bọc/xóa/xuất hàng loạt),
   tìm trong bể dữ liệu lớn, sinh output 1 nút, thay cả chuỗi thao tác. Khai thác mỗi tuần.
 - **3–4đ — Tiện lợi, có lợi:** bớt vài bước so với làm tay, không bắt buộc nhưng rõ ràng nhanh hơn.
@@ -73,11 +75,13 @@ như thế nào so với làm tay hoặc công cụ mặc định.
 **Ngưỡng:** Tổng **≥ 7/10 → HỮU ÍCH**; dưới 7 → KHÔNG HỮU ÍCH LẮM.
 
 **Quy tắc mạnh (overrides tổng điểm):**
+
 1. A ≤ 1 (chết hoàn toàn, hoặc phụ thuộc API bị cắt) → luôn KHÔNG HỮU ÍCH LẮM.
 2. W ≤ 2 (chạy tốt nhưng không giúp gì workflow) → luôn KHÔNG HỮU ÍCH LẮM.
 3. Chỉ mục/index hoặc trang hướng dẫn vẫn cập nhật, dùng được → mặc định HỮU ÍCH.
 
 **Tránh chấm lệch:**
+
 - Đừng trừ điểm vì công cụ khó cài/CLI/tự-host. Đo bằng chính giá trị workflow cho người
   dùng đúng nhu cầu.
 - Đừng cộng điểm vì tên nghe hay hoặc thương hiệu lớn.

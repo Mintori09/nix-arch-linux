@@ -37,6 +37,7 @@ Plan (writing-plans) → Subagent per task → Review → Next task
 **Runtime:** Node.js + `npx tsx` for running TypeScript directly.  
 **Package manager:** `pnpm` (add deps with `pnpm add <pkg>`).  
 **Key libs**:
+
 - `cheerio` for HTML parsing
 - `playwright` for SPA sites
 - `archiver` or system `zip` for CBZ generation
@@ -75,9 +76,11 @@ Before probing the site, create a structured plan using writing-plans methodolog
 ## Step 1: Probe the Site
 
 ### 1A. Try SSR (fetch)
+
 - Fetch the page to check if it's SSR or if it uses anti-bot (Cloudflare, etc.) or SPA.
 
 ### 1B. Try SPA (Playwright)
+
 - If the content/images are loaded dynamically via JS, use Playwright to load the page and extract the image URLs.
 
 ---
@@ -85,10 +88,13 @@ Before probing the site, create a structured plan using writing-plans methodolog
 ## Step 2: Understand the Structure
 
 ### 2A. Chapter List
+
 Determine how to get all chapter URLs.
 
 ### 2B. Chapter Images
+
 Identify selectors for the images of a chapter. Commonly, it is a list of `<img>` tags inside a reader area.
+
 - Exclude ads, logos, social sharing icons, and navigation buttons.
 - Extract the `src` or `data-src` attribute from valid comic page images.
 
@@ -142,7 +148,11 @@ interface NovelMeta {
 
 // ... Implement metadata & image scraping logic ...
 
-async function downloadImage(url: string, dest: string, retries = 3): Promise<void> {
+async function downloadImage(
+  url: string,
+  dest: string,
+  retries = 3,
+): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, { headers: UA });
@@ -173,6 +183,7 @@ async function createCbz(dirPath: string, cbzPath: string): Promise<void> {
 ---
 
 ## Step 4: Run the Adapter & Verify
+
 - Run `npx tsx {domain}/scrape-{domain}.ts {series-url}`.
 - Verify directories are created and populated with zero-padded images (e.g., `001.jpg`, `002.jpg`).
 - Verify `.cbz` files are successfully built.

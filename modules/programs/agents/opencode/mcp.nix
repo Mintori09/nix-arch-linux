@@ -11,6 +11,7 @@ let
         timeout = def.remote.timeout or 10000;
         enabled = def.enabled or true;
       }
+      // (if def.remote ? headers then { headers = def.remote.headers; } else { })
     else if def ? local then
       {
         type = "local";

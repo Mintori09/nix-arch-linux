@@ -51,6 +51,17 @@
     enabled = true;
   };
 
+  apify = {
+    remote = {
+      url = "https://mcp.apify.com/";
+      headers = {
+        Authorization = "Bearer $APIFY_API_KEY";
+      };
+      timeout = 10000;
+    };
+    enabled = true;
+  };
+
   tavily = {
     local = {
       argv = [
