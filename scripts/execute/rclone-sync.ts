@@ -206,9 +206,12 @@ async function syncConfig(dryRun: boolean): Promise<number> {
 		".ideavimrc",
 	];
 
+	console.log(`  Tar: tar ${tarArgs.join(" ")}`);
+	console.log(
+		`  Upload: rclone copy ${archivePath} ${ARCHIVES_REMOTE}/ --progress --log-file ${LOG_FILE} --log-level INFO`,
+	);
+
 	if (dryRun) {
-		console.log(`  Tar: tar ${tarArgs.join(" ")}`);
-		console.log(`  Upload: rclone copy ${archivePath} ${ARCHIVES_REMOTE}/`);
 		console.log(`  (dry-run — skipped)\n`);
 		return 0;
 	}
@@ -229,7 +232,7 @@ async function syncConfig(dryRun: boolean): Promise<number> {
 	}
 
 	console.log(`  Uploading to ${ARCHIVES_REMOTE}/...`);
-	const uploadCode = await spawnInherit("rclone", [
+	const uploadArgs = [
 		"copy",
 		archivePath,
 		`${ARCHIVES_REMOTE}/`,
@@ -238,7 +241,8 @@ async function syncConfig(dryRun: boolean): Promise<number> {
 		LOG_FILE,
 		"--log-level",
 		"INFO",
-	]);
+	];
+	const uploadCode = await spawnInherit("rclone", uploadArgs);
 
 	if (uploadCode !== 0) {
 		console.error(`  Upload error (code: ${uploadCode})`);
@@ -286,8 +290,12 @@ async function syncZen(dryRun: boolean): Promise<number> {
 			profileDir.replace(`${HOME}/`, ""),
 		];
 
+		console.log(`  Tar: tar ${tarArgs.join(" ")}`);
+		console.log(
+			`  Upload: rclone copy ${archivePath} ${ARCHIVES_REMOTE}/ --progress --log-file ${LOG_FILE} --log-level INFO`,
+		);
+
 		if (dryRun) {
-			console.log(`  Tar: tar ${tarArgs.join(" ")}`);
 			console.log(`  (dry-run — skipped)\n`);
 			continue;
 		}
@@ -312,7 +320,7 @@ async function syncZen(dryRun: boolean): Promise<number> {
 		}
 
 		console.log(`  Uploading to ${ARCHIVES_REMOTE}/...`);
-		const uploadCode = await spawnInherit("rclone", [
+		const uploadArgs = [
 			"copy",
 			archivePath,
 			`${ARCHIVES_REMOTE}/`,
@@ -321,7 +329,8 @@ async function syncZen(dryRun: boolean): Promise<number> {
 			LOG_FILE,
 			"--log-level",
 			"INFO",
-		]);
+		];
+		const uploadCode = await spawnInherit("rclone", uploadArgs);
 
 		if (uploadCode !== 0) {
 			console.error(`  Upload error for ${profileName} (code: ${uploadCode})`);
@@ -393,18 +402,21 @@ async function syncObsidian(dryRun: boolean): Promise<number> {
 
 	if (dryRun) cmdArgs.push("--dry-run");
 
+	console.log(`  Sync: rclone ${cmdArgs.join(" ")}`);
 	const syncCode = await spawnInherit("rclone", cmdArgs);
 
 	if (syncCode === 0 && !dryRun) {
 		console.log("  Verifying sync...");
-		const checkCode = await spawnInherit("rclone", [
+		const checkArgs = [
 			"check",
 			OBSIDIAN_SRC,
 			OBSIDIAN_DST,
 			"--one-way",
 			"--exclude-from",
 			`${OBSIDIAN_SRC}/.rclone-ignore`,
-		]);
+		];
+		console.log(`  Check: rclone ${checkArgs.join(" ")}`);
+		const checkCode = await spawnInherit("rclone", checkArgs);
 		if (checkCode === 0) {
 			console.log("  All synced files match on remote ✓");
 		} else {
