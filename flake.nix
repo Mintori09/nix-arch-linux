@@ -139,6 +139,7 @@
         src = ./.;
         hooks = {
           ripsecrets.enable = true;
+          gitleaks.enable = true;
           nixfmt.enable = true;
           shfmt.enable = true;
           prettier.enable = true;

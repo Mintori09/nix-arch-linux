@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Check if gitleaks is installed
+if command -v gitleaks &>/dev/null; then
+	echo "🔍 Scanning for secrets with Gitleaks before push..."
+	if ! gitleaks protect --staged --verbose; then
+		echo "❌ Gitleaks detected secrets! Push aborted."
+		exit 1
+	fi
+	echo "✅ Gitleaks scan passed."
+fi
