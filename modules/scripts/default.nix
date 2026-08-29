@@ -26,5 +26,6 @@
     ./caffeinate.nix
     ./cleartext-wifi.nix
     ./nix-rebuild.nix
+    ./fcitx5-remote.nix
   ];
 }

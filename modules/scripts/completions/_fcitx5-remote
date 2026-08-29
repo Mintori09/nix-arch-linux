@@ -1,0 +1,75 @@
+#compdef fcitx5-remote
+
+_fcitx5-remote_groups() {
+  local -a groups
+  local profile="${XDG_CONFIG_HOME:-$HOME/.config}/fcitx5/profile"
+
+  if [[ -f "$profile" ]]; then
+    local group_names
+    group_names=("${(@f)$(awk -F'=' '/^\[Groups\/[0-9]+\]/{in_grp=1} in_grp && /^Name=/{gsub(/"/, "", $2); print $2; in_grp=0}' "$profile")}")
+    for g in "${group_names[@]}"; do
+      groups+=("${g}:Input Method Group")
+    done
+  fi
+
+  _describe -t groups 'input method group' groups
+}
+
+_fcitx5-remote_imnames() {
+  local -a im_list
+  local profile="${XDG_CONFIG_HOME:-$HOME/.config}/fcitx5/profile"
+
+  # 1. Fetch available IMs with display descriptions from DBus if Fcitx5 is running
+  if (( $+commands[gdbus] )) && fcitx5-remote --check &>/dev/null; then
+    local raw_dbus
+    raw_dbus=$(gdbus call --session --dest org.fcitx.Fcitx5 --object-path /controller --method org.fcitx.Fcitx.Controller1.AvailableInputMethods 2>/dev/null)
+
+    if [[ -n "$raw_dbus" ]]; then
+      local -A desc_map
+      while IFS='=' read -r id desc; do
+        [[ -n "$id" ]] && desc_map[$id]="$desc"
+      done < <(echo "$raw_dbus" | grep -o "('[^']*', '[^']*'" | sed "s/('//; s/', '/=/")
+
+      if [[ -f "$profile" ]]; then
+        local configured_ims
+        configured_ims=("${(@u)${(@f)$(awk -F'=' '/^\[Groups\/[0-9]+\/Items\/[0-9]+\]/{in_item=1} in_item && /^Name=/{print $2; in_item=0}' "$profile")}}")
+        for im in "${configured_ims[@]}"; do
+          local d="${desc_map[$im]:-$im}"
+          im_list+=("${im}:${d//:/ -}")
+        done
+      fi
+    fi
+  fi
+
+  # 2. Fallback to profile entries directly
+  if (( ${#im_list} == 0 )) && [[ -f "$profile" ]]; then
+    local configured_ims
+    configured_ims=("${(@u)${(@f)$(awk -F'=' '/^\[Groups\/[0-9]+\/Items\/[0-9]+\]/{in_item=1} in_item && /^Name=/{print $2; in_item=0}' "$profile")}}")
+    for im in "${configured_ims[@]}"; do
+      im_list+=("${im}:Configured Input Method")
+    done
+  fi
+
+  _describe -t ims 'input method' im_list
+}
+
+_fcitx5-remote() {
+  _arguments -s -S \
+    '-c[Inactivate input method]' \
+    '-o[Activate input method]' \
+    '-r[Reload fcitx config]' \
+    '-t[Switch Active/Inactive]' \
+    '-T[Switch Active/Inactive]' \
+    '-e[Request fcitx to exit]' \
+    '-a[Print fcitx DBus address]' \
+    '-m[Print corresponding addon name for IM]:input method:_fcitx5-remote_imnames' \
+    '-g[Set current input method group]:group:_fcitx5-remote_groups' \
+    '-q[Get current input method group name]' \
+    '-n[Get current input method name]' \
+    '-s[Switch to input method]:input method:_fcitx5-remote_imnames' \
+    '-x[Open new X11 connection using DISPLAY]' \
+    '-h[Display help and exit]' \
+    '--check[Check if Fcitx is running, if not return 1]'
+}
+
+_fcitx5-remote "$@"
