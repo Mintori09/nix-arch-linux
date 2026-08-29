@@ -6,7 +6,7 @@ PACKAGES=(
 	"anyflip-downloader|$HOME/.config/home-manager/modules/packages/anyflip-downloader.nix|Lofter1/anyflip-downloader|https://github.com/{repo}/releases/download/v{version}/anyflip-downloader_{version}_linux_amd64.tar.gz"
 	"dbx|$HOME/.config/home-manager/modules/packages/dbx.nix|t8y2/dbx|https://github.com/{repo}/releases/download/v{version}/DBX_{version}_amd64.deb"
 	"magika|$HOME/.config/home-manager/modules/packages/magika.nix|google/magika|https://github.com/{repo}/releases/download/cli/v{version}/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
-	"vicinae|$HOME/.config/home-manager/modules/packages/vicinae.nix|vicinaehq/vicinae|https://github.com/{repo}/releases/download/v{version}/vicinae-linux-x86_64-v{version}.tar.gz"
+	"vicinae|$HOME/.config/home-manager/modules/packages/vicinae.nix|vicinaehq/vicinae|https://github.com/{repo}/releases/download/v{version}/Vicinae-x86_64.AppImage"
 	"zap|$HOME/.config/home-manager/modules/packages/zap.nix|zerx-lab/zap|https://github.com/{repo}/releases/download/v{version}/zap_{version}_amd64.deb"
 )
 

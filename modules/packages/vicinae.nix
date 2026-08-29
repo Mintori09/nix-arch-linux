@@ -1,61 +1,23 @@
 { pkgs, ... }:
 
 let
-  version = "0.27.4";
-in
-
-pkgs.stdenv.mkDerivation {
   pname = "vicinae";
-  inherit version;
+  version = "0.27.4";
 
   src = pkgs.fetchurl {
-    url = "https://github.com/vicinaehq/vicinae/releases/download/v${version}/vicinae-linux-x86_64-v${version}.tar.gz";
-    hash = "sha256-U3Rjx3NFBUwswAdUXr1/+khT+W7TQXaMOEmi2dNxWqg=";
+    url = "https://github.com/vicinaehq/vicinae/releases/download/v${version}/Vicinae-x86_64.AppImage";
+    hash = "sha256-OvTGyNi29yodFw3WOShzU3IaEN4eDQIdoNreKd4HFSk=";
   };
 
-  sourceRoot = ".";
+  appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
+in
 
-  nativeBuildInputs = [
-    pkgs.patchelf
-    pkgs.kdePackages.wrapQtAppsHook
-  ];
+pkgs.appimageTools.wrapType2 {
+  inherit pname version src;
 
-  buildInputs = with pkgs; [
-    gcc16.cc.lib
-    kdePackages.qtbase
-    kdePackages.qtdeclarative
-    kdePackages.qtsvg
-    kdePackages.qtwayland
-    kdePackages.layer-shell-qt
-    kdePackages.syntax-highlighting
-    kdePackages.qtkeychain
-    libqalculate
-    wayland
-    libxkbcommon
-    libxcb
-    libxcb-keysyms
-    libxml2
-    mpfr
-    gmp
-    openssl
-    curl
-    icu
-    libGL
-    systemdLibs
-  ];
-
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out
-    cp -r bin libexec share lib include $out/
-
-    for f in $out/bin/* $out/libexec/vicinae/*; do
-      if [ -f "$f" ] && [ -x "$f" ]; then
-        patchelf --set-rpath "$out/lib:/usr/lib:/usr/lib64" "$f" || true
-      fi
-    done
-
-    runHook postInstall
+  extraInstallCommands = ''
+    install -m 444 -D ${appimageContents}/vicinae.desktop $out/share/applications/vicinae.desktop
+    install -m 444 -D ${appimageContents}/vicinae.png $out/share/icons/hicolor/512x512/apps/vicinae.png
   '';
 
   meta = with pkgs.lib; {
