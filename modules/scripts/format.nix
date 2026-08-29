@@ -3,20 +3,6 @@ let
   inherit (pkgs) lib;
   helpers = import ./_helpers.nix { inherit pkgs; };
 
-  fmtron = pkgs.rustPlatform.buildRustPackage {
-    pname = "fmtron";
-    version = "unstable-2026-04-21";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "barafael";
-      repo = "fmtron";
-      rev = "937cec1356aa35ae1b41c83a5b1372d5950608b1";
-      hash = "sha256-KQzcN7MSJHZtNZ9QTMqb8THbCnoX4EU2U9TWJR97gik=";
-    };
-
-    cargoHash = "sha256-7mizUBkJdzODXqs8O/nVGgUYWFaBfEgkHfiNz7klNeo=";
-  };
-
   optionalPkg =
     name:
     lib.optionals (builtins.hasAttr name pkgs) [
@@ -34,7 +20,7 @@ let
     pkgs.bun
     pkgs.prettier
     pkgs.taplo
-    fmtron
+    pkgs.fmtron
     pkgs.kdlfmt
     pkgs.rustfmt
     pkgs.stylua

@@ -109,6 +109,8 @@
     generate-toc
     fitgirl-link-extractor
     keyboard-rs
+    qbittorrent
+    fmtron
     sd
     watchexec
     rclone
@@ -160,5 +162,6 @@
     aspell
     telegram-desktop
     kdePackages.kamoso
+    google-java-format
   ];
 }

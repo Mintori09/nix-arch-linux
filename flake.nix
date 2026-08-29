@@ -92,6 +92,11 @@
       url = "github:nushell/nu_scripts";
       flake = false;
     };
+
+    fmtron = {
+      url = "github:yusufraji/fmtron";
+      flake = false;
+    };
   };
 
   outputs =
@@ -131,6 +136,10 @@
             magika = final.callPackage ./modules/packages/magika.nix { };
             keyboard-rs = final.callPackage ./modules/packages/keyboard-rs.nix { };
             vicinae = final.callPackage ./modules/packages/vicinae.nix { };
+            qbittorrent = final.callPackage ./modules/packages/qbittorrent.nix { };
+            fmtron = final.callPackage ./modules/packages/fmtron.nix {
+              src = inputs.fmtron;
+            };
           })
         ];
         config.allowUnfree = true;

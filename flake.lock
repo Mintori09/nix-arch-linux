@@ -230,6 +230,22 @@
         "type": "github"
       }
     },
+    "fmtron": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786177972,
+        "narHash": "sha256-0EJfvcM/yAfN2oWBLtEF+JeAqMhQNdzsHq+HzPZdPmw=",
+        "owner": "yusufraji",
+        "repo": "fmtron",
+        "rev": "ade27b829dff0199e55738c9cc4b8bf39cb917f6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yusufraji",
+        "repo": "fmtron",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -463,6 +479,7 @@
         "anthropic-skills": "anthropic-skills",
         "awesome-claude-skills": "awesome-claude-skills",
         "ccconfigs": "ccconfigs",
+        "fmtron": "fmtron",
         "home-manager": "home-manager_2",
         "llm-agents": "llm-agents",
         "mcp-servers-nix": "mcp-servers-nix",
