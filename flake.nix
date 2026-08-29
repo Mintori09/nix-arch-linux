@@ -118,32 +118,7 @@
       homeDirectory = "/home/${username}";
       hostName = "endeavour-desktop";
       system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          nixgl.overlay
-          llm-agents.overlays.shared-nixpkgs
-          (final: prev: {
-            bookokrat = final.callPackage ./modules/packages/bookokrat.nix { };
-            dbx = final.callPackage ./modules/packages/dbx.nix { };
-            zap = final.callPackage ./modules/packages/zap.nix { };
-            anyflip-downloader = final.callPackage ./modules/packages/anyflip-downloader.nix { };
-            cv-cli = final.callPackage ./modules/packages/cv-cli.nix { };
-            anki-tool = final.callPackage ./modules/packages/anki-tool.nix { };
-            ai-bridge = final.callPackage ./modules/packages/ai-bridge.nix { };
-            generate-toc = final.callPackage ./modules/packages/generate-toc.nix { };
-            fitgirl-link-extractor = final.callPackage ./modules/packages/fitgirl-link-extractor.nix { };
-            magika = final.callPackage ./modules/packages/magika.nix { };
-            keyboard-rs = final.callPackage ./modules/packages/keyboard-rs.nix { };
-            vicinae = final.callPackage ./modules/packages/vicinae.nix { };
-            qbittorrent = final.callPackage ./modules/packages/qbittorrent.nix { };
-            fmtron = final.callPackage ./modules/packages/fmtron.nix {
-              src = inputs.fmtron;
-            };
-          })
-        ];
-        config.allowUnfree = true;
-      };
+      pkgs = nixpkgs.legacyPackages.${system};
 
       spicePkgs = spicetify-nix.legacyPackages.${system};
 

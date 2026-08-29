@@ -2,7 +2,7 @@
 {
   nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
-    inputs.mmdr.packages.${pkgs.system}.default
+    inputs.mmdr.packages.${pkgs.stdenv.hostPlatform.system}.default
     # Archive
     atool
     bzip2
@@ -163,5 +163,7 @@
     telegram-desktop
     kdePackages.kamoso
     google-java-format
+    python314Packages.icnsutil
+    libicns
   ];
 }

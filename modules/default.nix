@@ -6,6 +6,7 @@
     ./scripts
     ./systemd
     ./secrets.nix
+    ./overlays.nix
     ../fonts/default.nix
     ./config
   ];
