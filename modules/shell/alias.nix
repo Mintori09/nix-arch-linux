@@ -57,9 +57,6 @@ in
     vii = "trans -t vi -I";
     tt = "taskwarrior-tui";
 
-    hf = "HISTTIMEFORMAT= history | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | fzf --no-sort --tac --no-preview --height=40% --layout=default | wl-copy; echo \"Copied to clipboard: $(wl-paste)\"";
-
-    hfe = "HISTTIMEFORMAT= history | fzf --no-preview --height=40% --reverse --tac | sed -E 's/^[[:space:]]*[0-9]+\\*?[[:space:]]*//' | bash";
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
     co = "wl-copy";
     cat = "bat";
