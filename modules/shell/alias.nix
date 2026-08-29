@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   c = import ./_constants.nix;
 in
@@ -9,7 +9,7 @@ in
     # aider = "aider --model opencode-go/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
     # opencode-go/deepseek-v4-pro
     reload = "source $HOME/.config/zsh/.zshrc";
-    hms = "home-manager switch --flake ~/.config/home-manager -j 1";
+    hms = lib.mkForce "home-manager switch --flake ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
 
     # NAVIGATION & SHELL BASICS
@@ -67,9 +67,5 @@ in
     gdc = "git diff | wl-copy";
     catc = "cpath --content";
     cpf = "fzf | each --batch cpath";
-  };
-
-  programs.bash = {
-    shellAliases.hms = "home-manager switch --flake ~/.config/home-manager -j 1";
   };
 }
