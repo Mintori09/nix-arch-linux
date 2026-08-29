@@ -24,7 +24,7 @@ in
     (helpers.mkScriptPackage {
       name = "extract";
       entry = "${../../scripts/execute/extract-file.ts}";
-      extraPackages = [
+      extraPathPackages = [
         pkgs.gnutar
         pkgs.bzip2
         pkgs.gzip

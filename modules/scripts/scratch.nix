@@ -8,7 +8,7 @@ in
     entry = "${../../scripts/execute/scratch.ts}";
     extraPathPackages = [
       pkgs.bash
-      # pkgs.magika
+      pkgs.magika
       pkgs.jq
       pkgs.coreutils
     ];

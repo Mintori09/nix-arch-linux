@@ -66,7 +66,12 @@ function detectExtensionFromContent(content: string): string {
   if (magika.status === 0) {
     try {
       const parsed = JSON.parse(magika.stdout);
-      const label: string = parsed[0]?.output?.ct_label ?? "";
+      const label: string =
+        parsed[0]?.result?.value?.output?.label ??
+        parsed[0]?.prediction?.output?.label ??
+        parsed[0]?.output?.ct_label ??
+        parsed[0]?.output?.label ??
+        "";
       if (label && label !== "null") {
         const ext = getExtensionByType(label);
         if (ext) return ext;

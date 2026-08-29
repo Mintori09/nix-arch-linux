@@ -48,7 +48,7 @@ detect_extension_from_content() {
 
 	if command -v magika >/dev/null 2>&1; then
 		local type_label
-		type_label=$(echo "$content" | magika - --json 2>/dev/null | jq -r '.[0].output.ct_label // empty' 2>/dev/null || echo "")
+		type_label=$(echo "$content" | magika - --json 2>/dev/null | jq -r '.[0].result.value.output.label // .[0].prediction.output.label // .[0].output.ct_label // .[0].output.label // empty' 2>/dev/null || echo "")
 		if [[ -n $type_label && $type_label != "null" ]]; then
 			get_extension_by_type "$type_label"
 			return

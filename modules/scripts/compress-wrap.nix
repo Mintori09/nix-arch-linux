@@ -6,15 +6,13 @@ in
   home.packages = helpers.mkScriptPackage {
     name = "compress";
     entry = "${../../scripts/execute/compress-wrap.ts}";
-    extraPackages = [
+    extraPathPackages = [
+      pkgs.zip
       pkgs.gnutar
       pkgs.bzip2
       pkgs.gzip
-      pkgs.unzip
       pkgs.p7zip
-      pkgs.unrar
-      pkgs.libarchive
-      pkgs.binutils
+      pkgs.xz
     ];
   };
 }
