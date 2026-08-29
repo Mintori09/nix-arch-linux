@@ -40,11 +40,21 @@ export async function unpackApkg(apkgPath: string, outputDir: string): Promise<v
       throw new Error("Invalid .apkg: SQLite database collection file not found inside package.");
     }
 
-    // Resolve SQL.js from workspace node_modules
-    const workspaceRequire = createRequire(import.meta.url);
-    const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
-    const ankiRequire = createRequire(apkgPackagePath);
-    const sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+    // Resolve SQL.js
+    let sql: any;
+    try {
+      const workspaceRequire =
+        typeof require !== "undefined" ? require : createRequire(import.meta.url);
+      try {
+        const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
+        const ankiRequire = createRequire(apkgPackagePath);
+        sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+      } catch {
+        sql = workspaceRequire("sql.js/js/sql-memory-growth.js");
+      }
+    } catch (err) {
+      throw new Error(`Failed to resolve sql.js: ${err}`);
+    }
 
     // Load and optionally gunzip database
     let dbBuffer = fs.readFileSync(dbPath);

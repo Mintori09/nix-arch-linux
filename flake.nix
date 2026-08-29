@@ -128,6 +128,9 @@
             ai-bridge = final.callPackage ./modules/packages/ai-bridge.nix { };
             generate-toc = final.callPackage ./modules/packages/generate-toc.nix { };
             fitgirl-link-extractor = final.callPackage ./modules/packages/fitgirl-link-extractor.nix { };
+            magika = final.callPackage ./modules/packages/magika.nix { };
+            keyboard-rs = final.callPackage ./modules/packages/keyboard-rs.nix { };
+            vicinae = final.callPackage ./modules/packages/vicinae.nix { };
           })
         ];
         config.allowUnfree = true;
@@ -139,7 +142,6 @@
         src = ./.;
         hooks = {
           ripsecrets.enable = true;
-          gitleaks.enable = true;
           nixfmt.enable = true;
           shfmt.enable = true;
           prettier.enable = true;

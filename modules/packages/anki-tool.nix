@@ -3,7 +3,9 @@
 let
   runtimeDeps = with pkgs; [
     unzip
+    nodejs_22
   ];
+  srcDir = "/home/mintori/.config/home-manager/packages/anki-generator-node";
 in
 pkgs.stdenv.mkDerivation {
   pname = "anki-tool";
@@ -14,15 +16,13 @@ pkgs.stdenv.mkDerivation {
   nativeBuildInputs = [ pkgs.makeWrapper ];
 
   installPhase = ''
-    mkdir -p $out/bin $out/lib/anki-tool $out/share/zsh/site-functions
-    cp dist/index.js $out/lib/anki-tool/anki-tool.js
-    cp -r templates $out/lib/anki-tool/
-    cp -r styles $out/lib/anki-tool/
+    mkdir -p $out/bin $out/share/zsh/site-functions
 
     makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/anki-tool \
-      --add-flags "$out/lib/anki-tool/anki-tool.js" \
+      --add-flags "${srcDir}/dist/index.js" \
       --prefix PATH : ${pkgs.lib.makeBinPath runtimeDeps} \
-      --set ANKI_TOOL_ROOT "$out/lib/anki-tool"
+      --set NODE_PATH "${srcDir}/node_modules" \
+      --set ANKI_TOOL_ROOT "${srcDir}"
 
     if [ -f completions/_anki-tool ]; then
       cp completions/_anki-tool $out/share/zsh/site-functions/_anki-tool

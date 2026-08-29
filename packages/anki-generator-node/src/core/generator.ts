@@ -39,10 +39,19 @@ export async function generateApkg(
       typeof outputFilenameOrParser === "string" ? outputFilenameOrParser : "ankideck.apkg";
   }
 
-  const req = createRequire(import.meta.url);
-  const apkgPath = req.resolve("anki-apkg-export");
-  const ankiRequire = createRequire(apkgPath);
-  const sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+  let sql: any;
+  try {
+    const req = typeof require !== "undefined" ? require : createRequire(import.meta.url);
+    try {
+      const apkgPath = req.resolve("anki-apkg-export");
+      const ankiRequire = createRequire(apkgPath);
+      sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+    } catch {
+      sql = req("sql.js/js/sql-memory-growth.js");
+    }
+  } catch (err) {
+    throw new Error(`Failed to resolve sql.js: ${err}`);
+  }
 
   // Patch Exporter methods to properly free prepared statements and avoid memory exhaustion
   if (!(Exporter.prototype as any)._patched) {

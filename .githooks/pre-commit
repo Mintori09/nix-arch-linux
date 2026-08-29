@@ -38,7 +38,7 @@ if [ "$formatted" = true ]; then
 	echo "Formatted staged files"
 	# Only re-stage originally staged files, not all modified files
 	for file in $staged_files; do
-		git add "$file"
+		git add -f "$file"
 	done
 fi
 

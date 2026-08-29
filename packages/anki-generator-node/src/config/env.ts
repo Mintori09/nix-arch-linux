@@ -2,8 +2,15 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+function getDirname(): string {
+  if (typeof __dirname !== "undefined") return __dirname;
+  try {
+    if (typeof import.meta !== "undefined" && import.meta.url) {
+      return path.dirname(fileURLToPath(import.meta.url));
+    }
+  } catch {}
+  return process.cwd();
+}
 
 function findProjectRoot(fromDir: string): string {
   let current = path.resolve(fromDir);
@@ -12,16 +19,17 @@ function findProjectRoot(fromDir: string): string {
       return current;
     }
     const parent = path.dirname(current);
-    if (parent === current) throw new Error("Could not find project root (package.json)");
+    if (parent === current) return fromDir;
     current = parent;
   }
 }
 
-export const ROOT = findProjectRoot(__dirname);
+export const ROOT = process.env.ANKI_TOOL_ROOT || findProjectRoot(getDirname());
 export const MEDIA_DIR = path.join(ROOT, "media");
-export const IMAGE_DIR = path.join(ROOT, "media"); // Consistent with existing implementation where image files go to media
+export const IMAGE_DIR = path.join(ROOT, "media");
 
-// Ensure directories exist
 if (!fs.existsSync(MEDIA_DIR)) {
-  fs.mkdirSync(MEDIA_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(MEDIA_DIR, { recursive: true });
+  } catch {}
 }

@@ -1,8 +1,18 @@
-#!/usr/bin/env node
+var __require = /* @__PURE__ */ ((x) =>
+  typeof require !== "undefined"
+    ? require
+    : typeof Proxy !== "undefined"
+      ? new Proxy(x, {
+          get: (a, b) => (typeof require !== "undefined" ? require : a)[b],
+        })
+      : x)(function (x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
 
 // src/index.ts
-import fs12 from "node:fs";
-import path12 from "node:path";
+import fs14 from "node:fs";
+import path14 from "node:path";
 
 // src/parsers/vocab.ts
 import fs4 from "node:fs";
@@ -20,8 +30,15 @@ import path2 from "node:path";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-var __filename = fileURLToPath(import.meta.url);
-var __dirname = path.dirname(__filename);
+function getDirname() {
+  if (typeof __dirname !== "undefined") return __dirname;
+  try {
+    if (typeof import.meta !== "undefined" && import.meta.url) {
+      return path.dirname(fileURLToPath(import.meta.url));
+    }
+  } catch {}
+  return process.cwd();
+}
 function findProjectRoot(fromDir) {
   let current = path.resolve(fromDir);
   while (true) {
@@ -29,15 +46,17 @@ function findProjectRoot(fromDir) {
       return current;
     }
     const parent = path.dirname(current);
-    if (parent === current) throw new Error("Could not find project root (package.json)");
+    if (parent === current) return fromDir;
     current = parent;
   }
 }
-var ROOT = findProjectRoot(__dirname);
+var ROOT = process.env.ANKI_TOOL_ROOT || findProjectRoot(getDirname());
 var MEDIA_DIR = path.join(ROOT, "media");
 var IMAGE_DIR = path.join(ROOT, "media");
 if (!fs.existsSync(MEDIA_DIR)) {
-  fs.mkdirSync(MEDIA_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(MEDIA_DIR, { recursive: true });
+  } catch {}
 }
 
 // src/core/audio.ts
@@ -754,7 +773,36 @@ function parseJsonInput(raw) {
   try {
     return JSON.parse(cleanRaw);
   } catch (error) {
-    throw new Error("Invalid JSON content.");
+    let line = 1;
+    let column = 1;
+    let snippet = "";
+    const matchPos = error?.message?.match(/position\s+(\d+)/i);
+    if (matchPos) {
+      const pos = parseInt(matchPos[1], 10);
+      const lines = cleanRaw.slice(0, pos).split("\n");
+      line = lines.length;
+      column = lines[lines.length - 1].length + 1;
+      const allLines = cleanRaw.split("\n");
+      const errLine = allLines[line - 1] || "";
+      const pointer = " ".repeat(Math.max(0, column - 1)) + "^";
+      snippet = `
+  ${line} | ${errLine}
+    | ${pointer}`;
+    } else {
+      const matchLine = error?.message?.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+      if (matchLine) {
+        line = parseInt(matchLine[1], 10);
+        column = parseInt(matchLine[2], 10);
+        const allLines = cleanRaw.split("\n");
+        const errLine = allLines[line - 1] || "";
+        const pointer = " ".repeat(Math.max(0, column - 1)) + "^";
+        snippet = `
+  ${line} | ${errLine}
+    | ${pointer}`;
+      }
+    }
+    const details = `JSON Syntax Error at Line ${line}, Column ${column}: ${error?.message || "Invalid JSON"}${snippet}`;
+    throw new Error(details);
   }
 }
 var SCHEMAS = {
@@ -828,91 +876,82 @@ var SCHEMAS = {
   jp_vocab: [{ name: "vocabulary", type: "object" }],
   jp_grammar: [{ name: "grammar", type: "object" }],
 };
-function printSchema(strategy, schema) {
-  console.error('  Required fields for type "' + strategy + '":');
-  for (const f of schema) {
-    const tag = f.optional ? "  (optional)" : "  (required)";
-    console.error("    " + tag + ' "' + f.name + '" (' + f.type + ")");
-  }
-}
 function validateJsonStructure(data, strategy) {
   const schema = SCHEMAS[strategy];
   if (!schema) return;
   if (!Array.isArray(data)) {
-    console.error("");
-    console.error("=== JSON Structure Error ===");
-    console.error("");
-    console.error("  Expected: A JSON array of objects at the top level.");
-    console.error("  Got:      " + (data === null ? "null" : typeof data));
-    console.error("");
-    console.error("  When using --type " + strategy + ", your JSON file must contain");
-    console.error("  an array of items wrapped in [ ]. Currently it contains a");
-    console.error("  single " + (data === null ? "null" : typeof data) + " instead.");
-    console.error("");
-    console.error("  Correct format:");
-    console.error('    [ { "field1": "...", "field2": "..." } ]');
-    console.error("");
-    console.error("  Your content (truncated):");
-    try {
-      console.error("    " + JSON.stringify(data).slice(0, 200));
-    } catch (_) {
-      console.error("    (unable to display)");
-    }
-    process.exit(1);
+    const msg = [
+      "",
+      "=== JSON Structure Error ===",
+      "",
+      "  Expected: A JSON array of objects at the top level.",
+      "  Got:      " + (data === null ? "null" : typeof data),
+      "",
+      "  When using --type " + strategy + ", your JSON file must contain",
+      "  an array of items wrapped in [ ]. Currently it contains a",
+      "  single " + (data === null ? "null" : typeof data) + " instead.",
+      "",
+      "  Correct format:",
+      '    [ { "field1": "...", "field2": "..." } ]',
+    ].join("\n");
+    console.error(msg);
+    throw new Error(msg);
   }
   if (data.length === 0) {
-    console.error("");
-    console.error("=== JSON Structure Error ===");
-    console.error("");
-    console.error("  The JSON array is empty ([]).");
-    console.error("  There must be at least one item to compile.");
-    process.exit(1);
+    const msg = [
+      "",
+      "=== JSON Structure Error ===",
+      "",
+      "  The JSON array is empty ([]).",
+      "  There must be at least one item to compile.",
+    ].join("\n");
+    console.error(msg);
+    throw new Error(msg);
   }
   const requiredFields = schema.filter((f) => !f.optional);
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     if (typeof item !== "object" || item === null || Array.isArray(item)) {
       const typeName = item === null ? "null" : Array.isArray(item) ? "array" : typeof item;
-      console.error("");
-      console.error("=== JSON Structure Error ===");
-      console.error("");
-      console.error("  Item #" + i + " (type: " + strategy + ")");
-      console.error("  Reason: Item is not an object. Got: " + typeName);
-      console.error("");
-      console.error("  Each item in the array must be a JSON object ( { } ).");
-      console.error("  Value: " + JSON.stringify(item).slice(0, 150));
-      process.exit(1);
+      const msg = [
+        "",
+        "=== JSON Structure Error ===",
+        "",
+        "  Card #" + (i + 1) + " (type: " + strategy + ")",
+        "  Reason: Item is not an object. Got: " + typeName,
+        "",
+        "  Each item in the array must be a JSON object ( { } ).",
+      ].join("\n");
+      console.error(msg);
+      throw new Error(msg);
     }
     const missingFields = requiredFields.filter((f) => !(f.name in item)).map((f) => f.name);
     if (missingFields.length > 0) {
-      console.error("");
-      console.error("=== JSON Structure Error ===");
-      console.error("");
-      console.error("  Item #" + i + " (type: " + strategy + ")");
-      console.error("  Reason: Missing required field(s):");
-      for (const f of missingFields) {
-        console.error('    - "' + f + '"');
-      }
-      console.error("");
-      printSchema(strategy, schema);
-      console.error("");
-      console.error("  Fields actually present in this item (" + Object.keys(item).length + "):");
+      const msgLines = [
+        "",
+        "=== JSON Structure Error ===",
+        "",
+        "  Card #" + (i + 1) + " (type: " + strategy + ")",
+        "  Reason: Missing required field(s): " + missingFields.map((f) => `"${f}"`).join(", "),
+      ];
       const itemKeys = Object.keys(item);
       if (itemKeys.length === 0) {
-        console.error("    (none \u2014 the item is an empty object {})");
+        msgLines.push("  Fields present: (none \u2014 empty object {})");
       } else {
+        msgLines.push("  Fields present: " + itemKeys.map((k) => `"${k}"`).join(", "));
         for (const k of itemKeys) {
-          console.error('    - "' + k + '"');
           const match = requiredFields.find((f) => {
             const dist = levenshtein(k.toLowerCase(), f.name.toLowerCase());
             return dist > 0 && dist <= 2;
           });
           if (match) {
-            console.error('      (Did you mean "' + match.name + '" instead of "' + k + '"?)');
+            msgLines.push('  (Did you mean "' + match.name + '" instead of "' + k + '"?)');
           }
         }
       }
-      process.exit(1);
+      const msg = msgLines.join("\n");
+      console.error(msg);
+      throw new Error(msg);
     }
     for (const field of schema) {
       if (field.optional && !(field.name in item)) continue;
@@ -924,25 +963,16 @@ function validateJsonStructure(data, strategy) {
             : typeof value
           : typeof value;
       if (actualType !== field.type) {
-        console.error("");
-        console.error("=== JSON Structure Error ===");
-        console.error("");
-        console.error("  Item #" + i + " (type: " + strategy + ")");
-        console.error('  Field: "' + field.name + '"');
-        console.error("  Reason: Wrong type. Expected " + field.type + ", got " + actualType + ".");
-        console.error(
-          "  Value: " + (value === void 0 ? "undefined" : JSON.stringify(value).slice(0, 150)),
-        );
-        if (field.type === "string" && actualType === "number") {
-          console.error('  Hint: Wrap the number in double quotes: "' + value + '"');
-        } else if (field.type === "string") {
-          console.error("  Hint: Ensure the value is a string in double quotes.");
-        } else if (field.type === "object") {
-          console.error(
-            '  Hint: This field must be an object, e.g. {"a": "choice 1", "b": "choice 2"}',
-          );
-        }
-        process.exit(1);
+        const msg = [
+          "",
+          "=== JSON Structure Error ===",
+          "",
+          "  Card #" + (i + 1) + " (type: " + strategy + ")",
+          '  Field: "' + field.name + '"',
+          "  Reason: Wrong type. Expected " + field.type + ", got " + actualType + ".",
+        ].join("\n");
+        console.error(msg);
+        throw new Error(msg);
       }
     }
   }
@@ -1233,10 +1263,19 @@ async function generateApkg(
     outputFilename =
       typeof outputFilenameOrParser === "string" ? outputFilenameOrParser : "ankideck.apkg";
   }
-  const req = createRequire(import.meta.url);
-  const apkgPath = req.resolve("anki-apkg-export");
-  const ankiRequire = createRequire(apkgPath);
-  const sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+  let sql;
+  try {
+    const req = typeof __require !== "undefined" ? __require : createRequire(import.meta.url);
+    try {
+      const apkgPath = req.resolve("anki-apkg-export");
+      const ankiRequire = createRequire(apkgPath);
+      sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+    } catch {
+      sql = req("sql.js/js/sql-memory-growth.js");
+    }
+  } catch (err) {
+    throw new Error(`Failed to resolve sql.js: ${err}`);
+  }
   if (!Exporter.prototype._patched) {
     Exporter.prototype._patched = true;
     Exporter.prototype._update = function (query, obj) {
@@ -1360,10 +1399,20 @@ async function unpackApkg(apkgPath, outputDir) {
     if (!fs10.existsSync(dbPath)) {
       throw new Error("Invalid .apkg: SQLite database collection file not found inside package.");
     }
-    const workspaceRequire = createRequire2(import.meta.url);
-    const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
-    const ankiRequire = createRequire2(apkgPackagePath);
-    const sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+    let sql;
+    try {
+      const workspaceRequire =
+        typeof __require !== "undefined" ? __require : createRequire2(import.meta.url);
+      try {
+        const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
+        const ankiRequire = createRequire2(apkgPackagePath);
+        sql = ankiRequire("sql.js/js/sql-memory-growth.js");
+      } catch {
+        sql = workspaceRequire("sql.js/js/sql-memory-growth.js");
+      }
+    } catch (err) {
+      throw new Error(`Failed to resolve sql.js: ${err}`);
+    }
     let dbBuffer = fs10.readFileSync(dbPath);
     if (dbBuffer.length > 2 && dbBuffer[0] === 31 && dbBuffer[1] === 139) {
       dbBuffer = zlib.gunzipSync(dbBuffer);
@@ -1606,6 +1655,520 @@ var JpVocabParser = class extends BaseParser {
   }
 };
 
+// src/utils/deck-resolver.ts
+import path12 from "node:path";
+function sanitizeDeckFileName(deckName) {
+  return deckName
+    .replace(/::/g, "__")
+    .replace(/[/\\?%*:|"<>]/g, "_")
+    .trim();
+}
+function resolveDeckAndOutputNames(rawInputPaths, customDeckName) {
+  if (rawInputPaths.length === 0) {
+    throw new Error("Missing input paths.");
+  }
+  const isMultiple = rawInputPaths.length > 1;
+  const firstNormalized = path12.normalize(rawInputPaths[0]);
+  const firstBaseName = path12.basename(firstNormalized, path12.extname(firstNormalized));
+  const firstPathParts = firstNormalized.split(path12.sep).filter(Boolean);
+  const hasParentFolder = firstPathParts.length >= 2;
+  const parentFolder = hasParentFolder ? firstPathParts[firstPathParts.length - 2] : null;
+  const allShareSameParentFolder =
+    hasParentFolder &&
+    rawInputPaths.every((p) => {
+      const parts = path12.normalize(p).split(path12.sep).filter(Boolean);
+      return parts.length >= 2 && parts[parts.length - 2] === parentFolder;
+    });
+  let masterOutputName = firstBaseName;
+  if (customDeckName) {
+    masterOutputName = sanitizeDeckFileName(customDeckName);
+  } else if (isMultiple) {
+    if (allShareSameParentFolder && parentFolder) {
+      masterOutputName = parentFolder;
+    } else {
+      masterOutputName = `${firstBaseName}_combined`;
+    }
+  }
+  const items = rawInputPaths.map((inputPath) => {
+    const normalizedPath = path12.normalize(inputPath);
+    const fileBaseName = path12.basename(normalizedPath, path12.extname(normalizedPath));
+    const pathParts = normalizedPath.split(path12.sep).filter(Boolean);
+    let deckName = fileBaseName;
+    if (customDeckName) {
+      if (isMultiple) {
+        deckName = `${customDeckName}::${fileBaseName}`;
+      } else {
+        deckName = customDeckName;
+      }
+    } else {
+      if (pathParts.length >= 2) {
+        const folderParts = pathParts.slice(0, -1);
+        deckName = `${folderParts.join("::")}::${fileBaseName}`;
+      }
+    }
+    return {
+      inputPath,
+      deckName,
+    };
+  });
+  return {
+    masterOutputName,
+    items,
+  };
+}
+
+// src/utils/watcher.ts
+import fs12 from "node:fs";
+function watchFiles(filePaths, onChange, debounceMs = 300) {
+  const watchers = [];
+  let timer = null;
+  const pendingChanges = /* @__PURE__ */ new Set();
+  const trigger = (targetPath) => {
+    pendingChanges.add(targetPath);
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const files = Array.from(pendingChanges);
+      pendingChanges.clear();
+      for (const file of files) {
+        try {
+          await onChange(file);
+        } catch (err) {
+          console.error(`Error in file watch callback for ${file}:`, err);
+        }
+      }
+    }, debounceMs);
+  };
+  for (const filePath of filePaths) {
+    if (!fs12.existsSync(filePath)) continue;
+    try {
+      const watcher = fs12.watch(filePath, (_eventType) => {
+        trigger(filePath);
+      });
+      watchers.push(watcher);
+    } catch (err) {
+      console.warn(`Could not watch file ${filePath}:`, err);
+    }
+  }
+  return {
+    stop: () => {
+      if (timer) clearTimeout(timer);
+      watchers.forEach((w) => w.close());
+    },
+  };
+}
+
+// src/core/preview-server.ts
+import http2 from "node:http";
+import fs13 from "node:fs";
+import path13 from "node:path";
+function renderCardHtml(frontHtml, backHtml, css, fieldNames, cardFields) {
+  let renderedFront = frontHtml;
+  let renderedBack = backHtml;
+  for (const name of fieldNames) {
+    const val = cardFields[name] ?? "";
+    const reg = new RegExp(`{{${name}}}`, "g");
+    const sectionReg = new RegExp(`{{#${name}}}([\\s\\S]*?){{/${name}}}`, "g");
+    if (val && val.trim().length > 0) {
+      renderedFront = renderedFront.replace(sectionReg, "$1");
+      renderedBack = renderedBack.replace(sectionReg, "$1");
+    } else {
+      renderedFront = renderedFront.replace(sectionReg, "");
+      renderedBack = renderedBack.replace(sectionReg, "");
+    }
+    renderedFront = renderedFront.replace(reg, val);
+    renderedBack = renderedBack.replace(reg, val);
+  }
+  renderedFront = renderedFront.replace(/{{[#^/]?\w+}}/g, "");
+  renderedBack = renderedBack.replace(/{{[#^/]?\w+}}/g, "");
+  return {
+    front: renderedFront,
+    back: renderedBack,
+  };
+}
+function buildPreviewAppHtml(items) {
+  const cardsPayload = items.flatMap((item, itemIdx) => {
+    const templateName = item.parser.getTemplateName();
+    const fieldNames = item.parser.getFieldNames();
+    const frontTemplate = loadFrontHtml(templateName);
+    const backTemplate = loadBackHtml(templateName);
+    const css = loadCss(templateName);
+    return item.parsedResult.cards.map((card, cardIdx) => {
+      const { front, back } = renderCardHtml(
+        frontTemplate,
+        backTemplate,
+        css,
+        fieldNames,
+        card.fields,
+      );
+      return {
+        deckName: item.deckName,
+        cardIndex: cardIdx + 1,
+        css,
+        front,
+        back,
+      };
+    });
+  });
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anki Flashcard Previewer</title>
+  <style>
+    :root {
+      --app-bg: #0f172a;
+      --app-card-bg: #1e293b;
+      --app-text: #f8fafc;
+      --app-accent: #38bdf8;
+      --app-border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--app-bg);
+      color: var(--app-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--app-card-bg);
+      border-bottom: 1px solid var(--app-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--app-accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .deck-badge {
+      background: #0284c7;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    button.btn {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button.btn:hover {
+      background: #475569;
+      border-color: #64748b;
+    }
+    button.btn-primary {
+      background: #0284c7;
+      border-color: #0369a1;
+    }
+    button.btn-primary:hover {
+      background: #0369a1;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .preview-container {
+      width: 100%;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      padding: 24px;
+      min-height: 380px;
+      position: relative;
+    }
+    .card-side-label {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.05em;
+    }
+    .card-indicator {
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    .shortcuts-help {
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: #64748b;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .kbd {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  </style>
+  <style id="dynamic-card-css"></style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>\u{1F3B4} Anki Live Preview</span>
+      <span class="deck-badge" id="deck-name-badge">Deck</span>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prev-btn">\u2190 Prev</button>
+      <span class="card-indicator" id="card-counter">Card 1 / 1</span>
+      <button class="btn" id="next-btn">Next \u2192</button>
+      <button class="btn btn-primary" id="flip-btn">Flip (Space)</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="preview-container">
+      <div class="card-side-label" id="side-label">Front</div>
+      <div id="card-render-root"></div>
+    </div>
+
+    <div class="shortcuts-help">
+      <span><span class="kbd">Space</span> Flip Card</span>
+      <span><span class="kbd">\u2190</span> / <span class="kbd">A</span> Prev Card</span>
+      <span><span class="kbd">\u2192</span> / <span class="kbd">D</span> Next Card</span>
+      <span><span class="kbd">F</span> Flip Side</span>
+    </div>
+  </main>
+
+  <script>
+    const CARDS = ${JSON.stringify(cardsPayload)};
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    // Restore index from sessionStorage
+    try {
+      const saved = sessionStorage.getItem("anki_preview_idx");
+      if (saved !== null) currentIndex = parseInt(saved, 10) || 0;
+      if (currentIndex >= CARDS.length) currentIndex = 0;
+    } catch(e) {}
+
+    const dynamicCss = document.getElementById("dynamic-card-css");
+    const renderRoot = document.getElementById("card-render-root");
+    const sideLabel = document.getElementById("side-label");
+    const cardCounter = document.getElementById("card-counter");
+    const deckBadge = document.getElementById("deck-name-badge");
+
+    function renderCurrentCard() {
+      if (CARDS.length === 0) {
+        renderRoot.innerHTML = "<p>No cards available.</p>";
+        return;
+      }
+      const card = CARDS[currentIndex];
+      deckBadge.textContent = card.deckName;
+      cardCounter.textContent = \`Card \${currentIndex + 1} / \${CARDS.length}\`;
+      dynamicCss.innerHTML = card.css;
+
+      if (!isFlipped) {
+        sideLabel.textContent = "FRONT";
+        renderRoot.innerHTML = card.front;
+      } else {
+        sideLabel.textContent = "BACK";
+        renderRoot.innerHTML = card.back;
+      }
+
+      // Re-run embedded scripts in the card template
+      const scripts = renderRoot.querySelectorAll("script");
+      scripts.forEach(s => {
+        const newScript = document.createElement("script");
+        newScript.text = s.innerHTML;
+        document.body.appendChild(newScript).parentNode.removeChild(newScript);
+      });
+
+      try {
+        sessionStorage.setItem("anki_preview_idx", currentIndex.toString());
+      } catch(e) {}
+    }
+
+    function flip() {
+      isFlipped = !isFlipped;
+      renderCurrentCard();
+    }
+
+    function next() {
+      if (currentIndex < CARDS.length - 1) {
+        currentIndex++;
+        isFlipped = false;
+        renderCurrentCard();
+      }
+    }
+
+    function prev() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        isFlipped = false;
+        renderCurrentCard();
+      }
+    }
+
+    document.getElementById("flip-btn").addEventListener("click", flip);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === " " || e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        flip();
+      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+        e.preventDefault();
+        next();
+      } else if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+        e.preventDefault();
+        prev();
+      }
+    });
+
+    renderCurrentCard();
+
+    // SSE Live Reload listener
+    const evtSource = new EventSource("/events");
+    evtSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "reload") {
+          window.location.reload();
+        }
+      } catch(e) {}
+    };
+  </script>
+</body>
+</html>`;
+}
+function startPreviewServer(getItems, watchedPaths, initialPort = 3e3) {
+  return new Promise((resolve, reject) => {
+    let sseClients = [];
+    const watcher = watchFiles(
+      watchedPaths,
+      () => {
+        console.log("File change detected. Reloading preview...");
+        for (const client of sseClients) {
+          try {
+            client.write(`data: ${JSON.stringify({ type: "reload" })}
+
+`);
+          } catch (_) {}
+        }
+      },
+      300,
+    );
+    const server = http2.createServer(async (req, res) => {
+      const url = new URL(req.url || "/", `http://${req.headers.host}`);
+      if (url.pathname === "/") {
+        try {
+          const items = await getItems();
+          const html = buildPreviewAppHtml(items);
+          res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(html);
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(`<h1>Compilation Error</h1><pre>${err?.message || err}</pre>`);
+        }
+        return;
+      }
+      if (url.pathname === "/events") {
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        });
+        sseClients.push(res);
+        req.on("close", () => {
+          sseClients = sseClients.filter((c) => c !== res);
+        });
+        return;
+      }
+      if (url.pathname.startsWith("/media/")) {
+        const mediaFileName = decodeURIComponent(url.pathname.replace("/media/", ""));
+        const mediaFilePath = path13.join(MEDIA_DIR, mediaFileName);
+        if (fs13.existsSync(mediaFilePath)) {
+          const ext = path13.extname(mediaFilePath).toLowerCase();
+          const mimeTypes = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".mp3": "audio/mpeg",
+            ".wav": "audio/wav",
+            ".ogg": "audio/ogg",
+            ".svg": "image/svg+xml",
+          };
+          const contentType = mimeTypes[ext] || "application/octet-stream";
+          res.writeHead(200, { "Content-Type": contentType });
+          fs13.createReadStream(mediaFilePath).pipe(res);
+          return;
+        }
+        res.writeHead(404);
+        res.end("Media not found");
+        return;
+      }
+      res.writeHead(404);
+      res.end("Not Found");
+    });
+    const tryListen = (port) => {
+      server.listen(port, () => {
+        console.log(`
+\u{1F680} Anki Preview Server running at: http://localhost:${port}
+`);
+        resolve({
+          server,
+          port,
+          stop: () => {
+            watcher.stop();
+            sseClients.forEach((c) => c.end());
+            server.close();
+          },
+        });
+      });
+      server.on("error", (err) => {
+        if (err.code === "EADDRINUSE") {
+          tryListen(port + 1);
+        } else {
+          reject(err);
+        }
+      });
+    };
+    tryListen(initialPort);
+  });
+}
+
 // src/index.ts
 var VALID_STRATEGIES = [
   "vocab",
@@ -1628,27 +2191,53 @@ function parseArgs() {
   const hasExport = args.includes("--export");
   const hasPrompt = args.includes("--prompt");
   const hasAutocomplete = args.includes("--autocomplete");
-  return { args, hasType, hasExport, hasPrompt, hasAutocomplete };
+  const hasWatch = args.includes("--watch") || args.includes("-w");
+  const hasPreview = args.includes("--preview") || args.includes("-p");
+  let deckName;
+  const deckIdx =
+    args.indexOf("--deck-name") !== -1 ? args.indexOf("--deck-name") : args.indexOf("-d");
+  if (deckIdx !== -1 && args[deckIdx + 1] && !args[deckIdx + 1].startsWith("-")) {
+    deckName = args[deckIdx + 1];
+  }
+  let port;
+  const portIdx = args.indexOf("--port");
+  if (portIdx !== -1 && args[portIdx + 1] && !args[portIdx + 1].startsWith("-")) {
+    port = parseInt(args[portIdx + 1], 10);
+  }
+  return {
+    args,
+    hasType,
+    hasExport,
+    hasPrompt,
+    hasAutocomplete,
+    hasWatch,
+    hasPreview,
+    deckName,
+    port,
+  };
 }
 function printUsageAndExit() {
   console.error("Terminal Usage Error:");
   console.error("  Compilation Mode:");
   console.error(
-    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json> [path_to_input_json_2 ...]",
+    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json...> [--deck-name <name>] [--watch]",
+  );
+  console.error("  Preview Mode:");
+  console.error(
+    "    node src/index.js --type <strategy> <path_to_input_json...> [--deck-name <name>] --preview [--port <port>]",
   );
   console.error("  Deconstruction Mode:");
   console.error("    node src/index.js --export <path_to_target_apkg> <path_to_output_directory>");
   console.error("  Prompt Retrieval Mode:");
-  console.error("    node src/index.js --prompt");
-  console.error("    node src/index.js --prompt <name>");
+  console.error("    node src/index.js --prompt [name]");
   console.error("  Autocomplete Output Mode:");
   console.error("    node src/index.js --autocomplete");
   process.exit(1);
 }
 function resolveAbsolutePath(inputPath) {
-  return path12.isAbsolute(inputPath)
-    ? path12.normalize(inputPath)
-    : path12.resolve(process.cwd(), inputPath);
+  return path14.isAbsolute(inputPath)
+    ? path14.normalize(inputPath)
+    : path14.resolve(process.cwd(), inputPath);
 }
 function resolveParser(strategy) {
   const parsers = {
@@ -1664,12 +2253,45 @@ function resolveParser(strategy) {
   };
   return parsers[strategy]();
 }
-async function runCompile(args) {
+async function prepareDeckItems(strategy, rawInputPaths, customDeckName) {
+  const resolvedInfo = resolveDeckAndOutputNames(rawInputPaths, customDeckName);
+  const firstInputPath = resolveAbsolutePath(rawInputPaths[0]);
+  const inputDir = path14.dirname(firstInputPath);
+  const outputPath = path14.join(inputDir, `${resolvedInfo.masterOutputName}.apkg`);
+  const items = [];
+  for (const resolvedItem of resolvedInfo.items) {
+    const absoluteInputPath = resolveAbsolutePath(resolvedItem.inputPath);
+    if (!fs14.existsSync(absoluteInputPath)) {
+      console.error(`Input file not found: ${absoluteInputPath}`);
+      process.exit(1);
+    }
+    const raw = fs14.readFileSync(absoluteInputPath, "utf-8");
+    const data = parseJsonInput(raw);
+    validateJsonStructure(data, strategy);
+    const parser = resolveParser(strategy);
+    console.log(
+      `Compiling payload [${path14.basename(absoluteInputPath)}] with strategy: ${strategy}`,
+    );
+    const parsedResult = await parser.parse(raw);
+    items.push({
+      parsedResult,
+      parser,
+      deckName: resolvedItem.deckName,
+    });
+  }
+  return { items, outputPath };
+}
+async function runCompile(args, options) {
   const typeIdx = args.indexOf("--type");
   const strategy = args[typeIdx + 1]?.toLowerCase();
   const rawInputPaths = [];
   for (let i = typeIdx + 2; i < args.length; i++) {
-    if (args[i].startsWith("-")) break;
+    if (args[i].startsWith("-")) {
+      if (args[i] === "--deck-name" || args[i] === "-d" || args[i] === "--port") {
+        i++;
+      }
+      continue;
+    }
     rawInputPaths.push(args[i]);
   }
   if (!strategy || !VALID_STRATEGIES.includes(strategy)) {
@@ -1682,59 +2304,49 @@ async function runCompile(args) {
     console.error("Error: Missing path to input JSON file(s).");
     process.exit(1);
   }
-  const firstInputPath = resolveAbsolutePath(rawInputPaths[0]);
-  const inputDir = path12.dirname(firstInputPath);
-  const firstBaseName = path12.basename(firstInputPath, path12.extname(firstInputPath));
-  const isMultiple = rawInputPaths.length > 1;
-  const firstNormalized = path12.normalize(rawInputPaths[0]);
-  const firstPathParts = firstNormalized.split(path12.sep).filter(Boolean);
-  const hasParentFolder = firstPathParts.length >= 2;
-  const parentFolder = hasParentFolder ? firstPathParts[firstPathParts.length - 2] : null;
-  const allShareSameParentFolder =
-    hasParentFolder &&
-    rawInputPaths.every((p) => {
-      const parts = path12.normalize(p).split(path12.sep).filter(Boolean);
-      return parts.length >= 2 && parts[parts.length - 2] === parentFolder;
-    });
-  let masterOutputName = firstBaseName;
-  if (isMultiple) {
-    if (allShareSameParentFolder && parentFolder) {
-      masterOutputName = parentFolder;
-    } else {
-      masterOutputName = `${firstBaseName}_combined`;
-    }
-  }
-  const items = [];
-  for (const inputPath of rawInputPaths) {
-    const absoluteInputPath = resolveAbsolutePath(inputPath);
-    if (!fs12.existsSync(absoluteInputPath)) {
-      console.error(`Input file not found: ${absoluteInputPath}`);
-      process.exit(1);
-    }
-    const raw = fs12.readFileSync(absoluteInputPath, "utf-8");
-    const data = parseJsonInput(raw);
-    validateJsonStructure(data, strategy);
-    const parser = resolveParser(strategy);
-    console.log(
-      `Compiling payload [${path12.basename(absoluteInputPath)}] with strategy: ${strategy}`,
+  const absolutePaths = rawInputPaths.map(resolveAbsolutePath);
+  if (options.hasPreview) {
+    console.log("Starting Anki Flashcard Live Preview...");
+    await startPreviewServer(
+      async () => {
+        const { items } = await prepareDeckItems(strategy, rawInputPaths, options.deckName);
+        return items;
+      },
+      absolutePaths,
+      options.port || 3e3,
     );
-    const parsedResult = await parser.parse(raw);
-    const fileBaseName = path12.basename(absoluteInputPath, path12.extname(absoluteInputPath));
-    const normalizedPath = path12.normalize(inputPath);
-    const pathParts = normalizedPath.split(path12.sep).filter(Boolean);
-    let deckName = fileBaseName;
-    if (pathParts.length >= 2) {
-      const folderName = pathParts[pathParts.length - 2];
-      deckName = `${folderName}::${fileBaseName}`;
-    }
-    items.push({
-      parsedResult,
-      parser,
-      deckName,
-    });
+    return;
   }
-  const outputPath = path12.join(inputDir, `${masterOutputName}.apkg`);
-  await generateApkg(items, outputPath);
+  const compileOnce = async () => {
+    try {
+      const { items, outputPath } = await prepareDeckItems(
+        strategy,
+        rawInputPaths,
+        options.deckName,
+      );
+      await generateApkg(items, outputPath);
+    } catch (err) {
+      console.error("Compilation error:", err?.message || err);
+      if (!options.hasWatch) {
+        process.exit(1);
+      }
+    }
+  };
+  await compileOnce();
+  if (options.hasWatch) {
+    console.log(
+      "\n\u{1F440} Watch mode enabled. Waiting for file changes (press Ctrl+C to exit)...",
+    );
+    watchFiles(
+      absolutePaths,
+      async (changedFile) => {
+        console.log(`
+Detected change in ${path14.basename(changedFile)}. Recompiling...`);
+        await compileOnce();
+      },
+      300,
+    );
+  }
 }
 async function runExport(args) {
   const exportIdx = args.indexOf("--export");
@@ -1753,32 +2365,32 @@ async function runExport(args) {
 async function runPrompt(args) {
   const promptIdx = args.indexOf("--prompt");
   const name = args[promptIdx + 1];
-  const assetsDir = path12.join(ROOT, "assets");
+  const assetsDir = path14.join(ROOT, "assets");
   if (!name || name.startsWith("-")) {
-    if (!fs12.existsSync(assetsDir)) {
+    if (!fs14.existsSync(assetsDir)) {
       console.error("Error: assets directory not found.");
       process.exit(1);
     }
-    const files = fs12.readdirSync(assetsDir).filter((file) => file.endsWith(".md"));
+    const files = fs14.readdirSync(assetsDir).filter((file) => file.endsWith(".md"));
     const list = [];
     for (const file of files) {
       let shortName = file.replace(/\.md$/, "");
       if (shortName.startsWith("prompt-")) {
         shortName = shortName.slice(7);
       }
-      const stats = fs12.statSync(path12.join(assetsDir, file));
+      const stats = fs14.statSync(path14.join(assetsDir, file));
       const sizeKb = (stats.size / 1024).toFixed(2);
       list.push(`${shortName} (${sizeKb} KB)`);
     }
     console.log(list.join("\n"));
   } else {
     const filename = PROMPT_MAPPING[name] || `prompt-${name}.md`;
-    const fullPath = path12.join(assetsDir, filename);
-    if (!fs12.existsSync(fullPath)) {
+    const fullPath = path14.join(assetsDir, filename);
+    if (!fs14.existsSync(fullPath)) {
       console.error(`Error: Prompt template '${name}' not found.`);
       console.error("Available options:");
-      const files = fs12.existsSync(assetsDir)
-        ? fs12.readdirSync(assetsDir).filter((f) => f.endsWith(".md"))
+      const files = fs14.existsSync(assetsDir)
+        ? fs14.readdirSync(assetsDir).filter((f) => f.endsWith(".md"))
         : [];
       for (const file of files) {
         let shortName = file.replace(/\.md$/, "");
@@ -1789,18 +2401,18 @@ async function runPrompt(args) {
       }
       process.exit(1);
     }
-    const content = fs12.readFileSync(fullPath, "utf-8");
+    const content = fs14.readFileSync(fullPath, "utf-8");
     process.stdout.write(content);
   }
 }
 async function runAutocomplete() {
-  const completionPath = path12.join(ROOT, "completions", "_anki-tool");
-  if (!fs12.existsSync(completionPath)) {
+  const completionPath = path14.join(ROOT, "completions", "_anki-tool");
+  if (!fs14.existsSync(completionPath)) {
     console.error(`Error: Completion script not found at ${completionPath}`);
     process.exit(1);
   }
   try {
-    const content = fs12.readFileSync(completionPath, "utf-8");
+    const content = fs14.readFileSync(completionPath, "utf-8");
     process.stdout.write(content);
   } catch (err) {
     console.error(`Error reading completion script: ${err?.message || err}`);
@@ -1808,7 +2420,17 @@ async function runAutocomplete() {
   }
 }
 async function main() {
-  const { args, hasType, hasExport, hasPrompt, hasAutocomplete } = parseArgs();
+  const {
+    args,
+    hasType,
+    hasExport,
+    hasPrompt,
+    hasAutocomplete,
+    hasWatch,
+    hasPreview,
+    deckName,
+    port,
+  } = parseArgs();
   const activeFlagsCount = [hasType, hasExport, hasPrompt, hasAutocomplete].filter(Boolean).length;
   if (activeFlagsCount > 1) {
     console.error(
@@ -1817,7 +2439,7 @@ async function main() {
     process.exit(1);
   }
   if (activeFlagsCount === 0) printUsageAndExit();
-  if (hasType) await runCompile(args);
+  if (hasType) await runCompile(args, { hasWatch, hasPreview, deckName, port });
   if (hasExport) await runExport(args);
   if (hasPrompt) await runPrompt(args);
   if (hasAutocomplete) await runAutocomplete();
