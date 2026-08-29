@@ -9,7 +9,7 @@ in
     # aider = "aider --model opencode-go/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
     # opencode-go/deepseek-v4-pro
     reload = "source $HOME/.config/zsh/.zshrc";
-    hms = lib.mkForce "home-manager switch --flake ~/.config/home-manager";
+    hms = lib.mkForce "nh home switch ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
 
     # NAVIGATION & SHELL BASICS

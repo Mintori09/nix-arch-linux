@@ -164,6 +164,9 @@
     kdePackages.kamoso
     google-java-format
     python314Packages.icnsutil
-    libicns
+
+    # Nix helpers
+    nh
+    nix-output-monitor
   ];
 }
