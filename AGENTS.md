@@ -69,7 +69,7 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 ## Custom scripts & packages
 
 - Custom scripts (in `modules/scripts/`): `format-file`, `install-font`, `install-rpm`, `fzf-rg-edit`, `fzf-preview`, `extract`, `which_file`, `open`, `scratch`, `select-and-open-video`, `copy-files`, `remove`, `each`, `compress-wrap`, `direnv-wrap`, `rclone-sync`, `sleep-cycles`, `telepush`, `nano_usage`. Shared helpers in `_helpers.nix`.
-- Custom packages (in `modules/packages/` from `packages/`): `cv-cli` (`cv`), `anki-tool`, `ai-bridge`, `generate-toc` (`gentoc`), `fitgirl-link-extractor` (`mle`), `bookokrat`, `dbx`, `zap`, `anyflip-downloader`.
+- Custom packages (in `modules/packages/` from `packages/`): `cv-cli` (`cv`), `anki-tool`, `ai-bridge`, `generate-toc` (`gentoc`), `fitgirl-link-extractor` (`mle`), `bookokrat`, `dbx`, `zap`, `anyflip-downloader`, `magika`, `keyboard-rs`.
 
 Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging
 and zsh completion in `modules/scripts/<name>.nix`. When adding/modifying

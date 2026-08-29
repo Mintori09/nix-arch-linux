@@ -19,7 +19,7 @@
 
     # Core utilities
     fastfetch
-    # magika
+    magika
     cliphist
     fd
     ripgrep
@@ -108,6 +108,7 @@
     ai-bridge
     generate-toc
     fitgirl-link-extractor
+    keyboard-rs
     sd
     watchexec
     rclone
@@ -124,9 +125,16 @@
     charm-freeze
     tsx
 
+    # C/C++
+    clang
+    clang-tools
+
     # Rust
     cargo-deny # Lints dependencies for security advisories, license compliance, duplicate crates, and bans
 
+    cargo
+    rustc
+    mold
     # Testing & Coverage
     cargo-nextest # Next-generation test runner that executes tests in parallel with fast, clean output
     cargo-llvm-cov # Measures source-based code coverage using LLVM instrumentation (highly accurate and cross-platform)
@@ -150,6 +158,7 @@
 
     foliate
     aspell
+    telegram-desktop
     kdePackages.kamoso
   ];
 }

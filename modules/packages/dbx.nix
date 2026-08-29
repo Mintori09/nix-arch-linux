@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  version = "0.5.82";
+  version = "0.5.97";
 in
 
 pkgs.stdenv.mkDerivation {
@@ -10,7 +10,7 @@ pkgs.stdenv.mkDerivation {
 
   src = pkgs.fetchurl {
     url = "https://github.com/t8y2/dbx/releases/download/v${version}/DBX_${version}_amd64.deb";
-    hash = "sha256-COCLrVQkafPk+H2COMYUwOmh6DGf3mNOomgOwqh0hDw=";
+    hash = "sha256-zBfA0pgWVVfswH2HALwT+4ykWZPYYrRPXOplomvg6G0=";
   };
 
   dontUnpack = true;
