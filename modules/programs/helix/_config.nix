@@ -79,6 +79,10 @@
   };
 
   keys.insert = {
+    C-s = [
+      "normal_mode"
+      ":w"
+    ];
     C-h = "move_char_left";
     C-j = "move_line_down";
     C-k = "move_line_up";
@@ -88,6 +92,7 @@
   };
 
   keys.normal = {
+    C-s = ":w";
     G = [
       "normal_mode"
       "goto_file_end"
@@ -145,10 +150,22 @@
     S-tab = [ "goto_previous_buffer" ];
 
     space = {
+      space = "file_picker";
       x = ":buffer-close";
       q = {
         q = ":quit-all!";
       };
+    };
+
+    ";" = {
+      f = "file_picker"; # ;f -> Find Files
+      r = "global_search"; # ;r -> Live Grep (Search text)
+      s = "symbol_picker"; # ;s -> Document Symbols
+      S = "workspace_symbol_picker"; # ;S -> Workspace Symbols
+      e = "diagnostics_picker"; # ;e -> Document Diagnostics
+      E = "workspace_diagnostics_picker"; # ;E -> Workspace Diagnostics
+      t = "command_palette"; # ;t -> Command Palette / Help
+      ";" = "last_picker"; # ;; -> Mở lại picker vừa dùng
     };
 
     space.u = {

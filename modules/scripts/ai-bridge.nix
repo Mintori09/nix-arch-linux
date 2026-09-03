@@ -12,7 +12,7 @@
       ExecStart = "${pkgs.ai-bridge}/bin/ai-bridge server";
 
       Environment = [
-        "AI_BRIDGE_PROMPTS_DIR=/home/mintori/Documents/[2] Obsidian/06_Script/Prompt"
+        "AI_BRIDGE_PROMPTS_DIR=/home/mintori/Documents/Obsidian/06_Script/Prompt"
       ];
 
       Path = [

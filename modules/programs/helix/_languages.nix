@@ -11,7 +11,7 @@ toTOML "languages.toml" {
       file-types = [ "nix" ];
       auto-format = true;
       formatter = {
-        command = "alejandra";
+        command = "nixfmt";
       };
     }
     {
@@ -31,7 +31,7 @@ toTOML "languages.toml" {
       comment-token = "#";
       language-servers = [ "bash-language-server" ];
       indent = {
-        tab-width = 4;
+        tab-width = 2;
         unit = "  ";
       };
       auto-format = true;
@@ -40,83 +40,7 @@ toTOML "languages.toml" {
         args = [
           "-i"
           "2"
-          "-s"
-        ];
-      };
-    }
-    {
-      name = "typescript";
-      scope = "source.ts";
-      file-types = [
-        "ts"
-        "tsx"
-      ];
-      auto-format = true;
-      formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.ts"
-        ];
-      };
-    }
-    {
-      name = "javascript";
-      scope = "source.js";
-      file-types = [
-        "js"
-        "jsx"
-      ];
-      auto-format = true;
-      formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.js"
-        ];
-      };
-    }
-    {
-      name = "json";
-      scope = "source.json";
-      file-types = [ "json" ];
-      auto-format = true;
-      formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.json"
-        ];
-      };
-    }
-    {
-      name = "html";
-      scope = "text.html";
-      file-types = [ "html" ];
-      auto-format = true;
-      formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.html"
-        ];
-      };
-    }
-    {
-      name = "css";
-      scope = "source.css";
-      file-types = [ "css" ];
-      auto-format = true;
-      formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.css"
+          "-ci"
         ];
       };
     }
@@ -130,6 +54,181 @@ toTOML "languages.toml" {
       auto-format = true;
       formatter = {
         command = "shfmt";
+        args = [
+          "-i"
+          "2"
+          "-ci"
+        ];
+      };
+    }
+    {
+      name = "javascript";
+      scope = "source.js";
+      file-types = [
+        "js"
+        "mjs"
+        "cjs"
+      ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "babel"
+        ];
+      };
+    }
+    {
+      name = "jsx";
+      scope = "source.jsx";
+      file-types = [ "jsx" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "babel"
+        ];
+      };
+    }
+    {
+      name = "typescript";
+      scope = "source.ts";
+      file-types = [
+        "ts"
+        "mts"
+        "cts"
+      ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "typescript"
+        ];
+      };
+    }
+    {
+      name = "tsx";
+      scope = "source.tsx";
+      file-types = [ "tsx" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "typescript"
+        ];
+      };
+    }
+    {
+      name = "vue";
+      scope = "source.vue";
+      file-types = [ "vue" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "vue"
+        ];
+      };
+    }
+    {
+      name = "css";
+      scope = "source.css";
+      file-types = [ "css" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "css"
+        ];
+      };
+    }
+    {
+      name = "scss";
+      scope = "source.scss";
+      file-types = [ "scss" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "scss"
+        ];
+      };
+    }
+    {
+      name = "html";
+      scope = "text.html";
+      file-types = [ "html" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "html"
+        ];
+      };
+    }
+    {
+      name = "json";
+      scope = "source.json";
+      file-types = [ "json" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "json"
+        ];
+      };
+    }
+    {
+      name = "jsonc";
+      scope = "source.jsonc";
+      file-types = [ "jsonc" ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "json"
+        ];
+      };
+    }
+    {
+      name = "yaml";
+      scope = "source.yaml";
+      file-types = [
+        "yml"
+        "yaml"
+      ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "yaml"
+        ];
+      };
+    }
+    {
+      name = "graphql";
+      scope = "source.graphql";
+      file-types = [
+        "gql"
+        "graphql"
+      ];
+      auto-format = true;
+      formatter = {
+        command = "prettier";
+        args = [
+          "--parser"
+          "graphql"
+        ];
       };
     }
     {
@@ -149,45 +248,38 @@ toTOML "languages.toml" {
       };
     }
     {
-      name = "astro";
-      scope = "source.astro";
-      file-types = [ "astro" ];
+      name = "typst";
+      scope = "source.typst";
+      file-types = [ "typ" ];
       auto-format = true;
       formatter = {
-        command = "biome";
+        command = "typstyle";
+      };
+    }
+    {
+      name = "python";
+      scope = "source.python";
+      file-types = [ "py" ];
+      auto-format = true;
+      language-servers = [ "pyright" ];
+      formatter = {
+        command = "ruff";
         args = [
           "format"
-          "--stdin-file-path"
-          "file.astro"
+          "-"
         ];
       };
     }
     {
-      name = "vue";
-      scope = "source.vue";
-      file-types = [ "vue" ];
+      name = "lua";
+      scope = "source.lua";
+      file-types = [ "lua" ];
       auto-format = true;
+      language-servers = [ "lua-language-server" ];
       formatter = {
-        command = "biome";
-        args = [
-          "format"
-          "--stdin-file-path"
-          "file.vue"
-        ];
+        command = "stylua";
+        args = [ "-" ];
       };
-    }
-    {
-      name = "zig";
-      scope = "source.zig";
-      file-types = [ "zig" ];
-      auto-format = true;
-    }
-    {
-      name = "java";
-      scope = "source.java";
-      file-types = [ "java" ];
-      auto-format = true;
-      language-servers = [ "jdtls" ];
     }
     {
       name = "php";
@@ -196,12 +288,70 @@ toTOML "languages.toml" {
       auto-format = true;
       language-servers = [ "intelephense" ];
       formatter = {
-        command = "intelephense";
+        command = "pint";
+      };
+    }
+    {
+      name = "go";
+      scope = "source.go";
+      file-types = [ "go" ];
+      auto-format = true;
+      language-servers = [ "gopls" ];
+      formatter = {
+        command = "gofumpt";
+      };
+    }
+    {
+      name = "rust";
+      scope = "source.rust";
+      file-types = [ "rs" ];
+      auto-format = true;
+      language-servers = [ "rust-analyzer" ];
+      formatter = {
+        command = "rustfmt";
+      };
+    }
+    {
+      name = "toml";
+      scope = "source.toml";
+      file-types = [ "toml" ];
+      auto-format = true;
+      formatter = {
+        command = "taplo";
         args = [
-          "--format"
-          "--stdin-file-path"
-          "file.php"
+          "fmt"
+          "-"
         ];
+      };
+    }
+    {
+      name = "sql";
+      scope = "source.sql";
+      file-types = [ "sql" ];
+      auto-format = true;
+      formatter = {
+        command = "sql-formatter";
+      };
+    }
+    {
+      name = "dockerfile";
+      scope = "source.dockerfile";
+      file-types = [
+        "Dockerfile"
+        "dockerfile"
+      ];
+      auto-format = true;
+      language-servers = [ "dockerfile-language-server" ];
+    }
+    {
+      name = "java";
+      scope = "source.java";
+      file-types = [ "java" ];
+      auto-format = true;
+      language-servers = [ "jdtls" ];
+      formatter = {
+        command = "google-java-format";
+        args = [ "-" ];
       };
     }
     {
@@ -227,6 +377,7 @@ toTOML "languages.toml" {
         "hh"
         "cxx"
         "hxx"
+        "ino"
       ];
       auto-format = true;
       language-servers = [ "clangd" ];
@@ -235,74 +386,42 @@ toTOML "languages.toml" {
       };
     }
     {
-      name = "python";
-      scope = "source.python";
-      file-types = [ "py" ];
+      name = "c-sharp";
+      scope = "source.cs";
+      file-types = [ "cs" ];
       auto-format = true;
-      language-servers = [ "pyright" ];
       formatter = {
-        command = "black";
-        args = [ "-" ];
+        command = "csharpier";
+        args = [ "--write-stdout" ];
       };
     }
     {
-      name = "lua";
-      scope = "source.lua";
-      file-types = [ "lua" ];
+      name = "ron";
+      scope = "source.ron";
+      file-types = [ "ron" ];
       auto-format = true;
-      language-servers = [ "lua-language-server" ];
       formatter = {
-        command = "stylua";
-        args = [ "-" ];
+        command = "ronfmt";
       };
     }
     {
-      name = "dockerfile";
-      scope = "source.dockerfile";
-      file-types = [
-        "Dockerfile"
-        "dockerfile"
-      ];
-      auto-format = true;
-      language-servers = [ "dockerfile-language-server" ];
-    }
-    {
-      name = "yaml";
-      scope = "source.yaml";
-      file-types = [
-        "yml"
-        "yaml"
-      ];
+      name = "astro";
+      scope = "source.astro";
+      file-types = [ "astro" ];
       auto-format = true;
       formatter = {
-        command = "yamlfmt";
-      };
-    }
-    {
-      name = "toml";
-      scope = "source.toml";
-      file-types = [ "toml" ];
-      auto-format = true;
-      formatter = {
-        command = "taplo";
+        command = "prettier";
         args = [
-          "fmt"
-          "-"
+          "--parser"
+          "astro"
         ];
       };
     }
     {
-      name = "xml";
-      scope = "text.xml";
-      file-types = [ "xml" ];
+      name = "zig";
+      scope = "source.zig";
+      file-types = [ "zig" ];
       auto-format = true;
-      formatter = {
-        command = "xmllint";
-        args = [
-          "--format"
-          "-"
-        ];
-      };
     }
     {
       name = "cmake";
@@ -312,12 +431,6 @@ toTOML "languages.toml" {
       formatter = {
         command = "cmake-format";
       };
-    }
-    {
-      name = "ron";
-      scope = "source.ron";
-      file-types = [ "ron" ];
-      auto-format = true;
     }
   ];
 }

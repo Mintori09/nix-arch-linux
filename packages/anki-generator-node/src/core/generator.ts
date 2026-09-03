@@ -41,7 +41,7 @@ export async function generateApkg(
 
   let sql: any;
   try {
-    const req = typeof require !== "undefined" ? require : createRequire(import.meta.url);
+    const req = createRequire(import.meta.url);
     try {
       const apkgPath = req.resolve("anki-apkg-export");
       const ankiRequire = createRequire(apkgPath);

@@ -46,11 +46,15 @@ export async function downloadImage(prompt: string, filename: string): Promise<b
         return true;
       }
 
-      if (response.status === 429 && attempt < MAX_RETRIES) {
+      const isRetryable =
+        response.status === 429 || (response.status >= 500 && response.status < 600);
+      if (isRetryable && attempt < MAX_RETRIES) {
         const retryAfter = response.headers.get("Retry-After");
         const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.pow(3, attempt) * 1000;
+        const reason =
+          response.status === 429 ? "Rate limited" : `Server error (${response.status})`;
         console.warn(
-          `Rate limited for "${prompt}". Retrying in ${delayMs / 1000}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          `${reason} for "${prompt}". Retrying in ${delayMs / 1000}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;

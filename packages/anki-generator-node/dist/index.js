@@ -1,15 +1,3 @@
-var __require = /* @__PURE__ */ ((x) =>
-  typeof require !== "undefined"
-    ? require
-    : typeof Proxy !== "undefined"
-      ? new Proxy(x, {
-          get: (a, b) => (typeof require !== "undefined" ? require : a)[b],
-        })
-      : x)(function (x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-
 // src/index.ts
 import fs14 from "node:fs";
 import path14 from "node:path";
@@ -134,11 +122,15 @@ async function downloadImage(prompt, filename) {
         await fs3.promises.writeFile(filePath, Buffer.from(arrayBuffer));
         return true;
       }
-      if (response.status === 429 && attempt < MAX_RETRIES) {
+      const isRetryable =
+        response.status === 429 || (response.status >= 500 && response.status < 600);
+      if (isRetryable && attempt < MAX_RETRIES) {
         const retryAfter = response.headers.get("Retry-After");
         const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1e3 : Math.pow(3, attempt) * 1e3;
+        const reason =
+          response.status === 429 ? "Rate limited" : `Server error (${response.status})`;
         console.warn(
-          `Rate limited for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          `${reason} for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
@@ -1265,7 +1257,7 @@ async function generateApkg(
   }
   let sql;
   try {
-    const req = typeof __require !== "undefined" ? __require : createRequire(import.meta.url);
+    const req = createRequire(import.meta.url);
     try {
       const apkgPath = req.resolve("anki-apkg-export");
       const ankiRequire = createRequire(apkgPath);
@@ -1401,8 +1393,7 @@ async function unpackApkg(apkgPath, outputDir) {
     }
     let sql;
     try {
-      const workspaceRequire =
-        typeof __require !== "undefined" ? __require : createRequire2(import.meta.url);
+      const workspaceRequire = createRequire2(import.meta.url);
       try {
         const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
         const ankiRequire = createRequire2(apkgPackagePath);

@@ -9,6 +9,9 @@ with pkgs;
   tailwindcss-language-server
   vue-language-server
   zls
+  gopls
+  tinymist
+  csharp-ls
 
   # New LSPs
   jdt-language-server
@@ -21,10 +24,22 @@ with pkgs;
   rust-analyzer
   bash-language-server
 
-  # Formatters
+  # Formatters & Linters
+  nixfmt
   alejandra
   oxfmt
   shfmt
+  prettier
   black
+  ruff
   stylua
+  gofumpt
+  gotools # provides goimports
+  rustfmt
+  taplo
+  sql-formatter
+  google-java-format
+  csharpier
+  hadolint
+  typstyle
 ]

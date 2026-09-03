@@ -183,10 +183,22 @@ in
   };
 
   home.activation.updateKdeglobalsTerminal = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [ -f "$HOME/.config/kdeglobals" ]; then
-      ${lib.getBin pkgs.gnused}/bin/sed -i \
-        "s|^TerminalApplication=.*|TerminalApplication=${kittyWrapped}/bin/kitty|" \
-        "$HOME/.config/kdeglobals"
+    if command -v kwriteconfig6 >/dev/null 2>&1; then
+      kwriteconfig6 --file kdeglobals --group General --key TerminalApplication kitty
+      kwriteconfig6 --file kdeglobals --group General --key TerminalService kitty.desktop
+    elif command -v kwriteconfig5 >/dev/null 2>&1; then
+      kwriteconfig5 --file kdeglobals --group General --key TerminalApplication kitty
+      kwriteconfig5 --file kdeglobals --group General --key TerminalService kitty.desktop
+    elif [ -f "$HOME/.config/kdeglobals" ]; then
+      if grep -q "^\[General\]" "$HOME/.config/kdeglobals"; then
+        if grep -q "^TerminalApplication=" "$HOME/.config/kdeglobals"; then
+          ${lib.getBin pkgs.gnused}/bin/sed -i "s|^TerminalApplication=.*|TerminalApplication=kitty|" "$HOME/.config/kdeglobals"
+        else
+          ${lib.getBin pkgs.gnused}/bin/sed -i "/^\[General\]/a TerminalApplication=kitty\nTerminalService=kitty.desktop" "$HOME/.config/kdeglobals"
+        fi
+      else
+        printf "\n[General]\nTerminalApplication=kitty\nTerminalService=kitty.desktop\n" >> "$HOME/.config/kdeglobals"
+      fi
     fi
   '';
 }

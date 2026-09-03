@@ -43,8 +43,7 @@ export async function unpackApkg(apkgPath: string, outputDir: string): Promise<v
     // Resolve SQL.js
     let sql: any;
     try {
-      const workspaceRequire =
-        typeof require !== "undefined" ? require : createRequire(import.meta.url);
+      const workspaceRequire = createRequire(import.meta.url);
       try {
         const apkgPackagePath = workspaceRequire.resolve("anki-apkg-export");
         const ankiRequire = createRequire(apkgPackagePath);
