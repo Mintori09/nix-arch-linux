@@ -5,8 +5,11 @@ set -euo pipefail
 PACKAGES=(
 	"anyflip-downloader|$HOME/.config/home-manager/modules/packages/anyflip-downloader.nix|Lofter1/anyflip-downloader|https://github.com/{repo}/releases/download/v{version}/anyflip-downloader_{version}_linux_amd64.tar.gz"
 	"dbx|$HOME/.config/home-manager/modules/packages/dbx.nix|t8y2/dbx|https://github.com/{repo}/releases/download/v{version}/DBX_{version}_amd64.deb"
+	"hoppscotch|$HOME/.config/home-manager/modules/packages/hoppscotch.nix|hoppscotch/releases|https://github.com/{repo}/releases/download/v{version}/Hoppscotch_linux_x64.AppImage"
+	"kmp-lsp|$HOME/.config/home-manager/modules/packages/kmp-lsp.nix|Hessesian/kmp-lsp|https://github.com/{repo}/releases/download/v{version}/kmp-lsp-linux-x86_64.tar.gz"
 	"magika|$HOME/.config/home-manager/modules/packages/magika.nix|google/magika|https://github.com/{repo}/releases/download/cli/v{version}/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
 	"qbittorrent|$HOME/.config/home-manager/modules/packages/qbittorrent.nix|qbittorrent/qBittorrent|https://github.com/{repo}/releases/download/release-{version}/qbittorrent-{version}_x86_64.AppImage"
+	"super-productivity|$HOME/.config/home-manager/modules/packages/super-productivity.nix|super-productivity/super-productivity|https://github.com/{repo}/releases/download/v{version}/superProductivity-x86_64.AppImage"
 	"vicinae|$HOME/.config/home-manager/modules/packages/vicinae.nix|vicinaehq/vicinae|https://github.com/{repo}/releases/download/v{version}/Vicinae-x86_64.AppImage"
 	"zap|$HOME/.config/home-manager/modules/packages/zap.nix|zerx-lab/zap|https://github.com/{repo}/releases/download/v{version}/zap_{version}_amd64.deb"
 )

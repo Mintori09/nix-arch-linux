@@ -17,6 +17,9 @@
       keyboard-rs = final.callPackage ./packages/keyboard-rs.nix { };
       vicinae = final.callPackage ./packages/vicinae.nix { };
       qbittorrent = final.callPackage ./packages/qbittorrent.nix { };
+      hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
+      kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
+      super-productivity = final.callPackage ./packages/super-productivity.nix { };
       fmtron = final.callPackage ./packages/fmtron.nix {
         src = inputs.fmtron;
       };

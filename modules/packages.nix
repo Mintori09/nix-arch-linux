@@ -110,6 +110,9 @@
     fitgirl-link-extractor
     keyboard-rs
     qbittorrent
+    hoppscotch
+    kmp-lsp
+    super-productivity
     fmtron
     sd
     watchexec
@@ -168,5 +171,8 @@
     # Nix helpers
     nh
     nix-output-monitor
+    deno
+    cargo-outdated
   ];
+
 }
