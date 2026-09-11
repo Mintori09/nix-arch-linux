@@ -1,9 +1,33 @@
 #!/usr/bin/env tsx
+import { statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
-function fzfRgEdit(initialQuery: string): void {
-  const rgCmd = `rg --column --line-number --no-heading --color=always --smart-case -- ${JSON.stringify(initialQuery).slice(1, -1)}`;
+function isExistingFile(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function escapeShellArg(arg: string): string {
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
+function fzfRgEdit(initialQuery: string, targetFiles: string[] = []): void {
+  const fileArgs = targetFiles.map(escapeShellArg).join(" ");
+  const rgBaseCmd = "rg -H --column --line-number --no-heading --color=always --smart-case";
+  const initialQueryArg = escapeShellArg(initialQuery);
+
+  const rgCmd = fileArgs
+    ? `${rgBaseCmd} -e ${initialQueryArg} -- ${fileArgs}`
+    : `${rgBaseCmd} -e ${initialQueryArg}`;
+
+  const reloadCmd = fileArgs
+    ? `${rgBaseCmd} -e {q} -- ${fileArgs} || true`
+    : `${rgBaseCmd} -e {q} || true`;
+
   let result: string;
 
   const hasBat = spawnSync("which", ["bat"], { stdio: "ignore" }).status === 0;
@@ -19,7 +43,7 @@ function fzfRgEdit(initialQuery: string): void {
       "--query",
       initialQuery,
       "--bind",
-      "change:reload:rg --column --line-number --no-heading --color=always --smart-case -- {q} || true",
+      `change:reload:${reloadCmd}`,
       "--bind",
       "enter:accept",
       "--delimiter",
@@ -58,8 +82,20 @@ function fzfRgEdit(initialQuery: string): void {
 }
 
 function main(): void {
-  const query = args.join(" ");
-  fzfRgEdit(query);
+  const targetFiles: string[] = [];
+  const queryParts: string[] = [];
+
+  for (const arg of args) {
+    if (isExistingFile(arg)) {
+      targetFiles.push(arg);
+    } else {
+      queryParts.push(arg);
+    }
+  }
+
+  const query = queryParts.join(" ");
+  fzfRgEdit(query, targetFiles);
 }
 
 if (isMain(import.meta.url)) main();
+
