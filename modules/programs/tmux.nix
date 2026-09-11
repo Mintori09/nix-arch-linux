@@ -96,7 +96,6 @@
             repo = "tmux-dotbar";
             rev = "0.3.2";
 
-            # Nếu hash này lỗi, xem phần "Cách lấy hash" bên dưới.
             hash = "sha256-WaRKepmPqiE+W8Tm0dBc6hGiqqZP122eXjrG0rJnt0w=";
           };
         };

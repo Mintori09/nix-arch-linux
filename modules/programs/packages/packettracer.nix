@@ -1,8 +1,27 @@
 { pkgs, ... }:
 let
+  makeCleanWrapper = name: pkgs.writeShellScriptBin name ''
+    unset LD_LIBRARY_PATH
+    if [ -x "/usr/bin/${name}" ]; then
+      exec "/usr/bin/${name}" "$@"
+    else
+      exec /usr/bin/kde-open "$@"
+    fi
+  '';
+
+  helpers = pkgs.symlinkJoin {
+    name = "packettracer-helpers";
+    paths = [
+      (makeCleanWrapper "kde-open")
+      (makeCleanWrapper "kde-open5")
+      (makeCleanWrapper "kde-open6")
+      (makeCleanWrapper "xdg-open")
+    ];
+  };
+
   packettracer = pkgs.writeShellScriptBin "packettracer" ''
     export QT_QPA_PLATFORM=xcb
-    export PATH="$HOME/.local/bin/helpers:$PATH"
+    export PATH="${helpers}/bin:$PATH"
     exec /usr/lib/packettracer/packettracer.AppImage "$@"
   '';
 in

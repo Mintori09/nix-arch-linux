@@ -98,6 +98,12 @@
       "application/x-gzip" = [ "org.kde.ark.desktop" ];
       "application/zstd" = [ "org.kde.ark.desktop" ];
       "application/x-zstd-compressed-tar" = [ "org.kde.ark.desktop" ];
+
+      "application/epub+zip" = [
+        "org.pwmt.zathura.desktop"
+        "zathura.desktop"
+      ];
+      "application/x-etherpeek" = [ "CiscoPacketTracer-9.0.1.desktop" ];
     };
   };
 
