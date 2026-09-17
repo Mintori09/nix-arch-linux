@@ -99,7 +99,6 @@
       - .config/opencode/opencode-notifier.json
       - .config/pandoc/defaults.yaml
       - .config/qutebrowser/config.py
-      - .config/television/config.toml
       - .config/tmux/tmux.conf
       - .config/yazi/yazi.toml
       - .config/yt-dlp/config

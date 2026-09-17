@@ -7,7 +7,6 @@
     ./fd.nix
     ./fzf.nix
     ./github.nix
-    ./television.nix
     ./zoxide.nix
     ./java.nix
     ./direnv.nix
