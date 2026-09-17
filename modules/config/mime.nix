@@ -82,6 +82,9 @@
       # Terminal Emulator (Kitty)
       "x-scheme-handler/terminal" = [ "kitty.desktop" ];
 
+      # Obsidian URI Scheme
+      "x-scheme-handler/obsidian" = [ "obsidian.desktop" ];
+
       # Archive Manager (Ark)
       "application/zip" = [ "org.kde.ark.desktop" ];
       "application/x-tar" = [ "org.kde.ark.desktop" ];

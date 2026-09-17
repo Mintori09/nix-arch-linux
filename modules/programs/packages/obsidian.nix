@@ -16,11 +16,14 @@ in
     name = "Obsidian";
     genericName = "Knowledge Base";
     comment = "Markdown knowledge base";
-    exec = "${obsidian}/bin/obsidian";
+    exec = "${obsidian}/bin/obsidian %u";
     terminal = false;
     categories = [
       "Office"
       "Utility"
+    ];
+    mimeType = [
+      "x-scheme-handler/obsidian"
     ];
     icon = "obsidian";
     startupNotify = true;
