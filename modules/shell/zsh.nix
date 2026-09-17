@@ -69,6 +69,9 @@ in
           '--height=80%' \
           '--border=rounded'
 
+        # Allow selecting multiple items with Tab, Shift-Tab to unselect/move up
+        zstyle ':fzf-tab:*' fzf-bindings 'tab:toggle+down' 'btab:toggle+up'
+
         zstyle ':fzf-tab:complete:*:*' fzf-preview 'preview $realpath'
 
         zstyle ':fzf-tab:complete:kill:argument-rest' fzf-preview \
@@ -163,10 +166,21 @@ in
           zvm_bindkey vicmd '^G' _navi_widget
           bindkey -M emacs '^G' _navi_widget
 
-          # Alt+Z: zoxide interactive picker via fzf
+          # Bind Ctrl+T to fzf-file-widget (zsh-vi-mode safe)
+          zvm_bindkey viins '^T' fzf-file-widget
+          zvm_bindkey vicmd '^T' fzf-file-widget
+          bindkey -M emacs '^T' fzf-file-widget
+
+          # Alt+Z: zoxide interactive picker via fzf (supports fuzzy matching)
           zoxide-fzf() {
             local dir
-            dir="$(${pkgs.zoxide}/bin/zoxide query --interactive)" || return
+            dir="$(
+              ${pkgs.zoxide}/bin/zoxide query --list |
+              fzf --height=80% --layout=reverse --border=rounded \
+                --prompt="󱧖 zoxide ❯ " --pointer=" " --marker=" " \
+                --preview-window="down:60%,border-top" \
+                --preview='${pkgs.eza}/bin/eza --color=always --icons=always -a --group-directories-first {} 2>/dev/null'
+            )" || return
             [[ -n "$dir" ]] && builtin cd -- "$dir"
             redraw-prompt
           }
@@ -192,11 +206,11 @@ in
 
         # FZF compgen (fd)
         _fzf_compgen_path() {
-          ${pkgs.fd}/bin/fd --hidden -t f -E .git -E node_modules . "$1"
+          ${pkgs.fd}/bin/fd --hidden -t f -E .git -E node_modules -E target -E .venv -E venv . "$1"
         }
 
         _fzf_compgen_dir() {
-          ${pkgs.fd}/bin/fd --hidden -t d -E .git -E node_modules . "$1"
+          ${pkgs.fd}/bin/fd --hidden -t d -E .git -E node_modules -E target -E .venv -E venv . "$1"
         }
 
         # FZF-tab completion for dvt

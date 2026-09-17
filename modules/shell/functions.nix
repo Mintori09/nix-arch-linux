@@ -29,7 +29,10 @@
           local dir
           dir="$(
               zoxide query -l "$@" |
-              fzf --height 40% --reverse --preview 'eza -la --icons --group-directories-first {} 2>/dev/null || ls -la {}'
+              fzf --height=80% --layout=reverse --border=rounded \
+                --prompt="󱧖 zoxide ❯ " --pointer=" " --marker=" " \
+                --preview-window="down:60%,border-top" \
+                --preview='eza --color=always --icons=always -a --group-directories-first {} 2>/dev/null || ls -la {}'
           )" && cd "$dir"
       }
 
@@ -45,7 +48,7 @@
       nf() {
           local file
           file="$(
-              fd -t f \
+              fd -t f -I \
                   -E node_modules -E target -E .cache \
                   -e md -e txt -e ron\
                   -e json -e yaml -e yml -e toml -e xml \
@@ -138,6 +141,16 @@
               return 1
           fi
       }
+      curlopen() {
+          local file
+          file=$(mktemp --suffix=.html) || return
+          curl -fsSL "$1" -o "$file" || {
+              rm -f "$file"
+              return 1
+          }
+          xdg-open "$file"
+      }
+
     '';
   };
 
@@ -165,7 +178,7 @@
       nf() {
           local file
           file="$(
-              fd -t f \
+              fd -t f -I \
                   -E node_modules -E target -E .cache \
                   -e md -e txt -e ron\
                   -e json -e yaml -e yml -e toml -e xml \
@@ -228,6 +241,15 @@
               echo "Không tìm thấy package $pkg trong /nix/store"
               return 1
           fi
+      }
+      curlopen() {
+          local file
+          file=$(mktemp --suffix=.html) || return
+          curl -fsSL "$1" -o "$file" || {
+              rm -f "$file"
+              return 1
+          }
+          xdg-open "$file"
       }
     '';
   };

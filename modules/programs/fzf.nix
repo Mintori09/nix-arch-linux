@@ -44,6 +44,7 @@ in
     enable = true;
     enableZshIntegration = true;
     defaultCommand = "fd --no-ignore --hidden -t f ${excludeArgs}";
+    fileWidgetCommand = "fd --no-ignore --hidden ${excludeArgs}";
     defaultOptions = [
       "--layout=reverse"
       "--info=inline"
