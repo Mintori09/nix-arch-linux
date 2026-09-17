@@ -25,10 +25,17 @@ Dịch toàn bộ truyện tiếng Anh sang tiếng Việt bằng AI, không vi�
 - Mỗi marker là một chương. Giữ số chương gốc.
 - Nếu chương chỉ chứa thông báo paywall / "AI Translation Requires Registration" / "Security Check Required" thì không bịa truyện. Tạo file ghi chú ngắn giữ mạch số chương, hẹn gặp chương sau.
 - Chuẩn hóa tên riêng ngay từ chương 1 và giữ xuyên suốt. Ví dụ gợi ý: Ye You → Diệp Du, Jiang Yumeng → Khương Dư Mộng, Jiang Yaqin → Khương Nhã Cầm, Su Qinglong → Tô Thanh Long, Baiyujing Academy → Học viện Bạch Ngọc Kinh, Magic City → Ma Đô, Daxia → Đại Hạ. Nếu truyện khác, tự đặt bảng tên nhất quán từ đầu.
+- Kiểm tra không được để các dữ dính vào nhau.
 
-### 3. Dịch bằng AI, từng chương một
+### 3. Tự động dịch liên tục toàn bộ (Hỗ trợ chạy song song bằng Subagents)
 
-- Dịch 1-2 chương mỗi lượt, không dồn 13 chương vào một output.
+- **Tuyệt đối không dừng lại giữa chừng để hỏi user có dịch tiếp không.** Tự động xử lý lần lượt hoặc song song cho đến khi hoàn thành 100% các chương nguồn.
+- **Dịch song song bằng subagents (khuyến khích nếu môi trường hỗ trợ):**
+  - Trước khi gọi subagents, thiết lập bảng thuật ngữ / tên riêng chuẩn (glossary) cố định để truyền kèm vào prompt của các subagent, đảm bảo tính nhất quán trên toàn bộ các chương.
+  - Chia danh sách chương và kích hoạt các subagent xử lý song song (mỗi subagent nhận 1 hoặc vài chương).
+  - Mỗi subagent tự dịch, tự kiểm tra lỗi (regex Hán tự, thẻ tag máy dịch...) và ghi trực tiếp vào file markdown đích tương ứng trong `vi/`.
+- **Nếu chạy đơn luồng (không có tool subagent hoặc subagent bị giới hạn):**
+  - Dịch cuốn chiếu từng lượt 1-2 chương để đảm bảo chất lượng, sau đó ngay lập tức chuyển sang các chương tiếp theo trong cùng chuỗi hành động mà không dừng lại hỏi user.
 - Loại bỏ tag máy như `gemini-3.5-flash-lite`, tiêu đề kép `Chapter 1: ...Chapter 1: ...` — chỉ giữ một tiêu đề Việt.
 - Dịch toàn văn, không tóm tắt, không cắt cảnh nhạy cảm, giữ ngôi kể, hội thoại, trình tự gốc.
 - Viết tiếng Việt thuần túy, văn ngôn tình / đô thị tự nhiên. Tuyệt đối không để lọt ký tự Hán / pinyin trong output. Sau mỗi file, tự kiểm tra regex `[\u4e00-\u9fff]` — nếu còn là lỗi, sửa ngay.
@@ -70,6 +77,7 @@ Dịch toàn bộ truyện tiếng Anh sang tiếng Việt bằng AI, không vi�
 `chapter-content-15-46-10.md` chứa `#1Chapter 1 She was as helpless as a man.gemini-...`, `#2Chapter 2 ...`, `#3Chapter 3 ...`
 
 **Output:**
+
 - `vi/chuong-01-bat-luc-nhu-dan-ong.md` → `# Chương 1: Cô ấy bất lực như một người đàn ông` + toàn văn Việt
 - `vi/chuong-02-thanh-xuan-cua-con-trai.md` → `# Chương 2: Đối với con trai, thanh xuân là quý giá nhất!` + toàn văn Việt
 - `vi/chuong-03-hoa-khoi-ba-nam.md` → `# Chương 3: Hoa khôi si tình đã theo đuổi anh ba năm` + toàn văn Việt
@@ -82,6 +90,7 @@ Dịch toàn bộ truyện tiếng Anh sang tiếng Việt bằng AI, không vi�
 
 ## Không làm
 
+- **Không dừng lại sau mỗi chương để hỏi người dùng có dịch tiếp không.** Phải chủ động dịch toàn bộ cho đến khi xong hết tất cả các chương.
 - Không viết script Python/Node để dịch hàng loạt, không gọi API dịch máy ngoài AI hiện tại.
 - Không bịa nội dung cho chương paywall.
 - Không gộp nhiều chương vào một file Việt, trừ khi user yêu cầu rõ.
