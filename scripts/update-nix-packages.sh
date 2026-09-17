@@ -12,6 +12,7 @@ PACKAGES=(
 	"super-productivity|$HOME/.config/home-manager/modules/packages/super-productivity.nix|super-productivity/super-productivity|https://github.com/{repo}/releases/download/v{version}/superProductivity-x86_64.AppImage"
 	"vicinae|$HOME/.config/home-manager/modules/packages/vicinae.nix|vicinaehq/vicinae|https://github.com/{repo}/releases/download/v{version}/Vicinae-x86_64.AppImage"
 	"zap|$HOME/.config/home-manager/modules/packages/zap.nix|zerx-lab/zap|https://github.com/{repo}/releases/download/v{version}/zap_{version}_amd64.deb"
+	"zed-editor|$HOME/.config/home-manager/modules/packages/zed-editor.nix|zed-industries/zed|https://github.com/{repo}/releases/download/v{version}/zed-linux-x86_64.tar.gz"
 )
 
 update_pkg() {

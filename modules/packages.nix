@@ -54,7 +54,6 @@
     glow
     nixfmt
     rust-script
-    television
     pnpm
     gopls
     lazygit
@@ -173,6 +172,9 @@
     nix-output-monitor
     deno
     cargo-outdated
+    vesktop
+    bitwarden-desktop
+    zed-editor
   ];
 
 }
