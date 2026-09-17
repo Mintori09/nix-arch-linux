@@ -28,5 +28,6 @@
     ./nix-rebuild.nix
     ./fcitx5-remote.nix
     ./keyboard-control.nix
+    ./auto-click.nix
   ];
 }
