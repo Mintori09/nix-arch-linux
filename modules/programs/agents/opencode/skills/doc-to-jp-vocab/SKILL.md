@@ -47,7 +47,9 @@ When the user provides Japanese words or study material:
    - `cloze_front` *(Optional)*: Cloze sentence using Anki cloze syntax or blank placeholder `[...]`.
 
 3. **Notes & Metadata**:
-   - `mnemonic`: Memory trick or Kanji radical breakdown.
+   - `mnemonic`: Bắt buộc xây dựng mẹo ghi nhớ sâu sắc theo cấu trúc:
+     * **Phân tích bộ thủ / các nét cấu thành**: Tách chữ Hán thành các bộ thủ hoặc hình tượng nét vẽ cụ thể (tên Hán-Việt bộ thủ kèm ý nghĩa hình ảnh).
+     * **Câu chuyện liên kết (Story)**: Xây dựng một câu chuyện ngắn gọn, sinh động, giàu hình ảnh hoặc cảm xúc kết nối các bộ phận lại với nghĩa của từ/chữ, giúp việc liên tưởng và học thuộc trở nên dễ dàng, tự nhiên.
    - `nuance`: Usage distinction, register (formal, spoken, written), or confusable words.
    - `meta.jlpt_level`: `N1`, `N2`, `N3`, `N4`, or `N5`.
    - `meta.tags`: Array of category tags (e.g. `["JLPT_N2", "Business", "Verb"]`).
@@ -115,7 +117,7 @@ interface JpVocabItem {
       "cloze_front": "彼[かれ]は 危険[きけん]を 前[まえ]にしても 一瞬[いっしゅん]たりとも [...]しなかった。"
     },
     "notes": {
-      "mnemonic": "Bộ Túc (chân) ở cả hai chữ 躊 và 躇: bước chân ngập ngừng không dám tiến tới.",
+      "mnemonic": "• Các bộ/nét cấu thành: Cả 2 chữ đều có bộ Túc (足 - chân). Chữ 躊 gồm Túc (足) + Thọ (寿 - trường thọ, già nua); chữ 躇 gồm Túc (足) + Trứ (著 - tỏ rõ, dừng lại).\n• Câu chuyện liên kết: Một người già lưng còng bước đi (chân + thọ) bỗng khựng chân lại dừng giữa đường (chân + trứ) vì phía trước có nguy hiểm nên ngập ngừng, lưỡng lự (躊躇 - do dự) không biết có nên bước tiếp.",
       "nuance": "Chỉ tâm lý chần chừ, do dự hành động. Thường dùng trang trọng trong văn viết; trong khẩu ngữ thường dùng 'ためらう'."
     },
     "media": {
@@ -141,6 +143,7 @@ interface JpVocabItem {
       "sentence_translation": "Thua trận đấu chỉ vì cách biệt 1 điểm, thật sự vô cùng tiếc nuối và cay đắng."
     },
     "notes": {
+      "mnemonic": "• Các bộ/nét cấu thành: Bộ Tâm đứng (忄- trái tim, cảm xúc) + chữ Mỗi (毎 - mỗi lần, mỗi ngày).\n• Câu chuyện liên kết: Mỗi lần (毎) nhớ lại thất bại hay sai lầm cũ, trái tim (忄) lại nhói đau và cay cú, cảm thấy vô cùng tiếc nuối (悔しい).",
       "nuance": "'悔しい' thể hiện cảm xúc tiếc nuối kèm cay cú, tức giận với bản thân vì đã để thua hoặc bỏ lỡ cơ hội."
     }
   }
@@ -155,6 +158,7 @@ interface JpVocabItem {
 - [ ] `vocabulary` object must contain: `kanji_expression`, `kana_reading`, `furigana_format`, `part_of_speech`, `meaning_vi`.
 - [ ] Furigana uses bracket notation: `Kanji[kana]`, e.g. `勉強[べんきょう]`.
 - [ ] `sentence_furigana` contains bracket furigana for all kanji words in the sentence.
+- [ ] `notes.mnemonic` có phân tích chi tiết bộ thủ / nét vẽ cấu thành và câu chuyện liên tưởng sinh động, dễ nhớ.
 
 ---
 
