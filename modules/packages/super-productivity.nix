@@ -18,7 +18,7 @@ pkgs.appimageTools.wrapType2 {
   extraInstallCommands = ''
     install -m 444 -D ${appimageContents}/superproductivity.desktop $out/share/applications/superproductivity.desktop
     substituteInPlace $out/share/applications/superproductivity.desktop \
-      --replace-fail 'Exec=AppRun --no-sandbox %U' "Exec=$out/bin/${pname} %U"
+      --replace-fail 'Exec=AppRun --no-sandbox %U' "Exec=$out/bin/${pname} --ozone-platform-hint=auto %U"
 
     mkdir -p $out/share/icons
     cp -r ${appimageContents}/usr/share/icons/* $out/share/icons/
