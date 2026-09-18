@@ -5,8 +5,14 @@ User: `mintori`, host: `endeavour-desktop`, system: `x86_64-linux`.
 
 ## Apply config
 
+> [!IMPORTANT]
+> Always rebuild home-manager after making changes to any configuration files or scripts so they take effect immediately:
+> ```bash
+> nh home switch ~/.config/home-manager
+> ```
+
 ```bash
-home-manager switch --flake ~/.config/home-manager
+nh home switch ~/.config/home-manager
 nix flake update && home-manager switch --flake ~/.config/home-manager  # update inputs then apply
 nix-collect-garbage --delete-older-than 2d  # GC cleanup
 ```
@@ -40,9 +46,12 @@ Do NOT edit `config.json` directly — edit the Nix source and run `hms`.
 
 ## MCP servers
 
-Shared between Claude and OpenCode via `modules/programs/agents/mcp.nix`.
-OpenCode `mcp.nix` transforms the shared format; Claude `mcp.nix` does too, plus conditionally adds `codex` MCP and `work-docs` on `work-laptop`.
-Servers: context7, playwright, github (uses `gh auth token` lazily via `$()`), filesystem (scoped to `~/projects`, `~/dotfiles`), deepwiki (remote), tavily (disabled by default).
+Shared across agents via `modules/programs/agents/mcp.nix`:
+- **OpenCode** (`opencode/mcp.nix`): transforms format into `local` and `remote` types.
+- **Claude** (`claude/mcp.nix`): supports local servers, plus conditionally adds `codex` MCP and `work-docs` on `work-laptop`.
+- **Antigravity CLI** (`antigravity/mcp.nix` & `default.nix`): generates `~/.gemini/antigravity-cli/mcp_config.json`, includes custom zsh completion (`_agy`).
+- **Copilot CLI** (`copilot-cli/mcp.nix` & `default.nix`): generates `~/.copilot/mcp-config.json` with `local` and `http` server definitions.
+Servers configured: context7, playwright, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, tavily (disabled by default).
 
 ## oc-go-cc proxy
 
@@ -53,10 +62,10 @@ Model tiers: default (v4-flash), think/complex (v4-pro), long_context (glm-5.1).
 
 ## Skills
 
-Sourced from 9+ external flake inputs (anthropic-skills, vercel-skills, agent-toolkit, etc.)
-and linked to `~/.config/opencode/skill/`, `~/.claude/skills/`, `~/.codex/skills/` as symlinks.
-Enabled: skill-creator, webapp-testing, frontend-design, react-best-practices, technical-writing,
-blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers.
+Sourced from external flake inputs (anthropic-skills, vercel-skills, agent-toolkit, superpowers, etc.) and local skills (`modules/programs/agents/opencode/skills/`).
+Symlinked to `~/.config/opencode/skill/`, `~/.claude/skills/`, `~/.codex/skills/`, `~/.gemini/skills/`, and `~/.copilot/skills/` via `programs.agent-skills`.
+Enabled skills: skill-creator, webapp-testing, frontend-design, react-best-practices, technical-writing,
+blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers, anki-vocab-generator, plus all from `opencode-local` (e.g. `novel-vi-translator`, `doc-to-jp-vocab`) and `superpowers`.
 Conditional: `work-laptop` host adds `work/agent-skills`.
 
 ## Git
@@ -68,18 +77,19 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 
 ## Custom scripts & packages
 
-- Custom scripts (in `modules/scripts/`): `format-file`, `install-font`, `install-rpm`, `fzf-rg-edit`, `fzf-preview`, `extract`, `which_file`, `open`, `scratch`, `select-and-open-video`, `copy-files`, `remove`, `each`, `compress-wrap`, `direnv-wrap`, `rclone-sync`, `sleep-cycles`, `telepush`, `nano_usage`. Shared helpers in `_helpers.nix`.
-- Custom packages (in `modules/packages/` from `packages/`): `cv-cli` (`cv`), `anki-tool`, `ai-bridge`, `generate-toc` (`gentoc`), `fitgirl-link-extractor` (`mle`), `bookokrat`, `dbx`, `zap`, `anyflip-downloader`, `magika`, `keyboard-rs`.
+- Custom scripts (in `modules/scripts/`): `auto-click`, `caffeinate`, `cleartext-wifi`, `compress-wrap`, `copy-files`, `direnv-wrap`, `each`, `extract`, `fcitx5-remote`, `format`, `fzf-preview`, `fzf-rg-edit`, `keyboard-control`, `nano_usage`, `nix-rebuild`, `open`, `quick-aliases`, `rclone-sync`, `read`, `remove`, `scratch`, `select-and-open-video`, `sleep-cycles`, `telepush`, `which_file`. Shared helpers in `_helpers.nix`.
+- Custom packages (in `modules/packages/` from `packages/`): `ai-bridge`, `anki-tool`, `anyflip-downloader`, `bookokrat`, `cv-cli` (`cv`), `dbx`, `fitgirl-link-extractor` (`mle`), `fmtron`, `generate-toc` (`gentoc`), `hoppscotch`, `keyboard-rs`, `kmp-lsp`, `magika`, `qbittorrent`, `super-productivity`, `vicinae`, `zap`, `zed-editor`.
 
 Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging
-and zsh completion in `modules/scripts/<name>.nix`. When adding/modifying
+and zsh completion in `modules/scripts/<name>.nix` (or `completions/`). When adding/modifying
 flags, update both the source and the zsh completion spec in the same PR.
-After editing, rebuild with `home-manager switch` to make changes available
+After editing, rebuild with `nh home switch ~/.config/home-manager` to make changes available
 globally.
 
 ## Shell
 
-- Zsh primary (vi-mode, autosuggestions, fast-syntax-highlighting, fzf-tab, p10k prompt)
+- Zsh primary (vi-mode, autosuggestions, fast-syntax-highlighting, fzf-tab, p10k prompt, carapace completion integration)
+- Default editor: `EDITOR=nvim`
 - Fish also configured
 - Custom `cd` with fzf directory picker
 - `Ctrl+O` for fzf/rg file search → Neovim
@@ -92,5 +102,5 @@ globally.
 
 `formatters.nix` → gofumpt, hadolint, kdlfmt, ruff, shellcheck, shfmt, stylua, taplo, sql-formatter
 LSPs → 10+ built into OpenCode config automatically
-`nodejs_22`, `pnpm`, `bun`, `mise` for JS/Dev envs
+`nodejs_22`, `pnpm`, `bun`, `uv`, `mise` for JS/Python/Dev envs
 `nixGL` overlay for GPU-accelerated apps on non-NixOS

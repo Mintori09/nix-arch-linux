@@ -3,7 +3,8 @@
   nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
     inputs.mmdr.packages.${pkgs.stdenv.hostPlatform.system}.default
-    # Archive
+
+    # Archive utilities
     atool
     bzip2
     gzip
@@ -17,56 +18,99 @@
     zip
     zstd
 
-    # Core utilities
+    # Core CLI utilities
     fastfetch
     magika
     cliphist
     fd
     ripgrep
+    sd
+    trashy
     wl-clipboard
     just
-    # opencode
     fx
-
-    # CLI tools
-    aichat
+    jq
+    carapace
     pv
     onefetch
     xh
     tdf
     dust
-    aichat
+    duf
     btop
     konsave
     rofi
     vex-tui
-
-    # aider-chat
-    duf
     watchexec
     arp-scan
-    bun
     chafa
     ffmpegthumbnailer
     hexyl
-    jq
-    # mise
     glow
     nixfmt
-    rust-script
-    pnpm
-    gopls
     lazygit
     lazydocker
     spicetify-cli
     rclone
-
     brotab
     navi
     lazyjournal
     lazysql
     helix
     devenv
+    charm-freeze
+    websocat
+    gdown
+    proton-vpn
+    google-java-format
+
+    # AI tools
+    aichat
+    shell-gpt
+
+    # Web & Node runtime / packages
+    bun
+    deno
+    nodejs_22
+    pnpm
+    yarn
+    node-gyp
+    tsx
+
+    # C / C++ / Build
+    clang
+    clang-tools
+    gnumake
+
+    # Go
+    gopls
+
+    # Python & Doc tools
+    uv
+    python314Packages.icnsutil
+    python314Packages.markitdown
+    pandoc
+    imagemagick
+    tabiew
+
+    # Rust & Cargo Ecosystem
+    rustc
+    cargo
+    rust-script
+    mold
+    cargo-deny
+    cargo-nextest
+    cargo-llvm-cov
+    cargo-tarpaulin
+    cargo-audit
+    cargo-edit
+    cargo-semver-checks
+    cargo-bloat
+    cargo-machete
+    cargo-watch
+    cargo-flamegraph
+    cargo-show-asm
+    cargo-outdated
 
     # Formatters & linters
     gofumpt
@@ -78,26 +122,30 @@
     sql-formatter
     stylua
     taplo
-    nodejs_22
-    pnpm
-    yarn
-    node-gyp
 
-    gnumake
-    shell-gpt
-    brotab
+    # Typst Ecosystem
+    typstyle
+    typst
+    tinymist
 
-    # Program
+    # Git
+    gitleaks
+
+    # Desktop & GUI apps
     slack
     signal-desktop
+    foliate
+    aspell
+    telegram-desktop
+    kdePackages.kamoso
+    vesktop
+    bitwarden-desktop
 
-    # Document conversion
-    pandoc
-    imagemagick
-    python314Packages.markitdown
-    tabiew
+    # Nix helpers
+    nh
+    nix-output-monitor
 
-    # Custom packages (prebuilt from GitHub)
+    # Custom packages (prebuilt from GitHub / local)
     bookokrat
     dbx
     zap
@@ -113,68 +161,5 @@
     kmp-lsp
     super-productivity
     fmtron
-    sd
-    watchexec
-    rclone
-    trashy
-    gdown
-    proton-vpn
-
-    # Typst
-    typstyle
-    typst
-    tinymist
-    websocat
-
-    charm-freeze
-    tsx
-
-    # C/C++
-    clang
-    clang-tools
-
-    # Rust
-    cargo-deny # Lints dependencies for security advisories, license compliance, duplicate crates, and bans
-
-    cargo
-    rustc
-    mold
-    # Testing & Coverage
-    cargo-nextest # Next-generation test runner that executes tests in parallel with fast, clean output
-    cargo-llvm-cov # Measures source-based code coverage using LLVM instrumentation (highly accurate and cross-platform)
-    cargo-tarpaulin # Native code coverage tool for Rust projects (primarily designed for Linux/x86_64)
-
-    # Dependency & Analysis
-    cargo-audit # Audits Cargo.lock for crates with known security vulnerabilities via the RustSec Advisory Database
-    cargo-edit # Utilities to manage Cargo.toml dependencies via CLI (`cargo add`, `cargo rm`, `cargo upgrade`)
-    cargo-semver-checks # Lints Rust crates for SemVer compliance and breaking API changes before publishing
-    cargo-bloat # Analyzes executable binaries to find what functions and crates take up the most space
-    cargo-machete # Fast tool to detect and clean up unused dependencies in Cargo.toml
-    cargo-watch # Watches source files for changes and automatically re-runs commands (e.g., check, test, run)
-
-    # Performance & Binary Analysis
-    cargo-flamegraph # Profiles performance and generates interactive SVG flame graphs (pkgs.cargo-flamegraph)
-    cargo-bloat # Analyzes executable binaries to find what functions and crates take up the most space (pkgs.cargo-bloat)
-    cargo-show-asm # Shows the generated assembly, LLVM-IR, or MIR for specific Rust functions (`cargo asm`)
-
-    # git
-    gitleaks
-
-    foliate
-    aspell
-    telegram-desktop
-    kdePackages.kamoso
-    google-java-format
-    python314Packages.icnsutil
-
-    # Nix helpers
-    nh
-    nix-output-monitor
-    deno
-    cargo-outdated
-    vesktop
-    bitwarden-desktop
-    zed-editor
   ];
-
 }

@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./9router.nix
+    # ./9router.nix
     ./watchexec
     ./anyrun.nix
     ./keyboard-rs.nix
