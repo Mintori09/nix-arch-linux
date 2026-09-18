@@ -14,7 +14,7 @@ in
   home.sessionVariables = {
     LANG = "en_GB.UTF-8";
     LC_ALL = "en_GB.UTF-8";
-    EDITOR = "hx";
+    EDITOR = "nvim";
     SHELL = "zsh";
     XMODIFIERS = "@im=fcitx";
     GLFW_IM_MODULE = "ibus";

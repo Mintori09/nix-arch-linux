@@ -59,26 +59,47 @@ in
         # Completion + fzf-tab config
         zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
         zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
+        zstyle ':completion:*:descriptions' format '-- %d --'
+        zstyle ':completion:*' group-name ""
 
-        # Use global FZF_DEFAULT_OPTS in fzf-tab
-        zstyle ':fzf-tab:*' use-fzf-default-opts yes
+        # systemctl: prioritize services, sockets, timers and targets (hide cluttered devices)
+        zstyle ':completion:*:*:systemctl:*' tag-order 'services' 'sockets' 'timers' 'targets'
 
+        # agy: show both flags/options (--model, --effort, ...) along with subcommands on Tab
+        zstyle ':completion:*:*:agy:*' prefix-needed false
+
+        # fzf-tab configuration: decoupled from FZF_DEFAULT_OPTS
+        zstyle ':fzf-tab:*' use-fzf-default-opts no
+        zstyle ':fzf-tab:*' default-color ""
+        zstyle ':fzf-tab:*' prefix ""
+
+        # Default preview-window hidden, opens only when preview content exists
         zstyle ':fzf-tab:*' fzf-flags \
           '--layout=reverse' \
           '--info=inline' \
-          '--height=80%' \
-          '--border=rounded'
+          '--height=60%' \
+          '--border=rounded' \
+          '--ansi' \
+          '--color=fg:#c6d0f7,bg:#303446,hl:#e78284,fg+:#c6d0f7,bg+:#414559,hl+:#a6d189,info:#ca9ee6,prompt:#8caaee,pointer:#f4b8e7,marker:#eebebe,spinner:#ca9ee6,header:#eebebe,gutter:#303446'
 
-        # Allow selecting multiple items with Tab, Shift-Tab to unselect/move up
-        zstyle ':fzf-tab:*' fzf-bindings 'tab:toggle+down' 'btab:toggle+up'
+        # fzf-tab keybindings: Tab/Shift-Tab to toggle selection, ? or ctrl-/ to toggle preview
+        zstyle ':fzf-tab:*' fzf-bindings 'tab:toggle+down' 'btab:toggle+up' '?:toggle-preview' 'ctrl-/:toggle-preview'
 
-        zstyle ':fzf-tab:complete:*:*' fzf-preview 'preview $realpath'
+        # File & directory preview for common file openers
+        zstyle ':fzf-tab:complete:(nvim|vim|nano|bat|cat|less|eza|ls|cd|z):*' fzf-preview \
+          'preview "''${(Q)realpath:-''${(Q)word}}"'
 
-        zstyle ':fzf-tab:complete:kill:argument-rest' fzf-preview \
-          'ps --pid=$word -o cmd --no-headers'
+        # General file/directory preview when completion context matches files/directories
+        zstyle ':fzf-tab:complete:*:*(files|directories)*' fzf-preview \
+          'preview "''${(Q)realpath:-''${(Q)word}}"'
 
-        zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview \
-          'systemctl status $word'
+        # Process preview for kill/pkill
+        zstyle ':fzf-tab:complete:(kill|pkill):argument-rest' fzf-preview \
+          'ps --pid=$word -o cmd --no-headers 2>/dev/null'
+
+        # Preview systemctl status only for unit management subcommands (start, stop, restart, status, reload, etc.)
+        zstyle ':fzf-tab:complete:systemctl-(start|stop|restart|status|reload|try-restart|enable|disable|mask|unmask|kill|is-active|is-failed):*' fzf-preview \
+          'unit="''${word% }"; SYSTEMD_COLORS=1 systemctl status --no-pager "$unit" 2>&1 || SYSTEMD_COLORS=1 systemctl --user status --no-pager "$unit" 2>&1'
 
         # Env
         export ZSH_AUTOSUGGEST_USE_ASYNC=1
@@ -254,6 +275,12 @@ in
       (lib.mkAfter ''
         # Unload buggy fzf-tab binary module after plugins load (fixes quote evaluation bug in -ftb-generate-complist)
         zmodload -u aloxaf/fzftab >/dev/null 2>&1 || true
+
+        # Carapace completion integration (must run after compinit)
+        source <(${pkgs.carapace}/bin/carapace _carapace zsh)
+        # Retain zsh native _systemctl for full subcontext support (systemctl-start, systemctl-stop, ...) and tag-order
+        compdef _systemctl systemctl
+        zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
     ];
   };

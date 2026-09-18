@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { args, isMain, which } from "./utils.ts";
+import fs from "node:fs";
 
 const CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
 mkdirSync(CACHE_DIR, { recursive: true });
@@ -83,29 +84,30 @@ function renderImage(
 
 function main(): void {
   const cmdArgs = args;
-  if (cmdArgs.length !== 1) {
+  if (cmdArgs.length !== 1 || !cmdArgs[0]) {
     console.error("usage: preview FILENAME[:LINENO][:IGNORED]");
     process.exit(1);
   }
 
-  let file = cmdArgs[0].replace(/^~\//, `${process.env.HOME}/`);
+  let file = cmdArgs[0].replace(/^~\//, `${process.env.HOME}/`).trim();
   let center = 0;
+
+  if (!fs.existsSync(file)) {
+    const m = file.match(/^(.+):(\d+)/);
+    if (m && fs.existsSync(m[1])) {
+      file = m[1];
+      center = parseInt(m[2], 10);
+    } else {
+      console.error(`Error: Path '${file}' does not exist!`);
+      process.exit(1);
+    }
+  }
 
   try {
     statSync(file);
-  } catch {
-    const m = file.match(/^(.+):(\d+)/);
-    if (m) {
-      try {
-        statSync(m[1]);
-        file = m[1];
-        center = parseInt(m[2], 10);
-      } catch {
-        process.exit(1);
-      }
-    } else {
-      process.exit(1);
-    }
+  } catch (err) {
+    console.error(`Error stat '${file}':`, err);
+    process.exit(1);
   }
 
   const mimeResult = spawnSync(
@@ -128,7 +130,7 @@ function main(): void {
     if (which("eza")) {
       spawnSync(
         "eza",
-        ["--long", "--tree", "--level=2", "--icons", "--color=always", file],
+        ["--tree", "--level=2", "--icons", "--color=always", file],
         { stdio: "inherit" },
       );
     } else {
