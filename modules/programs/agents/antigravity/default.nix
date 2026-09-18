@@ -13,10 +13,17 @@ let
   mcpConfig = {
     mcpServers = builtins.mapAttrs (name: def: removeAttrs def [ "enabled" ]) enabledServers;
   };
+
+  agyCompletion = pkgs.writeTextFile {
+    name = "agy-zsh-completion";
+    destination = "/share/zsh/site-functions/_agy";
+    text = builtins.readFile ../../../scripts/completions/_agy;
+  };
 in
 {
   home.packages = with pkgs; [
     llm-agents.antigravity-cli
+    agyCompletion
   ];
 
   home.file = {
