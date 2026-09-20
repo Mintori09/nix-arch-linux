@@ -51,13 +51,17 @@ in
 
         # Completion path
         fpath=(
+          "$HOME/.nix-profile/share/zsh/site-functions"
           /usr/share/zsh/site-functions
           ${pkgs.zsh-completions}/share/zsh-completions/functions
           $fpath
         )
 
-        # Completion + fzf-tab config
-        zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+        # Completion + fzf-tab config (prefix -> case-insensitive -> partial -> substring match)
+        zstyle ':completion:*' matcher-list "" \
+          'm:{a-z}={A-Za-z}' \
+          'r:|[._-]=* r:|=*' \
+          'l:|=* r:|=*'
         zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
         zstyle ':completion:*:descriptions' format '-- %d --'
         zstyle ':completion:*' group-name ""
@@ -65,8 +69,10 @@ in
         # systemctl: prioritize services, sockets, timers and targets (hide cluttered devices)
         zstyle ':completion:*:*:systemctl:*' tag-order 'services' 'sockets' 'timers' 'targets'
 
-        # agy: show both flags/options (--model, --effort, ...) along with subcommands on Tab
+        # agy / opencode / yay: show both flags/options along with subcommands on Tab
         zstyle ':completion:*:*:agy:*' prefix-needed false
+        zstyle ':completion:*:*:opencode:*' prefix-needed false
+        zstyle ':completion:*:*:yay:*' prefix-needed false
 
         # fzf-tab configuration: decoupled from FZF_DEFAULT_OPTS
         zstyle ':fzf-tab:*' use-fzf-default-opts no
@@ -101,6 +107,10 @@ in
         zstyle ':fzf-tab:complete:systemctl-(start|stop|restart|status|reload|try-restart|enable|disable|mask|unmask|kill|is-active|is-failed):*' fzf-preview \
           'unit="''${word% }"; SYSTEMD_COLORS=1 systemctl status --no-pager "$unit" 2>&1 || SYSTEMD_COLORS=1 systemctl --user status --no-pager "$unit" 2>&1'
 
+        # Preview yay package details for installed and repo/AUR packages
+        zstyle ':fzf-tab:complete:yay:*' fzf-preview \
+          'pkg="''${word% }"; pacman -Qi "$pkg" 2>/dev/null || yay -Si "$pkg" 2>/dev/null'
+
         # Env
         export ZSH_AUTOSUGGEST_USE_ASYNC=1
         export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
@@ -121,23 +131,79 @@ in
         export HISTFILE="$HOME/.zsh_history"
         export SAVEHIST=$HISTSIZE
 
-        # cd: no args -> pick directory via fzf, args -> normal cd
+        # cd: no args -> pick directory via fzf; non-existent path -> fuzzy fzf fallback
         cd() {
-          if (( $# > 0 )); then
+          # 1. Non-interactive shell (scripts, subshells, pipelines): use standard builtin cd
+          if [[ ! -t 0 || ! -t 1 ]]; then
             builtin cd "$@"
             return
           fi
 
+          # 2. Try standard cd first
+          if (( $# > 0 )); then
+            builtin cd "$@" 2>/dev/null && return
+
+            # Options / flags (-P, -L) or directory stack (-N, +N, -): pass through to builtin cd
+            if [[ "$1" == -* ]]; then
+              builtin cd "$@"
+              return
+            fi
+          fi
+
+          local query="$*"
           local dir
+
+          # 3. If query uniquely matches a directory at depth 1 (case-insensitive substring), jump directly
+          if [[ -n "$query" ]]; then
+            setopt LOCAL_OPTIONS EXTENDED_GLOB
+            local -a d1_matches
+            d1_matches=( (#i)*"$query"*(N/) )
+            if (( ''${#d1_matches[@]} == 1 )); then
+              builtin cd -- "''${d1_matches[1]}"
+              return
+            fi
+          fi
+
+          # 4. Check fzf availability
+          if ! command -v fzf >/dev/null 2>&1; then
+            print -u2 "cd: no such file or directory: $*"
+            return 1
+          fi
+
+          # 5. Search directories with fd
+          local fd_pattern="."
+          [[ -n "$query" ]] && fd_pattern="$query"
+
+          local fd_out
+          fd_out="$(${pkgs.fd}/bin/fd --max-depth 5 --hidden --type d \
+            --exclude .git \
+            --exclude node_modules \
+            --exclude venv \
+            "$fd_pattern" . 2>/dev/null)"
+
+          # If user gave arguments but no directory matched at all, error out without opening fzf
+          if [[ -z "$fd_out" ]]; then
+            if [[ -n "$query" ]]; then
+              print -u2 "cd: no such file or directory: $query"
+              return 1
+            fi
+            return 0
+          fi
+
+          # 6. If only 1 directory matched, jump directly without opening fzf
+          local -a matches
+          matches=( "''${(f)fd_out}" )
+          if (( ''${#matches[@]} == 1 )); then
+            builtin cd -- "''${matches[1]}"
+            return
+          fi
+
+          # 7. Multiple matches: open fzf to pick
           dir="$(
-            ${pkgs.fd}/bin/fd --hidden --type d \
-              --exclude .git \
-              --exclude node_modules \
-              --exclude venv \
-              . . 2>/dev/null |
+            printf '%s\n' "''${matches[@]}" |
             fzf --height=40% --reverse \
               --preview '${pkgs.eza}/bin/eza -la --icons --group-directories-first {} 2>/dev/null'
-          )" || return
+          )"
 
           [[ -n "$dir" ]] && builtin cd -- "$dir"
         }
@@ -182,7 +248,41 @@ in
           bindkey -M emacs '^R' mcfly-fzf-history-widget
 
           # Bind Ctrl+G to navi cheatsheet search (zsh-vi-mode safe)
-          eval "$(${pkgs.navi}/bin/navi widget zsh)"
+          _navi_call() {
+            local result
+            result="$(${pkgs.navi}/bin/navi "$@" </dev/tty)"
+            printf "%s" "$result"
+          }
+
+          _navi_widget() {
+            local -r input="''${LBUFFER}"
+            local -r last_command="$(echo "''${input}" | ${pkgs.navi}/bin/navi fn widget::last_command)"
+            local replacement
+
+            if [[ -z "$last_command" ]]; then
+              replacement="$(_navi_call --print)"
+            else
+              replacement="$(_navi_call --print --query "$last_command")"
+            fi
+
+            # Strip trailing newlines to prevent shell from executing immediately
+            replacement="''${replacement%$'\n'}"
+
+            if [[ -n "$replacement" ]]; then
+              local -r find="''${last_command}_NAVIEND"
+              previous_output="''${input}_NAVIEND"
+              previous_output="''${previous_output//$find/$replacement}"
+            else
+              previous_output="$input"
+            fi
+
+            zle kill-whole-line
+            LBUFFER="''${previous_output}"
+            region_highlight=("P0 100 bold")
+            zle redisplay
+          }
+
+          zle -N _navi_widget
           zvm_bindkey viins '^G' _navi_widget
           zvm_bindkey vicmd '^G' _navi_widget
           bindkey -M emacs '^G' _navi_widget
@@ -219,6 +319,125 @@ in
           zvm_bindkey viins '\ez' zoxide-fzf
           zvm_bindkey vicmd '\ez' zoxide-fzf
           bindkey -M emacs '\ez' zoxide-fzf
+
+          # Smart Streaming Tab Completion for yay (instant fzf UI, continuous stream)
+          _yay_smart_tab() {
+            local lbuf="''${LBUFFER}"
+            local -a tokens
+            tokens=(''${(z)lbuf})
+
+            # Only intercept if command starts with yay
+            if [[ "''${tokens[1]}" == "yay" ]]; then
+              local last_token=""
+              if [[ "''${lbuf[-1]}" != " " ]]; then
+                last_token="''${tokens[-1]}"
+              fi
+
+              # 1. yay -R / -Rs / -Rns: Streaming Remove of installed packages
+              if [[ "''${tokens[2]}" == -*R* ]]; then
+                if [[ "$last_token" != -* ]]; then
+                  local query="''${last_token}"
+                  local selected
+                  selected=$(
+                    pacman -Q --color=never 2>/dev/null |
+                      awk '{print $1, $2}' |
+                      fzf \
+                        --multi \
+                        --query="$query" \
+                        --prompt="  Remove (yay) > " \
+                        --pointer="▶ " \
+                        --marker="✓ " \
+                        --header="Tab: Select | Enter: Accept | Ctrl-A: All | Ctrl-D: Deselect | Ctrl-/: Preview" \
+                        --preview='pacman -Qi {1} 2>/dev/null' \
+                        --preview-window="bottom:50%:wrap" \
+                        --nth=1 \
+                        --height=80% \
+                        --bind='ctrl-a:select-all,ctrl-d:deselect-all,ctrl-/:toggle-preview' \
+                        --layout=reverse \
+                        --border
+                  ) || true
+
+                  if [[ -n "$selected" ]]; then
+                    local pkgs
+                    pkgs=$(echo "$selected" | awk '{print $1}' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+                    if [[ -n "$last_token" ]]; then
+                      LBUFFER="''${lbuf%''${last_token}}''${pkgs} "
+                    else
+                      LBUFFER="''${lbuf}''${pkgs} "
+                    fi
+                    zle redisplay
+                    return 0
+                  fi
+                  zle redisplay
+                  return 0
+                fi
+
+              # 2. yay -S / yay <pkg>: Streaming Install of Repo + AUR packages
+              elif [[ "''${tokens[2]}" == -*S* || ( "''${tokens[2]}" != -* && ''${#tokens} -ge 1 ) ]]; then
+                if [[ "$last_token" != -* ]]; then
+                  local query="''${last_token}"
+                  local cache_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/yay"
+                  local cache_file="''${cache_dir}/completion.cache"
+
+                  # Background refresh if cache is older than 3 days (259200s) or missing
+                  local now=$(date +%s)
+                  local mtime=$(stat -c %Y "$cache_file" 2>/dev/null || echo 0)
+                  if [[ ! -s "$cache_file" ]]; then
+                    mkdir -p "$cache_dir" 2>/dev/null
+                    yay -Pc > "$cache_file" 2>/dev/null
+                  elif (( now - mtime > 259200 )); then
+                    ( yay -Pc > "$cache_file" 2>/dev/null ) &!
+                  fi
+
+                  local selected
+                  selected=$(
+                    {
+                      if [[ -s "$cache_file" ]]; then
+                        awk '{print $2 "\t" $1}' "$cache_file"
+                      else
+                        yay -Sl --color=never 2>/dev/null | awk '{print $1 "\t" $2}'
+                      fi
+                    } |
+                      fzf \
+                        --multi \
+                        --query="$query" \
+                        --prompt="  Install (yay) > " \
+                        --pointer="▶ " \
+                        --marker="✓ " \
+                        --header="Tab: Select | Enter: Accept | Ctrl-A: All | Ctrl-D: Deselect | Ctrl-/: Preview" \
+                        --preview='pacman -Si {2} 2>/dev/null || yay -Si {2} 2>/dev/null' \
+                        --preview-window="bottom:50%:wrap" \
+                        --nth=2 \
+                        --height=80% \
+                        --bind='ctrl-a:select-all,ctrl-d:deselect-all,ctrl-/:toggle-preview' \
+                        --layout=reverse \
+                        --border
+                  ) || true
+
+                  if [[ -n "$selected" ]]; then
+                    local pkgs
+                    pkgs=$(echo "$selected" | awk '{print $2}' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+                    if [[ -n "$last_token" ]]; then
+                      LBUFFER="''${lbuf%''${last_token}}''${pkgs} "
+                    else
+                      LBUFFER="''${lbuf}''${pkgs} "
+                    fi
+                    zle redisplay
+                    return 0
+                  fi
+                  zle redisplay
+                  return 0
+                fi
+              fi
+            fi
+
+            # Fallback to default completion system
+            zle fzf-completion
+          }
+          zle -N _yay_smart_tab
+          zvm_bindkey viins '^I' _yay_smart_tab
+          zvm_bindkey vicmd '^I' _yay_smart_tab
+          bindkey -M emacs '^I' _yay_smart_tab
         }
 
         function zvm_after_lazy_keybindings() {
@@ -278,8 +497,9 @@ in
 
         # Carapace completion integration (must run after compinit)
         source <(${pkgs.carapace}/bin/carapace _carapace zsh)
-        # Retain zsh native _systemctl for full subcontext support (systemctl-start, systemctl-stop, ...) and tag-order
+        # Retain zsh native _systemctl and _yay for full subcontext support and rich packages
         compdef _systemctl systemctl
+        compdef _yay yay
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
     ];

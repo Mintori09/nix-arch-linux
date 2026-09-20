@@ -66,5 +66,6 @@ in
     gdc = "git diff | wl-copy";
     catc = "cpath --content";
     cpf = "fzf | each --batch cpath";
+    wp = "wl-paste";
   };
 }
