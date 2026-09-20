@@ -1,0 +1,719 @@
+#compdef opencode
+
+# ----------------------------------------------------------------------
+# Dynamic Helpers
+# ----------------------------------------------------------------------
+
+# Dynamic models completion with 24h caching + background refresh
+_opencode_models() {
+  local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/opencode"
+  local cache_file="$cache_dir/models.cache"
+  local -a models
+  local now=$(date +%s)
+  local mtime=0
+
+  if [[ -f "$cache_file" ]]; then
+    mtime=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file" 2>/dev/null || echo 0)
+  fi
+
+  # If cache file missing or empty, fetch synchronously once
+  if [[ ! -s "$cache_file" ]]; then
+    mkdir -p "$cache_dir" 2>/dev/null
+    local raw_models
+    raw_models=$(opencode models 2>/dev/null | grep -E '^[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+')
+    if [[ -n "$raw_models" ]]; then
+      printf '%s\n' "$raw_models" > "$cache_file" 2>/dev/null
+    fi
+  elif (( now - mtime > 86400 )); then
+    # If expired (> 24h), refresh in background so tab completion is always instantaneous
+    (
+      local updated
+      updated=$(opencode models 2>/dev/null | grep -E '^[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+')
+      [[ -n "$updated" ]] && printf '%s\n' "$updated" > "$cache_file"
+    ) &!
+  fi
+
+  if [[ -s "$cache_file" ]]; then
+    while IFS= read -r id; do
+      [[ -n "$id" ]] && models+=("${id}:${id}")
+    done < "$cache_file"
+  fi
+
+  if (( ${#models} == 0 )); then
+    models=(
+      'opencode-go/deepseek-v4-flash:DeepSeek V4 Flash'
+      'opencode-go/deepseek-v4-pro:DeepSeek V4 Pro'
+      'opencode-go/glm-5.1:GLM 5.1'
+      'opencode/claude-sonnet-4-6:Claude Sonnet 4.6'
+      'opencode/gemini-3.8-flash:Gemini 3.8 Flash'
+    )
+  fi
+
+  _describe -t models 'available model' models
+}
+
+# Dynamic session completion from opencode SQLite database
+_opencode_sessions() {
+  local -a sessions
+  local db="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
+  if [[ -f "$db" ]] && (( $+commands[sqlite3] )); then
+    local raw_sessions
+    raw_sessions=$(sqlite3 -separator $'\t' "$db" "SELECT id, replace(replace(title, char(10), ' '), ':', ' - ') FROM session WHERE title IS NOT NULL AND length(title) > 0 ORDER BY time_updated DESC LIMIT 30;" 2>/dev/null | sed 's/^[│ ]*//;s/[│ ]*$//')
+    if [[ -n "$raw_sessions" ]]; then
+      while IFS=$'\t' read -r id title; do
+        [[ -n "$id" ]] && sessions+=("${id}:${title:-session}")
+      done <<< "$raw_sessions"
+    fi
+  fi
+
+  if (( ${#sessions} > 0 )); then
+    _describe -t sessions 'session ID' sessions
+  else
+    _message 'session ID'
+  fi
+}
+
+# Configured MCP servers from ~/.config/opencode/config.json
+_opencode_mcp_servers() {
+  local -a servers
+  local cfg="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/config.json"
+  if [[ -f "$cfg" ]] && (( $+commands[jq] )); then
+    local names
+    names=($(jq -r '.mcp | keys[]' "$cfg" 2>/dev/null))
+    for s in "${names[@]}"; do
+      servers+=("${s}:MCP server")
+    done
+  fi
+
+  if (( ${#servers} > 0 )); then
+    _describe -t mcp-servers 'configured MCP server' servers
+  else
+    _message 'MCP server name'
+  fi
+}
+
+# Providers
+_opencode_providers() {
+  local -a providers
+  providers=(
+    'opencode-go:OpenCode Go'
+    'opencode:OpenCode Gateway'
+    'anthropic:Anthropic'
+    'openai:OpenAI'
+    'google:Google Gemini'
+    'groq:Groq'
+    'ollama-cloud:Ollama Cloud'
+    'openrouter:OpenRouter'
+    'github-copilot:GitHub Copilot'
+    'deep-infra:Deep Infra'
+    'together-ai:Together AI'
+    'xai:xAI'
+  )
+  _describe -t providers 'AI provider' providers
+}
+
+# Agents
+_opencode_agents() {
+  local -a agents
+  agents=(
+    'build:Primary build agent'
+    'compaction:Context compaction agent'
+    'explore:Subagent for exploration'
+    'general:General subagent'
+    'plan:Primary planning agent'
+    'summary:Summary agent'
+    'title:Session titling agent'
+    'yolo:Agent with all permissions allowed'
+  )
+  _describe -t agents 'agent' agents
+}
+
+# ----------------------------------------------------------------------
+# Subcommand Handlers
+# ----------------------------------------------------------------------
+
+_opencode_mcp() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->args' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a mcp_cmds
+      mcp_cmds=(
+        'add:Add an MCP server'
+        'list:List MCP servers and their status'
+        'ls:List MCP servers and their status'
+        'auth:Authenticate with an OAuth-enabled MCP server'
+        'logout:Remove OAuth credentials for an MCP server'
+        'debug:Debug OAuth connection for an MCP server'
+      )
+      _describe -t commands 'mcp subcommand' mcp_cmds && ret=0
+      ;;
+    args)
+      case "$words[1]" in
+        add)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '--url=[URL for a remote MCP server]:remote URL:' \
+            '*--env=[Environment variable for a local MCP server (KEY=VALUE)]:env variable:' \
+            '*--header=[HTTP header for a remote MCP server (KEY=VALUE)]:header:' \
+            '1:server name:' && ret=0
+          ;;
+        list|ls)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' && ret=0
+          ;;
+        auth)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:server name or list:((list\:"List OAuth-capable servers" ls\:"List OAuth-capable servers"))' && ret=0
+          ;;
+        logout)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:server name:_opencode_mcp_servers' && ret=0
+          ;;
+        debug)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:server name:_opencode_mcp_servers' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_run() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--command=[Command to run, use message for args]:command:' \
+    '(-c --continue)'{-c,--continue}'[Continue the last session]' \
+    '(-s --session)'{-s+,--session=}'[Session id to continue]:session ID:_opencode_sessions' \
+    '--fork[Fork session before continuing (requires --continue or --session)]' \
+    '--share[Share the session]' \
+    '(-m --model)'{-m+,--model=}'[Model to use (provider/model)]:model:_opencode_models' \
+    '--agent=[Agent to use]:agent:_opencode_agents' \
+    '--format=[Format (default or json)]:format:(default json)' \
+    '*'{-f+,--file=}'[File(s) to attach to message]:file:_files' \
+    '--title=[Title for session]:title:' \
+    '--attach=[Attach to running opencode server]:URL:' \
+    '(-p --password)'{-p+,--password=}'[Basic auth password]:password:' \
+    '(-u --username)'{-u+,--username=}'[Basic auth username]:username:' \
+    '--dir=[Directory to run in]:directory:_files -/' \
+    '--port=[Port for local server]:port:' \
+    '--variant=[Model reasoning effort variant]:variant:(high max minimal low medium)' \
+    '--thinking[Show thinking blocks]' \
+    '(-i --interactive)'{-i,--interactive}'[Run in direct interactive split-footer mode]' \
+    '--auto[Auto-approve permissions not explicitly denied]' \
+    '*:message prompt:'
+}
+
+_opencode_attach() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--dir=[Directory to run in]:directory:_files -/' \
+    '(-c --continue)'{-c,--continue}'[Continue the last session]' \
+    '(-s --session)'{-s+,--session=}'[Session id to continue]:session ID:_opencode_sessions' \
+    '--fork[Fork the session when continuing]' \
+    '(-p --password)'{-p+,--password=}'[Basic auth password]:password:' \
+    '(-u --username)'{-u+,--username=}'[Basic auth username]:username:' \
+    '--mini[Start the minimal interactive interface]' \
+    '--no-replay[Disable mini session history replay on resume and after resize]' \
+    '--replay-limit=[Cap visible mini replay to newest N messages]:number:' \
+    '1:server URL:(http\://localhost\:4096)'
+}
+
+_opencode_debug() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->args' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a debug_cmds
+      debug_cmds=(
+        'config:Show resolved configuration'
+        'lsp:LSP debugging utilities'
+        'rg:Ripgrep debugging utilities'
+        'file:File system debugging utilities'
+        'scrap:List all known projects'
+        'skill:List all available skills'
+        'snapshot:Snapshot debugging utilities'
+        'startup:Print startup timing'
+        'agent:Show agent configuration details'
+        'v2:Debug v2 catalog and built-in plugins'
+        'info:Show debug information'
+        'paths:Show global paths (data, config, cache, state)'
+        'wait:Wait indefinitely (for debugging)'
+      )
+      _describe -t commands 'debug subcommand' debug_cmds && ret=0
+      ;;
+    args)
+      case "$words[1]" in
+        lsp)
+          _arguments \
+            '1:subcommand:(diagnostics symbols document-symbols)' \
+            '2:argument:_files' && ret=0
+          ;;
+        rg)
+          _arguments \
+            '1:subcommand:(files search)' \
+            '2:pattern:' && ret=0
+          ;;
+        file)
+          _arguments \
+            '1:subcommand:(read list search)' \
+            '2:path or query:_files' && ret=0
+          ;;
+        snapshot)
+          _arguments \
+            '1:subcommand:(track patch diff)' \
+            '2:hash:' && ret=0
+          ;;
+        agent)
+          _arguments \
+            '--tool=[Tool id to execute]:tool id:' \
+            '--params=[Tool params as JSON]:params:' \
+            '1:agent name:_opencode_agents' && ret=0
+          ;;
+        *)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_providers_cmd() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->args' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a prov_cmds
+      prov_cmds=(
+        'list:List providers and credentials'
+        'ls:List providers and credentials'
+        'login:Log in to a provider'
+        'logout:Log out from a configured provider'
+      )
+      _describe -t commands 'providers subcommand' prov_cmds && ret=0
+      ;;
+    args)
+      case "$words[1]" in
+        login)
+          _arguments '1:provider URL or ID:_opencode_providers' && ret=0
+          ;;
+        logout)
+          _arguments '1:provider ID:_opencode_providers' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_agent_cmd() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a agent_cmds
+      agent_cmds=(
+        'create:Create a new agent'
+        'list:List all available agents'
+      )
+      _describe -t commands 'agent subcommand' agent_cmds && ret=0
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_session_cmd() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->args' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a session_cmds
+      session_cmds=(
+        'list:List sessions'
+        'delete:Delete a session'
+      )
+      _describe -t commands 'session subcommand' session_cmds && ret=0
+      ;;
+    args)
+      case "$words[1]" in
+        delete)
+          _arguments '1:session ID:_opencode_sessions' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_db() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--format=[Output format]:format:(tsv json)' \
+    '1:query or path:->query_or_path' && ret=0
+
+  case "$state" in
+    query_or_path)
+      local -a db_cmds
+      db_cmds=(
+        'path:Print database file path'
+      )
+      _describe -t commands 'database action' db_cmds
+      _message 'SQL query'
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_models_cmd() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--verbose[Use more verbose model output (costs, metadata)]' \
+    '--refresh[Refresh models cache from models.dev]' \
+    '1:provider:_opencode_providers'
+}
+
+_opencode_stats() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--days=[Show stats for last N days (default: all time)]:days:' \
+    '--tools=[Number of tools to show (default: all)]:number:' \
+    '--models=[Show model statistics (optional top N)]:top N:' \
+    '--project=[Filter by project]:project path:_files -/'
+}
+
+_opencode_github() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '1:subcommand:->subcmd' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a gh_cmds
+      gh_cmds=(
+        'install:Install the GitHub agent'
+        'run:Run the GitHub agent'
+      )
+      _describe -t commands 'github subcommand' gh_cmds && ret=0
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode_plugin_cmd() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '(-g --global)'{-g,--global}'[Install in global config]' \
+    '(-f --force)'{-f,--force}'[Replace existing plugin version]' \
+    '1:npm module name:'
+}
+
+_opencode_server_options() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--port=[Port to listen on]:port:' \
+    '--hostname=[Hostname to listen on]:hostname:' \
+    '--mdns[Enable mDNS service discovery]' \
+    '--mdns-domain=[Custom domain name for mDNS]:domain:' \
+    '*--cors=[Additional domain to allow for CORS]:domain:'
+}
+
+# ----------------------------------------------------------------------
+# Main Dispatcher
+# ----------------------------------------------------------------------
+
+_opencode() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  # Enable prefix-needed false to display flags alongside subcommands on Tab
+  zstyle ":completion:*:*:opencode:*" prefix-needed false
+
+  local -a global_opts
+  global_opts=(
+    '(-h --help)'{-h,--help}'[Show help]'
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--port=[Port to listen on]:port:' \
+    '--hostname=[Hostname to listen on]:hostname:' \
+    '--mdns[Enable mDNS service discovery]' \
+    '--mdns-domain=[Custom domain name for mDNS]:domain:' \
+    '*--cors=[Additional domain to allow for CORS]:domain:' \
+    '(-m --model)'{-m+,--model=}'[Model to use (provider/model)]:model:_opencode_models' \
+    '(-c --continue)'{-c,--continue}'[Continue the last session]' \
+    '(-s --session)'{-s+,--session=}'[Session id to continue]:session ID:_opencode_sessions' \
+    '--fork[Fork session when continuing (use with -c or -s)]' \
+    '--prompt=[Prompt to use]:prompt:' \
+    '--agent=[Agent to use]:agent:_opencode_agents' \
+    '--auto[Auto-approve permissions not explicitly denied]' \
+    '--mini[Start minimal interactive interface]' \
+    '--no-replay[Disable mini session history replay]' \
+    '--replay-limit=[Cap visible mini replay to newest N messages]:number:'
+  )
+
+  _arguments -s -S -C \
+    "$global_opts[@]" \
+    '1:subcommand or project path:->subcmd_or_dir' \
+    '*::subcommand arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd_or_dir)
+      local -a subcommands
+      subcommands=(
+        'run:Run opencode with a message'
+        'attach:Attach to a running opencode server'
+        'models:List all available models'
+        'session:Manage sessions'
+        'mcp:Manage MCP servers'
+        'debug:Debugging and troubleshooting tools'
+        'providers:Manage AI providers and credentials'
+        'auth:Manage AI providers and credentials'
+        'agent:Manage agents'
+        'db:Database tools and sqlite queries'
+        'stats:Show token usage and cost statistics'
+        'export:Export session data as JSON'
+        'import:Import session data from JSON file or URL'
+        'github:Manage GitHub agent'
+        'pr:Fetch and checkout GitHub PR branch, then run opencode'
+        'plugin:Install plugin and update config'
+        'plug:Install plugin and update config'
+        'serve:Start a headless opencode server'
+        'web:Start opencode server and open web interface'
+        'acp:Start ACP (Agent Client Protocol) server'
+        'upgrade:Upgrade opencode version'
+        'uninstall:Uninstall opencode'
+        'completion:Generate shell completion script'
+      )
+      _describe -t subcommands 'opencode subcommand' subcommands
+      _files -/
+      ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        run)
+          _opencode_run && ret=0
+          ;;
+        attach)
+          _opencode_attach && ret=0
+          ;;
+        mcp)
+          _opencode_mcp && ret=0
+          ;;
+        debug)
+          _opencode_debug && ret=0
+          ;;
+        providers|auth)
+          _opencode_providers_cmd && ret=0
+          ;;
+        agent)
+          _opencode_agent_cmd && ret=0
+          ;;
+        session)
+          _opencode_session_cmd && ret=0
+          ;;
+        db)
+          _opencode_db && ret=0
+          ;;
+        models)
+          _opencode_models_cmd && ret=0
+          ;;
+        stats)
+          _opencode_stats && ret=0
+          ;;
+        export)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '--sanitize[Redact sensitive transcript and file data]' \
+            '1:session ID:_opencode_sessions' && ret=0
+          ;;
+        import)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:JSON file or share URL:_files' && ret=0
+          ;;
+        github)
+          _opencode_github && ret=0
+          ;;
+        pr)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:PR number:' && ret=0
+          ;;
+        plugin|plug)
+          _opencode_plugin_cmd && ret=0
+          ;;
+        serve|web|acp)
+          _opencode_server_options && ret=0
+          ;;
+        upgrade)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '(-m --method)'{-m+,--method=}'[Installation method]:method:(curl npm pnpm bun brew choco scoop)' \
+            '1:version target:' && ret=0
+          ;;
+        uninstall)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '(-v --version)'{-v,--version}'[Show version number]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '(-c --keep-config)'{-c,--keep-config}'[Keep configuration files]' \
+            '(-d --keep-data)'{-d,--keep-data}'[Keep session data and snapshots]' \
+            '--dry-run[Show what would be removed without removing]' \
+            '(-f --force)'{-f,--force}'[Skip confirmation prompts]' && ret=0
+          ;;
+        completion)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' && ret=0
+          ;;
+        *)
+          _arguments \
+            '(-h --help)'{-h,--help}'[Show help]' \
+            '*:arguments:_files' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_opencode "$@"

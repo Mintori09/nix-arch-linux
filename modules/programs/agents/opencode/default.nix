@@ -48,11 +48,18 @@ let
     ];
   };
 
+  opencodeCompletion = pkgs.writeTextFile {
+    name = "opencode-zsh-completion";
+    destination = "/share/zsh/site-functions/_opencode";
+    text = builtins.readFile ../../../scripts/completions/_opencode;
+  };
+
   configFile = "opencode/config.json";
 in
 {
   home.packages = [
     (lib.hiPrio opencodeEnv)
+    opencodeCompletion
   ];
   xdg.configFile."${configFile}".text = configJson;
 
