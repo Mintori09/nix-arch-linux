@@ -22,6 +22,7 @@ _agy_models() {
   elif (( now - mtime > 86400 )); then
     # If expired (> 24h), refresh in background so tab completion is always instantaneous
     (
+      setopt localoptions no_notify no_monitor 2>/dev/null
       local updated
       updated=$(agy models 2>/dev/null | tr '\r' '\n' | grep -v 'Fetching' | grep -E '[a-zA-Z0-9]')
       [[ -n "$updated" ]] && printf '%s\n' "$updated" > "$cache_file"
