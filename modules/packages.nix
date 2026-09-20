@@ -92,6 +92,7 @@
     pandoc
     imagemagick
     tabiew
+    qpdf
 
     # Rust & Cargo Ecosystem
     rustc
@@ -160,6 +161,7 @@
     hoppscotch
     kmp-lsp
     super-productivity
+    zed-editor
     fmtron
   ];
 }
