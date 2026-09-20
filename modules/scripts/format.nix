@@ -31,6 +31,9 @@ let
     pkgs.elixir
     pkgs.erlfmt
     pkgs.shfmt
+    pkgs.zip
+    pkgs.unzip
+    pkgs.libxml2
   ]
   ++ optionalPkg "clang-tools"
   ++ optionalPkg "blade-formatter"
@@ -50,6 +53,12 @@ let
     mkdir -p $out/lib/node_modules/yaml
     tar -xzf ${yamlSrc} -C $out/lib/node_modules/yaml --strip-components=1
   '';
+
+  formatCompletion = pkgs.writeTextFile {
+    name = "format-zsh-completion";
+    destination = "/share/zsh/site-functions/_format";
+    text = builtins.readFile ./completions/_format;
+  };
 in
 {
   home.packages =
@@ -62,5 +71,7 @@ in
         export FORMAT_PRETTIER_ENTRYPOINT="${pkgs.prettier}/lib/node_modules/prettier/index.mjs";
       '';
     }
-    ++ formatterPackages;
+    ++ formatterPackages
+    ++ [ formatCompletion ];
 }
+

@@ -1,0 +1,25 @@
+#compdef format
+
+_format() {
+  setopt localoptions extendedglob
+
+  local -a extensions
+  extensions=(
+    astro bash blade.php c cc cjs clj cljs cs css cts cxx
+    dart dockerfile ejs epub erl ex exs fish go gql
+    graphql h handlebars hbs hcl hpp hrl hs htm html
+    hxx java js json json5 jsx kdl kt kts less lua
+    markdown md mdx mjs mts ncx nix opf php prisma
+    proto pug py rb ron rs scss sh slint sql
+    svelte svg tf toml ts tsx txt vue xhtml xml
+    yaml yml zig zsh
+  )
+
+  local glob_pattern="((#i)Dockerfile|*.(#i)(${(j:|:)extensions}))"
+
+  _arguments -s : \
+    '(-h --help)'{-h,--help}'[Show help message and exit]' \
+    "*:file:_files -g '$glob_pattern'"
+}
+
+_format "$@"
