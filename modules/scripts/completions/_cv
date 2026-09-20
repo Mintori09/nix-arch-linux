@@ -1,8 +1,5 @@
 #compdef cv
 
-local -A opt_args
-local state line ret=1
-
 _cv_normalize_ext() {
   local ext="$1"
   case "$ext" in
@@ -169,118 +166,125 @@ _cv_route_flags() {
   reply=("${flags[@]}")
 }
 
-local -a argspec
-_cv_find_input
-if [[ -n "$REPLY" ]]; then
-  argspec=(
-    '--dry-run[simulate conversion without running tools]'
+_cv() {
+  local curcontext="$curcontext" state line ret=1
+  typeset -A opt_args
+
+  local -a argspec
+  _cv_find_input
+  if [[ -n "$REPLY" ]]; then
+    argspec=(
+      '--dry-run[simulate conversion without running tools]'
+    )
+  else
+    argspec=(
+      '--dry-run[simulate conversion without running tools]'
+      '--list[list all supported format conversions]'
+      '(-h --help)'{--help,-h}'[show usage]'
+    )
+  fi
+
+  _cv_detect_route; local route="$REPLY"
+  if [[ -n "$route" ]]; then
+    _cv_route_flags "$route"
+    argspec+=("${reply[@]}")
+  fi
+
+  argspec+=(
+    '1:command or input file:->cmd_or_input'
+    '2:output file:->output_file'
   )
-else
-  argspec=(
-    '--dry-run[simulate conversion without running tools]'
-    '--list[list all supported format conversions]'
-    '(-h --help)'{--help,-h}'[show usage]'
-  )
-fi
 
-_cv_detect_route; local route="$REPLY"
-if [[ -n "$route" ]]; then
-  _cv_route_flags "$route"
-  argspec+=("${reply[@]}")
-fi
+  _arguments "${argspec[@]}" && ret=0
 
-argspec+=(
-  '1:command or input file:->cmd_or_input'
-  '2:output file:->output_file'
-)
-
-_arguments "${argspec[@]}" && ret=0
-
-case "$state" in
-  cmd_or_input)
-    _cv_collect_input_exts
-    if [[ $? -eq 0 && ${#reply} -gt 0 ]]; then
-      local input_glob="(#i)*.(${(j:|:)reply})"
-      _alternative \
-        "files:input file:_files -g \"$input_glob\"" \
-        'directories:input directory:_files -/' \
-        'subcommands:command:compadd init' && ret=0
-    else
-      _alternative \
-        'subcommands:command:compadd init' \
-        'directories:input directory:_files -/' \
-        'files:input file:_files' && ret=0
-    fi
-    ;;
-  output_file)
-    local input_file input_ext input_base current_word ext
-    current_word="${words[CURRENT]}"
-    _cv_find_input; input_file="$REPLY"
-    if [[ -n "$input_file" ]]; then
-      if [[ -d "$input_file" ]]; then
-        input_ext="dir"
-        input_base="${input_file:t}"
+  case "$state" in
+    cmd_or_input)
+      _cv_collect_input_exts
+      if [[ $? -eq 0 && ${#reply} -gt 0 ]]; then
+        local input_glob="(#i)*.(${(j:|:)reply})"
+        _alternative \
+          "files:input file:_files -g \"$input_glob\"" \
+          'directories:input directory:_files -/' \
+          'subcommands:command:compadd init' && ret=0
       else
-        input_ext="${input_file##*.}"
-        if [[ "$input_ext" != "$input_file" ]]; then
-          _cv_normalize_ext "${input_ext:l}"; input_ext="$REPLY"
-          input_base="${input_file:t:r}"
-        else
-          input_ext=""
-        fi
+        _alternative \
+          'subcommands:command:compadd init' \
+          'directories:input directory:_files -/' \
+          'files:input file:_files' && ret=0
       fi
+      ;;
+    output_file)
+      local input_file input_ext input_base current_word ext
+      current_word="${words[CURRENT]}"
+      _cv_find_input; input_file="$REPLY"
+      if [[ -n "$input_file" ]]; then
+        if [[ -d "$input_file" ]]; then
+          input_ext="dir"
+          input_base="${input_file:t}"
+        else
+          input_ext="${input_file##*.}"
+          if [[ "$input_ext" != "$input_file" ]]; then
+            _cv_normalize_ext "${input_ext:l}"; input_ext="$REPLY"
+            input_base="${input_file:t:r}"
+          else
+            input_ext=""
+          fi
+        fi
 
-      _cv_collect_output_exts "$input_ext"
-      if [[ -n "$input_ext" && $? -eq 0 && ${#reply} -gt 0 ]]; then
-        if [[ -z "$current_word" ]]; then
-          local _cvi _pos_cnt=0 _cv_tok
-          for (( _cvi = 2; _cvi < CURRENT; _cvi++ )); do
-            _cv_tok="${words[_cvi]}"
-            [[ -z "$_cv_tok" || "$_cv_tok" == -* ]] && continue
-            [[ "${words[_cvi-1]}" == --(style|page-size|metadata-file|wrap|extract-media|reference-doc) ]] && continue
-            (( _pos_cnt++ ))
-          done
-          if (( _pos_cnt < 2 )); then
-            _wanted base-names expl 'output base name' compadd -- "$input_base" && ret=0
+        _cv_collect_output_exts "$input_ext"
+        if [[ -n "$input_ext" && $? -eq 0 && ${#reply} -gt 0 ]]; then
+          if [[ -z "$current_word" ]]; then
+            local _cvi _pos_cnt=0 _cv_tok
+            for (( _cvi = 2; _cvi < CURRENT; _cvi++ )); do
+              _cv_tok="${words[_cvi]}"
+              [[ -z "$_cv_tok" || "$_cv_tok" == -* ]] && continue
+              [[ "${words[_cvi-1]}" == --(style|page-size|metadata-file|wrap|extract-media|reference-doc) ]] && continue
+              (( _pos_cnt++ ))
+            done
+            if (( _pos_cnt < 2 )); then
+              _wanted base-names expl 'output base name' compadd -- "$input_base" && ret=0
+            fi
+          else
+            local base="${current_word:t}"
+            if [[ "$base" == -* ]]; then
+              :
+            elif [[ "$base" == *.* ]]; then
+              compset -P '*.'
+              _wanted output-extensions expl 'extension' compadd -Q -- "${reply[@]}" && ret=0
+            else
+              _files && ret=0
+            fi
           fi
         else
-          local base="${current_word:t}"
-          if [[ "$base" == -* ]]; then
-            :
-          elif [[ "$base" == *.* ]]; then
-            compset -P '*.'
-            _wanted output-extensions expl 'extension' compadd -Q -- "${reply[@]}" && ret=0
-          else
-            _files && ret=0
-          fi
+          _files && ret=0
         fi
       else
         _files && ret=0
       fi
-    else
-      _files && ret=0
-    fi
-    ;;
-  styles)
-    local config="${HOME}/.config/convert-file/config.json"
-    local -a alias_list
-    if [[ -s "$config" ]]; then
-      alias_list=($(jq -r '.styles | keys[]' "$config" 2>/dev/null))
-    fi
-    _alternative \
-      'config-aliases:style alias:compadd -a alias_list' \
-      'local-styles:local CSS file:_files -g "*.css"' && ret=0
-    ;;
-  reference_docs)
-    local config="${HOME}/.config/convert-file/config.json"
-    local -a alias_list
-    if [[ -s "$config" ]]; then
-      alias_list=($(jq -r '.referenceDocs | keys[]' "$config" 2>/dev/null))
-    fi
-    _alternative \
-      'config-aliases:reference doc alias:compadd -a alias_list' \
-      'local-docx:local DOCX file:_files -g "*.docx"' && ret=0
-    ;;
-esac
+      ;;
+    styles)
+      local config="${HOME}/.config/convert-file/config.json"
+      local -a alias_list
+      if [[ -s "$config" ]] && (( $+commands[jq] )); then
+        alias_list=("${(@f)$(jq -r '.styles // {} | keys[]' "$config" 2>/dev/null)}")
+      fi
+      _alternative \
+        'config-aliases:style alias:compadd -a alias_list' \
+        'local-styles:local CSS file:_files -g "*.css"' && ret=0
+      ;;
+    reference_docs)
+      local config="${HOME}/.config/convert-file/config.json"
+      local -a alias_list
+      if [[ -s "$config" ]] && (( $+commands[jq] )); then
+        alias_list=("${(@f)$(jq -r '.referenceDocs // {} | keys[]' "$config" 2>/dev/null)}")
+      fi
+      _alternative \
+        'config-aliases:reference doc alias:compadd -a alias_list' \
+        'local-docx:local DOCX file:_files -g "*.docx"' && ret=0
+      ;;
+  esac
 
-return ret
+  return ret
+}
+
+_cv "$@"
