@@ -78,8 +78,10 @@
             packages =
               (with python.pkgs; [
                 venvShellHook
-                pip
                 python-docx
+                ebooklib
+                beautifulsoup4
+                pypdf
 
                 # Add whatever else you'd like here.
                 # pkgs.basedpyright

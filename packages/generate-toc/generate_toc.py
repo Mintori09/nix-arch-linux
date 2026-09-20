@@ -1,8 +1,10 @@
 import os
 import re
 import sys
+import warnings
 
-from docx import Document
+# Suppress ebooklib and other third-party parsing warnings
+warnings.filterwarnings("ignore")
 
 
 def slugify(title):
@@ -18,7 +20,7 @@ def process_markdown(file_path):
     toc = []
     in_code_block = False
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
             if line.strip().startswith("```"):
                 in_code_block = not in_code_block
@@ -36,6 +38,8 @@ def process_markdown(file_path):
 
 def process_docx(file_path):
     """Quét và lấy tiêu đề từ file Word (.docx) dựa trên Style Heading"""
+    from docx import Document
+
     toc = []
     doc = Document(file_path)
 
@@ -54,6 +58,113 @@ def process_docx(file_path):
     return toc
 
 
+def process_html(file_path):
+    """Quét và lấy tiêu đề từ file HTML (.html, .htm)"""
+    from bs4 import BeautifulSoup
+
+    toc = []
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        soup = BeautifulSoup(f, "html.parser")
+
+    for heading in soup.find_all(re.compile(r"^h[1-6]$", re.I)):
+        try:
+            level = int(heading.name[1])
+            title = heading.get_text().strip()
+            if title:
+                toc.append((level, title))
+        except (ValueError, IndexError):
+            continue
+
+    return toc
+
+
+def process_epub(file_path):
+    """Quét và lấy tiêu đề từ file EPUB (.epub) qua mục lục sách (TOC) hoặc thẻ heading nội dung"""
+    import ebooklib
+    from ebooklib import epub
+    from bs4 import BeautifulSoup
+
+    book = epub.read_epub(file_path)
+    toc = []
+
+    def extract_from_toc_items(items, level=1):
+        extracted = []
+        for item in items:
+            if isinstance(item, epub.Link):
+                if item.title and item.title.strip():
+                    extracted.append((level, item.title.strip()))
+            elif isinstance(item, (list, tuple)):
+                if len(item) == 2:
+                    section, children = item
+                    if hasattr(section, "title") and section.title and section.title.strip():
+                        extracted.append((level, section.title.strip()))
+                        extracted.extend(extract_from_toc_items(children, level + 1))
+                    else:
+                        extracted.extend(extract_from_toc_items(item, level))
+                else:
+                    for sub in item:
+                        extracted.extend(extract_from_toc_items([sub], level))
+            elif hasattr(item, "title") and item.title and item.title.strip():
+                extracted.append((level, item.title.strip()))
+        return extracted
+
+    # 1. Thử lấy từ TOC metadata của EPUB
+    if hasattr(book, "toc") and book.toc:
+        toc = extract_from_toc_items(book.toc, level=1)
+
+    # 2. Nếu TOC metadata trống, quét các thẻ heading (h1-h6) từ nội dung HTML của từng chương
+    if not toc:
+        for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+            soup = BeautifulSoup(item.get_content(), "html.parser")
+            for heading in soup.find_all(re.compile(r"^h[1-6]$", re.I)):
+                try:
+                    level = int(heading.name[1])
+                    title = heading.get_text().strip()
+                    if title:
+                        toc.append((level, title))
+                except (ValueError, IndexError):
+                    continue
+
+    return toc
+
+
+def process_pdf(file_path):
+    """Quét và lấy tiêu đề / bookmarks từ file PDF (.pdf)"""
+    import pypdf
+
+    reader = pypdf.PdfReader(file_path)
+    toc = []
+
+    def extract_outline(outlines, level=1):
+        extracted = []
+        for item in outlines:
+            if isinstance(item, list):
+                extracted.extend(extract_outline(item, level + 1))
+            else:
+                title = getattr(item, "title", None)
+                if title and str(title).strip():
+                    extracted.append((level, str(title).strip()))
+        return extracted
+
+    try:
+        if reader.outline:
+            toc = extract_outline(reader.outline, level=1)
+    except Exception:
+        pass
+
+    return toc
+
+
+HANDLERS = {
+    ".md": ("Markdown", process_markdown),
+    ".docx": ("Word Docx", process_docx),
+    ".epub": ("EPUB Book", process_epub),
+    ".html": ("HTML", process_html),
+    ".htm": ("HTML", process_html),
+    ".pdf": ("PDF", process_pdf),
+}
+
+
 def generate_toc(file_path):
     if not os.path.exists(file_path):
         print(f"❌ Error: Không tìm thấy file '{file_path}'")
@@ -61,25 +172,28 @@ def generate_toc(file_path):
 
     ext = os.path.splitext(file_path)[1].lower()
 
-    # Nhận diện đuôi file để xử lý
-    if ext == ".md":
-        print(f"📝 Đang xử lý file Markdown: {file_path}")
-        headings = process_markdown(file_path)
-    elif ext == ".docx":
-        print(f"📄 Đang xử lý file Word Docx: {file_path}")
-        headings = process_docx(file_path)
-    else:
-        print("⚠️ Định dạng file không được hỗ trợ! Chỉ nhận file .md hoặc .docx")
+    if ext not in HANDLERS:
+        supported = ", ".join(sorted(HANDLERS.keys()))
+        print(f"⚠️ Định dạng file '{ext}' không được hỗ trợ! Các định dạng hỗ trợ: {supported}")
+        return
+
+    label, handler = HANDLERS[ext]
+    print(f"📄 Đang xử lý file {label}: {file_path}")
+
+    try:
+        headings = handler(file_path)
+    except Exception as e:
+        print(f"❌ Lỗi khi đọc file '{file_path}': {e}")
         return
 
     if not headings:
-        print("📭 Không tìm thấy tiêu đề nào trong file.")
+        print("📭 Không tìm thấy tiêu đề hoặc mục lục nào trong file.")
         return
 
     # Tạo nội dung mục lục dạng Markdown
     toc_lines = []
     for level, title in headings:
-        indent = "  " * (level - 1)
+        indent = "  " * max(0, level - 1)
         slug = slugify(title)
         toc_lines.append(f"{indent}- [{title}](#{slug})")
 
