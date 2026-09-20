@@ -91,3 +91,132 @@ describe("findCoverRef", () => {
     assert.strictEqual(cover, null);
   });
 });
+
+describe("mdToEpub", () => {
+  it("converts directory of markdown files to epub in dry-run with natural sorting and auto metadata/cover", async () => {
+    const mod = await loadModule();
+    const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const path = await import("node:path");
+
+    const tmp = await mkdtemp(path.join(tmpdir(), "cv-test-md-epub-"));
+    try {
+      // Create chapters out of order
+      await writeFile(path.join(tmp, "chapter-10.md"), "# Chapter 10");
+      await writeFile(path.join(tmp, "chapter-1.md"), "# Chapter 1");
+      await writeFile(path.join(tmp, "chapter-2.md"), "# Chapter 2");
+      await writeFile(
+        path.join(tmp, "metadata.json"),
+        JSON.stringify({ title: "Custom Novel Title", author: "Alice" }),
+      );
+      await writeFile(path.join(tmp, "cover.jpg"), "fake jpg");
+
+      const executedCommands: string[][] = [];
+      const origLog = console.log;
+      console.log = (msg?: unknown) => {
+        if (typeof msg === "string" && msg.includes("[dry-run]")) {
+          executedCommands.push(msg.split(" "));
+        }
+      };
+
+      try {
+        const converter = mod.mdToEpub();
+        await converter.convert(tmp, "/tmp/out.epub", {
+          dryRun: true,
+          flags: {},
+          route: "dir:epub",
+          passthroughArgs: [],
+        });
+      } finally {
+        console.log = origLog;
+      }
+
+      assert.strictEqual(executedCommands.length, 1);
+      const cmdStr = executedCommands[0].join(" ");
+      assert.ok(cmdStr.includes("pandoc"));
+      // Verify natural sorting: chapter-1 before chapter-2 before chapter-10
+      const idx1 = cmdStr.indexOf("chapter-1.md");
+      const idx2 = cmdStr.indexOf("chapter-2.md");
+      const idx10 = cmdStr.indexOf("chapter-10.md");
+      assert.ok(idx1 !== -1 && idx2 !== -1 && idx10 !== -1);
+      assert.ok(idx1 < idx2, "chapter-1 must come before chapter-2");
+      assert.ok(idx2 < idx10, "chapter-2 must come before chapter-10");
+
+      // Verify metadata & cover
+      assert.ok(cmdStr.includes(`--metadata-file=${path.join(tmp, "metadata.json")}`));
+      assert.ok(cmdStr.includes(`--epub-cover-image=${path.join(tmp, "cover.jpg")}`));
+      // Title already in metadata.json, so -M title: should NOT be present
+      assert.ok(!cmdStr.includes("-M title:"), "Should not override title if present in metadata");
+      assert.ok(cmdStr.includes("--toc"), "Should include --toc by default");
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("adds fallback title if metadata does not contain title", async () => {
+    const mod = await loadModule();
+    const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const path = await import("node:path");
+
+    const tmp = await mkdtemp(path.join(tmpdir(), "cv-test-no-meta-"));
+    try {
+      await writeFile(path.join(tmp, "ch1.md"), "# Chapter 1");
+
+      const executedCommands: string[][] = [];
+      const origLog = console.log;
+      console.log = (msg?: unknown) => {
+        if (typeof msg === "string" && msg.includes("[dry-run]")) {
+          executedCommands.push(msg.split(" "));
+        }
+      };
+
+      try {
+        const converter = mod.mdToEpub();
+        await converter.convert(tmp, "/tmp/my-story.epub", {
+          dryRun: true,
+          flags: {},
+          route: "dir:epub",
+          passthroughArgs: [],
+        });
+      } finally {
+        console.log = origLog;
+      }
+
+      assert.strictEqual(executedCommands.length, 1);
+      const cmdStr = executedCommands[0].join(" ");
+      assert.ok(cmdStr.includes("-M title:my-story"));
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("handles multiple input files passed via context.inputs", async () => {
+    const mod = await loadModule();
+    const executedCommands: string[][] = [];
+    const origLog = console.log;
+    console.log = (msg?: unknown) => {
+      if (typeof msg === "string" && msg.includes("[dry-run]")) {
+        executedCommands.push(msg.split(" "));
+      }
+    };
+
+    try {
+      const converter = mod.mdToEpub();
+      await converter.convert("a.md", "/tmp/book.epub", {
+        dryRun: true,
+        flags: { toc: false },
+        route: "md:epub",
+        passthroughArgs: [],
+        inputs: ["a.md", "b.md", "c.md"],
+      });
+    } finally {
+      console.log = origLog;
+    }
+
+    assert.strictEqual(executedCommands.length, 1);
+    const cmdStr = executedCommands[0].join(" ");
+    assert.ok(cmdStr.includes("pandoc a.md b.md c.md"));
+    assert.ok(!cmdStr.includes("--toc"), "TOC should be omitted when flags.toc is false");
+  });
+});

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile, rm, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { parseArgs } from "node:util";
@@ -330,20 +330,33 @@ async function convertOne(
   input: string,
   output: string,
   passthroughArgs: string[],
-  options: { dryRun: boolean; flags: ConversionFlags },
+  options: {
+    dryRun: boolean;
+    flags: ConversionFlags;
+    inputs?: string[];
+  },
 ): Promise<void> {
   if (!(await pathExists(input)))
     throw new CliError(
       `${COLORS.RED}Error:${COLORS.NC} Input file '${input}' not found.`,
     );
-  const inExt = extensionOf(input);
+
+  let isDir = false;
+  try {
+    const s = await stat(input);
+    isDir = s.isDirectory();
+  } catch {
+    // ignore
+  }
+
+  const inExt = isDir ? "dir" : extensionOf(input);
   const outExt = extensionOf(output);
   if (!inExt || !outExt)
     throw new CliError(
       `${COLORS.RED}Error:${COLORS.NC} Both input and output need file extensions.`,
     );
   let tempInput: string | undefined;
-  if (!options.dryRun && (inExt === "md" || inExt === "markdown")) {
+  if (!isDir && !options.dryRun && (inExt === "md" || inExt === "markdown")) {
     const content = await readFile(input, "utf-8");
     if (hasMermaidBlocks(content)) {
       const preprocessed = await tryPreprocessMermaid(content, {
@@ -375,6 +388,7 @@ async function convertOne(
     passthroughArgs,
     route,
     flags: options.flags,
+    inputs: options.inputs,
   };
   await assertToolAvailable(routeConfig.tool, options.dryRun);
   await ensureOutputDir(output);
@@ -434,6 +448,35 @@ function splitArgs(rawArgs: string[]): {
 } {
   const cvArgs: string[] = [];
   const passthroughArgs: string[] = [];
+
+  // Check if the command line is targeting an epub output with multiple inputs
+  // Find the last positional (non-flag) argument before any '--'
+  const nonFlagBeforeDashDash: string[] = [];
+  let expectingVal: string | null = null;
+  for (const arg of rawArgs) {
+    if (arg === "--") break;
+    if (expectingVal !== null) {
+      expectingVal = null;
+      continue;
+    }
+    if (isCvOption(arg)) {
+      if (isCvStringOptionWithoutEquals(arg)) {
+        expectingVal = arg;
+      }
+    } else if (!arg.startsWith("-")) {
+      nonFlagBeforeDashDash.push(arg);
+    }
+  }
+
+  const lastPositional =
+    nonFlagBeforeDashDash.length > 0
+      ? nonFlagBeforeDashDash[nonFlagBeforeDashDash.length - 1]
+      : null;
+  const isMultiPositionalEpub =
+    nonFlagBeforeDashDash.length > 2 &&
+    lastPositional !== null &&
+    lastPositional.toLowerCase().endsWith(".epub");
+
   let positionalsCount = 0;
   let expectingValueFor: string | null = null;
 
@@ -457,9 +500,13 @@ function splitArgs(rawArgs: string[]): {
         expectingValueFor = arg;
       }
     } else {
-      if (positionalsCount < 2 && !arg.startsWith("-")) {
-        cvArgs.push(arg);
-        positionalsCount++;
+      if (!arg.startsWith("-")) {
+        if (isMultiPositionalEpub || positionalsCount < 2) {
+          cvArgs.push(arg);
+          positionalsCount++;
+        } else {
+          passthroughArgs.push(arg);
+        }
       } else {
         passthroughArgs.push(arg);
       }
@@ -540,8 +587,8 @@ export async function run(): Promise<void> {
     printSupportedRoutes();
     return;
   }
-  const [input, output] = parsed.positionals;
-  if (input === "init") {
+  const positionals = parsed.positionals;
+  if (positionals.length === 1 && positionals[0] === "init") {
     await cmdInit();
     return;
   }
@@ -567,12 +614,27 @@ export async function run(): Promise<void> {
     if (aliasPath) conversionFlags.referenceDoc = aliasPath;
   }
 
-  if (!input || !output) {
+  if (positionals.length < 2) {
     printUsage();
     throw new CliError("Input and output files are required.");
   }
+
+  let input: string;
+  let output: string;
+  let multiInputs: string[] | undefined;
+
+  if (positionals.length > 2) {
+    output = positionals[positionals.length - 1];
+    multiInputs = positionals.slice(0, -1);
+    input = multiInputs[0];
+  } else {
+    input = positionals[0];
+    output = positionals[1];
+  }
+
   await convertOne(input, output, passthroughArgs, {
     dryRun,
     flags: conversionFlags,
+    inputs: multiInputs,
   });
 }

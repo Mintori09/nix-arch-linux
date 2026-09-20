@@ -1,11 +1,16 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { writeFile, copyFile, rm } from "node:fs/promises";
+import { writeFile, copyFile, rm, stat, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
 import { pathExists } from "../utils.ts";
 import { runCommand } from "../core/command.ts";
 import { pandoc, type ToolConverter, type ConvertContext } from "./index.ts";
+import { CliError } from "../errors.ts";
+import {
+  hasRemoteImages,
+  preprocessRemoteImages,
+} from "./remote-images.ts";
 
 export type EpubMetadata = {
   title?: string;
@@ -160,6 +165,175 @@ export function mdToHtml(): ReturnType<typeof pandoc> {
         to: "html",
         params: extraParams,
       }).convert(input, output, context);
+    },
+  };
+}
+
+export function mdToEpub(): ToolConverter {
+  return {
+    tool: "pandoc" as const,
+    convert: async (input, output, context) => {
+      let mdFiles: string[] = [];
+      let searchDir: string | null = null;
+
+      if (context.inputs && context.inputs.length > 1) {
+        mdFiles = [...context.inputs];
+      } else {
+        try {
+          const st = await stat(input);
+          if (st.isDirectory()) {
+            searchDir = input;
+            const entries = await readdir(input, { withFileTypes: true });
+            const collator = new Intl.Collator(undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+            mdFiles = entries
+              .filter(
+                (e) =>
+                  e.isFile() &&
+                  !e.name.startsWith(".") &&
+                  (e.name.endsWith(".md") || e.name.endsWith(".markdown")),
+              )
+              .map((e) => e.name)
+              .sort(collator.compare)
+              .map((name) => path.join(input, name));
+            if (mdFiles.length === 0) {
+              throw new CliError(`No markdown files found in directory '${input}'.`);
+            }
+          } else {
+            mdFiles = [input];
+          }
+        } catch (err: unknown) {
+          if (err instanceof CliError) throw err;
+          // If stat fails or anything else, fallback to [input]
+          mdFiles = [input];
+        }
+      }
+
+      const dirToScan =
+        searchDir ??
+        (mdFiles.length > 0 ? path.dirname(mdFiles[0]) : path.dirname(input));
+
+      // 1. Detect metadata file
+      let metadataFilePath = context.flags.metadataFile;
+      if (!metadataFilePath && dirToScan) {
+        for (const metaCandidate of [
+          "metadata.json",
+          "metadata.yaml",
+          "metadata.yml",
+        ]) {
+          const candidatePath = path.join(dirToScan, metaCandidate);
+          if (await pathExists(candidatePath)) {
+            metadataFilePath = candidatePath;
+            break;
+          }
+        }
+      }
+
+      // Check if metadata has title and cover-image
+      let hasTitleInMetadata = false;
+      let hasCoverInMetadata = false;
+      if (metadataFilePath && (await pathExists(metadataFilePath))) {
+        try {
+          const content = await readFile(metadataFilePath, "utf-8");
+          if (metadataFilePath.endsWith(".json")) {
+            const parsed = JSON.parse(content);
+            if (parsed.title) hasTitleInMetadata = true;
+            if (parsed["cover-image"] || parsed.cover) hasCoverInMetadata = true;
+          } else {
+            if (/^title\s*:/m.test(content)) hasTitleInMetadata = true;
+            if (/^(cover-image|cover)\s*:/m.test(content))
+              hasCoverInMetadata = true;
+          }
+        } catch {
+          // ignore parsing error, let pandoc handle or report
+        }
+      }
+
+      // 2. Detect cover image if not defined in metadata
+      let coverImagePath: string | null = null;
+      if (!hasCoverInMetadata && dirToScan) {
+        for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+          const candidate = path.join(dirToScan, `cover.${ext}`);
+          if (await pathExists(candidate)) {
+            coverImagePath = candidate;
+            break;
+          }
+        }
+      }
+
+      let tempDir: string | undefined;
+      let effectiveMdFiles = mdFiles;
+
+      if (!context.dryRun) {
+        // Preprocess remote images if any file contains them
+        const filesWithRemote: { file: string; content: string }[] = [];
+        for (const file of mdFiles) {
+          try {
+            const content = await readFile(file, "utf-8");
+            if (hasRemoteImages(content)) {
+              filesWithRemote.push({ file, content });
+            }
+          } catch {
+            // ignore unreadable files
+          }
+        }
+
+        if (filesWithRemote.length > 0) {
+          tempDir = await mkdtemp(path.join(tmpdir(), "cv-epub-img-"));
+          const newFiles: string[] = [];
+          for (const file of mdFiles) {
+            const item = filesWithRemote.find((f) => f.file === file);
+            if (item) {
+              const updatedContent = await preprocessRemoteImages(
+                item.content,
+                tempDir,
+              );
+              const tempMdPath = path.join(tempDir, path.basename(file));
+              await writeFile(tempMdPath, updatedContent);
+              newFiles.push(tempMdPath);
+            } else {
+              newFiles.push(file);
+            }
+          }
+          effectiveMdFiles = newFiles;
+        }
+      }
+
+      try {
+        const args = ["pandoc", ...effectiveMdFiles, "-f", "markdown", "-t", "epub"];
+
+        // Default --toc for epub unless explicitly disabled (--no-toc sets flags.toc = false)
+        if (context.flags.toc !== false) {
+          args.push("--toc");
+        }
+        if (context.flags.numberSections) {
+          args.push("--number-sections");
+        }
+        if (context.flags.wrap) {
+          args.push(`--wrap=${context.flags.wrap}`);
+        }
+        if (metadataFilePath) {
+          args.push(`--metadata-file=${metadataFilePath}`);
+        }
+        if (coverImagePath) {
+          args.push(`--epub-cover-image=${coverImagePath}`);
+        }
+        // If no title in metadata, provide fallback from output filename
+        if (!hasTitleInMetadata) {
+          const outTitle = path.basename(output).replace(/\.[^/.]+$/, "");
+          args.push("-M", `title:${outTitle}`);
+        }
+
+        args.push(...context.passthroughArgs, "-o", output);
+
+        await runCommand(args, { dryRun: context.dryRun });
+      } finally {
+        if (tempDir) {
+          await rm(tempDir, { recursive: true, force: true });
+        }
+      }
     },
   };
 }

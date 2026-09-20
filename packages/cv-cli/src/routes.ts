@@ -19,6 +19,7 @@ import {
   epubToPdf,
   mdToHtml,
   epubToMd,
+  mdToEpub,
 } from "./converters/document.ts";
 
 const H264_AAC = ["-c:v", "libx264", "-c:a", "aac"] as const;
@@ -82,13 +83,8 @@ export const ROUTES: Record<string, ToolConverter> = {
   "docx:html": pandoc({ from: "docx", to: "html" }),
   "txt:md": pandoc(),
   "rst:md": pandoc({ from: "rst", to: "markdown" }),
-  "md:epub": pandoc({
-    from: "markdown",
-    to: "epub",
-    paramsFromContext: (context, _input, output) => {
-      return ["-M", `title:${path.basename(output).replace(/\.[^/.]+$/, "")}`];
-    },
-  }),
+  "md:epub": mdToEpub(),
+  "dir:epub": mdToEpub(),
   "docx:epub": pandoc({
     from: "docx",
     to: "epub",

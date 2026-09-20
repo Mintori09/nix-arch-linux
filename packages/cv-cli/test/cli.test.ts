@@ -347,3 +347,22 @@ describe("epub:md metadata and cover extraction", () => {
     }
   });
 });
+
+describe("dir:epub and multi-file md:epub CLI", () => {
+  it("converts directory to epub with --dry-run", () => {
+    const r = runCli(["--dry-run", fixturesDir, "/tmp/fixtures-test.epub"]);
+    assert.strictEqual(r.status, 0, `status=${r.status} stderr=${r.stderr}`);
+    assert.ok(r.stdout.includes("pandoc"));
+    assert.ok(r.stdout.includes("/tmp/fixtures-test.epub"));
+    assert.ok(r.stdout.includes("--toc"));
+  });
+
+  it("converts multiple markdown files to epub with --dry-run", () => {
+    const md1 = path.join(fixturesDir, "input.md");
+    const r = runCli(["--dry-run", md1, md1, "/tmp/multi-test.epub"]);
+    assert.strictEqual(r.status, 0, `status=${r.status} stderr=${r.stderr}`);
+    assert.ok(r.stdout.includes("pandoc"));
+    assert.ok(r.stdout.includes("/tmp/multi-test.epub"));
+  });
+});
+

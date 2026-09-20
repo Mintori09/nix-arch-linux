@@ -32,6 +32,7 @@ export type ConvertContext = {
   passthroughArgs: string[];
   route: string;
   flags: ConversionFlags;
+  inputs?: string[];
 };
 
 export type Converter = (
