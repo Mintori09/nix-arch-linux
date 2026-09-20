@@ -1,5 +1,5 @@
 import { BaseParser } from "./base.js";
-import type { MCQItem, ParsedResult, ParsedCard } from "../types/index.js";
+import type { MCQItem, ParsedResult, ParsedCard, ParserOptions } from "../types/index.js";
 import { convertMarkdownToHtml } from "../utils/helpers.js";
 
 const FIELD_NAMES = ["Question", "OptionsB64", "CorrectAnswersB64", "Explanation"] as const;
@@ -13,7 +13,7 @@ export class MCQParser extends BaseParser {
     return "mcq";
   }
 
-  async parse(rawJson: string): Promise<ParsedResult> {
+  async parse(rawJson: string, _options?: ParserOptions): Promise<ParsedResult> {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");

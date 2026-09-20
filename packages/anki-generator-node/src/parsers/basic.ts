@@ -1,5 +1,5 @@
 import { BaseParser } from "./base.js";
-import type { ParsedResult, ParsedCard, BasicItem } from "../types/index.js";
+import type { ParsedResult, ParsedCard, BasicItem, ParserOptions } from "../types/index.js";
 import { convertMarkdownToHtml } from "../utils/helpers.js";
 
 const FIELD_NAMES = ["Front", "Back"] as const;
@@ -13,7 +13,7 @@ export class BasicParser extends BaseParser {
     return "basic";
   }
 
-  async parse(rawJson: string): Promise<ParsedResult> {
+  async parse(rawJson: string, _options?: ParserOptions): Promise<ParsedResult> {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");

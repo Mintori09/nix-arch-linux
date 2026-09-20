@@ -127,7 +127,12 @@ export interface MediaAsset {
   buffer: Buffer;
 }
 
+export interface ParserOptions {
+  withoutImage?: boolean;
+}
+
 export interface ParsedResult {
   cards: ParsedCard[];
   media: MediaAsset[];
 }
+

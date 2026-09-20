@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { BaseParser } from "./base.js";
-import type { JpGrammarItem, MediaAsset, ParsedResult, ParsedCard } from "../types/index.js";
+import type { JpGrammarItem, MediaAsset, ParsedResult, ParsedCard, ParserOptions } from "../types/index.js";
 import { downloadAudio } from "../core/audio.js";
 import { downloadImage, promptToFilename } from "../core/image.js";
 import { MEDIA_DIR } from "../config/env.js";
@@ -42,7 +42,7 @@ export class JpGrammarParser extends BaseParser {
     return "jp_grammar";
   }
 
-  async parse(rawJson: string): Promise<ParsedResult> {
+  async parse(rawJson: string, options?: ParserOptions): Promise<ParsedResult> {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -99,6 +99,7 @@ export class JpGrammarParser extends BaseParser {
       let imageFilename = "";
       let imageBuffer: Buffer | null = null;
       if (
+        !options?.withoutImage &&
         mediaFields.image_hint &&
         mediaFields.image_hint !== "N/A" &&
         mediaFields.image_hint.trim() !== ""

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { BaseParser } from "./base.js";
-import type { GrammarItem, MediaAsset, ParsedResult, ParsedCard } from "../types/index.js";
+import type { GrammarItem, MediaAsset, ParsedResult, ParsedCard, ParserOptions } from "../types/index.js";
 import { downloadAudio } from "../core/audio.js";
 import { downloadImage, promptToFilename } from "../core/image.js";
 import { MEDIA_DIR } from "../config/env.js";
@@ -31,7 +31,7 @@ export class GrammarParser extends BaseParser {
     return "grammar";
   }
 
-  async parse(rawJson: string): Promise<ParsedResult> {
+  async parse(rawJson: string, options?: ParserOptions): Promise<ParsedResult> {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -60,7 +60,7 @@ export class GrammarParser extends BaseParser {
       let imageHtml = "";
       let imageFilename = "";
       let imageBuffer: Buffer | null = null;
-      if (item.image_prompt && item.image_prompt !== "N/A") {
+      if (!options?.withoutImage && item.image_prompt && item.image_prompt !== "N/A") {
         imageFilename = promptToFilename(item.pattern);
         const hasImage = await downloadImage(item.image_prompt, imageFilename);
         if (hasImage) {

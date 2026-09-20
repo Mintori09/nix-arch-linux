@@ -9,10 +9,11 @@ _anki_tool() {
         '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-deck-name,--deck-name,-d}'[Specify custom deck name or root hierarchy]:deck name:' \
         '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-watch,--watch,-w}'[Watch input files and auto rebuild APKG on change]' \
         '(-export --export -prompt --prompt -autocomplete --autocomplete)'{-preview,--preview,-p}'[Start local web preview server in browser]' \
+        '(-export --export -prompt --prompt -autocomplete --autocomplete)--without-image[Skip image downloading and rendering]' \
         '(-export --export -prompt --prompt -autocomplete --autocomplete)--port[Specify port for preview server]:port number:' \
-        '(-type --type -prompt --prompt -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port)'{-export,--export}'[Specify package deconstruction mode]:anki deck:_files -g "*.apkg"' \
-        '(-type --type -export --export -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port)'{-prompt,--prompt}'[Output specified prompt template or list all]:prompt name:(anki-flashcard-english-vocab mcq-creation)' \
-        '(-type --type -export --export -prompt --prompt --watch -w --preview -p --deck-name -d --port)'{-autocomplete,--autocomplete}'[Output the ZSH completion script to stdout]' \
+        '(-type --type -prompt --prompt -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port --without-image)'{-export,--export}'[Specify package deconstruction mode]:anki deck:_files -g "*.apkg"' \
+        '(-type --type -export --export -autocomplete --autocomplete --watch -w --preview -p --deck-name -d --port --without-image)'{-prompt,--prompt}'[Output specified prompt template or list all]:prompt name:(anki-flashcard-english-vocab mcq-creation)' \
+        '(-type --type -export --export -prompt --prompt --watch -w --preview -p --deck-name -d --port --without-image)'{-autocomplete,--autocomplete}'[Output the ZSH completion script to stdout]' \
         '*:json files:_files -g "*.json"'
 }
 

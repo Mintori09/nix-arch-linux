@@ -303,4 +303,26 @@ describe("CLI Mode: Mutual Exclusivity & Usages", () => {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  test("76: --without-image flag được chấp nhận và biên dịch thành công", () => {
+    const tmpDir = path.join(PROJECT_ROOT, "tests", "tmp_without_image_cli");
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+    const fileA = path.join(tmpDir, "lesson.json");
+    fs.writeFileSync(fileA, JSON.stringify([{ front: "Hello", back: "World" }]), "utf-8");
+
+    try {
+      const { stdout, status } = runCli([
+        "--type",
+        "basic",
+        fileA,
+        "--without-image",
+      ]);
+      assert.strictEqual(status, 0);
+      assert.ok(stdout.includes("Success! Exported lesson.apkg"));
+      assert.ok(fs.existsSync(path.join(tmpDir, "lesson.apkg")));
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });

@@ -131,11 +131,12 @@ describe("Completion file: nội dung pattern hoàn chỉnh", () => {
     );
   });
 
-  test("các cờ mới được khai báo: --deck-name, --watch, --preview, --port", () => {
+  test("các cờ mới được khai báo: --deck-name, --watch, --preview, --port, --without-image", () => {
     assert.ok(src.includes("--deck-name"), "Thiếu --deck-name");
     assert.ok(src.includes("--watch"), "Thiếu --watch");
     assert.ok(src.includes("--preview"), "Thiếu --preview");
     assert.ok(src.includes("--port"), "Thiếu --port");
+    assert.ok(src.includes("--without-image"), "Thiếu --without-image");
   });
 
   test("các giá trị parser type: vocab, grammar, mcq, mcq-shuffle, basic, jp_vocab, jp_grammar", () => {

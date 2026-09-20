@@ -3,7 +3,7 @@ import https from "node:https";
 import http from "node:http";
 import path from "node:path";
 import { BaseParser } from "./base.js";
-import type { MCQListeningItem, ParsedResult, ParsedCard, MediaAsset } from "../types/index.js";
+import type { MCQListeningItem, ParsedResult, ParsedCard, MediaAsset, ParserOptions } from "../types/index.js";
 import { downloadAudio, sanitizeFilename } from "../core/audio.js";
 import { downloadImage, promptToFilename } from "../core/image.js";
 import { MEDIA_DIR } from "../config/env.js";
@@ -48,7 +48,7 @@ export class MCQListeningParser extends BaseParser {
     return "mcq-listening";
   }
 
-  async parse(rawJson: string): Promise<ParsedResult> {
+  async parse(rawJson: string, options?: ParserOptions): Promise<ParsedResult> {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -66,7 +66,7 @@ export class MCQListeningParser extends BaseParser {
       let imageBuffer: Buffer | null = null;
 
       const rawImage = (item.image || item.image_prompt || "").trim();
-      if (rawImage && rawImage !== "N/A") {
+      if (!options?.withoutImage && rawImage && rawImage !== "N/A") {
         const isUrl = rawImage.startsWith("http://") || rawImage.startsWith("https://");
         const isLocalFile =
           !isUrl &&

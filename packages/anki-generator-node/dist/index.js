@@ -7,7 +7,8 @@ import fs4 from "node:fs";
 import path4 from "node:path";
 
 // src/parsers/base.ts
-var BaseParser = class {};
+var BaseParser = class {
+};
 
 // src/core/audio.ts
 import fs2 from "node:fs";
@@ -24,7 +25,8 @@ function getDirname() {
     if (typeof import.meta !== "undefined" && import.meta.url) {
       return path.dirname(fileURLToPath(import.meta.url));
     }
-  } catch {}
+  } catch {
+  }
   return process.cwd();
 }
 function findProjectRoot(fromDir) {
@@ -44,7 +46,8 @@ var IMAGE_DIR = path.join(ROOT, "media");
 if (!fs.existsSync(MEDIA_DIR)) {
   try {
     fs.mkdirSync(MEDIA_DIR, { recursive: true });
-  } catch {}
+  } catch {
+  }
 }
 
 // src/core/audio.ts
@@ -60,27 +63,25 @@ function downloadAudio(word, filename, lang = "en") {
       return;
     }
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(word)}`;
-    https
-      .get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
-        if (res.statusCode !== 200) {
-          resolve(false);
-          return;
-        }
-        const fileStream = fs2.createWriteStream(filePath);
-        fileStream.on("error", (err) => {
-          console.error(`Error writing audio file for "${word}":`, err.message);
-          resolve(false);
-        });
-        res.pipe(fileStream);
-        fileStream.on("finish", () => {
-          fileStream.close();
-          resolve(true);
-        });
-      })
-      .on("error", (err) => {
-        console.error(`Error downloading audio for "${word}":`, err.message);
+    https.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+      if (res.statusCode !== 200) {
+        resolve(false);
+        return;
+      }
+      const fileStream = fs2.createWriteStream(filePath);
+      fileStream.on("error", (err) => {
+        console.error(`Error writing audio file for "${word}":`, err.message);
         resolve(false);
       });
+      res.pipe(fileStream);
+      fileStream.on("finish", () => {
+        fileStream.close();
+        resolve(true);
+      });
+    }).on("error", (err) => {
+      console.error(`Error downloading audio for "${word}":`, err.message);
+      resolve(false);
+    });
   });
 }
 
@@ -92,8 +93,10 @@ var nextSlot = Promise.resolve();
 async function takeTurn(fn) {
   const myTurn = nextSlot.then(fn, fn);
   nextSlot = myTurn.then(
-    () => {},
-    () => {},
+    () => {
+    },
+    () => {
+    }
   );
   return myTurn;
 }
@@ -111,7 +114,7 @@ async function downloadImage(prompt, filename) {
         try {
           return await fetch(url, {
             headers: { "User-Agent": "Mozilla/5.0" },
-            signal: controller.signal,
+            signal: controller.signal
           });
         } finally {
           clearTimeout(timeout);
@@ -122,37 +125,33 @@ async function downloadImage(prompt, filename) {
         await fs3.promises.writeFile(filePath, Buffer.from(arrayBuffer));
         return true;
       }
-      const isRetryable =
-        response.status === 429 || (response.status >= 500 && response.status < 600);
+      const isRetryable = response.status === 429 || response.status >= 500 && response.status < 600;
       if (isRetryable && attempt < MAX_RETRIES) {
         const retryAfter = response.headers.get("Retry-After");
         const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1e3 : Math.pow(3, attempt) * 1e3;
-        const reason =
-          response.status === 429 ? "Rate limited" : `Server error (${response.status})`;
+        const reason = response.status === 429 ? "Rate limited" : `Server error (${response.status})`;
         console.warn(
-          `${reason} for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          `${reason} for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
       }
       console.error(
-        response.status === 429
-          ? `Image API returned 429 for "${prompt}" after ${MAX_RETRIES} retries`
-          : `Image API returned ${response.status} for "${prompt}"`,
+        response.status === 429 ? `Image API returned 429 for "${prompt}" after ${MAX_RETRIES} retries` : `Image API returned ${response.status} for "${prompt}"`
       );
       return false;
     } catch (error) {
       if (attempt < MAX_RETRIES) {
         const delayMs = Math.pow(3, attempt) * 1e3;
         console.warn(
-          `Error for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          `Error for "${prompt}". Retrying in ${delayMs / 1e3}s... (attempt ${attempt + 1}/${MAX_RETRIES})`
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
       }
       console.error(
         `Error downloading image for "${prompt}":`,
-        error instanceof Error ? error.message : error,
+        error instanceof Error ? error.message : error
       );
       return false;
     }
@@ -161,11 +160,7 @@ async function downloadImage(prompt, filename) {
 }
 function promptToFilename(prompt) {
   if (!prompt || prompt === "N/A") return "";
-  const slug = prompt
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "")
-    .slice(0, 80);
+  const slug = prompt.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 80);
   return `${slug}.jpg`;
 }
 
@@ -182,7 +177,7 @@ var FIELD_NAMES = [
   "Example_JP",
   "Collocations",
   "Audio",
-  "Image",
+  "Image"
 ];
 var VocabParser = class extends BaseParser {
   getFieldNames() {
@@ -191,7 +186,7 @@ var VocabParser = class extends BaseParser {
   getTemplateName() {
     return "vocab";
   }
-  async parse(rawJson) {
+  async parse(rawJson, options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -201,11 +196,7 @@ var VocabParser = class extends BaseParser {
     const media = [];
     console.log(`VocabParser: Processing ${vocabList.length} items...`);
     const tasks = vocabList.map((item) => async () => {
-      const cleanWord = item.word
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "_")
-        .replace(/[/\\?%*:|"<>]/g, "_");
+      const cleanWord = item.word.trim().toLowerCase().replace(/\s+/g, "_").replace(/[/\\?%*:|"<>]/g, "_");
       const audioFilename = `${cleanWord}.mp3`;
       console.log(`- Processing: ${item.word}`);
       const hasAudio = await downloadAudio(item.word, audioFilename);
@@ -216,7 +207,7 @@ var VocabParser = class extends BaseParser {
       let imageHtml = "";
       let imageFilename = "";
       let imageBuffer = null;
-      if (item.image_prompt && item.image_prompt !== "N/A") {
+      if (!options?.withoutImage && item.image_prompt && item.image_prompt !== "N/A") {
         imageFilename = promptToFilename(item.word);
         const hasImage = await downloadImage(item.image_prompt, imageFilename);
         if (hasImage) {
@@ -239,13 +230,13 @@ var VocabParser = class extends BaseParser {
             Example_JP: convertMarkdownToHtml(item.example_jp),
             Collocations: convertMarkdownToHtml(item.collocations),
             Audio: hasAudio ? `[sound:${audioFilename}]` : "",
-            Image: imageHtml,
-          },
+            Image: imageHtml
+          }
         },
         media: [
-          ...(audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : []),
-          ...(imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []),
-        ],
+          ...audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : [],
+          ...imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []
+        ]
       };
     });
     const results = await limitConcurrency(tasks, 5);
@@ -272,7 +263,7 @@ var FIELD_NAMES2 = [
   "Example_JP",
   "Collocations",
   "Audio",
-  "Image",
+  "Image"
 ];
 var GrammarParser = class extends BaseParser {
   getFieldNames() {
@@ -281,7 +272,7 @@ var GrammarParser = class extends BaseParser {
   getTemplateName() {
     return "grammar";
   }
-  async parse(rawJson) {
+  async parse(rawJson, options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -291,11 +282,7 @@ var GrammarParser = class extends BaseParser {
     const media = [];
     console.log(`GrammarParser: Processing ${grammarList.length} items...`);
     const tasks = grammarList.map((item) => async () => {
-      const cleanPattern = item.pattern
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "_")
-        .replace(/[/\\?%*:|"<>]/g, "_");
+      const cleanPattern = item.pattern.trim().toLowerCase().replace(/\s+/g, "_").replace(/[/\\?%*:|"<>]/g, "_");
       const audioFilename = `${cleanPattern}.mp3`;
       console.log(`- Processing grammar: ${item.pattern}`);
       const hasAudio = await downloadAudio(item.pattern, audioFilename);
@@ -306,7 +293,7 @@ var GrammarParser = class extends BaseParser {
       let imageHtml = "";
       let imageFilename = "";
       let imageBuffer = null;
-      if (item.image_prompt && item.image_prompt !== "N/A") {
+      if (!options?.withoutImage && item.image_prompt && item.image_prompt !== "N/A") {
         imageFilename = promptToFilename(item.pattern);
         const hasImage = await downloadImage(item.image_prompt, imageFilename);
         if (hasImage) {
@@ -329,13 +316,13 @@ var GrammarParser = class extends BaseParser {
             Example_JP: convertMarkdownToHtml(item.example_jp),
             Collocations: convertMarkdownToHtml(item.usage_notes),
             Audio: hasAudio ? `[sound:${audioFilename}]` : "",
-            Image: imageHtml,
-          },
+            Image: imageHtml
+          }
         },
         media: [
-          ...(audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : []),
-          ...(imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []),
-        ],
+          ...audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : [],
+          ...imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []
+        ]
       };
     });
     const results = await limitConcurrency(tasks, 5);
@@ -356,7 +343,7 @@ var MCQParser = class extends BaseParser {
   getTemplateName() {
     return "mcq";
   }
-  async parse(rawJson) {
+  async parse(rawJson, _options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -368,7 +355,7 @@ var MCQParser = class extends BaseParser {
       const optionsArray = Object.entries(item.options).map(([key, value]) => ({
         key: key.trim().toLowerCase(),
         label: key.trim().toUpperCase(),
-        text: value.trim(),
+        text: value.trim()
       }));
       const optionsB64 = Buffer.from(JSON.stringify(optionsArray)).toString("base64");
       const answersArray = item.answer.split(",").map((ans) => ans.trim().toLowerCase());
@@ -379,8 +366,8 @@ var MCQParser = class extends BaseParser {
           Question: convertMarkdownToHtml(item.question),
           OptionsB64: optionsB64,
           CorrectAnswersB64: correctAnswersB64,
-          Explanation: convertMarkdownToHtml(item.explanation),
-        },
+          Explanation: convertMarkdownToHtml(item.explanation)
+        }
       });
     }
     return { cards, media: [] };
@@ -392,25 +379,30 @@ import fs6 from "node:fs";
 import https2 from "node:https";
 import http from "node:http";
 import path6 from "node:path";
-var FIELD_NAMES4 = ["Image", "Audio", "Question", "OptionsB64", "CorrectAnswersB64", "Explanation"];
+var FIELD_NAMES4 = [
+  "Image",
+  "Audio",
+  "Question",
+  "OptionsB64",
+  "CorrectAnswersB64",
+  "Explanation"
+];
 async function downloadFileFromUrl(url, destPath) {
   return new Promise((resolve) => {
     const client = url.startsWith("https") ? https2 : http;
-    client
-      .get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
-        if (res.statusCode !== 200) {
-          resolve(false);
-          return;
-        }
-        const fileStream = fs6.createWriteStream(destPath);
-        fileStream.on("error", () => resolve(false));
-        res.pipe(fileStream);
-        fileStream.on("finish", () => {
-          fileStream.close();
-          resolve(true);
-        });
-      })
-      .on("error", () => resolve(false));
+    client.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+      if (res.statusCode !== 200) {
+        resolve(false);
+        return;
+      }
+      const fileStream = fs6.createWriteStream(destPath);
+      fileStream.on("error", () => resolve(false));
+      res.pipe(fileStream);
+      fileStream.on("finish", () => {
+        fileStream.close();
+        resolve(true);
+      });
+    }).on("error", () => resolve(false));
   });
 }
 var MCQListeningParser = class extends BaseParser {
@@ -420,7 +412,7 @@ var MCQListeningParser = class extends BaseParser {
   getTemplateName() {
     return "mcq-listening";
   }
-  async parse(rawJson) {
+  async parse(rawJson, options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -434,16 +426,9 @@ var MCQListeningParser = class extends BaseParser {
       let imageFilename = "";
       let imageBuffer = null;
       const rawImage = (item.image || item.image_prompt || "").trim();
-      if (rawImage && rawImage !== "N/A") {
+      if (!options?.withoutImage && rawImage && rawImage !== "N/A") {
         const isUrl = rawImage.startsWith("http://") || rawImage.startsWith("https://");
-        const isLocalFile =
-          !isUrl &&
-          (rawImage.endsWith(".jpg") ||
-            rawImage.endsWith(".jpeg") ||
-            rawImage.endsWith(".png") ||
-            rawImage.endsWith(".webp") ||
-            rawImage.endsWith(".gif") ||
-            rawImage.endsWith(".svg"));
+        const isLocalFile = !isUrl && (rawImage.endsWith(".jpg") || rawImage.endsWith(".jpeg") || rawImage.endsWith(".png") || rawImage.endsWith(".webp") || rawImage.endsWith(".gif") || rawImage.endsWith(".svg"));
         if (isUrl) {
           const ext = path6.extname(new URL(rawImage).pathname) || ".jpg";
           imageFilename = sanitizeFilename(`mcq_img_${index}_${Date.now()}${ext}`);
@@ -456,7 +441,7 @@ var MCQListeningParser = class extends BaseParser {
         } else if (isLocalFile) {
           const candidatePaths = [
             path6.isAbsolute(rawImage) ? rawImage : path6.resolve(process.cwd(), rawImage),
-            path6.join(MEDIA_DIR, path6.basename(rawImage)),
+            path6.join(MEDIA_DIR, path6.basename(rawImage))
           ];
           const foundPath = candidatePaths.find((p) => fs6.existsSync(p));
           if (foundPath) {
@@ -497,7 +482,7 @@ var MCQListeningParser = class extends BaseParser {
         } else {
           const candidatePaths = [
             path6.isAbsolute(rawAudio) ? rawAudio : path6.resolve(process.cwd(), rawAudio),
-            path6.join(MEDIA_DIR, path6.basename(rawAudio)),
+            path6.join(MEDIA_DIR, path6.basename(rawAudio))
           ];
           const foundPath = candidatePaths.find((p) => fs6.existsSync(p));
           if (foundPath) {
@@ -523,19 +508,13 @@ var MCQListeningParser = class extends BaseParser {
       const optionsArray = Object.entries(item.options || {}).map(([key, value]) => ({
         key: key.trim().toLowerCase(),
         label: key.trim().toUpperCase(),
-        text: String(value).trim(),
+        text: String(value).trim()
       }));
       const optionsB64 = Buffer.from(JSON.stringify(optionsArray)).toString("base64");
-      const answersArray = Array.isArray(item.answer)
-        ? item.answer.map((ans) => String(ans).trim().toLowerCase())
-        : String(item.answer || "")
-            .split(",")
-            .map((ans) => ans.trim().toLowerCase())
-            .filter(Boolean);
+      const answersArray = Array.isArray(item.answer) ? item.answer.map((ans) => String(ans).trim().toLowerCase()) : String(item.answer || "").split(",").map((ans) => ans.trim().toLowerCase()).filter(Boolean);
       const correctAnswersB64 = Buffer.from(JSON.stringify(answersArray)).toString("base64");
       const questionText = item.question ? convertMarkdownToHtml(item.question) : "";
-      const frontKey =
-        item.question || (item.options ? Object.values(item.options)[0] : `Q${index + 1}`);
+      const frontKey = item.question || (item.options ? Object.values(item.options)[0] : `Q${index + 1}`);
       return {
         card: {
           frontKeyField: frontKey,
@@ -545,13 +524,13 @@ var MCQListeningParser = class extends BaseParser {
             Question: questionText,
             OptionsB64: optionsB64,
             CorrectAnswersB64: correctAnswersB64,
-            Explanation: item.explanation ? convertMarkdownToHtml(item.explanation) : "",
-          },
+            Explanation: item.explanation ? convertMarkdownToHtml(item.explanation) : ""
+          }
         },
         media: [
-          ...(imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []),
-          ...(audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : []),
-        ],
+          ...imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : [],
+          ...audioBuffer ? [{ filename: audioFilename, buffer: audioBuffer }] : []
+        ]
       };
     });
     const results = await limitConcurrency(tasks, 5);
@@ -572,7 +551,7 @@ var BasicParser = class extends BaseParser {
   getTemplateName() {
     return "basic";
   }
-  async parse(rawJson) {
+  async parse(rawJson, _options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -585,8 +564,8 @@ var BasicParser = class extends BaseParser {
         frontKeyField: item.front,
         fields: {
           Front: convertMarkdownToHtml(item.front),
-          Back: convertMarkdownToHtml(item.back),
-        },
+          Back: convertMarkdownToHtml(item.back)
+        }
       });
     }
     return { cards, media: [] };
@@ -615,7 +594,7 @@ var FIELD_NAMES6 = [
   "Usage_Notes_EN",
   "Related_Grammar",
   "JLPT_Level",
-  "Tags",
+  "Tags"
 ];
 var JpGrammarParser = class extends BaseParser {
   getFieldNames() {
@@ -624,7 +603,7 @@ var JpGrammarParser = class extends BaseParser {
   getTemplateName() {
     return "jp_grammar";
   }
-  async parse(rawJson) {
+  async parse(rawJson, options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -639,11 +618,7 @@ var JpGrammarParser = class extends BaseParser {
       const mediaFields = item.media || {};
       const notes = item.notes || {};
       const meta = item.meta || {};
-      const cleanPattern = g.pattern
-        .trim()
-        .replace(/\s+/g, "_")
-        .replace(/[〜〜~]/g, "")
-        .replace(/[/\\?%*:|"<>]/g, "_");
+      const cleanPattern = g.pattern.trim().replace(/\s+/g, "_").replace(/[〜〜~]/g, "").replace(/[/\\?%*:|"<>]/g, "_");
       const patternAudioFilename = `jp_gram_${cleanPattern}.mp3`;
       const sentenceAudioFilename = `jp_gram_sent_${cleanPattern}.mp3`;
       console.log(`- Processing Japanese Grammar: ${g.pattern}`);
@@ -673,11 +648,7 @@ var JpGrammarParser = class extends BaseParser {
       let imageHtml = "";
       let imageFilename = "";
       let imageBuffer = null;
-      if (
-        mediaFields.image_hint &&
-        mediaFields.image_hint !== "N/A" &&
-        mediaFields.image_hint.trim() !== ""
-      ) {
+      if (!options?.withoutImage && mediaFields.image_hint && mediaFields.image_hint !== "N/A" && mediaFields.image_hint.trim() !== "") {
         if (mediaFields.image_hint.endsWith(".jpg") || mediaFields.image_hint.endsWith(".png")) {
           imageFilename = mediaFields.image_hint;
           imageHtml = `<img src="${imageFilename}" class="card-image">`;
@@ -693,20 +664,8 @@ var JpGrammarParser = class extends BaseParser {
           }
         }
       }
-      const patternAudioTag = mediaFields.pattern_audio
-        ? mediaFields.pattern_audio.startsWith("[sound:")
-          ? mediaFields.pattern_audio
-          : `[sound:${mediaFields.pattern_audio}]`
-        : hasPatternAudio
-          ? `[sound:${patternAudioFilename}]`
-          : "";
-      const sentenceAudioTag = mediaFields.sentence_audio
-        ? mediaFields.sentence_audio.startsWith("[sound:")
-          ? mediaFields.sentence_audio
-          : `[sound:${mediaFields.sentence_audio}]`
-        : hasSentenceAudio
-          ? `[sound:${sentenceAudioFilename}]`
-          : "";
+      const patternAudioTag = mediaFields.pattern_audio ? mediaFields.pattern_audio.startsWith("[sound:") ? mediaFields.pattern_audio : `[sound:${mediaFields.pattern_audio}]` : hasPatternAudio ? `[sound:${patternAudioFilename}]` : "";
+      const sentenceAudioTag = mediaFields.sentence_audio ? mediaFields.sentence_audio.startsWith("[sound:") ? mediaFields.sentence_audio : `[sound:${mediaFields.sentence_audio}]` : hasSentenceAudio ? `[sound:${sentenceAudioFilename}]` : "";
       return {
         card: {
           frontKeyField: g.pattern,
@@ -720,10 +679,10 @@ var JpGrammarParser = class extends BaseParser {
             Explanation: convertMarkdownToHtml(g.explanation || ""),
             Sentence_JP: ex.sentence_jp || "",
             Sentence_Furigana_HTML: convertFuriganaToHtml(
-              ex.sentence_furigana || ex.sentence_jp || "",
+              ex.sentence_furigana || ex.sentence_jp || ""
             ),
             Sentence_Translation: convertMarkdownToHtml(
-              ex.sentence_translation || ex.sentence_translation_vi || "",
+              ex.sentence_translation || ex.sentence_translation_vi || ""
             ),
             Sentence_Translation_EN: convertMarkdownToHtml(ex.sentence_translation_en || ""),
             Pattern_Audio: patternAudioTag,
@@ -733,18 +692,14 @@ var JpGrammarParser = class extends BaseParser {
             Usage_Notes_EN: convertMarkdownToHtml(notes.usage_notes_en || ""),
             Related_Grammar: convertMarkdownToHtml(notes.related_grammar || ""),
             JLPT_Level: meta.jlpt_level || "",
-            Tags: (meta.tags || []).join(" "),
-          },
+            Tags: (meta.tags || []).join(" ")
+          }
         },
         media: [
-          ...(patternAudioBuffer
-            ? [{ filename: patternAudioFilename, buffer: patternAudioBuffer }]
-            : []),
-          ...(sentenceAudioBuffer
-            ? [{ filename: sentenceAudioFilename, buffer: sentenceAudioBuffer }]
-            : []),
-          ...(imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []),
-        ],
+          ...patternAudioBuffer ? [{ filename: patternAudioFilename, buffer: patternAudioBuffer }] : [],
+          ...sentenceAudioBuffer ? [{ filename: sentenceAudioFilename, buffer: sentenceAudioBuffer }] : [],
+          ...imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []
+        ]
       };
     });
     const results = await limitConcurrency(tasks, 5);
@@ -809,7 +764,7 @@ var SCHEMAS = {
     { name: "example_vn", type: "string" },
     { name: "example_jp", type: "string" },
     { name: "collocations", type: "string" },
-    { name: "image_prompt", type: "string" },
+    { name: "image_prompt", type: "string" }
   ],
   grammar: [
     { name: "pattern", type: "string" },
@@ -821,25 +776,25 @@ var SCHEMAS = {
     { name: "example_vn", type: "string" },
     { name: "example_jp", type: "string" },
     { name: "usage_notes", type: "string" },
-    { name: "image_prompt", type: "string", optional: true },
+    { name: "image_prompt", type: "string", optional: true }
   ],
   mcq: [
     { name: "question", type: "string" },
     { name: "options", type: "object" },
     { name: "answer", type: "string" },
-    { name: "explanation", type: "string" },
+    { name: "explanation", type: "string" }
   ],
   "mcq-shuffle": [
     { name: "question", type: "string" },
     { name: "options", type: "object" },
     { name: "answer", type: "string" },
-    { name: "explanation", type: "string" },
+    { name: "explanation", type: "string" }
   ],
   mcq_shuffle: [
     { name: "question", type: "string" },
     { name: "options", type: "object" },
     { name: "answer", type: "string" },
-    { name: "explanation", type: "string" },
+    { name: "explanation", type: "string" }
   ],
   "mcq-listening": [
     { name: "image", type: "string", optional: true },
@@ -849,7 +804,7 @@ var SCHEMAS = {
     { name: "question", type: "string", optional: true },
     { name: "options", type: "object" },
     { name: "answer", type: "string" },
-    { name: "explanation", type: "string", optional: true },
+    { name: "explanation", type: "string", optional: true }
   ],
   mcq_listening: [
     { name: "image", type: "string", optional: true },
@@ -859,14 +814,14 @@ var SCHEMAS = {
     { name: "question", type: "string", optional: true },
     { name: "options", type: "object" },
     { name: "answer", type: "string" },
-    { name: "explanation", type: "string", optional: true },
+    { name: "explanation", type: "string", optional: true }
   ],
   basic: [
     { name: "front", type: "string" },
-    { name: "back", type: "string" },
+    { name: "back", type: "string" }
   ],
   jp_vocab: [{ name: "vocabulary", type: "object" }],
-  jp_grammar: [{ name: "grammar", type: "object" }],
+  jp_grammar: [{ name: "grammar", type: "object" }]
 };
 function validateJsonStructure(data, strategy) {
   const schema = SCHEMAS[strategy];
@@ -884,7 +839,7 @@ function validateJsonStructure(data, strategy) {
       "  single " + (data === null ? "null" : typeof data) + " instead.",
       "",
       "  Correct format:",
-      '    [ { "field1": "...", "field2": "..." } ]',
+      '    [ { "field1": "...", "field2": "..." } ]'
     ].join("\n");
     console.error(msg);
     throw new Error(msg);
@@ -895,7 +850,7 @@ function validateJsonStructure(data, strategy) {
       "=== JSON Structure Error ===",
       "",
       "  The JSON array is empty ([]).",
-      "  There must be at least one item to compile.",
+      "  There must be at least one item to compile."
     ].join("\n");
     console.error(msg);
     throw new Error(msg);
@@ -912,7 +867,7 @@ function validateJsonStructure(data, strategy) {
         "  Card #" + (i + 1) + " (type: " + strategy + ")",
         "  Reason: Item is not an object. Got: " + typeName,
         "",
-        "  Each item in the array must be a JSON object ( { } ).",
+        "  Each item in the array must be a JSON object ( { } )."
       ].join("\n");
       console.error(msg);
       throw new Error(msg);
@@ -924,7 +879,7 @@ function validateJsonStructure(data, strategy) {
         "=== JSON Structure Error ===",
         "",
         "  Card #" + (i + 1) + " (type: " + strategy + ")",
-        "  Reason: Missing required field(s): " + missingFields.map((f) => `"${f}"`).join(", "),
+        "  Reason: Missing required field(s): " + missingFields.map((f) => `"${f}"`).join(", ")
       ];
       const itemKeys = Object.keys(item);
       if (itemKeys.length === 0) {
@@ -948,12 +903,7 @@ function validateJsonStructure(data, strategy) {
     for (const field of schema) {
       if (field.optional && !(field.name in item)) continue;
       const value = item[field.name];
-      const actualType =
-        field.type === "object"
-          ? typeof value === "object" && value !== null && !Array.isArray(value)
-            ? "object"
-            : typeof value
-          : typeof value;
+      const actualType = field.type === "object" ? typeof value === "object" && value !== null && !Array.isArray(value) ? "object" : typeof value : typeof value;
       if (actualType !== field.type) {
         const msg = [
           "",
@@ -961,7 +911,7 @@ function validateJsonStructure(data, strategy) {
           "",
           "  Card #" + (i + 1) + " (type: " + strategy + ")",
           '  Field: "' + field.name + '"',
-          "  Reason: Wrong type. Expected " + field.type + ", got " + actualType + ".",
+          "  Reason: Wrong type. Expected " + field.type + ", got " + actualType + "."
         ].join("\n");
         console.error(msg);
         throw new Error(msg);
@@ -975,10 +925,7 @@ function levenshtein(a, b) {
   for (let j = 0; j <= a.length; j++) m[0][j] = j;
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
-      m[i][j] =
-        b[i - 1] === a[j - 1]
-          ? m[i - 1][j - 1]
-          : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+      m[i][j] = b[i - 1] === a[j - 1] ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
     }
   }
   return m[b.length][a.length];
@@ -1083,10 +1030,7 @@ function loadCss(templateName) {
     const customPath = path8.join(ROOT, "styles", `${templateName}.css`);
     if (fs8.existsSync(customPath)) {
       const customCss = fs8.readFileSync(customPath, "utf-8").trim();
-      const resolvedCustomCss = resolveCssImports(
-        customCss,
-        /* @__PURE__ */ new Set([customPath, basePath]),
-      );
+      const resolvedCustomCss = resolveCssImports(customCss, /* @__PURE__ */ new Set([customPath, basePath]));
       return `${baseCss}
 
 ${resolvedCustomCss}`.trim();
@@ -1102,10 +1046,10 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
     rtl: false,
     ord: i,
     font: "Arial",
-    size: 20,
+    size: 20
   }));
   const models = {
-    1388596687391: {
+    "1388596687391": {
       veArs: [],
       name: "Dynamic-Anki-Card",
       tags: ["Tag"],
@@ -1114,8 +1058,7 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
       req: [[0, "all", [0]]],
       flds,
       sortf: 0,
-      latexPre:
-        "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+      latexPre: "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
       tmpls: [
         {
           name: "Anki Card",
@@ -1124,18 +1067,18 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
           bafmt: "",
           afmt: backHtml,
           ord: 0,
-          bqfmt: "",
-        },
+          bqfmt: ""
+        }
       ],
       latexPost: "\\end{document}",
       type: 0,
       id: 1388596687391,
       css,
-      mod: 1435645658,
-    },
+      mod: 1435645658
+    }
   };
   const decks = {
-    1: {
+    "1": {
       desc: "",
       name: "Default",
       extendRev: 50,
@@ -1149,9 +1092,9 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
       revToday: [0, 0],
       lrnToday: [0, 0],
       id: 1,
-      mod: 1435645724,
+      mod: 1435645724
     },
-    1435588830424: {
+    "1435588830424": {
       desc: "",
       name: "Template",
       extendRev: 50,
@@ -1165,11 +1108,11 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
       revToday: [545, 0],
       lrnToday: [545, 0],
       id: 1435588830424,
-      mod: 1435588830,
-    },
+      mod: 1435588830
+    }
   };
   const dconf = {
-    1: {
+    "1": {
       name: "Default",
       replayq: true,
       lapse: {
@@ -1177,7 +1120,7 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
         minInt: 1,
         delays: [10],
         leechAction: 0,
-        mult: 0,
+        mult: 0
       },
       rev: {
         perDay: 100,
@@ -1186,7 +1129,7 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
         maxIvl: 36500,
         ease4: 1.3,
         bury: true,
-        minSpace: 1,
+        minSpace: 1
       },
       timer: 0,
       maxTaken: 60,
@@ -1198,12 +1141,12 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
         ints: [1, 4, 7],
         initialFactor: 2500,
         bury: true,
-        order: 1,
+        order: 1
       },
       mod: 0,
       id: 1,
-      autoplay: true,
-    },
+      autoplay: true
+    }
   };
   return [
     "PRAGMA foreign_keys=OFF;",
@@ -1223,7 +1166,7 @@ function createAnkiTemplate(frontHtml, backHtml, css, fieldNames) {
     "CREATE INDEX ix_cards_sched on cards (did, queue, due);",
     "CREATE INDEX ix_revlog_cid on revlog (cid);",
     "CREATE INDEX ix_notes_csum on notes (csum);",
-    "COMMIT;",
+    "COMMIT;"
   ].join("\n");
 }
 function escapeJson(json) {
@@ -1233,12 +1176,7 @@ var SEPARATOR = "";
 
 // src/core/generator.ts
 var Exporter = ankiPkg.Exporter || ankiPkg.default?.Exporter || ankiPkg;
-async function generateApkg(
-  items,
-  outputFilenameOrParser = "ankideck.apkg",
-  legacyDeckName,
-  legacyOutputFilename,
-) {
+async function generateApkg(items, outputFilenameOrParser = "ankideck.apkg", legacyDeckName, legacyOutputFilename) {
   let itemList;
   let outputFilename;
   if (items && "cards" in items && typeof outputFilenameOrParser === "object") {
@@ -1246,14 +1184,13 @@ async function generateApkg(
       {
         parsedResult: items,
         parser: outputFilenameOrParser,
-        deckName: legacyDeckName || "Default",
-      },
+        deckName: legacyDeckName || "Default"
+      }
     ];
     outputFilename = legacyOutputFilename || "ankideck.apkg";
   } else {
     itemList = Array.isArray(items) ? items : [items];
-    outputFilename =
-      typeof outputFilenameOrParser === "string" ? outputFilenameOrParser : "ankideck.apkg";
+    outputFilename = typeof outputFilenameOrParser === "string" ? outputFilenameOrParser : "ankideck.apkg";
   }
   let sql;
   try {
@@ -1270,24 +1207,24 @@ async function generateApkg(
   }
   if (!Exporter.prototype._patched) {
     Exporter.prototype._patched = true;
-    Exporter.prototype._update = function (query, obj) {
+    Exporter.prototype._update = function(query, obj) {
       this.db.run(query, obj);
     };
-    Exporter.prototype._getId = function (table, col, ts) {
+    Exporter.prototype._getId = function(table, col, ts) {
       const query = `SELECT ${col} from ${table} WHERE ${col} >= :ts ORDER BY ${col} DESC LIMIT 1`;
       const stmt = this.db.prepare(query);
       const rowObj = stmt.getAsObject({ ":ts": ts });
       stmt.free();
       return rowObj[col] ? +rowObj[col] + 1 : ts;
     };
-    Exporter.prototype._getNoteId = function (guid, ts) {
+    Exporter.prototype._getNoteId = function(guid, ts) {
       const query = "SELECT id from notes WHERE guid = :guid ORDER BY id DESC LIMIT 1";
       const stmt = this.db.prepare(query);
       const rowObj = stmt.getAsObject({ ":guid": guid });
       stmt.free();
       return rowObj.id || this._getId("notes", "id", ts);
     };
-    Exporter.prototype._getCardId = function (note_id, ts) {
+    Exporter.prototype._getCardId = function(note_id, ts) {
       const query = "SELECT id from cards WHERE nid = :note_id ORDER BY id DESC LIMIT 1";
       const stmt = this.db.prepare(query);
       const rowObj = stmt.getAsObject({ ":note_id": note_id });
@@ -1305,9 +1242,7 @@ async function generateApkg(
   const backHtml = loadBackHtml(primaryTemplateName);
   const css = loadCss(primaryTemplateName);
   const template = createAnkiTemplate(frontHtml, backHtml, css, primaryFieldNames);
-  const topLevelDeckName = primaryItem.deckName.includes("::")
-    ? primaryItem.deckName.split("::")[0]
-    : primaryItem.deckName;
+  const topLevelDeckName = primaryItem.deckName.includes("::") ? primaryItem.deckName.split("::")[0] : primaryItem.deckName;
   const apkg = new Exporter(topLevelDeckName, { template, sql });
   const deckIdMap = /* @__PURE__ */ new Map();
   deckIdMap.set(topLevelDeckName, apkg.topDeckId);
@@ -1325,7 +1260,7 @@ async function generateApkg(
     newDeck.id = newDeckId;
     decksStr[newDeckId + ""] = newDeck;
     apkg._update("update col set decks=:decks where id=1", {
-      ":decks": JSON.stringify(decksStr),
+      ":decks": JSON.stringify(decksStr)
     });
     deckIdMap.set(fullDeckName, newDeckId);
     return newDeckId;
@@ -1350,9 +1285,7 @@ async function generateApkg(
   console.log("Packing apkg file...");
   try {
     const zip = await apkg.save();
-    const finalPath = path9.isAbsolute(outputFilename)
-      ? outputFilename
-      : path9.join(ROOT, outputFilename);
+    const finalPath = path9.isAbsolute(outputFilename) ? outputFilename : path9.join(ROOT, outputFilename);
     fs9.writeFileSync(finalPath, zip);
     console.log(`Success! Exported ${path9.basename(finalPath)}`);
   } catch (err) {
@@ -1369,12 +1302,8 @@ import cp from "node:child_process";
 import zlib from "node:zlib";
 import { createRequire as createRequire2 } from "node:module";
 async function unpackApkg(apkgPath, outputDir) {
-  const absoluteApkgPath = path10.isAbsolute(apkgPath)
-    ? path10.normalize(apkgPath)
-    : path10.resolve(process.cwd(), apkgPath);
-  const absoluteOutputDir = path10.isAbsolute(outputDir)
-    ? path10.normalize(outputDir)
-    : path10.resolve(process.cwd(), outputDir);
+  const absoluteApkgPath = path10.isAbsolute(apkgPath) ? path10.normalize(apkgPath) : path10.resolve(process.cwd(), apkgPath);
+  const absoluteOutputDir = path10.isAbsolute(outputDir) ? path10.normalize(outputDir) : path10.resolve(process.cwd(), outputDir);
   if (!fs10.existsSync(absoluteApkgPath)) {
     throw new Error(`APKG file not found: ${absoluteApkgPath}`);
   }
@@ -1448,7 +1377,7 @@ async function unpackApkg(apkgPath, outputDir) {
           id,
           modelName,
           fields,
-          tags,
+          tags
         });
       }
     }
@@ -1479,7 +1408,8 @@ async function unpackApkg(apkgPath, outputDir) {
   } finally {
     try {
       fs10.rmSync(tmpDir, { recursive: true, force: true });
-    } catch (e) {}
+    } catch (e) {
+    }
   }
 }
 
@@ -1511,7 +1441,7 @@ var FIELD_NAMES7 = [
   "Mnemonic",
   "Nuance",
   "JLPT_Level",
-  "Tags",
+  "Tags"
 ];
 var JpVocabParser = class extends BaseParser {
   getFieldNames() {
@@ -1520,7 +1450,7 @@ var JpVocabParser = class extends BaseParser {
   getTemplateName() {
     return "jp_vocab";
   }
-  async parse(rawJson) {
+  async parse(rawJson, options) {
     let cleanRaw = rawJson.trim();
     if (cleanRaw.startsWith("```")) {
       cleanRaw = cleanRaw.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
@@ -1535,10 +1465,7 @@ var JpVocabParser = class extends BaseParser {
       const mediaFields = item.media || {};
       const notes = item.notes || {};
       const meta = item.meta || {};
-      const cleanKanji = vocab.kanji_expression
-        .trim()
-        .replace(/\s+/g, "_")
-        .replace(/[/\\?%*:|"<>]/g, "_");
+      const cleanKanji = vocab.kanji_expression.trim().replace(/\s+/g, "_").replace(/[/\\?%*:|"<>]/g, "_");
       const wordAudioFilename = `jp_word_${cleanKanji}.mp3`;
       const sentenceAudioFilename = `jp_sent_${cleanKanji}.mp3`;
       console.log(`- Processing Japanese Vocab: ${vocab.kanji_expression}`);
@@ -1568,11 +1495,7 @@ var JpVocabParser = class extends BaseParser {
       let imageHtml = "";
       let imageFilename = "";
       let imageBuffer = null;
-      if (
-        mediaFields.image_hint &&
-        mediaFields.image_hint !== "N/A" &&
-        mediaFields.image_hint.trim() !== ""
-      ) {
+      if (!options?.withoutImage && mediaFields.image_hint && mediaFields.image_hint !== "N/A" && mediaFields.image_hint.trim() !== "") {
         if (mediaFields.image_hint.endsWith(".jpg") || mediaFields.image_hint.endsWith(".png")) {
           imageFilename = mediaFields.image_hint;
           imageHtml = `<img src="${imageFilename}" class="card-image">`;
@@ -1588,20 +1511,8 @@ var JpVocabParser = class extends BaseParser {
           }
         }
       }
-      const wordAudioTag = mediaFields.word_audio
-        ? mediaFields.word_audio.startsWith("[sound:")
-          ? mediaFields.word_audio
-          : `[sound:${mediaFields.word_audio}]`
-        : hasWordAudio
-          ? `[sound:${wordAudioFilename}]`
-          : "";
-      const sentenceAudioTag = mediaFields.sentence_audio
-        ? mediaFields.sentence_audio.startsWith("[sound:")
-          ? mediaFields.sentence_audio
-          : `[sound:${mediaFields.sentence_audio}]`
-        : hasSentenceAudio
-          ? `[sound:${sentenceAudioFilename}]`
-          : "";
+      const wordAudioTag = mediaFields.word_audio ? mediaFields.word_audio.startsWith("[sound:") ? mediaFields.word_audio : `[sound:${mediaFields.word_audio}]` : hasWordAudio ? `[sound:${wordAudioFilename}]` : "";
+      const sentenceAudioTag = mediaFields.sentence_audio ? mediaFields.sentence_audio.startsWith("[sound:") ? mediaFields.sentence_audio : `[sound:${mediaFields.sentence_audio}]` : hasSentenceAudio ? `[sound:${sentenceAudioFilename}]` : "";
       return {
         card: {
           frontKeyField: vocab.kanji_expression,
@@ -1615,7 +1526,7 @@ var JpVocabParser = class extends BaseParser {
             Meaning_VI: convertMarkdownToHtml(vocab.meaning_vi),
             Sentence_JP: ctx.sentence_jp || "",
             Sentence_Furigana_HTML: convertFuriganaToHtml(
-              ctx.sentence_furigana || ctx.sentence_jp || "",
+              ctx.sentence_furigana || ctx.sentence_jp || ""
             ),
             Sentence_Translation: convertMarkdownToHtml(ctx.sentence_translation || ""),
             Cloze_Front: convertFuriganaToHtml(ctx.cloze_front || ""),
@@ -1625,16 +1536,14 @@ var JpVocabParser = class extends BaseParser {
             Mnemonic: convertMarkdownToHtml(notes.mnemonic || ""),
             Nuance: convertMarkdownToHtml(notes.nuance || ""),
             JLPT_Level: meta.jlpt_level || "",
-            Tags: (meta.tags || []).join(" "),
-          },
+            Tags: (meta.tags || []).join(" ")
+          }
         },
         media: [
-          ...(wordAudioBuffer ? [{ filename: wordAudioFilename, buffer: wordAudioBuffer }] : []),
-          ...(sentenceAudioBuffer
-            ? [{ filename: sentenceAudioFilename, buffer: sentenceAudioBuffer }]
-            : []),
-          ...(imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []),
-        ],
+          ...wordAudioBuffer ? [{ filename: wordAudioFilename, buffer: wordAudioBuffer }] : [],
+          ...sentenceAudioBuffer ? [{ filename: sentenceAudioFilename, buffer: sentenceAudioBuffer }] : [],
+          ...imageBuffer ? [{ filename: imageFilename, buffer: imageBuffer }] : []
+        ]
       };
     });
     const results = await limitConcurrency(tasks, 5);
@@ -1649,10 +1558,7 @@ var JpVocabParser = class extends BaseParser {
 // src/utils/deck-resolver.ts
 import path12 from "node:path";
 function sanitizeDeckFileName(deckName) {
-  return deckName
-    .replace(/::/g, "__")
-    .replace(/[/\\?%*:|"<>]/g, "_")
-    .trim();
+  return deckName.replace(/::/g, "__").replace(/[/\\?%*:|"<>]/g, "_").trim();
 }
 function resolveDeckAndOutputNames(rawInputPaths, customDeckName) {
   if (rawInputPaths.length === 0) {
@@ -1664,12 +1570,10 @@ function resolveDeckAndOutputNames(rawInputPaths, customDeckName) {
   const firstPathParts = firstNormalized.split(path12.sep).filter(Boolean);
   const hasParentFolder = firstPathParts.length >= 2;
   const parentFolder = hasParentFolder ? firstPathParts[firstPathParts.length - 2] : null;
-  const allShareSameParentFolder =
-    hasParentFolder &&
-    rawInputPaths.every((p) => {
-      const parts = path12.normalize(p).split(path12.sep).filter(Boolean);
-      return parts.length >= 2 && parts[parts.length - 2] === parentFolder;
-    });
+  const allShareSameParentFolder = hasParentFolder && rawInputPaths.every((p) => {
+    const parts = path12.normalize(p).split(path12.sep).filter(Boolean);
+    return parts.length >= 2 && parts[parts.length - 2] === parentFolder;
+  });
   let masterOutputName = firstBaseName;
   if (customDeckName) {
     masterOutputName = sanitizeDeckFileName(customDeckName);
@@ -1699,12 +1603,12 @@ function resolveDeckAndOutputNames(rawInputPaths, customDeckName) {
     }
     return {
       inputPath,
-      deckName,
+      deckName
     };
   });
   return {
     masterOutputName,
-    items,
+    items
   };
 }
 
@@ -1744,7 +1648,7 @@ function watchFiles(filePaths, onChange, debounceMs = 300) {
     stop: () => {
       if (timer) clearTimeout(timer);
       watchers.forEach((w) => w.close());
-    },
+    }
   };
 }
 
@@ -1773,7 +1677,7 @@ function renderCardHtml(frontHtml, backHtml, css, fieldNames, cardFields) {
   renderedBack = renderedBack.replace(/{{[#^/]?\w+}}/g, "");
   return {
     front: renderedFront,
-    back: renderedBack,
+    back: renderedBack
   };
 }
 function buildPreviewAppHtml(items) {
@@ -1789,14 +1693,14 @@ function buildPreviewAppHtml(items) {
         backTemplate,
         css,
         fieldNames,
-        card.fields,
+        card.fields
       );
       return {
         deckName: item.deckName,
         cardIndex: cardIdx + 1,
         css,
         front,
-        back,
+        back
       };
     });
   });
@@ -2076,10 +1980,11 @@ function startPreviewServer(getItems, watchedPaths, initialPort = 3e3) {
             client.write(`data: ${JSON.stringify({ type: "reload" })}
 
 `);
-          } catch (_) {}
+          } catch (_) {
+          }
         }
       },
-      300,
+      300
     );
     const server = http2.createServer(async (req, res) => {
       const url = new URL(req.url || "/", `http://${req.headers.host}`);
@@ -2099,7 +2004,7 @@ function startPreviewServer(getItems, watchedPaths, initialPort = 3e3) {
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          Connection: "keep-alive",
+          Connection: "keep-alive"
         });
         sseClients.push(res);
         req.on("close", () => {
@@ -2119,7 +2024,7 @@ function startPreviewServer(getItems, watchedPaths, initialPort = 3e3) {
             ".mp3": "audio/mpeg",
             ".wav": "audio/wav",
             ".ogg": "audio/ogg",
-            ".svg": "image/svg+xml",
+            ".svg": "image/svg+xml"
           };
           const contentType = mimeTypes[ext] || "application/octet-stream";
           res.writeHead(200, { "Content-Type": contentType });
@@ -2145,7 +2050,7 @@ function startPreviewServer(getItems, watchedPaths, initialPort = 3e3) {
             watcher.stop();
             sseClients.forEach((c) => c.end());
             server.close();
-          },
+          }
         });
       });
       server.on("error", (err) => {
@@ -2170,11 +2075,11 @@ var VALID_STRATEGIES = [
   "mcq_listening",
   "basic",
   "jp_vocab",
-  "jp_grammar",
+  "jp_grammar"
 ];
 var PROMPT_MAPPING = {
   "anki-flashcard-english-vocab": "prompt-anki-flashcard-english-vocab.md",
-  "mcq-creation": "prompt-mcq-creation.md",
+  "mcq-creation": "prompt-mcq-creation.md"
 };
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -2184,9 +2089,9 @@ function parseArgs() {
   const hasAutocomplete = args.includes("--autocomplete");
   const hasWatch = args.includes("--watch") || args.includes("-w");
   const hasPreview = args.includes("--preview") || args.includes("-p");
+  const hasWithoutImage = args.includes("--without-image");
   let deckName;
-  const deckIdx =
-    args.indexOf("--deck-name") !== -1 ? args.indexOf("--deck-name") : args.indexOf("-d");
+  const deckIdx = args.indexOf("--deck-name") !== -1 ? args.indexOf("--deck-name") : args.indexOf("-d");
   if (deckIdx !== -1 && args[deckIdx + 1] && !args[deckIdx + 1].startsWith("-")) {
     deckName = args[deckIdx + 1];
   }
@@ -2203,19 +2108,20 @@ function parseArgs() {
     hasAutocomplete,
     hasWatch,
     hasPreview,
+    hasWithoutImage,
     deckName,
-    port,
+    port
   };
 }
 function printUsageAndExit() {
   console.error("Terminal Usage Error:");
   console.error("  Compilation Mode:");
   console.error(
-    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json...> [--deck-name <name>] [--watch]",
+    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json...> [--deck-name <name>] [--without-image] [--watch]"
   );
   console.error("  Preview Mode:");
   console.error(
-    "    node src/index.js --type <strategy> <path_to_input_json...> [--deck-name <name>] --preview [--port <port>]",
+    "    node src/index.js --type <strategy> <path_to_input_json...> [--deck-name <name>] [--without-image] --preview [--port <port>]"
   );
   console.error("  Deconstruction Mode:");
   console.error("    node src/index.js --export <path_to_target_apkg> <path_to_output_directory>");
@@ -2226,9 +2132,7 @@ function printUsageAndExit() {
   process.exit(1);
 }
 function resolveAbsolutePath(inputPath) {
-  return path14.isAbsolute(inputPath)
-    ? path14.normalize(inputPath)
-    : path14.resolve(process.cwd(), inputPath);
+  return path14.isAbsolute(inputPath) ? path14.normalize(inputPath) : path14.resolve(process.cwd(), inputPath);
 }
 function resolveParser(strategy) {
   const parsers = {
@@ -2240,11 +2144,11 @@ function resolveParser(strategy) {
     mcq_listening: () => new MCQListeningParser(),
     basic: () => new BasicParser(),
     jp_vocab: () => new JpVocabParser(),
-    jp_grammar: () => new JpGrammarParser(),
+    jp_grammar: () => new JpGrammarParser()
   };
   return parsers[strategy]();
 }
-async function prepareDeckItems(strategy, rawInputPaths, customDeckName) {
+async function prepareDeckItems(strategy, rawInputPaths, customDeckName, options) {
   const resolvedInfo = resolveDeckAndOutputNames(rawInputPaths, customDeckName);
   const firstInputPath = resolveAbsolutePath(rawInputPaths[0]);
   const inputDir = path14.dirname(firstInputPath);
@@ -2261,13 +2165,13 @@ async function prepareDeckItems(strategy, rawInputPaths, customDeckName) {
     validateJsonStructure(data, strategy);
     const parser = resolveParser(strategy);
     console.log(
-      `Compiling payload [${path14.basename(absoluteInputPath)}] with strategy: ${strategy}`,
+      `Compiling payload [${path14.basename(absoluteInputPath)}] with strategy: ${strategy}`
     );
-    const parsedResult = await parser.parse(raw);
+    const parsedResult = await parser.parse(raw, { withoutImage: options?.withoutImage });
     items.push({
       parsedResult,
       parser,
-      deckName: resolvedItem.deckName,
+      deckName: resolvedItem.deckName
     });
   }
   return { items, outputPath };
@@ -2287,7 +2191,7 @@ async function runCompile(args, options) {
   }
   if (!strategy || !VALID_STRATEGIES.includes(strategy)) {
     console.error(
-      "Error: Invalid or missing type. Must be one of: vocab, grammar, mcq, mcq-shuffle, basic, jp_vocab, jp_grammar",
+      "Error: Invalid or missing type. Must be one of: vocab, grammar, mcq, mcq-shuffle, basic, jp_vocab, jp_grammar"
     );
     process.exit(1);
   }
@@ -2300,11 +2204,13 @@ async function runCompile(args, options) {
     console.log("Starting Anki Flashcard Live Preview...");
     await startPreviewServer(
       async () => {
-        const { items } = await prepareDeckItems(strategy, rawInputPaths, options.deckName);
+        const { items } = await prepareDeckItems(strategy, rawInputPaths, options.deckName, {
+          withoutImage: options.hasWithoutImage
+        });
         return items;
       },
       absolutePaths,
-      options.port || 3e3,
+      options.port || 3e3
     );
     return;
   }
@@ -2314,6 +2220,7 @@ async function runCompile(args, options) {
         strategy,
         rawInputPaths,
         options.deckName,
+        { withoutImage: options.hasWithoutImage }
       );
       await generateApkg(items, outputPath);
     } catch (err) {
@@ -2325,9 +2232,7 @@ async function runCompile(args, options) {
   };
   await compileOnce();
   if (options.hasWatch) {
-    console.log(
-      "\n\u{1F440} Watch mode enabled. Waiting for file changes (press Ctrl+C to exit)...",
-    );
+    console.log("\n\u{1F440} Watch mode enabled. Waiting for file changes (press Ctrl+C to exit)...");
     watchFiles(
       absolutePaths,
       async (changedFile) => {
@@ -2335,7 +2240,7 @@ async function runCompile(args, options) {
 Detected change in ${path14.basename(changedFile)}. Recompiling...`);
         await compileOnce();
       },
-      300,
+      300
     );
   }
 }
@@ -2380,9 +2285,7 @@ async function runPrompt(args) {
     if (!fs14.existsSync(fullPath)) {
       console.error(`Error: Prompt template '${name}' not found.`);
       console.error("Available options:");
-      const files = fs14.existsSync(assetsDir)
-        ? fs14.readdirSync(assetsDir).filter((f) => f.endsWith(".md"))
-        : [];
+      const files = fs14.existsSync(assetsDir) ? fs14.readdirSync(assetsDir).filter((f) => f.endsWith(".md")) : [];
       for (const file of files) {
         let shortName = file.replace(/\.md$/, "");
         if (shortName.startsWith("prompt-")) {
@@ -2419,18 +2322,19 @@ async function main() {
     hasAutocomplete,
     hasWatch,
     hasPreview,
+    hasWithoutImage,
     deckName,
-    port,
+    port
   } = parseArgs();
   const activeFlagsCount = [hasType, hasExport, hasPrompt, hasAutocomplete].filter(Boolean).length;
   if (activeFlagsCount > 1) {
     console.error(
-      "Error: --type, --export, --prompt, and --autocomplete are mutually exclusive and only one may be active per invocation.",
+      "Error: --type, --export, --prompt, and --autocomplete are mutually exclusive and only one may be active per invocation."
     );
     process.exit(1);
   }
   if (activeFlagsCount === 0) printUsageAndExit();
-  if (hasType) await runCompile(args, { hasWatch, hasPreview, deckName, port });
+  if (hasType) await runCompile(args, { hasWatch, hasPreview, hasWithoutImage, deckName, port });
   if (hasExport) await runExport(args);
   if (hasPrompt) await runPrompt(args);
   if (hasAutocomplete) await runAutocomplete();

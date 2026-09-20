@@ -43,6 +43,7 @@ function parseArgs() {
   const hasAutocomplete = args.includes("--autocomplete");
   const hasWatch = args.includes("--watch") || args.includes("-w");
   const hasPreview = args.includes("--preview") || args.includes("-p");
+  const hasWithoutImage = args.includes("--without-image");
 
   let deckName: string | undefined;
   const deckIdx =
@@ -65,6 +66,7 @@ function parseArgs() {
     hasAutocomplete,
     hasWatch,
     hasPreview,
+    hasWithoutImage,
     deckName,
     port,
   };
@@ -74,11 +76,11 @@ function printUsageAndExit(): never {
   console.error("Terminal Usage Error:");
   console.error("  Compilation Mode:");
   console.error(
-    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json...> [--deck-name <name>] [--watch]",
+    "    node src/index.js --type <vocab | grammar | mcq | mcq-shuffle | mcq-listening | basic | jp_vocab | jp_grammar> <path_to_input_json...> [--deck-name <name>] [--without-image] [--watch]",
   );
   console.error("  Preview Mode:");
   console.error(
-    "    node src/index.js --type <strategy> <path_to_input_json...> [--deck-name <name>] --preview [--port <port>]",
+    "    node src/index.js --type <strategy> <path_to_input_json...> [--deck-name <name>] [--without-image] --preview [--port <port>]",
   );
   console.error("  Deconstruction Mode:");
   console.error("    node src/index.js --export <path_to_target_apkg> <path_to_output_directory>");
@@ -114,6 +116,7 @@ async function prepareDeckItems(
   strategy: Strategy,
   rawInputPaths: string[],
   customDeckName?: string,
+  options?: { withoutImage?: boolean },
 ): Promise<{ items: InputDeckItem[]; outputPath: string }> {
   const resolvedInfo = resolveDeckAndOutputNames(rawInputPaths, customDeckName);
   const firstInputPath = resolveAbsolutePath(rawInputPaths[0]);
@@ -138,7 +141,7 @@ async function prepareDeckItems(
     console.log(
       `Compiling payload [${path.basename(absoluteInputPath)}] with strategy: ${strategy}`,
     );
-    const parsedResult = await parser.parse(raw);
+    const parsedResult = await parser.parse(raw, { withoutImage: options?.withoutImage });
 
     items.push({
       parsedResult,
@@ -152,7 +155,13 @@ async function prepareDeckItems(
 
 async function runCompile(
   args: string[],
-  options: { hasWatch: boolean; hasPreview: boolean; deckName?: string; port?: number },
+  options: {
+    hasWatch: boolean;
+    hasPreview: boolean;
+    hasWithoutImage?: boolean;
+    deckName?: string;
+    port?: number;
+  },
 ) {
   const typeIdx = args.indexOf("--type");
   const strategy = args[typeIdx + 1]?.toLowerCase() as Strategy;
@@ -187,7 +196,9 @@ async function runCompile(
     console.log("Starting Anki Flashcard Live Preview...");
     await startPreviewServer(
       async () => {
-        const { items } = await prepareDeckItems(strategy, rawInputPaths, options.deckName);
+        const { items } = await prepareDeckItems(strategy, rawInputPaths, options.deckName, {
+          withoutImage: options.hasWithoutImage,
+        });
         return items;
       },
       absolutePaths,
@@ -202,6 +213,7 @@ async function runCompile(
         strategy,
         rawInputPaths,
         options.deckName,
+        { withoutImage: options.hasWithoutImage },
       );
       await generateApkg(items, outputPath);
     } catch (err: any) {
@@ -314,6 +326,7 @@ async function main() {
     hasAutocomplete,
     hasWatch,
     hasPreview,
+    hasWithoutImage,
     deckName,
     port,
   } = parseArgs();
@@ -328,7 +341,7 @@ async function main() {
 
   if (activeFlagsCount === 0) printUsageAndExit();
 
-  if (hasType) await runCompile(args, { hasWatch, hasPreview, deckName, port });
+  if (hasType) await runCompile(args, { hasWatch, hasPreview, hasWithoutImage, deckName, port });
   if (hasExport) await runExport(args);
   if (hasPrompt) await runPrompt(args);
   if (hasAutocomplete) await runAutocomplete();

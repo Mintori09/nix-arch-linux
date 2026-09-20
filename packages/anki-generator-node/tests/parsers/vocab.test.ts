@@ -123,4 +123,12 @@ describe("VocabParser", () => {
     const result = await parser.parse(JSON.stringify([item]));
     assert.ok(result.cards[0].fields["Image"]?.startsWith("<img"));
   });
+
+  test("withoutImage = true → bỏ qua download ảnh và Image field rỗng", async () => {
+    const parser = new VocabParser();
+    const item = { ...VOCAB_ITEM, image_prompt: "a beautiful landscape" };
+    const result = await parser.parse(JSON.stringify([item]), { withoutImage: true });
+    assert.strictEqual(result.cards[0].fields["Image"], "");
+    assert.strictEqual(mockDownloadImage.mock.callCount(), 0);
+  });
 });
