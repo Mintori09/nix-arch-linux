@@ -14,6 +14,20 @@ const NAMED_DELIMITERS: Record<string, string> = {
   colon: ":",
 };
 
+const c = {
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  gray: "\x1b[90m",
+};
+
+
 export class Item {
   constructor(
     readonly value: string,
@@ -163,7 +177,7 @@ export function parseArgs(): {
     }
     if (arg === "--split") {
       if (!cliArgs[i + 1]) {
-        console.error("each: --split requires an argument");
+        console.error(`${c.red}each: --split requires an argument${c.reset}`);
         process.exit(1);
       }
       opts.split = cliArgs[i + 1];
@@ -204,7 +218,7 @@ export function parseArgs(): {
       const val = arg.split("=")[1];
       const n = parseInt(val, 10);
       if (isNaN(n) || n < 1) {
-        console.error("each: --batch=N requires a positive integer");
+        console.error(`${c.red}each: --batch=N requires a positive integer${c.reset}`);
         process.exit(1);
       }
       opts.batch = n;
@@ -220,7 +234,7 @@ export function parseArgs(): {
       const val = arg.split("=")[1];
       const n = parseInt(val, 10);
       if (isNaN(n) || n < 1) {
-        console.error("each: --parallel=N requires a positive integer");
+        console.error(`${c.red}each: --parallel=N requires a positive integer${c.reset}`);
         process.exit(1);
       }
       opts.parallel = n;
@@ -236,7 +250,7 @@ export function parseArgs(): {
       process.exit(0);
     }
     if (arg.startsWith("-")) {
-      console.error(`each: unrecognized flag: ${arg}`);
+      console.error(`${c.red}each: unrecognized flag: ${arg}${c.reset}`);
       process.exit(1);
     }
     const cmdArgs = cliArgs.slice(i);
@@ -283,11 +297,11 @@ export function parseStdin(
     try {
       value = JSON.parse(text);
     } catch (exc: any) {
-      console.error(`Invalid JSON stdin: ${exc.message}`);
+      console.error(`${c.red}Invalid JSON stdin: ${exc.message}${c.reset}`);
       process.exit(1);
     }
     if (!Array.isArray(value)) {
-      console.error("JSON stdin must be an array.");
+      console.error(`${c.red}JSON stdin must be an array.${c.reset}`);
       process.exit(1);
     }
     return value.map(stringifyJsonItem);
@@ -367,7 +381,9 @@ function ttyRestore(): void {
 }
 
 function confirm(cmd: string): boolean {
-  process.stderr.write(`\n$ ${cmd}\nAccept? [Y/n] `);
+  process.stderr.write(
+    `\n${c.yellow}$ ${cmd}${c.reset}\n${c.bold}Accept?${c.reset} [${c.green}Y${c.reset}/${c.red}n${c.reset}] `,
+  );
   let fd: number;
   try {
     fd = fs.openSync("/dev/tty", "r+");
@@ -561,6 +577,10 @@ export function renderBatchCommand(
   return cmd;
 }
 
+function formatCmdLog(prefix: string, cmd: string): string {
+  return `${c.dim}[${prefix}]${c.reset} ${c.yellow}$ ${cmd}${c.reset}`;
+}
+
 function runCommands(
   items: Item[],
   opts: ReturnType<typeof parseArgs>,
@@ -571,7 +591,7 @@ function runCommands(
     const cmd = renderCommand(opts.command, item, items.length);
 
     if (opts.print) {
-      console.log(cmd);
+      console.log(`${c.cyan}${cmd}${c.reset}`);
       continue;
     }
 
@@ -581,14 +601,14 @@ function runCommands(
     }
 
     if (!opts.quiet) {
-      console.error(`[${item.number}] $ ${cmd}`);
+      console.error(formatCmdLog(String(item.number), cmd));
     }
 
     const result = spawnSync(cmd, [], { shell: true, stdio: "inherit" });
     if (result.status !== 0) {
       finalCode = result.status ?? 1;
       console.error(
-        `each: command failed for item #${item.number} with exit code ${result.status}`,
+        `${c.red}each: command failed for item #${item.number} with exit code ${result.status}${c.reset}`,
       );
       if (opts.failFast) return result.status ?? 1;
     }
@@ -611,7 +631,7 @@ function runBatchCommands(
     const chunk = items.slice(start, start + batchSize);
     const cmd = renderBatchCommand(opts.command, chunk, items.length);
     if (opts.print) {
-      console.log(cmd);
+      console.log(`${c.cyan}${cmd}${c.reset}`);
       continue;
     }
     if (opts.accept && !confirm(cmd)) {
@@ -619,12 +639,14 @@ function runBatchCommands(
       continue;
     }
     if (!opts.quiet)
-      console.error(`[${start + 1}-${start + chunk.length}] $ ${cmd}`);
+      console.error(
+        formatCmdLog(`${start + 1}-${start + chunk.length}`, cmd),
+      );
     const result = spawnSync(cmd, [], { shell: true, stdio: "inherit" });
     if (result.status !== 0) {
       finalCode = result.status ?? 1;
       console.error(
-        `each: command failed for items #${start + 1}-${start + chunk.length} with exit code ${result.status}`,
+        `${c.red}each: command failed for items #${start + 1}-${start + chunk.length} with exit code ${result.status}${c.reset}`,
       );
       if (opts.failFast) return result.status ?? 1;
     }
@@ -656,11 +678,11 @@ async function runParallelCommands(
     if (aborted) return 0;
     const cmd = renderCommand(opts.command, item, items.length);
     if (opts.print) {
-      console.log(cmd);
+      console.log(`${c.cyan}${cmd}${c.reset}`);
       return 0;
     }
     if (!opts.quiet) {
-      console.error(`[${item.number}] $ ${cmd}`);
+      console.error(formatCmdLog(String(item.number), cmd));
     }
     const child = spawn(cmd, [], { shell: true, stdio: "inherit" });
     children[item.index] = child;
@@ -669,7 +691,7 @@ async function runParallelCommands(
     );
     if (code !== 0) {
       console.error(
-        `each: command failed for item #${item.number} with exit code ${code}`,
+        `${c.red}each: command failed for item #${item.number} with exit code ${code}${c.reset}`,
       );
       if (opts.failFast) {
         aborted = true;
