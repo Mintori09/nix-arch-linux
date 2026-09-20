@@ -59,4 +59,35 @@
       slint-lsp
     ];
   };
+
+  xdg.desktopEntries.nvim = {
+    name = "Neovim";
+    genericName = "Text Editor";
+    comment = "Vim-fork focused on extensibility and usability";
+    icon = "nvim";
+    exec = "kitty -e nvim %F";
+    terminal = false;
+    type = "Application";
+    categories = [
+      "Development"
+      "TextEditor"
+      "Utility"
+    ];
+    mimeType = [
+      "text/plain"
+      "text/markdown"
+      "text/x-makefile"
+      "text/x-c"
+      "text/x-c++"
+      "text/x-csrc"
+      "text/x-chdr"
+      "text/x-python"
+      "text/x-shellscript"
+      "application/json"
+      "application/toml"
+      "application/yaml"
+      "application/xml"
+      "application/x-yaml"
+    ];
+  };
 }

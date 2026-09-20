@@ -63,21 +63,21 @@
       "audio/mp4" = [ "mpv.desktop" ];
       "audio/opus" = [ "mpv.desktop" ];
 
-      # Text Editor (Helix)
-      "text/plain" = [ "Helix.desktop" ];
-      "text/markdown" = [ "Helix.desktop" ];
-      "text/x-makefile" = [ "Helix.desktop" ];
-      "text/x-c" = [ "Helix.desktop" ];
-      "text/x-c++" = [ "Helix.desktop" ];
-      "text/x-csrc" = [ "Helix.desktop" ];
-      "text/x-chdr" = [ "Helix.desktop" ];
-      "text/x-python" = [ "Helix.desktop" ];
-      "text/x-shellscript" = [ "Helix.desktop" ];
-      "application/json" = [ "Helix.desktop" ];
-      "application/toml" = [ "Helix.desktop" ];
-      "application/yaml" = [ "Helix.desktop" ];
-      "application/xml" = [ "Helix.desktop" ];
-      "application/x-yaml" = [ "Helix.desktop" ];
+      # Text Editor (Neovim)
+      "text/plain" = [ "nvim.desktop" ];
+      "text/markdown" = [ "nvim.desktop" ];
+      "text/x-makefile" = [ "nvim.desktop" ];
+      "text/x-c" = [ "nvim.desktop" ];
+      "text/x-c++" = [ "nvim.desktop" ];
+      "text/x-csrc" = [ "nvim.desktop" ];
+      "text/x-chdr" = [ "nvim.desktop" ];
+      "text/x-python" = [ "nvim.desktop" ];
+      "text/x-shellscript" = [ "nvim.desktop" ];
+      "application/json" = [ "nvim.desktop" ];
+      "application/toml" = [ "nvim.desktop" ];
+      "application/yaml" = [ "nvim.desktop" ];
+      "application/xml" = [ "nvim.desktop" ];
+      "application/x-yaml" = [ "nvim.desktop" ];
 
       # Terminal Emulator (Kitty)
       "x-scheme-handler/terminal" = [ "kitty.desktop" ];
