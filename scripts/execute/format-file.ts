@@ -1,14 +1,43 @@
 #!/usr/bin/env tsx
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+  rmSync,
+  readdirSync,
+} from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
-const _require = createRequire(import.meta.url);
-const { parse, stringify } = _require("yaml");
-import { availableParallelism } from "node:os";
-import { extname } from "node:path";
+import { availableParallelism, tmpdir } from "node:os";
+import { extname, join, resolve, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
-import { isMain, readStdin, sleep, args } from "./utils.ts";
+import { isMain, readStdin, sleep, args, which, spawnAsync } from "./utils.ts";
+
+function getYamlParser(): {
+  parse: typeof import("yaml").parse;
+  stringify: typeof import("yaml").stringify;
+} {
+  try {
+    const req = createRequire(import.meta.url);
+    return req("yaml");
+  } catch {
+    const nodePaths = (process.env.NODE_PATH || "").split(":");
+    for (const p of nodePaths) {
+      if (!p) continue;
+      try {
+        const req = createRequire(join(p, "dummy.js"));
+        return req("yaml");
+      } catch {}
+    }
+    throw new Error("Cannot find package 'yaml'");
+  }
+}
+
+const { parse, stringify } = getYamlParser();
+
 
 const EXIT_FAILURE = 1;
 const PRETTIER_WORKER_ARG = "--prettier-worker";
@@ -58,12 +87,12 @@ export const FILE_HANDLERS: Record<string, FileHandler> = {
   ".scss": { parser: "scss" },
   ".less": { parser: "less" },
 
-  // HTML / Templates
+  // HTML / Templates / EPUB markup
   ".html": { parser: "html" },
   ".htm": { parser: "html" },
+  ".xhtml": { parser: "html" },
   ".vue": { parser: "vue" },
   ".svelte": { parser: "html" },
-  ".xml": { parser: "html" },
   ".svg": { parser: "html" },
   ".astro": { parser: "html" },
   ".ejs": { parser: "html" },
@@ -80,6 +109,9 @@ export const FORMATTER_COMMANDS: Record<
   string,
   (filePath: string) => string[]
 > = {
+  ".xml": (fp) => ["xmllint", "--format", "--output", fp, fp],
+  ".opf": (fp) => ["xmllint", "--format", "--output", fp, fp],
+  ".ncx": (fp) => ["xmllint", "--format", "--output", fp, fp],
   ".toml": (fp) => ["taplo", "format", fp],
   ".ron": (fp) => ["fmtron", "--input", fp],
   ".kdl": (fp) => ["kdlfmt", "format", fp],
@@ -334,13 +366,191 @@ export async function formatWithPrettierInSubprocess(
   return readFileSync(tempFilePath, "utf-8");
 }
 
+function getAllFilesRecursively(dir: string): string[] {
+  const results: string[] = [];
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...getAllFilesRecursively(fullPath));
+    } else if (entry.isFile()) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+export async function formatEpubFile(
+  filePath: string,
+): Promise<PrettierWorkerResult> {
+  const absPath = resolve(filePath);
+  if (!which("unzip") || !which("zip")) {
+    throw new Error("Both 'unzip' and 'zip' are required to format EPUB files.");
+  }
+
+  const tempDir = await mkdtemp(join(tmpdir(), "format-epub-"));
+  const repackedEpub = join(
+    tmpdir(),
+    `format-epub-repack-${process.pid}-${Date.now()}.epub`,
+  );
+
+  try {
+    const extractRes = await spawnAsync(
+      "unzip",
+      ["-q", "-o", absPath, "-d", tempDir],
+    );
+    if (extractRes.exitCode !== 0) {
+      throw new Error(
+        `Failed to extract EPUB: ${extractRes.stderr.trim() || "unzip error"}`,
+      );
+    }
+
+    const files = getAllFilesRecursively(tempDir);
+    let anyUpdated = false;
+
+    for (const file of files) {
+      const ext = extname(file).toLowerCase();
+      if (ext === ".epub") continue;
+
+      const handler = FILE_HANDLERS[ext];
+      const externalCmd = FORMATTER_COMMANDS[ext];
+
+      if (handler) {
+        try {
+          const res = await formatFileWithPrettier(file);
+          if (res.status === "updated") {
+            anyUpdated = true;
+          }
+        } catch (err) {
+          const rel = relative(tempDir, file);
+          throw new Error(
+            `Failed formatting ${rel} inside EPUB: ${(err as Error).message}`,
+          );
+        }
+      } else if (externalCmd) {
+        const cmd = externalCmd(file);
+        if (which(cmd[0])) {
+          try {
+            const originalContent = readFileSync(file, "utf-8");
+            const res = await spawnAsync(cmd[0], cmd.slice(1));
+            if (res.exitCode === 0) {
+              const finalContent = readFileSync(file, "utf-8");
+              if (finalContent !== originalContent) {
+                anyUpdated = true;
+              }
+            } else {
+              const rel = relative(tempDir, file);
+              throw new Error(
+                `Failed formatting ${rel} inside EPUB: ${res.stderr.trim() || `exit code ${res.exitCode}`}`,
+              );
+            }
+          } catch (err) {
+            const rel = relative(tempDir, file);
+            throw new Error(
+              `Failed formatting ${rel} inside EPUB: ${(err as Error).message}`,
+            );
+          }
+        }
+      }
+    }
+
+    if (!anyUpdated) {
+      return { status: "unchanged" };
+    }
+
+    const mimePath = join(tempDir, "mimetype");
+    const hasMimetype = existsSync(mimePath);
+    if (hasMimetype) {
+      const mimeContent = readFileSync(mimePath, "utf-8").trim();
+      if (mimeContent === "application/epub+zip") {
+        writeFileSync(mimePath, "application/epub+zip", "utf-8");
+      }
+      const zipMimeRes = await spawnAsync(
+        "zip",
+        ["-0", "-X", "-q", repackedEpub, "mimetype"],
+        { cwd: tempDir },
+      );
+      if (zipMimeRes.exitCode !== 0) {
+        throw new Error(
+          `Failed to archive mimetype: ${zipMimeRes.stderr.trim()}`,
+        );
+      }
+
+      const zipRestRes = await spawnAsync(
+        "zip",
+        ["-r", "-X", "-q", repackedEpub, ".", "-x", "mimetype"],
+        { cwd: tempDir },
+      );
+      if (zipRestRes.exitCode !== 0) {
+        throw new Error(
+          `Failed to archive EPUB contents: ${zipRestRes.stderr.trim()}`,
+        );
+      }
+    } else {
+      const zipAllRes = await spawnAsync(
+        "zip",
+        ["-r", "-X", "-q", repackedEpub, "."],
+        { cwd: tempDir },
+      );
+      if (zipAllRes.exitCode !== 0) {
+        throw new Error(
+          `Failed to archive EPUB contents: ${zipAllRes.stderr.trim()}`,
+        );
+      }
+    }
+
+    copyFileSync(repackedEpub, absPath);
+    return { status: "updated" };
+  } finally {
+    try {
+      await rm(tempDir, { recursive: true, force: true });
+    } catch {}
+    if (existsSync(repackedEpub)) {
+      try {
+        rmSync(repackedEpub, { force: true });
+      } catch {}
+    }
+  }
+}
+
+export function printHelp(): void {
+  process.stdout.write(`Usage: format [options] <file1> <file2> ...
+       cat file-list.txt | format
+       find . -name '*.ts' | format
+
+Format source code, markup, configuration files, and EPUB ebooks.
+
+Options:
+  -h, --help    Show this help message and exit
+
+Supported Formats:
+  Markdown / Text:   .md, .markdown, .mdx, .txt
+  Config / Data:     .json, .json5, .yaml, .yml, .toml, .ron, .kdl
+  Web / JS / TS:     .js, .jsx, .mjs, .cjs, .ts, .tsx, .cts, .mts,
+                     .html, .htm, .xhtml, .vue, .svelte, .css, .scss, .less,
+                     .xml, .svg, .astro, .ejs, .hbs, .handlebars, .pug,
+                     .graphql, .gql
+  E-books:           .epub, .opf, .ncx
+  Languages:         .rs, .py, .go, .zig, .nix, .c, .cpp, .h, .hpp, .cc, .cxx, .hxx,
+                     .php, .blade.php, .rb, .java, .kt, .kts, .cs, .swift, .dart,
+                     .ex, .exs, .erl, .hrl, .hs, .clj, .cljs,
+                     .sh, .bash, .zsh, .fish, .tf, .hcl, .sql, .prisma,
+                     .dockerfile, .proto, .slint
+`);
+}
+
 async function main(): Promise<void> {
   if (isPrettierWorkerMode()) {
     await runPrettierWorkerCli();
     return;
   }
 
-  const argvFiles = args;
+  if (args.includes("-h") || args.includes("--help")) {
+    printHelp();
+    process.exit(0);
+  }
+
+  const argvFiles = args.filter((arg) => !arg.startsWith("-"));
   let stdinFiles: string[] = [];
 
   if (!process.stdin.isTTY) {
@@ -348,15 +558,16 @@ async function main(): Promise<void> {
     stdinFiles = stdinData
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0 && !line.startsWith("-"));
   }
 
   const targetFiles = [...new Set([...argvFiles, ...stdinFiles])];
 
   if (targetFiles.length === 0) {
-    console.error("Usage: tsx format.ts <file1> <file2> ...");
-    console.error("   or: cat file-list.txt | tsx format.ts");
-    console.error("   or: find . -name '*.ts' | tsx format.ts");
+    console.error("Usage: format [options] <file1> <file2> ...");
+    console.error("   or: cat file-list.txt | format");
+    console.error("   or: find . -name '*.ts' | format");
+    console.error("Run 'format --help' for more information.");
     process.exit(EXIT_FAILURE);
   }
 
@@ -435,10 +646,11 @@ async function main(): Promise<void> {
       }
 
       const ext = extname(filePath).toLowerCase();
+      const isEpub = ext === ".epub";
       const handler = FILE_HANDLERS[ext];
       const externalCmd = FORMATTER_COMMANDS[ext];
 
-      if (!handler && !externalCmd) {
+      if (!isEpub && !handler && !externalCmd) {
         const elapsed = formatElapsedDuration(performance.now() - startTime);
         activeFiles.delete(filePath);
         stats.skipped++;
@@ -449,7 +661,35 @@ async function main(): Promise<void> {
         continue;
       }
 
-      if (handler) {
+      if (isEpub) {
+        try {
+          const result = await formatEpubFile(filePath);
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          completedFiles++;
+
+          if (result.status === "updated") {
+            stats.updated++;
+            await logResult(renderResultLine("Updated", elapsed, filePath));
+          } else {
+            stats.unchanged++;
+            await logResult(renderResultLine("Unchanged", elapsed, filePath));
+          }
+        } catch (error) {
+          const elapsed = formatElapsedDuration(performance.now() - startTime);
+          activeFiles.delete(filePath);
+          stats.errors++;
+          completedFiles++;
+          await withLock(async () => {
+            clearSpinnerLine();
+            console.error(error);
+            process.stdout.write(
+              `${renderResultLine("Error", elapsed, filePath)}\n`,
+            );
+            renderSpinner();
+          });
+        }
+      } else if (handler) {
         try {
           const result = await formatFileWithPrettier(filePath);
           const elapsed = formatElapsedDuration(performance.now() - startTime);

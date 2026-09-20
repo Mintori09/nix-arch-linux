@@ -10,7 +10,10 @@ import {
   renderResultLine,
   renderSpinnerFrame,
   resolvePrettierModuleSpecifier,
+  formatEpubFile,
+  printHelp,
 } from "./format-file.ts";
+import { spawnAsync } from "./utils.ts";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -97,3 +100,68 @@ it("formatFileWithPrettier - formats a markdown file in place and reports unchan
     await rm(tempDir, { recursive: true, force: true });
   }
 });
+
+it("printHelp - writes usage and format information including epub to stdout", () => {
+  let output = "";
+  const originalWrite = process.stdout.write;
+  try {
+    process.stdout.write = ((chunk: any) => {
+      output += chunk.toString();
+      return true;
+    }) as any;
+    printHelp();
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+
+  assert.ok(output.includes("Usage: format"));
+  assert.ok(output.includes("--help"));
+  assert.ok(output.includes(".epub"));
+});
+
+it("formatEpubFile - unpacks, formats internal markup and styles, and repacks epub", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "format-epub-test-"));
+  const stagingDir = join(tempDir, "staging");
+  const epubPath = join(tempDir, "sample.epub");
+
+  try {
+    await spawnAsync("mkdir", ["-p", join(stagingDir, "META-INF"), join(stagingDir, "OEBPS")]);
+    await writeFile(join(stagingDir, "mimetype"), "application/epub+zip");
+    await writeFile(
+      join(stagingDir, "META-INF", "container.xml"),
+      '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
+    );
+    await writeFile(
+      join(stagingDir, "OEBPS", "chapter1.xhtml"),
+      '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>   test    spacing   </p></body></html>',
+    );
+    await writeFile(
+      join(stagingDir, "OEBPS", "style.css"),
+      "body {   margin:   0;   color: #000; }",
+    );
+
+    await spawnAsync("zip", ["-0", "-X", "-q", epubPath, "mimetype"], { cwd: stagingDir });
+    await spawnAsync("zip", ["-r", "-X", "-q", epubPath, "META-INF", "OEBPS"], { cwd: stagingDir });
+
+    const firstRun = await formatEpubFile(epubPath);
+    assert.deepEqual(firstRun, { status: "updated" });
+
+    // Verify formatted content inside repacked epub
+    const verifyDir = join(tempDir, "verify");
+    await spawnAsync("mkdir", ["-p", verifyDir]);
+    await spawnAsync("unzip", ["-q", epubPath, "-d", verifyDir]);
+
+    const formattedXhtml = await readFile(join(verifyDir, "OEBPS", "chapter1.xhtml"), "utf8");
+    assert.ok(formattedXhtml.includes("<p>test spacing</p>"));
+
+    const formattedCss = await readFile(join(verifyDir, "OEBPS", "style.css"), "utf8");
+    assert.ok(formattedCss.includes("margin: 0;"));
+
+    // Second run should report unchanged
+    const secondRun = await formatEpubFile(epubPath);
+    assert.deepEqual(secondRun, { status: "unchanged" });
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
