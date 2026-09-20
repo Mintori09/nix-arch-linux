@@ -1,12 +1,19 @@
 { pkgs, ... }:
 
 let
-  pythonEnv = pkgs.python3.withPackages (ps: with ps; [ python-docx ]);
+  pythonEnv = pkgs.python3.withPackages (
+    ps: with ps; [
+      python-docx
+      ebooklib
+      beautifulsoup4
+      pypdf
+    ]
+  );
 
   zshCompletion = ''
     #compdef gentoc
     _arguments \
-      '1:target file:_files -g "*.md *.docx"'
+      '1:target file:_files -g "*.md *.docx *.epub *.html *.htm *.pdf"'
   '';
 in
 pkgs.stdenv.mkDerivation {
@@ -28,7 +35,7 @@ pkgs.stdenv.mkDerivation {
   '';
 
   meta = with pkgs.lib; {
-    description = "Generate table of contents for markdown and docx documents";
+    description = "Generate table of contents for markdown, docx, epub, html, and pdf documents";
     mainProgram = "gentoc";
     platforms = platforms.linux;
   };
