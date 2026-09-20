@@ -65,9 +65,13 @@ _cv_detect_route() {
 
   if [[ -n "$input_file" ]]; then
     _cv_load_routes
-    in_ext="${input_file##*.}"
-    [[ "$in_ext" == "$input_file" ]] && in_ext=""
-    _cv_normalize_ext "${in_ext:l}"; in_ext="$REPLY"
+    if [[ -d "$input_file" ]]; then
+      in_ext="dir"
+    else
+      in_ext="${input_file##*.}"
+      [[ "$in_ext" == "$input_file" ]] && in_ext=""
+      _cv_normalize_ext "${in_ext:l}"; in_ext="$REPLY"
+    fi
 
     for (( i = 2; i < CURRENT; i++ )); do
       token="${words[i]}"
@@ -105,7 +109,7 @@ _cv_route_flags() {
   # Check if it's a document-to-document route
   local is_doc_in=0
   local is_doc_out=0
-  [[ "$in_ext" =~ ^(md|markdown|docx|html|epub|txt|rst|odt)$ ]] && is_doc_in=1
+  [[ "$in_ext" =~ ^(md|markdown|docx|html|epub|txt|rst|odt|dir)$ ]] && is_doc_in=1
   [[ "$out_ext" =~ ^(md|markdown|docx|html|epub|txt|rst|odt|pdf)$ ]] && is_doc_out=1
 
   local is_pandoc=0
@@ -199,10 +203,12 @@ case "$state" in
       local input_glob="(#i)*.(${(j:|:)reply})"
       _alternative \
         "files:input file:_files -g \"$input_glob\"" \
+        'directories:input directory:_files -/' \
         'subcommands:command:compadd init' && ret=0
     else
       _alternative \
         'subcommands:command:compadd init' \
+        'directories:input directory:_files -/' \
         'files:input file:_files' && ret=0
     fi
     ;;
@@ -211,12 +217,17 @@ case "$state" in
     current_word="${words[CURRENT]}"
     _cv_find_input; input_file="$REPLY"
     if [[ -n "$input_file" ]]; then
-      input_ext="${input_file##*.}"
-      if [[ "$input_ext" != "$input_file" ]]; then
-        _cv_normalize_ext "${input_ext:l}"; input_ext="$REPLY"
-        input_base="${input_file:t:r}"
+      if [[ -d "$input_file" ]]; then
+        input_ext="dir"
+        input_base="${input_file:t}"
       else
-        input_ext=""
+        input_ext="${input_file##*.}"
+        if [[ "$input_ext" != "$input_file" ]]; then
+          _cv_normalize_ext "${input_ext:l}"; input_ext="$REPLY"
+          input_base="${input_file:t:r}"
+        else
+          input_ext=""
+        fi
       fi
 
       _cv_collect_output_exts "$input_ext"
