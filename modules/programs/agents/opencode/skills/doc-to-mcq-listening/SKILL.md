@@ -117,5 +117,5 @@ When the user provides audio/video/image media (local path or URL), transcripts,
 To compile into an Anki `.apkg` file:
 
 ```bash
-node dist/index.js --type mcq-listening <output.json>
+anki-tool --type mcq-listening <output.json>
 ```

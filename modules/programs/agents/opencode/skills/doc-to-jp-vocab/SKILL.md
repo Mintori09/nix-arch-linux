@@ -11,7 +11,7 @@ description: >-
 
 Convert Japanese vocabulary notes, JLPT lists (N5 through N1), or reading excerpts into a structured JSON array conforming to the `JpVocabItem` schema for use with `--type jp_vocab` in the `anki-generator-node` project.
 
-When compiled with `node dist/index.js --type jp_vocab <input.json>`, the tool automatically:
+When compiled with `anki-tool --type jp_vocab <input.json>`, the tool automatically:
 - Synthesizes and downloads Japanese TTS audio for the vocabulary word and the example sentence using Google TTS (`downloadAudio(..., "ja")`).
 - Converts bracket-style Furigana (e.g. `私[わたし]`) into valid HTML `<ruby>` tags.
 - Converts Markdown in meanings, nuances, and mnemonics into HTML.
@@ -168,8 +168,8 @@ To compile into an Anki `.apkg` deck:
 
 ```bash
 # Basic compilation (auto generates Japanese audio via TTS)
-node dist/index.js --type jp_vocab <output.json>
+anki-tool --type jp_vocab <output.json>
 
 # With custom deck name
-node dist/index.js --type jp_vocab --deck-name "Japanese::JLPT N1 Vocab" <output.json>
+anki-tool --type jp_vocab --deck-name "Japanese::JLPT N1 Vocab" <output.json>
 ```

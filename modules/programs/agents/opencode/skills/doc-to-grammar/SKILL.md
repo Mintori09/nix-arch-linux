@@ -10,7 +10,7 @@ description: >-
 
 Convert English grammar rules, syntactic structures, or textbook notes into a structured JSON array conforming to the `GrammarItem` schema for use with `--type grammar` in the `anki-generator-node` project.
 
-When compiled with `node dist/index.js --type grammar <input.json>`, the tool automatically:
+When compiled with `anki-tool --type grammar <input.json>`, the tool automatically:
 - Generates and downloads pronunciation audio for the grammar pattern (`downloadAudio`).
 - Generates or downloads illustration images if `image_prompt` is provided (`downloadImage`).
 - Renders formulas, explanations, and usage notes into formatted HTML.
@@ -107,8 +107,8 @@ To compile into an Anki `.apkg` deck:
 
 ```bash
 # Standard compilation
-node dist/index.js --type grammar <output.json>
+anki-tool --type grammar <output.json>
 
 # With custom deck name
-node dist/index.js --type grammar --deck-name "English::Advanced Grammar" <output.json>
+anki-tool --type grammar --deck-name "English::Advanced Grammar" <output.json>
 ```

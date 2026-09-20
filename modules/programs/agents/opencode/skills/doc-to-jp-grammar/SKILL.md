@@ -11,7 +11,7 @@ description: >-
 
 Convert Japanese grammar rules, JLPT Bunpou patterns (N5 to N1), or textbook notes into a structured JSON array conforming to the `JpGrammarItem` schema for use with `--type jp_grammar` in the `anki-generator-node` project.
 
-When compiled with `node dist/index.js --type jp_grammar <input.json>`, the tool automatically:
+When compiled with `anki-tool --type jp_grammar <input.json>`, the tool automatically:
 - Synthesizes and downloads Japanese TTS audio for both the grammar pattern reading and the example sentence (`downloadAudio(..., "ja")`).
 - Converts bracket-style Furigana (e.g. `漢字[かんじ]`) into valid HTML `<ruby>` tags.
 - Renders Markdown formulas, explanations, and usage notes into HTML.
@@ -163,8 +163,8 @@ To compile into an Anki `.apkg` deck:
 
 ```bash
 # Basic compilation (auto generates Japanese audio TTS)
-node dist/index.js --type jp_grammar <output.json>
+anki-tool --type jp_grammar <output.json>
 
 # With custom deck name
-node dist/index.js --type jp_grammar --deck-name "Japanese::JLPT N2 Grammar" <output.json>
+anki-tool --type jp_grammar --deck-name "Japanese::JLPT N2 Grammar" <output.json>
 ```

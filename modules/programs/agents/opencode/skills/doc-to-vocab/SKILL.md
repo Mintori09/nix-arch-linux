@@ -10,7 +10,7 @@ description: >-
 
 Convert English vocabulary lists, notes, or reading materials into a structured JSON array conforming to the `VocabItem` schema for use with `--type vocab` in the `anki-generator-node` project.
 
-When compiled with `node dist/index.js --type vocab <input.json>`, the tool automatically:
+When compiled with `anki-tool --type vocab <input.json>`, the tool automatically:
 - Generates and downloads pronunciation audio for the word (`downloadAudio`).
 - Automatically creates or fetches illustration images if `image_prompt` is provided (`downloadImage`).
 - Formats markdown definitions and examples into rich HTML.
@@ -115,8 +115,8 @@ To compile into an Anki `.apkg` deck:
 
 ```bash
 # Basic compilation
-node dist/index.js --type vocab <output.json>
+anki-tool --type vocab <output.json>
 
 # With custom deck name
-node dist/index.js --type vocab --deck-name "English::Advanced Vocab" <output.json>
+anki-tool --type vocab --deck-name "English::Advanced Vocab" <output.json>
 ```

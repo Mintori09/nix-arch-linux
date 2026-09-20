@@ -68,5 +68,5 @@ Save the generated JSON file (e.g., `grammar_jp.json`) and compile it using `ank
 
 ```bash
 # Compile to APKG package
-node dist/index.js --type jp_grammar grammar_jp.json
+anki-tool --type jp_grammar grammar_jp.json
 ```
