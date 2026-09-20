@@ -27,6 +27,7 @@
     ./cleartext-wifi.nix
     ./nix-rebuild.nix
     ./fcitx5-remote.nix
+    ./yay.nix
     ./keyboard-control.nix
     ./auto-click.nix
   ];
