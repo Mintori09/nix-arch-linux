@@ -1,0 +1,77 @@
+% rust, cargo, nextest
+
+# Nextest: Run all tests in the workspace
+cargo nextest run <capture_mode>
+
+# Nextest: Select test file (any .rs file containing #[test]) via fzf and run
+file="<test_file>"; if [[ "$file" =~ ^tests/([^/]+)\.rs$ ]]; then cargo nextest run --test "${BASH_REMATCH[1]}" <capture_mode>; else mod_path="${file#src/}"; mod_path="${mod_path%.rs}"; mod_path="${mod_path%/mod}"; mod_path="${mod_path%/lib}"; mod_path="${mod_path%/tests}"; mod_path="${mod_path//\//::}"; cargo nextest run -E "test($mod_path)" <capture_mode>; fi
+
+# Nextest: Select a specific test case via fzf and run
+cargo nextest run -E "test(=<test_name>)" <capture_mode>
+
+# Nextest: Run tests matching a filter pattern
+cargo nextest run -E 'test(<test_filter>)' <capture_mode>
+
+# Nextest: Run tests in a specific package
+cargo nextest run -p <package> <capture_mode>
+
+# Nextest: Run tests with retry on failure
+cargo nextest run --retries <retries> <capture_mode>
+
+# Nextest: Run only failing tests from previous run
+cargo nextest run --status fail <capture_mode>
+
+# Nextest: Run ignored tests
+cargo nextest run --run-ignored only <capture_mode>
+
+# Nextest: List all tests without executing
+cargo nextest list
+
+# Nextest: Run tests with specific profile (e.g. ci)
+cargo nextest run --profile <profile> <capture_mode>
+
+# Nextest: Continuous testing with cargo watch
+cargo watch -x 'nextest run'
+
+# Nextest: Generate JUnit XML report
+cargo nextest run --profile ci --junit-path <junit_path>
+
+# Nextest: Create initial nextest configuration (.config/nextest.toml)
+cargo nextest init
+
+# Cargo: Check compilation without producing binaries
+cargo check --all-targets --all-features
+
+# Cargo: Run clippy linter with strict warnings
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Cargo: Build in release mode
+cargo build --release
+
+# Cargo: Build a specific package in release mode
+cargo build --release -p <package>
+
+# Cargo: Run benchmarks
+cargo bench
+
+# Cargo: Update dependencies and bump Cargo.lock
+cargo update
+
+# Cargo: Check outdated dependencies
+cargo outdated
+
+# Cargo: Audit dependencies for security advisories
+cargo audit
+
+# Cargo: Clean build artifacts
+cargo clean
+
+# Cargo: Run doc tests (since nextest does not run doctests directly)
+cargo test --doc
+
+$ capture_mode: echo -e "--nocapture\n" --- --headers 0
+$ test_file: rg -l '#\[(?:[^\]]*::)?test\b' --type rust 2>/dev/null | sort -u
+$ test_name: cargo nextest list --message-format oneline 2>/dev/null | awk '{print $2}'
+$ retries: echo -e "1\n2\n3"
+$ profile: echo -e "default\nci"
+$ junit_path: echo "target/nextest-reports/junit.xml"

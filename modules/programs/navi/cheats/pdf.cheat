@@ -1,0 +1,18 @@
+% pdf, split, extract
+
+# Split / extract page range from PDF (using qpdf)
+qpdf "<input_pdf>" --pages "<input_pdf>" <start_page>-<end_page> -- "<output_pdf>"
+
+# Split / extract page range from PDF (using Ghostscript)
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -dFirstPage=<start_page> -dLastPage=<end_page> -sOutputFile="<output_pdf>" "<input_pdf>"
+
+# Extract single page from PDF (using pdfseparate)
+pdfseparate -f <page> -l <page> "<input_pdf>" "<output_single_pdf>"
+
+$ input_pdf: fd -e pdf | fzf --prompt="Select PDF: "
+$ total_pages: pdfinfo "<input_pdf>" 2>/dev/null | awk '/^Pages:/ {print $2}'
+$ start_page: echo -e "1"
+$ end_page: echo -e "<total_pages>"
+$ output_pdf: echo "${input_pdf%.*}_p<start_page>-<end_page>.pdf"
+$ page: seq 1 $(pdfinfo "<input_pdf>" 2>/dev/null | awk '/^Pages:/ {print $2}')
+$ output_single_pdf: echo "${input_pdf%.*}_page_<page>.pdf"

@@ -1,0 +1,10 @@
+% jupyter, notebook, python
+
+# Execute notebook in-place using a specific kernel (e.g. venv)
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.kernel_name=<kernel_name> "<notebook>"
+
+# Execute notebook and output to a new file using a specific kernel
+jupyter nbconvert --to notebook --execute --ExecutePreprocessor.kernel_name=<kernel_name> "<notebook>"
+
+$ notebook: fd -e ipynb | fzf --prompt="Select Notebook: "
+$ kernel_name: echo -e "venv\npython3"

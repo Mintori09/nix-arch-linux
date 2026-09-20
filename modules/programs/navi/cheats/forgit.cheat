@@ -1,0 +1,144 @@
+% git, forgit, fzf
+
+# git add - Interactive stage files (like forgit 'ga')
+git add <untracked_or_modified_files>
+
+$ untracked_or_modified_files: git status --porcelain | awk '{print $2}' --- --multi --preview 'git diff --color=always -- {1} 2>/dev/null || cat {1}'
+
+# git diff - Interactive diff viewer for modified files (like forgit 'gd')
+git diff <modified_files>
+
+$ modified_files: git diff --name-only --- --multi --preview 'git diff --color=always -- {1} | delta --paging=never'
+
+# git log - Interactive commit history browser (like forgit 'glo')
+git show <commit_hash>
+
+$ commit_hash: git log --graph --color=always --format="%C(auto)%h%d %s %C(black)%C(bold)%cr%Creset" --- --preview 'git show --color=always {1}' --column 1
+
+# git show - Interactive commit viewer (like forgit 'gso')
+git show <recent_commits>
+
+$ recent_commits: git log --oneline --color=always -n 50 --- --preview 'git show --color=always {1}' --column 1
+
+# git reset HEAD - Interactive unstage files (like forgit 'grh')
+git reset HEAD -- <staged_files>
+
+$ staged_files: git diff --cached --name-only --- --multi --preview 'git diff --cached --color=always -- {1}'
+
+# git restore - Interactive discard worktree changes (like forgit 'grs')
+git restore <modified_worktree_files>
+
+$ modified_worktree_files: git diff --name-only --- --multi --preview 'git diff --color=always -- {1}'
+
+# git checkout file - Interactive checkout file from HEAD (like forgit 'gcf')
+git checkout HEAD -- <changed_files>
+
+$ changed_files: git status --porcelain | awk '{print $2}' --- --multi --preview 'git diff --color=always -- {1}'
+
+# git checkout file from commit - Interactive restore file from selected commit (like forgit 'gcff')
+git checkout <commit_sha> -- <file_in_commit>
+
+$ commit_sha: git log --oneline --color=always -n 50 --- --preview 'git show --color=always {1}' --column 1
+$ file_in_commit: git ls-tree -r --name-only <commit_sha> --- --preview 'git show --color=always <commit_sha>:{1}'
+
+# git checkout / switch branch - Interactive switch branch (like forgit 'gcb' / 'gsw')
+git switch <local_or_remote_branch>
+
+$ local_or_remote_branch: git branch --all --color=always | sed 's/^[* ]*//' | grep -v 'HEAD' --- --preview 'git log -n 20 --graph --color=always --oneline {1}'
+
+# git branch -D - Interactive force delete branch (like forgit 'gbd')
+git branch -D <delete_branch>
+
+$ delete_branch: git branch --color=always | sed 's/^[* ]*//' --- --multi --preview 'git log -n 20 --graph --color=always --oneline {1}'
+
+# git checkout tag - Interactive checkout tag (like forgit 'gct')
+git checkout <git_tag>
+
+$ git_tag: git tag -l --sort=-version:refname --- --preview 'git show --color=always {1}'
+
+# git checkout commit - Interactive checkout specific commit in detached HEAD (like forgit 'gco')
+git checkout <commit_to_checkout>
+
+$ commit_to_checkout: git log --oneline --color=always -n 50 --- --preview 'git show --color=always {1}' --column 1
+
+# git revert - Interactive revert commit (like forgit 'grc')
+git revert <commit_to_revert>
+
+$ commit_to_revert: git log --oneline --color=always -n 50 --- --preview 'git show --color=always {1}' --column 1
+
+# git stash show - Interactive stash viewer and inspect diff (like forgit 'gss')
+git stash show -p <stash_entry>
+
+$ stash_entry: git stash list --- --preview 'git stash show -p --color=always {1}' --column 1
+
+# git stash pop - Interactive apply and drop stash
+git stash pop <stash_pop_entry>
+
+$ stash_pop_entry: git stash list --- --preview 'git stash show -p --color=always {1}' --column 1
+
+# git stash drop - Interactive delete stash entry
+git stash drop <stash_drop_entry>
+
+$ stash_drop_entry: git stash list --- --preview 'git stash show -p --color=always {1}' --column 1
+
+# git stash push - Interactive stash specific modified files (like forgit 'gsp')
+git stash push -m "<stash_message>" -- <files_to_stash>
+
+$ files_to_stash: git status --porcelain | awk '{print $2}' --- --multi --preview 'git diff --color=always -- {1}'
+$ stash_message: echo "WIP work"
+
+# git cherry-pick - Interactive cherry-pick commit from another branch (like forgit 'gcp')
+git cherry-pick <cherry_commit>
+
+$ cherry_commit: git log --all --oneline --color=always -n 100 --- --preview 'git show --color=always {1}' --column 1
+
+# git rebase -i - Interactive rebase onto ancestor commit (like forgit 'grb')
+git rebase -i <rebase_base_commit>~1
+
+$ rebase_base_commit: git log --oneline --color=always -n 30 --- --preview 'git show --color=always {1}' --column 1
+
+# git reflog - Interactive reflog inspection (like forgit 'grl')
+git show <reflog_entry>
+
+$ reflog_entry: git reflog --color=always --- --preview 'git show --color=always {1}' --column 1
+
+# git blame - Interactive blame file viewer (like forgit 'gbl')
+git blame -w -C -C -C <blame_file>
+
+$ blame_file: git ls-files --- --preview 'head -n 50 {1}'
+
+# git commit --fixup - Interactive fixup commit with auto autosquash (like forgit 'gfu')
+git commit --fixup <fixup_target_commit> && GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <fixup_target_commit>~1
+
+$ fixup_target_commit: git log --oneline --color=always -n 30 --- --preview 'git show --color=always {1}' --column 1
+
+# git commit --squash - Interactive squash commit with autosquash (like forgit 'gsq')
+git commit --squash <squash_target_commit> && git rebase -i --autosquash <squash_target_commit>~1
+
+$ squash_target_commit: git log --oneline --color=always -n 30 --- --preview 'git show --color=always {1}' --column 1
+
+# git clean - Interactive clean untracked files (like forgit 'gclean')
+git clean -fd <clean_untracked_files>
+
+$ clean_untracked_files: git ls-files --others --exclude-standard --- --multi --preview 'head -n 50 {1}'
+
+# git worktree - Interactive worktree switch directory (like forgit 'gwt')
+cd <worktree_path>
+
+$ worktree_path: git worktree list | awk '{print $1}' --- --preview 'git -C {1} status'
+
+# git worktree add - Interactive add worktree for branch (like forgit 'gwa')
+git worktree add <new_worktree_path> <worktree_branch>
+
+$ worktree_branch: git branch --all --color=always | sed 's/^[* ]*//' | grep -v 'HEAD' --- --preview 'git log -n 10 --graph --color=always --oneline {1}'
+$ new_worktree_path: echo "../$(basename $(git rev-parse --show-toplevel))-<worktree_branch>"
+
+# git worktree remove - Interactive remove worktree (like forgit 'gwd')
+git worktree remove <worktree_to_remove>
+
+$ worktree_to_remove: git worktree list | grep -v "$(git rev-parse --show-toplevel) " | awk '{print $1}' --- --preview 'git -C {1} status'
+
+# gitignore - Generate .gitignore template via gitignore.io (like forgit 'gi')
+curl -sL https://www.toptal.com/developers/gitignore/api/<gitignore_templates> >> .gitignore
+
+$ gitignore_templates: curl -sL https://www.toptal.com/developers/gitignore/api/list | tr ',' '\n' | sort -u --- --multi
