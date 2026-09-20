@@ -1,0 +1,78 @@
+#compdef sh bash dash zsh
+
+_sh() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -s -S -A "-*" \
+    '(-c)-c[execute specified command string]:command string:_cmdstring' \
+    '-a[mark variables which are modified or created for export]' \
+    '-b[notify of job termination immediately]' \
+    '-C[prevent existing files from being overwritten by redirection]' \
+    '-e[exit immediately if a pipeline or subshell exits with non-zero status]' \
+    '-f[disable pathname expansion (globbing)]' \
+    '-h[locate and remember function commands as functions are defined]' \
+    '-i[act as interactive shell]' \
+    '-l[act as login shell]' \
+    '-m[enable job control]' \
+    '-n[read commands without executing them]' \
+    '-u[treat unset variables as an error when substituting]' \
+    '-v[print shell input lines as they are read]' \
+    '-x[print command execution trace to stderr]' \
+    '-s[read commands from standard input]' \
+    '-o+[set specified option]:option:' \
+    '+o+[unset specified option]:option:' \
+    '1:script file:->runnable_files' \
+    '*:argument:_files' && return 0
+
+  case "$state" in
+    runnable_files)
+      local -a runnable_files
+      local cur="$words[CURRENT]"
+      local search_dir=""
+
+      if [[ "$cur" == */* ]]; then
+        search_dir="${cur%/*}"
+        [[ -z "$search_dir" ]] && search_dir="/"
+      fi
+
+      local f first_line
+      while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        f="${f#./}"
+        if [[ "$f" == *.(sh|bash|zsh) ]]; then
+          runnable_files+=("$f")
+        elif [[ -x "$f" && ! -d "$f" ]]; then
+          read -r first_line < "$f" 2>/dev/null
+          if [[ "$first_line" == "#!"* ]]; then
+            runnable_files+=("$f")
+          fi
+        fi
+      done < <(
+        if (( $+commands[fd] )); then
+          if [[ -n "$search_dir" ]]; then
+            fd -t f -E .git -c never . "$search_dir" 2>/dev/null
+          else
+            fd -t f -E .git -c never 2>/dev/null
+          fi
+        else
+          if [[ -n "$search_dir" ]]; then
+            find "$search_dir" -maxdepth 5 -type f ! -path "*/.*" 2>/dev/null | sed "s|^\./||"
+          else
+            find . -maxdepth 5 -type f ! -path "*/.*" 2>/dev/null | sed "s|^\./||"
+          fi
+        fi
+      )
+
+      typeset -U runnable_files
+
+      if (( ${#runnable_files} > 0 )); then
+        _describe -t runnable-files 'runnable file' runnable_files
+      else
+        _files
+      fi
+      ;;
+  esac
+}
+
+_sh "$@"

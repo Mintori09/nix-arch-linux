@@ -92,7 +92,7 @@ in
         zstyle ':fzf-tab:*' fzf-bindings 'tab:toggle+down' 'btab:toggle+up' '?:toggle-preview' 'ctrl-/:toggle-preview'
 
         # File & directory preview for common file openers
-        zstyle ':fzf-tab:complete:(nvim|vim|nano|bat|cat|less|eza|ls|cd|z):*' fzf-preview \
+        zstyle ':fzf-tab:complete:(nvim|vim|nano|bat|cat|less|eza|ls|cd|z|sh|bash):*' fzf-preview \
           'preview "''${(Q)realpath:-''${(Q)word}}"'
 
         # General file/directory preview when completion context matches files/directories
@@ -500,6 +500,8 @@ in
         # Retain zsh native _systemctl and _yay for full subcontext support and rich packages
         compdef _systemctl systemctl
         compdef _yay yay
+        compdef _sh sh
+        compdef _sh bash
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
     ];
