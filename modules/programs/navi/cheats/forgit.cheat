@@ -5,6 +5,9 @@ git add <untracked_or_modified_files>
 
 $ untracked_or_modified_files: git status --porcelain | awk '{print $2}' --- --multi --preview 'git diff --color=always -- {1} 2>/dev/null || cat {1}'
 
+# git commit diff
+git-commit-diff
+
 # git diff - Interactive diff viewer for modified files (like forgit 'gd')
 git diff <modified_files>
 

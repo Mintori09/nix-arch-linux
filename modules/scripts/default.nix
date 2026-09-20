@@ -31,5 +31,6 @@
     ./keyboard-control.nix
     ./auto-click.nix
     ./sh-completion.nix
+    ./git-fzf.nix
   ];
 }
