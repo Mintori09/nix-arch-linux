@@ -497,11 +497,12 @@ in
 
         # Carapace completion integration (must run after compinit)
         source <(${pkgs.carapace}/bin/carapace _carapace zsh)
-        # Retain zsh native _systemctl and _yay for full subcontext support and rich packages
+        # Retain zsh native completion
         compdef _systemctl systemctl
         compdef _yay yay
         compdef _sh sh
         compdef _sh bash
+        compdef _files nvim vim vi
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
     ];
