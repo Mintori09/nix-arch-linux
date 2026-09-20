@@ -1,5 +1,5 @@
 ---
-name: add-nix-github-package
+name: nix:add-github-package
 description: >
   Automatically packages applications or CLI tools from GitHub Releases (AppImage,
   Debian .deb, tarball/tar.xz/tar.gz, prebuilt binary) into this Nix Home-Manager
