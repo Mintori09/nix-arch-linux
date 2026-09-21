@@ -1,19 +1,16 @@
 #!/usr/bin/env tsx
 import { spawn, spawnSync, ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { createServer, Socket } from "node:net";
+import { availableParallelism } from "node:os";
 import { join } from "node:path";
-import { args, isMain, which } from "./utils.ts";
+import { args, isMain, which, getFzfPreviewCachePath } from "./utils.ts";
 
 const VIDEO_EXTENSIONS = ["mp4", "mkv", "avi", "mov", "webm", "flv"];
 const CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
 
 function getCachePath(target: string, ext: string): string {
-  const sum =
-    spawnSync("cksum", { input: target, encoding: "utf-8" }).stdout?.split(
-      " ",
-    )[0] ?? target.length.toString();
-  return `${CACHE_DIR}/${sum}${ext}`;
+  return getFzfPreviewCachePath(target, ext);
 }
 
 function ensureThumbnail(file: string): void {
@@ -22,7 +19,47 @@ function ensureThumbnail(file: string): void {
 
   mkdirSync(CACHE_DIR, { recursive: true });
 
-  if (which("ffprobe")) {
+  // 1. Fastest: ffmpegthumbnailer
+  if (which("ffmpegthumbnailer")) {
+    spawnSync(
+      "ffmpegthumbnailer",
+      ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
+      { stdio: "ignore" },
+    );
+  }
+
+  // 2. Embedded cover stream via ffmpeg
+  if (!existsSync(cache) && which("ffmpeg")) {
+    spawnSync(
+      "ffmpeg",
+      ["-y", "-i", file, "-map", "0:t:0", "-c", "copy", cache],
+      { stdio: "ignore" },
+    );
+  }
+
+  // 3. Frame at 2 seconds
+  if (!existsSync(cache) && which("ffmpeg")) {
+    spawnSync(
+      "ffmpeg",
+      [
+        "-y",
+        "-ss",
+        "00:00:02",
+        "-i",
+        file,
+        "-vframes",
+        "1",
+        "-an",
+        "-q:v",
+        "5",
+        cache,
+      ],
+      { stdio: "ignore" },
+    );
+  }
+
+  // 4. Fallback: ffprobe cover stream
+  if (!existsSync(cache) && which("ffprobe")) {
     const cover = spawnSync(
       "ffprobe",
       [
@@ -61,59 +98,26 @@ function ensureThumbnail(file: string): void {
       );
     }
   }
-
-  if (!existsSync(cache) && which("ffmpeg")) {
-    spawnSync(
-      "ffmpeg",
-      ["-y", "-i", file, "-map", "0:t:0", "-c", "copy", cache],
-      { stdio: "ignore" },
-    );
-  }
-
-  if (!existsSync(cache) && which("ffmpegthumbnailer")) {
-    spawnSync(
-      "ffmpegthumbnailer",
-      ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
-      { stdio: "ignore" },
-    );
-  }
-
-  if (!existsSync(cache) && which("ffmpeg")) {
-    spawnSync(
-      "ffmpeg",
-      [
-        "-y",
-        "-i",
-        file,
-        "-ss",
-        "00:00:02",
-        "-vframes",
-        "1",
-        "-an",
-        "-q:v",
-        "5",
-        cache,
-      ],
-      { stdio: "ignore" },
-    );
-  }
 }
 
 class ThumbnailWorker {
   private queue: string[] = [];
-  private processing = false;
-  private currentChild: ChildProcess | null = null;
+  private activeChildren: Map<string, ChildProcess> = new Map();
+  private maxConcurrency: number;
   private serverSocketPath: string;
   private server: ReturnType<typeof createServer> | null = null;
+  private closed = false;
 
   constructor(allFiles: string[]) {
     this.queue = allFiles.filter((f) => !existsSync(getCachePath(f, ".jpg")));
+    const cpus = typeof availableParallelism === "function" ? availableParallelism() : 4;
+    this.maxConcurrency = Math.max(2, Math.min(6, cpus - 1));
     this.serverSocketPath = join(
       "/tmp",
       `vd-thumb-${process.pid}-${Date.now()}.sock`,
     );
     this.initServer();
-    this.processNext();
+    this.processQueue();
   }
 
   private initServer(): void {
@@ -145,80 +149,85 @@ class ThumbnailWorker {
 
   public prioritize(file: string): void {
     if (existsSync(getCachePath(file, ".jpg"))) return;
+    if (this.activeChildren.has(file)) return;
 
-    // Place at front of queue
+    // Put at very front of queue
     this.queue = [file, ...this.queue.filter((f) => f !== file)];
 
-    // If currently generating a different thumbnail, abort it so priority file runs immediately
-    if (this.currentChild) {
-      try {
-        this.currentChild.kill("SIGTERM");
-      } catch {}
+    // If at max capacity, interrupt the oldest non-priority background job
+    if (this.activeChildren.size >= this.maxConcurrency) {
+      const oldestKey = this.activeChildren.keys().next().value;
+      if (oldestKey) {
+        const child = this.activeChildren.get(oldestKey);
+        try {
+          child?.kill("SIGTERM");
+        } catch {}
+        this.activeChildren.delete(oldestKey);
+        // Put back into queue so it finishes later
+        this.queue.push(oldestKey);
+      }
     }
+
+    this.processQueue();
   }
 
-  private processNext(): void {
-    if (this.processing) return;
+  private processQueue(): void {
+    if (this.closed) return;
 
-    const file = this.queue.shift();
-    if (!file) return;
+    while (this.activeChildren.size < this.maxConcurrency && this.queue.length > 0) {
+      const file = this.queue.shift();
+      if (!file) break;
 
-    const cache = getCachePath(file, ".jpg");
-    if (existsSync(cache)) {
-      setImmediate(() => this.processNext());
-      return;
+      const cache = getCachePath(file, ".jpg");
+      if (existsSync(cache)) continue;
+
+      mkdirSync(CACHE_DIR, { recursive: true });
+
+      const cmd = which("ffmpegthumbnailer")
+        ? {
+            bin: "ffmpegthumbnailer",
+            args: ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
+          }
+        : {
+            bin: "ffmpeg",
+            args: [
+              "-y",
+              "-ss",
+              "00:00:02",
+              "-i",
+              file,
+              "-vframes",
+              "1",
+              "-an",
+              "-q:v",
+              "5",
+              cache,
+            ],
+          };
+
+      const child = spawn(cmd.bin, cmd.args, { stdio: "ignore" });
+      this.activeChildren.set(file, child);
+
+      const cleanup = () => {
+        this.activeChildren.delete(file);
+        this.processQueue();
+      };
+
+      child.on("close", cleanup);
+      child.on("error", cleanup);
     }
-
-    this.processing = true;
-    mkdirSync(CACHE_DIR, { recursive: true });
-
-    // Use ffmpegthumbnailer if available for fast background extraction, else ffmpeg
-    const cmd = which("ffmpegthumbnailer")
-      ? {
-          bin: "ffmpegthumbnailer",
-          args: ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
-        }
-      : {
-          bin: "ffmpeg",
-          args: [
-            "-y",
-            "-i",
-            file,
-            "-ss",
-            "00:00:02",
-            "-vframes",
-            "1",
-            "-an",
-            "-q:v",
-            "5",
-            cache,
-          ],
-        };
-
-    const child = spawn(cmd.bin, cmd.args, { stdio: "ignore" });
-    this.currentChild = child;
-
-    child.on("close", () => {
-      this.currentChild = null;
-      this.processing = false;
-      this.processNext();
-    });
-
-    child.on("error", () => {
-      this.currentChild = null;
-      this.processing = false;
-      this.processNext();
-    });
   }
 
   public close(): void {
+    this.closed = true;
     this.queue = [];
-    if (this.currentChild) {
+    for (const child of this.activeChildren.values()) {
       try {
-        this.currentChild.kill("SIGTERM");
+        child.kill("SIGTERM");
       } catch {}
-      this.currentChild = null;
     }
+    this.activeChildren.clear();
+
     if (this.server) {
       try {
         this.server.close();
@@ -259,13 +268,17 @@ function findAndOpenVideo(recursive: boolean): void {
   const worker = new ThumbnailWorker(files);
 
   const socketPath = worker.getSocketPath();
+  const notifySocketCmd = which("socat")
+    ? `echo {} | socat - UNIX-CONNECT:${socketPath} 2>/dev/null || true`
+    : `python3 -c 'import socket, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.connect("${socketPath}"); s.sendall(("{}" + "\\n").encode()); s.close()' 2>/dev/null || true`;
+
   const fzfArgs = [
     "--style",
     "full",
     "--prompt",
     "Select a video: ",
     "--bind",
-    `focus:execute-silent(python3 -c 'import socket; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.connect("${socketPath}"); s.sendall(("{}" + "\\n").encode()); s.close()' 2>/dev/null || true)`,
+    `focus:execute-silent(${notifySocketCmd})`,
   ];
 
   const fzf = spawnSync("fzf", fzfArgs, {

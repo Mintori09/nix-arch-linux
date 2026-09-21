@@ -2,18 +2,14 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { args, isMain, which } from "./utils.ts";
+import { args, isMain, which, getFzfPreviewCachePath } from "./utils.ts";
 import fs from "node:fs";
 
 const CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
 mkdirSync(CACHE_DIR, { recursive: true });
 
 function getCachePath(target: string, ext: string): string {
-  const sum =
-    spawnSync("cksum", { input: target, encoding: "utf-8" }).stdout?.split(
-      " ",
-    )[0] ?? target.length.toString();
-  return `${CACHE_DIR}/${sum}${ext}`;
+  return getFzfPreviewCachePath(target, ext);
 }
 
 function dim(options?: { heightOffset?: number }): string {
@@ -207,7 +203,44 @@ function main(): void {
     try {
       readFileSync(cache);
     } catch {
-      if (which("ffprobe")) {
+      // 1. Fastest extraction: ffmpegthumbnailer (~50-80ms)
+      if (which("ffmpegthumbnailer")) {
+        spawnSync(
+          "ffmpegthumbnailer",
+          ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
+          { stdio: "ignore" },
+        );
+      }
+      // 2. Try embedded cover / attachment stream via ffmpeg
+      if (!fs.existsSync(cache) && which("ffmpeg")) {
+        spawnSync(
+          "ffmpeg",
+          ["-y", "-i", file, "-map", "0:t:0", "-c", "copy", cache],
+          { stdio: "ignore" },
+        );
+      }
+      // 3. Fallback: seek to 2s and grab frame
+      if (!fs.existsSync(cache) && which("ffmpeg")) {
+        spawnSync(
+          "ffmpeg",
+          [
+            "-y",
+            "-ss",
+            "00:00:02",
+            "-i",
+            file,
+            "-vframes",
+            "1",
+            "-an",
+            "-q:v",
+            "5",
+            cache,
+          ],
+          { stdio: "ignore" },
+        );
+      }
+      // 4. ffprobe cover stream as last resort if needed
+      if (!fs.existsSync(cache) && which("ffprobe")) {
         const cover = spawnSync(
           "ffprobe",
           [
@@ -245,68 +278,6 @@ function main(): void {
             { stdio: "ignore" },
           );
         }
-      }
-      if (
-        !(() => {
-          try {
-            readFileSync(cache);
-            return true;
-          } catch {
-            return false;
-          }
-        })() &&
-        which("ffmpeg")
-      ) {
-        spawnSync(
-          "ffmpeg",
-          ["-y", "-i", file, "-map", "0:t:0", "-c", "copy", cache],
-          { stdio: "ignore" },
-        );
-      }
-      if (
-        !(() => {
-          try {
-            readFileSync(cache);
-            return true;
-          } catch {
-            return false;
-          }
-        })() &&
-        which("ffmpegthumbnailer")
-      ) {
-        spawnSync(
-          "ffmpegthumbnailer",
-          ["-i", file, "-o", cache, "-s", "0", "-q", "5"],
-          { stdio: "ignore" },
-        );
-      }
-      if (
-        !(() => {
-          try {
-            readFileSync(cache);
-            return true;
-          } catch {
-            return false;
-          }
-        })()
-      ) {
-        spawnSync(
-          "ffmpeg",
-          [
-            "-y",
-            "-i",
-            file,
-            "-ss",
-            "00:00:02",
-            "-vframes",
-            "1",
-            "-an",
-            "-q:v",
-            "5",
-            cache,
-          ],
-          { stdio: "ignore" },
-        );
       }
     }
     try {

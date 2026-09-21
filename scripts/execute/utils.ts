@@ -143,4 +143,40 @@ export function writeFile(path: string, data: string): void {
   writeFileSync(path, data);
 }
 
+export function posixCksum(data: string | Buffer): number {
+  const buf = typeof data === "string" ? Buffer.from(data, "utf-8") : data;
+  let crc = 0;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i] << 24;
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x80000000) {
+        crc = ((crc << 1) ^ 0x04c11db7) >>> 0;
+      } else {
+        crc = (crc << 1) >>> 0;
+      }
+    }
+  }
+  let len = buf.length;
+  while (len > 0) {
+    crc ^= (len & 0xff) << 24;
+    len >>>= 8;
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x80000000) {
+        crc = ((crc << 1) ^ 0x04c11db7) >>> 0;
+      } else {
+        crc = (crc << 1) >>> 0;
+      }
+    }
+  }
+  return (~crc) >>> 0;
+}
+
+const PREVIEW_CACHE_DIR = `${process.env.XDG_CACHE_HOME || `${process.env.HOME}/.cache`}/fzf-preview`;
+
+export function getFzfPreviewCachePath(target: string, ext: string): string {
+  const sum = posixCksum(target);
+  return `${PREVIEW_CACHE_DIR}/${sum}${ext}`;
+}
+
 export { fileURLToPath } from "node:url";
+
