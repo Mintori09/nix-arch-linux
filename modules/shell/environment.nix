@@ -1,6 +1,8 @@
 { config, lib, ... }:
 let
   c = import ./_constants.nix;
+  home = config.home.homeDirectory;
+  pnpmDir = "${home}/.local/share/pnpm";
 in
 {
   xdg.systemDirs.data = lib.mkForce (
@@ -25,8 +27,8 @@ in
     BROWSER = "zen-browser";
     CLIPCOPY = c.clipCopy;
     CLIPPASTE = c.clipPaste;
-    ANDROID_HOME = "$HOME/Android/Sdk";
-    PNPM_HOME = c.pnpmHome;
+    ANDROID_HOME = "${home}/Android/Sdk";
+    PNPM_HOME = pnpmDir;
     OLLAMA_HOST = "127.0.0.1";
     GTK_USE_PORTAL = "1";
     ZVM_SYSTEM_CLIPBOARD_ENABLED = "true";
@@ -34,7 +36,7 @@ in
     ZVM_CLIPBOARD_PASTE_CMD = "${c.clipPaste} -n";
     _JAVA_AWT_WM_NONREPARENTING = "1";
     BAT_THEME = "Catppuccin Frappe";
-    RCLONE_LOG_FILE = "$HOME/rclone-sync.log";
+    RCLONE_LOG_FILE = "${home}/rclone-sync.log";
     GSETTINGS_SCHEMA_DIR = "/usr/share/glib-2.0/schemas";
     QT_QPA_PLATFORM = "wayland";
     QT_QPA_PLATFORMTHEME = "qt6ct";
@@ -47,20 +49,20 @@ in
 
   home.sessionPath = c.systemPathPriority ++ [
     c.spicetifyPath
-    "$HOME/.local/bin"
-    "$HOME/.local/scripts"
-    "$HOME/bin"
-    "$HOME/.luarocks/bin"
-    "$HOME/.config/composer/vendor/bin"
-    "$HOME/.cargo/bin"
-    "$HOME/.npm/bin"
-    "$HOME/.pnpm/bin"
+    "${home}/.local/bin"
+    "${home}/.local/scripts"
+    "${home}/bin"
+    "${home}/.luarocks/bin"
+    "${home}/.config/composer/vendor/bin"
+    "${home}/.cargo/bin"
+    "${home}/.npm/bin"
+    "${home}/.pnpm/bin"
     "$GOBIN"
-    "$HOME/flutter/bin"
-    "$HOME/development/flutter/bin"
+    "${home}/flutter/bin"
+    "${home}/development/flutter/bin"
     "$JAVA_HOME/bin"
-    "$PNPM_HOME"
-    "$INTELLI_HOME/bin"
+    "${pnpmDir}/bin"
+    c.intelliHome
     "/usr/lib64/qt5/bin"
   ];
 }

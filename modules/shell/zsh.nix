@@ -461,6 +461,7 @@ in
         typeset -U path
         path=(
           ${systemPathPriorityZsh}
+          "$HOME/.local/share/pnpm/bin"
           $path
         )
         export PATH
