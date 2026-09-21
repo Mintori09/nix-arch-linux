@@ -1,0 +1,49 @@
+#compdef git-commit-diff gitlog
+
+_git_commit_diff_commits() {
+  local -a commits
+  local commit_lines
+  commit_lines=("${(@f)$(git log --oneline -n 50 2>/dev/null)}")
+  if (( ${#commit_lines} > 0 )); then
+    local line hash desc
+    for line in "${commit_lines[@]}"; do
+      hash="${line%% *}"
+      desc="${line#* }"
+      commits+=("${hash}:${desc}")
+    done
+    _describe -t commits 'commit' commits
+  fi
+}
+
+_git_commit_diff() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -s -S \
+    '--opencommitlink=[Open the commit link for the given short hash in browser]:commit:->commits' \
+    '--copydiff=[Copy the full diff of the given short hash to clipboard]:commit:->commits' \
+    '--copyhash=[Copy the short hash to clipboard]:commit:->commits' \
+    '(-h --help)'{-h,--help}'[Show help message and exit]' \
+    '*::git log options:->git_log_args' && return 0
+
+  case "$state" in
+    commits)
+      _git_commit_diff_commits
+      ;;
+    git_log_args)
+      # Delegate any extra flags / arguments to git-log completion
+      (( $+functions[_git] )) || autoload -Uz +X _git 2>/dev/null
+      if (( $+functions[_git-log] )); then
+        _git-log
+      elif (( $+functions[_git] )); then
+        words=(git log "${words[@]:1}")
+        CURRENT=$(( CURRENT + 1 ))
+        _git
+      else
+        _default
+      fi
+      ;;
+  esac
+}
+
+_git_commit_diff "$@"
