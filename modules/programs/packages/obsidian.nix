@@ -18,14 +18,18 @@ in
     comment = "Markdown knowledge base";
     exec = "${obsidian}/bin/obsidian %u";
     terminal = false;
+
+    startupNotify = true;
+
     categories = [
       "Office"
       "Utility"
     ];
+
     mimeType = [
       "x-scheme-handler/obsidian"
     ];
+
     icon = "obsidian";
-    startupNotify = true;
   };
 }
