@@ -8,5 +8,6 @@
     ./functions.nix
     ./fish.nix
     ./autostart.nix
+    ./global-alias.nix
   ];
 }
