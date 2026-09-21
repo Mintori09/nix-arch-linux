@@ -29,12 +29,12 @@
     "nano-gpt"
     "ollama-cloud"
     "google"
-    "kilo"
-    "openrouter"
   ];
 
   enabled = [
     "opencode-go"
+    "kilo"
+    "openrouter"
   ];
 
 }
