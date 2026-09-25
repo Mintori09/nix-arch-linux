@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   c = import ./_constants.nix;
 in
@@ -41,7 +46,7 @@ in
     cfz = "cd $HOME/.config/shell; nvim $HOME/.zshrc; source $HOME/.zshrc";
 
     # IDEs
-    zed = "zeditor .; exit";
+    # zed = "zeditor .; exit";
 
     # SYNCTHING
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
@@ -54,8 +59,8 @@ in
     tauri-build = "NO_STRP=true pnpm tauri build";
 
     of = "onefetch --disabled-fields description head pending version dependencies authors last-change url churn license --no-art --no-title --no-color-palette";
-    vii = "trans -t vi -I";
-    tt = "taskwarrior-tui";
+    # vii = "trans -t vi -I";
+    # tt = "taskwarrior-tui";
 
     navicat = "QT_QPA_PLATFORM=xcb navicatQT_QPA_PLATFORM=xcb navicat";
     co = "wl-copy";
@@ -67,5 +72,7 @@ in
     catc = "cpath --content";
     cpf = "fzf | each --batch cpath";
     wp = "wl-paste";
+    vdg = "${pkgs.python3}/bin/python ${config.home.homeDirectory}/Desktop/youtube/server.py >/dev/null 2>&1 & pake-video-viewer";
+    open = "xdg-open";
   };
 }

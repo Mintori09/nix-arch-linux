@@ -490,6 +490,9 @@ in
         typeset -gA _zcomp_cache
         add-zsh-hook precmd _zsh_auto_reload_completions
 
+        chpwd() {
+            p=$PWD:t
+        }
       '')
 
       (lib.mkAfter ''

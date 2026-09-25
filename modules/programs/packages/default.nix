@@ -4,7 +4,7 @@
     ./spicetify.nix
     ./vicinae.nix
     ./kcolorchooser.nix
-    ./obsidian.nix
+    # ./obsidian.nix
     ./gimp.nix
     # ./foliate.nix
     ./drawio.nix

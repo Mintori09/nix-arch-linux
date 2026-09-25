@@ -17,7 +17,7 @@
     ./copy-files.nix
     ./remove.nix
     ./compress-wrap.nix
-    ./open.nix
+    # ./open.nix
     ./direnv-wrap.nix
     ./rclone-sync.nix
     ./ai-bridge.nix
