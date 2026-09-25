@@ -11,12 +11,11 @@ function resolveFilename(name) {
 }
 
 function createChatHistoryPanel(adapter, promptsContainerEl) {
-  let layoutWrapper = null;
-  let geminiContainer = null;
   let panelContainer = null;
   let listEl = null;
   let toggleBtn = null;
-  let isOpen = true;
+  const defaultHidden = Boolean(adapter && adapter.defaultHideNavigator);
+  let isOpen = !defaultHidden;
 
   function init() {
     const prevFocus = document.activeElement;
@@ -24,6 +23,7 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     buildDOM();
     setupToggle();
     observeTurns();
+    renderTurns();
     restoreInputFocus(prevFocus);
   }
 
@@ -38,7 +38,9 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
   }
 
   function injectCSS() {
+    if (document.getElementById("ai-bridge-style")) return;
     const style = document.createElement("style");
+    style.id = "ai-bridge-style";
     if (ttPolicy) {
       style.textContent = ttPolicy.createHTML(panelCSS);
     } else {
@@ -49,32 +51,15 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
 
   function buildDOM() {
     // Cleanup old instances
-    const oldWrapper = document.getElementById("ai-bridge-layout-wrapper");
-    if (oldWrapper) {
-      const oldGemini = document.getElementById("ai-bridge-gemini-container");
-      if (oldGemini) {
-        while (oldGemini.firstChild) {
-          document.body.appendChild(oldGemini.firstChild);
-        }
-      }
-      oldWrapper.remove();
-    }
+    const oldPanel = document.getElementById("ai-bridge-inserted-panel");
+    if (oldPanel) oldPanel.remove();
     const oldToggle = document.getElementById("ai-bridge-toggle-navbar-btn");
     if (oldToggle) oldToggle.remove();
 
-    // Create layout structure
-    layoutWrapper = document.createElement("div");
-    layoutWrapper.id = "ai-bridge-layout-wrapper";
-
-    geminiContainer = document.createElement("div");
-    geminiContainer.id = "ai-bridge-gemini-container";
-
     panelContainer = document.createElement("div");
     panelContainer.id = "ai-bridge-inserted-panel";
-
-    // Move all existing body children into geminiContainer
-    while (document.body.firstChild) {
-      geminiContainer.appendChild(document.body.firstChild);
+    if (defaultHidden) {
+      panelContainer.classList.add("sidebar-hidden");
     }
 
     // Build panel header
@@ -98,14 +83,15 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     toggleBtn.id = "ai-bridge-toggle-navbar-btn";
     toggleBtn.textContent = "\u2630";
     toggleBtn.title = "\u01afu/\u1ea8n Sidebar";
+    if (defaultHidden) {
+      toggleBtn.classList.add("btn-collapsed");
+    }
 
     // Assemble DOM tree
     panelContainer.appendChild(header);
     panelContainer.appendChild(listEl);
-    layoutWrapper.appendChild(geminiContainer);
-    layoutWrapper.appendChild(panelContainer);
 
-    document.body.appendChild(layoutWrapper);
+    document.body.appendChild(panelContainer);
     document.body.appendChild(toggleBtn);
   }
 
@@ -113,7 +99,7 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     toggleBtn.addEventListener("click", () => {
       panelContainer.classList.toggle("sidebar-hidden");
       toggleBtn.classList.toggle("btn-collapsed");
-      // Trigger Gemini layout recalculation
+      isOpen = !panelContainer.classList.contains("sidebar-hidden");
       setTimeout(() => {
         window.dispatchEvent(new Event("resize"));
       }, 260);
@@ -121,30 +107,31 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
   }
 
   function getChatTitle() {
-    // Try aria-label on active sidebar link
-    const activeLink =
-      geminiContainer && geminiContainer.querySelector("a.is-active");
-    if (!activeLink) {
-      // Fallback: page title
-      const t = document.title.replace(/\s*[-–|].*$/, "").trim();
-      return t || null;
+    const activeLink = document.querySelector(
+      "a.is-active, nav a[aria-current='page'], nav li.active a",
+    );
+    if (activeLink) {
+      const ariaLabel = activeLink.getAttribute("aria-label");
+      if (ariaLabel) return ariaLabel;
+      const titleEl = activeLink.querySelector(
+        ".title-text, div[class*='truncate']",
+      );
+      if (titleEl) return titleEl.textContent.trim();
     }
-    const ariaLabel = activeLink.getAttribute("aria-label");
-    if (ariaLabel) return ariaLabel;
-    // Fallback: title-text span inside active link
-    const titleEl = activeLink.querySelector(".title-text");
-    if (titleEl) return titleEl.textContent.trim();
-    // Fallback: page title
     const t = document.title.replace(/\s*[-–|].*$/, "").trim();
     return t || null;
   }
 
   function getTurns() {
-    if (!geminiContainer) return [];
-    const turnEls = geminiContainer.querySelectorAll(
-      adapter.TURN_SELECTORS.join(", "),
+    const rawEls = Array.from(
+      document.querySelectorAll(adapter.TURN_SELECTORS.join(", ")),
     );
-    return Array.from(turnEls).map((el, i) => ({
+    // Keep only top-level matching turns to prevent duplicates from nested selectors
+    const turnEls = rawEls.filter((el) => {
+      return !rawEls.some((other) => other !== el && other.contains(el));
+    });
+
+    return turnEls.map((el, i) => ({
       element: el,
       index: i,
       name: adapter.getTurnName(el),
@@ -216,10 +203,7 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
         item.addEventListener("click", (e) => {
           if (e.target.closest(".turn-actions")) return;
           if (turn.element) {
-            turn.element.scrollIntoView({ behavior: "smooth", block: "start" });
-            setTimeout(() => {
-              geminiContainer.scrollBy({ top: -80, behavior: "smooth" });
-            }, 120);
+            turn.element.scrollIntoView({ behavior: "smooth", block: "center" });
             turn.element.classList.add("gemini-activated-highlight");
             setTimeout(() => {
               turn.element.classList.remove("gemini-activated-highlight");
@@ -257,12 +241,11 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
 
   let mutationTimer = null;
   function observeTurns() {
-    if (!geminiContainer) return;
     const observer = new MutationObserver(() => {
       if (mutationTimer) clearTimeout(mutationTimer);
       mutationTimer = setTimeout(renderTurns, 300);
     });
-    observer.observe(geminiContainer, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   return { init, togglePanel: () => toggleBtn && toggleBtn.click() };

@@ -9,8 +9,8 @@
     "build": "pnpm build:daemon && pnpm build:userscript",
     "run:clipboard": "./dist/ai-bridge.js clipboard",
     "typecheck": "pnpm --filter . exec tsc --noEmit && pnpm --filter userscript exec tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run tests --exclude '**/.direnv/**'",
+    "test:watch": "vitest tests --exclude '**/.direnv/**'",
     "server": "pnpm build:daemon && ./dist/ai-bridge.js server"
   },
   "keywords": [],
@@ -31,6 +31,7 @@
     "@types/node": "^26.0.0",
     "esbuild": "^0.28.1",
     "jsdom": "^29.1.1",
+    "playwright": "^1.63.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   },

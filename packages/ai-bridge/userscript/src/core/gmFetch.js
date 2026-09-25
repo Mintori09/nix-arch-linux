@@ -6,10 +6,18 @@ function gmFetch(url, opts = {}) {
       headers: opts.headers || {},
       responseType: "json",
       onload(res) {
+        let data = res.response;
+        if (data === undefined && res.responseText) {
+          try {
+            data = JSON.parse(res.responseText);
+          } catch {
+            data = res.responseText;
+          }
+        }
         resolve({
           ok: res.status >= 200 && res.status < 300,
           status: res.status,
-          json: () => Promise.resolve(res.response),
+          json: () => Promise.resolve(data),
         });
       },
       onerror(err) {

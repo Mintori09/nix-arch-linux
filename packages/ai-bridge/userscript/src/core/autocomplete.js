@@ -38,9 +38,38 @@ function createAutocomplete(adapter, getPromptList) {
     };
   }
 
+  function getInputElement() {
+    if (!inputEl || !inputEl.isConnected) {
+      const found = adapter.findInput();
+      if (found) {
+        if (inputEl && inputEl !== found) {
+          detachListeners(inputEl);
+        }
+        inputEl = found;
+        attachListeners(inputEl);
+      }
+    }
+    return inputEl;
+  }
+
+    let justSelectedWithEnter = false;
+
+  function attachListeners(el) {
+    if (!el) return;
+    el.addEventListener("input", checkAutocomplete);
+    el.addEventListener("keyup", checkAutocomplete);
+    el.addEventListener("blur", onBlur);
+  }
+
+  function detachListeners(el) {
+    if (!el) return;
+    el.removeEventListener("input", checkAutocomplete);
+    el.removeEventListener("keyup", checkAutocomplete);
+    el.removeEventListener("blur", onBlur);
+  }
+
   function init() {
     inputEl = adapter.findInput();
-    if (!inputEl) return;
 
     popupEl = document.createElement("div");
     popupEl.id = "ai-bridge-autocomplete-popup";
@@ -48,26 +77,34 @@ function createAutocomplete(adapter, getPromptList) {
 
     document.body.appendChild(popupEl);
 
-    inputEl.addEventListener("input", checkAutocomplete);
-    inputEl.addEventListener("keyup", checkAutocomplete);
-    inputEl.addEventListener("keydown", onKeyDown);
-    inputEl.addEventListener("blur", onBlur);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+
+    if (inputEl) {
+      attachListeners(inputEl);
+    }
+
+    // Keep checking in case input is rendered or replaced dynamically
+    document.addEventListener("focusin", () => {
+      getInputElement();
+    });
   }
 
   function destroy() {
+    window.removeEventListener("keydown", onKeyDown, true);
+    window.removeEventListener("keyup", onKeyUp, true);
     if (popupEl) popupEl.remove();
     if (inputEl) {
-      inputEl.removeEventListener("input", checkAutocomplete);
-      inputEl.removeEventListener("keyup", checkAutocomplete);
-      inputEl.removeEventListener("keydown", onKeyDown);
-      inputEl.removeEventListener("blur", onBlur);
+      detachListeners(inputEl);
     }
   }
 
   function getTextBeforeCursor() {
-    if (!inputEl) return "";
-    if (inputEl.tagName === "TEXTAREA" || inputEl.tagName === "INPUT") {
-      return inputEl.value.slice(0, inputEl.selectionStart);
+    const el = getInputElement();
+    if (!el) return "";
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+      const pos = typeof el.selectionStart === "number" ? el.selectionStart : el.value.length;
+      return el.value.slice(0, pos);
     }
 
     const sel = window.getSelection();
@@ -76,7 +113,7 @@ function createAutocomplete(adapter, getPromptList) {
 
     try {
       const preRange = range.cloneRange();
-      preRange.selectNodeContents(inputEl);
+      preRange.selectNodeContents(el);
       preRange.setEnd(range.startContainer, range.startOffset);
       return preRange.toString();
     } catch (e) {
@@ -114,6 +151,8 @@ function createAutocomplete(adapter, getPromptList) {
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       selectedIndex = Math.min(
         selectedIndex + 1,
         getFilteredPrompts().length - 1,
@@ -124,21 +163,40 @@ function createAutocomplete(adapter, getPromptList) {
 
     if (e.key === "ArrowUp") {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       selectedIndex = Math.max(selectedIndex - 1, 0);
       highlightItem();
       return;
     }
 
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
+      justSelectedWithEnter = true;
+      setTimeout(() => {
+        justSelectedWithEnter = false;
+      }, 500);
       selectCurrent();
       return;
     }
 
     if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       hidePopup();
+      return;
+    }
+  }
+
+  function onKeyUp(e) {
+    if (justSelectedWithEnter && (e.key === "Enter" || e.key === "Tab")) {
+      justSelectedWithEnter = false;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       return;
     }
   }
@@ -197,7 +255,7 @@ function createAutocomplete(adapter, getPromptList) {
 
       item.addEventListener("mousedown", (e) => {
         e.preventDefault();
-        selectedIndex = parseInt(item.dataset.index);
+        selectedIndex = parseInt(item.dataset.index, 10);
         selectCurrent();
       });
 
@@ -214,13 +272,12 @@ function createAutocomplete(adapter, getPromptList) {
 
     // 3. Compute optimal position relative to viewport boundaries
     const sel = window.getSelection();
-    if (sel && sel.rangeCount) {
+    if (sel && sel.rangeCount && typeof sel.getRangeAt(0).getBoundingClientRect === "function") {
       const rect = sel.getRangeAt(0).getBoundingClientRect();
       const popupHeight = popupEl.offsetHeight || 240;
       const popupWidth = popupEl.offsetWidth || 200;
       const margin = 4;
 
-      // Vertical positioning: check if there is enough space below the cursor
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -229,11 +286,9 @@ function createAutocomplete(adapter, getPromptList) {
         spaceBelow < popupHeight + margin &&
         spaceAbove > popupHeight + margin
       ) {
-        // Position above the cursor
         topPosition = rect.top - popupHeight - margin;
       }
 
-      // Horizontal positioning: keep popup within the screen bounds
       let leftPosition = rect.left;
       if (leftPosition + popupWidth > window.innerWidth) {
         leftPosition = Math.max(
@@ -266,6 +321,74 @@ function createAutocomplete(adapter, getPromptList) {
     });
   }
 
+  function insertCompletion(content) {
+    const el = getInputElement();
+    if (!el) return;
+
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+      const val = el.value || "";
+      const pos = typeof el.selectionStart === "number" ? el.selectionStart : val.length;
+      const textBefore = val.slice(0, pos);
+      const textAfter = val.slice(pos);
+      const match = textBefore.match(/(?:^|\s)!(\w*)$/);
+
+      if (match) {
+        const triggerPos = textBefore.lastIndexOf("!" + match[1]);
+        const beforeTrigger = val.slice(0, triggerPos);
+        el.value = beforeTrigger + content + textAfter;
+        const newCursor = beforeTrigger.length + content.length;
+        el.selectionStart = newCursor;
+        el.selectionEnd = newCursor;
+      } else {
+        el.value = content;
+      }
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      el.focus();
+      return;
+    }
+
+    // Contenteditable (ProseMirror / div)
+    el.focus();
+    const sel = window.getSelection();
+    let replaced = false;
+    if (sel && sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      const nodeText = range.startContainer.textContent || "";
+      const textBefore = nodeText.slice(0, range.startOffset);
+      const match = textBefore.match(/!(\w*)$/);
+
+      if (match && range.startOffset >= match[0].length) {
+        const startOffset = range.startOffset - match[0].length;
+        try {
+          range.setStart(range.startContainer, startOffset);
+          range.setEnd(range.startContainer, range.startOffset);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          replaced = document.execCommand("insertText", false, content);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
+    if (!replaced) {
+      const success = document.execCommand("insertText", false, content);
+      if (!success) {
+        const text = el.textContent || "";
+        const match = text.match(/(?:^|\s)!(\w*)$/);
+        if (match) {
+          const triggerPos = text.lastIndexOf("!" + match[1]);
+          el.textContent = text.slice(0, triggerPos) + content;
+        } else {
+          el.textContent = content;
+        }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
   async function selectCurrent() {
     const filtered = getFilteredPrompts();
     const prompt = filtered[selectedIndex];
@@ -273,43 +396,27 @@ function createAutocomplete(adapter, getPromptList) {
 
     hidePopup();
 
-    if (!cachedContents[prompt.name]) {
+    let content = prompt.content || cachedContents[prompt.name];
+    if (!content) {
       try {
-        const url = `http://127.0.0.1:${getPort()}/prompts/${encodeURIComponent(prompt.name)}`;
+        const port = typeof getPort === "function" ? getPort() : 3457;
+        const url = `http://127.0.0.1:${port}/prompts/${encodeURIComponent(prompt.name)}`;
         const res = await gmFetch(url);
         if (res.ok) {
           const data = await res.json();
-          cachedContents[prompt.name] = data.content || "";
+          content = data.content || "";
+          cachedContents[prompt.name] = content;
         }
-      } catch {
+      } catch (err) {
+        console.warn("[ai-bridge] fetch prompt content error:", err);
         return;
       }
     }
 
-    const content = cachedContents[prompt.name];
     if (!content) return;
 
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    const textBefore = range.startContainer.textContent.slice(
-      0,
-      range.startOffset,
-    );
-    const match = textBefore.match(/(?:^|\s)!(\w*)$/);
-
-    if (!match) return;
-
-    const fullMatch = match[0];
-    const startOffset = range.startOffset - fullMatch.length;
-
-    range.setStart(range.startContainer, startOffset);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(content));
-    range.collapse(false);
-
-    inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    insertCompletion(content);
   }
 
-  return { init, destroy };
+  return { init, destroy, insertCompletion };
 }
