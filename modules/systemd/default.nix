@@ -6,5 +6,6 @@
     ./anyrun.nix
     ./keyboard-rs.nix
     ./kglance.nix
+    ./bluetooth.nix
   ];
 }
