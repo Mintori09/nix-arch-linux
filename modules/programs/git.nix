@@ -48,16 +48,6 @@
 
       color.ui = "auto";
 
-      delta = {
-        features = "catppuccin-mocha";
-        syntax-theme = "OneHalfDark";
-        line-numbers = true;
-        side-by-side = false;
-        hyperlinks = true;
-        minus-style = "red italic black";
-        plus-style = "green bold black";
-      };
-
       pull.rebase = true;
       push.autoSetupRemote = true;
       fetch.prune = true;
@@ -66,16 +56,17 @@
 
       help.autocorrect = 20;
 
-      include.path = toString ../../assets/catppuccin.gitconfig;
-
       commit.gpgsign = true;
       gpg.format = "ssh";
     };
   };
 
-  programs.delta = {
+  programs.difftastic = {
     enable = true;
-    enableGitIntegration = true;
+    git = {
+      enable = true;
+      diffToolMode = true;
+    };
   };
 
   home.packages = [ pkgs.wl-clipboard ];

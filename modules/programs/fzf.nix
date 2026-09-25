@@ -9,7 +9,6 @@ let
     "venv"
     "__pycache__"
     ".mypy_cache"
-    "dist"
     "build"
     "out"
     "target"
