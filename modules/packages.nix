@@ -160,8 +160,7 @@
     qbittorrent
     hoppscotch
     kmp-lsp
-    super-productivity
-    zed-editor
     fmtron
+    samply
   ];
 }

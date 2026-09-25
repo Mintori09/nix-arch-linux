@@ -29,7 +29,7 @@ hms
 
 ### Development
 
-- **Editors**: Helix, Neovim, Zed
+- **Editors**: Helix, Neovim
 - **Git**: Lazygit, Onefetch
 - **Search/Navigation**: fzf, ripgrep, fd, zoxide, yazi
 - **File listing**: bat, eza
@@ -72,7 +72,6 @@ modules/
 ├── programs/        # Application configurations
 │   ├── agents/      # AI agent setups
 │   ├── helix/       # Helix editor
-│   ├── zed/         # Zed editor
 │   └── ...
 ├── shell/           # Shell environments and aliases
 │   ├── zsh.nix

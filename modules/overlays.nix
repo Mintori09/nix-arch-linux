@@ -19,8 +19,6 @@
       qbittorrent = final.callPackage ./packages/qbittorrent.nix { };
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
-      super-productivity = final.callPackage ./packages/super-productivity.nix { };
-      zed-editor = final.callPackage ./packages/zed-editor.nix { };
       fmtron = final.callPackage ./packages/fmtron.nix {
         src = inputs.fmtron;
       };

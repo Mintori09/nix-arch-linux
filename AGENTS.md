@@ -78,7 +78,7 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 ## Custom scripts & packages
 
 - Custom scripts (in `modules/scripts/`): `auto-click`, `caffeinate`, `cleartext-wifi`, `compress-wrap`, `copy-files`, `direnv-wrap`, `each`, `extract`, `fcitx5-remote`, `format`, `fzf-preview`, `fzf-rg-edit`, `keyboard-control`, `nano_usage`, `nix-rebuild`, `open`, `quick-aliases`, `rclone-sync`, `read`, `remove`, `scratch`, `select-and-open-video`, `sleep-cycles`, `telepush`, `which_file`. Shared helpers in `_helpers.nix`.
-- Custom packages (in `modules/packages/` from `packages/`): `ai-bridge`, `anki-tool`, `anyflip-downloader`, `bookokrat`, `cv-cli` (`cv`), `dbx`, `fitgirl-link-extractor` (`mle`), `fmtron`, `generate-toc` (`gentoc`), `hoppscotch`, `keyboard-rs`, `kmp-lsp`, `magika`, `qbittorrent`, `super-productivity`, `vicinae`, `zap`, `zed-editor`.
+- Custom packages (in `modules/packages/` from `packages/`): `ai-bridge`, `anki-tool`, `anyflip-downloader`, `bookokrat`, `cv-cli` (`cv`), `dbx`, `fitgirl-link-extractor` (`mle`), `fmtron`, `generate-toc` (`gentoc`), `hoppscotch`, `keyboard-rs`, `kmp-lsp`, `magika`, `qbittorrent`, `vicinae`, `zap`, `zed-editor`.
 
 Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging
 and zsh completion in `modules/scripts/<name>.nix` (or `completions/`). When adding/modifying
