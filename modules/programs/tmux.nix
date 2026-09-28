@@ -14,8 +14,7 @@ let
         session="agy-$(echo "$path" | md5sum | cut -c1-8)"
 
         current_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
-        if [[ "$current_session" == agy-* ]]; then
-          tmux display-message "Antigravity popup already open"
+        if [ "$current_session" = "$session" ]; then
           exit 0
         fi
 
@@ -31,9 +30,16 @@ let
         [ -n "$origin" ] && tmux set-option -t "$session" @agy_origin "$origin" 2>/dev/null || true
         tmux set-option -t "$session" @agy_path "$path" 2>/dev/null || true
 
-        proj_name="$(basename "$path")"
-        title=" 󰚩 Antigravity  $proj_name "
-        tmux display-popup -w 85% -h 89% -b rounded -T "$title" -E "tmux attach-session -t '$session'"
+        case "$current_session" in
+          agy-*|term-*|opencode-*|pi-*)
+            tmux switch-client -t "$session"
+            ;;
+          *)
+            proj_name="$(basename "$path")"
+            title=" 󰚩 Antigravity  $proj_name "
+            tmux display-popup -w 85% -h 89% -b rounded -T "$title" -E "tmux attach-session -t '$session'"
+            ;;
+        esac
         ;;
 
       list)
@@ -137,12 +143,48 @@ let
         ;;
     esac
   '';
+
+  tmuxPopupHelper = pkgs.writeShellScriptBin "tmux-popup-helper" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    prefix="''${1:-term}"
+    path="''${2:-$PWD}"
+    cmd="''${3:-}"
+
+    session="''${prefix}-$(echo "$path" | md5sum | cut -c1-8)"
+    current_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+
+    if [ "$current_session" = "$session" ]; then
+      exit 0
+    fi
+
+    if ! tmux has-session -t "$session" 2>/dev/null; then
+      if [ -n "$cmd" ]; then
+        tmux new-session -d -s "$session" -c "$path" "$cmd"
+      else
+        tmux new-session -d -s "$session" -c "$path"
+      fi
+    fi
+
+    tmux set-option -t "$session" detach-on-destroy on 2>/dev/null || true
+
+    case "$current_session" in
+      agy-*|term-*|opencode-*|pi-*)
+        tmux switch-client -t "$session"
+        ;;
+      *)
+        tmux display-popup -w 85% -h 89% -b rounded -E "tmux attach-session -t '$session'"
+        ;;
+    esac
+  '';
 in
 {
   home.packages = with pkgs; [
     fzf
     wl-clipboard
     tmuxAgyHatch
+    tmuxPopupHelper
   ];
 
   home.shellAliases = {
@@ -306,13 +348,7 @@ in
                   # ---------------------------------------------------------------------
       unbind t
 
-      bind -r t run-shell '\
-        SESSION="term-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
-        if [ "#{session_name}" != "$SESSION" ]; then \
-          tmux has-session -t "$SESSION" 2>/dev/null || \
-          tmux new-session -d -s "$SESSION" -c "#{pane_current_path}"; \
-          tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
-        fi'
+      bind -r t run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper term "#{pane_current_path}"'
             bind p display-popup -w 100% -h 100% -E '
             tmux list-panes -F "#{pane_id} | #I.#P | #{pane_current_command} | #{pane_current_path}" |
             fzf \
@@ -443,20 +479,8 @@ in
                   bind -r u display-popup -w 85% -h 89% -b rounded -T " 󰚩 Antigravity Agents " -E "${tmuxAgyHatch}/bin/tmux-agy-hatch picker"
 
                   set-hook -g alert-bell "run-shell -b '${tmuxAgyHatch}/bin/tmux-agy-hatch bell #{q:hook_session_name}'"
-                  bind -r y run-shell '\
-                    SESSION="opencode-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
-                    if [ "#{session_name}" != "$SESSION" ]; then \
-                      tmux has-session -t "$SESSION" 2>/dev/null || \
-                      tmux new-session -d -s "$SESSION" -c "#{pane_current_path}" "opencode"; \
-                      tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
-                    fi'
-                  bind -r P run-shell '\
-                    SESSION="pi-$(echo "#{pane_current_path}" | md5sum | cut -c1-8)"; \
-                    if [ "#{session_name}" != "$SESSION" ]; then \
-                      tmux has-session -t "$SESSION" 2>/dev/null || \
-                      tmux new-session -d -s "$SESSION" -c "#{pane_current_path}" "pi"; \
-                      tmux display-popup -w80% -h89% -E "tmux attach-session -t \"$SESSION\""; \
-                    fi'
+                  bind -r y run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper opencode "#{pane_current_path}" "opencode"'
+                  bind -r P run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper pi "#{pane_current_path}" "pi"'
 
                   # ---------------------------------------------------------------------
                   # Appearance not managed by dotbar
