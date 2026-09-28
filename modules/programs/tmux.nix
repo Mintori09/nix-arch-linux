@@ -156,34 +156,53 @@ in
   };
 
   programs.zsh.initContent = ''
-    # Attach tmux session with fzf.
-    # - 0 session: create/attach "main"
-    # - 1 session: attach directly
-    # - 2+ sessions: select with fzf
-    # - Esc in fzf: do nothing
+    # Smart tmux launcher & session switcher:
+    # - If session name argument given (`t <name>`):
+    #   - Attach if exists, otherwise create new session with that name.
+    # - If no argument (`t`):
+    #   - Check if an existing tmux session is currently in $PWD: attach to it.
+    #   - If none found: create new session named after current directory.
     t() {
-      local sessions count session
+      if [ "$#" -gt 0 ]; then
+        local sess_name="$1"
+        if [ -n "$TMUX" ]; then
+          command tmux has-session -t "$sess_name" 2>/dev/null || \
+            command tmux new-session -d -s "$sess_name" -c "$PWD"
+          command tmux switch-client -t "$sess_name"
+        else
+          command tmux new-session -A -s "$sess_name" -c "$PWD"
+        fi
+        return $?
+      fi
 
-      sessions=$(tmux list-sessions 2>/dev/null)
-      count=$(printf "%s\n" "$sessions" | sed '/^$/d' | wc -l | tr -d ' ')
+      # No argument: find session with matching path or create one
+      local current_dir="$PWD"
+      local matched_sess
 
-      if [ "$count" = "0" ]; then
-        tmux new-session -A -s main
-      elif [ "$count" = "1" ]; then
-        session=$(printf "%s\n" "$sessions" | cut -d: -f1)
-        tmux attach-session -t "$session"
+      # Check pane paths first, then session paths
+      matched_sess="$(command tmux list-panes -a -F "#{session_name}	#{pane_current_path}" 2>/dev/null | awk -F'\t' -v dir="$current_dir" '$2 == dir { print $1; exit }')"
+      if [ -z "$matched_sess" ]; then
+        matched_sess="$(command tmux list-sessions -F "#{session_name}	#{session_path}" 2>/dev/null | awk -F'\t' -v dir="$current_dir" '$2 == dir { print $1; exit }')"
+      fi
+
+      if [ -n "$matched_sess" ]; then
+        if [ -n "$TMUX" ]; then
+          command tmux switch-client -t "$matched_sess"
+        else
+          command tmux attach-session -t "$matched_sess"
+        fi
       else
-        session=$(
-          printf "%s\n" "$sessions" |
-            fzf \
-              --prompt="tmux session> " \
-              --reverse \
-              --preview='tmux list-windows -t {1} 2>/dev/null' \
-              --preview-window=right:60% |
-            cut -d: -f1
-        )
+        local new_name
+        new_name="$(basename "$current_dir" | tr '.: ' '---')"
+        [ -z "$new_name" ] && new_name="main"
 
-        [ -n "$session" ] && tmux attach-session -t "$session"
+        if [ -n "$TMUX" ]; then
+          command tmux has-session -t "$new_name" 2>/dev/null || \
+            command tmux new-session -d -s "$new_name" -c "$current_dir"
+          command tmux switch-client -t "$new_name"
+        else
+          command tmux new-session -A -s "$new_name" -c "$current_dir"
+        fi
       fi
     }
   '';
@@ -403,10 +422,14 @@ in
                     xargs tmux select-window -t'
 
                   bind S display-popup -w 100% -h 100% -E '\
-                    tmux list-sessions -F "#{session_name} | #{session_windows} windows" | \
-                    fzf --reverse --header " switch session " | \
-                    cut -d"|" -f1 | tr -d " " | \
-                    xargs tmux switch-client -t'
+                    tmux list-sessions -F "#{session_name}	#{session_windows} windows	#{pane_current_path}" | \
+                    fzf --reverse --header " switch session · ctrl-x: kill session " \
+                      --delimiter="\t" \
+                      --preview "tmux capture-pane -ept {1} 2>/dev/null || tmux list-windows -t {1} 2>/dev/null" \
+                      --preview-window=right:65% \
+                      --bind="ctrl-x:execute-silent(tmux kill-session -t {1})+reload(tmux list-sessions -F \"#{session_name}	#{session_windows} windows	#{pane_current_path}\")" | \
+                    cut -f1 | \
+                    xargs -r tmux switch-client -t'
 
                   # ---------------------------------------------------------------------
                   # Popups
