@@ -47,6 +47,7 @@ in
 
     # IDEs
     # zed = "zeditor .; exit";
+    upload-rclone = "/home/mintori/Projects/tools/upload.sh";
 
     # SYNCTHING
     syncthing-config = "nvim $HOME/.local/state/syncthing/config.xml";
