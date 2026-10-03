@@ -7,8 +7,9 @@ let
     destination = "/share/zsh/site-functions/_rgf";
     text = ''
       #compdef rgf
-
-      _arguments -s -S '*:target:_files'
+      _arguments -s -S \
+        '(-e --regexp)'{-e,--regexp}'[Search pattern/regex]:pattern:' \
+        '*:target:_files'
     '';
   };
 in

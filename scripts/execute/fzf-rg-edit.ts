@@ -3,9 +3,10 @@ import { statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { args, isMain } from "./utils.ts";
 
-function isExistingFile(filePath: string): boolean {
+function isExistingPath(filePath: string): boolean {
   try {
-    return statSync(filePath).isFile();
+    const stat = statSync(filePath);
+    return stat.isFile() || stat.isDirectory();
   } catch {
     return false;
   }
@@ -17,7 +18,8 @@ function escapeShellArg(arg: string): string {
 
 function fzfRgEdit(initialQuery: string, targetFiles: string[] = []): void {
   const fileArgs = targetFiles.map(escapeShellArg).join(" ");
-  const rgBaseCmd = "rg -H --column --line-number --no-heading --color=always --smart-case";
+  const rgBaseCmd =
+    "rg -H --column --line-number --no-heading --color=always --smart-case --pcre2";
   const initialQueryArg = escapeShellArg(initialQuery);
 
   const rgCmd = fileArgs
@@ -85,8 +87,24 @@ function main(): void {
   const targetFiles: string[] = [];
   const queryParts: string[] = [];
 
-  for (const arg of args) {
-    if (isExistingFile(arg)) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--") {
+      for (let j = i + 1; j < args.length; j++) {
+        const nextArg = args[j];
+        if (isExistingPath(nextArg)) {
+          targetFiles.push(nextArg);
+        } else {
+          queryParts.push(nextArg);
+        }
+      }
+      break;
+    }
+    if ((arg === "-e" || arg === "--regexp") && i + 1 < args.length) {
+      queryParts.push(args[++i]);
+      continue;
+    }
+    if (isExistingPath(arg)) {
       targetFiles.push(arg);
     } else {
       queryParts.push(arg);
