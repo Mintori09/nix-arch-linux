@@ -65,4 +65,8 @@ in
     c.intelliHome
     "/usr/lib64/qt5/bin"
   ];
+
+  xdg.configFile."environment.d/10-nix-path.conf".text = ''
+    PATH=''${HOME}/.nix-profile/bin:/nix/var/nix/profiles/default/bin:''${PATH}
+  '';
 }

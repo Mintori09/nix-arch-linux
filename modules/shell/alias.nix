@@ -75,5 +75,6 @@ in
     wp = "wl-paste";
     vdg = "${pkgs.python3}/bin/python ${config.home.homeDirectory}/Desktop/youtube/server.py >/dev/null 2>&1 & pake-video-viewer";
     open = "xdg-open";
+    turn-off-screen = "qdbus6 org.kde.kglobalaccel /component/org_kde_powerdevil invokeShortcut 'Turn Off Screen'";
   };
 }
