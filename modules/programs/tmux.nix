@@ -31,7 +31,7 @@ let
         tmux set-option -t "$session" @agy_path "$path" 2>/dev/null || true
 
         case "$current_session" in
-          agy-*|term-*|opencode-*|pi-*)
+          agy-*|term-*|opencode-*|pi-*|btop-*)
             tmux switch-client -t "$session"
             ;;
           *)
@@ -109,13 +109,8 @@ let
         [ -z "$sel" ] && exit 0
 
         target_sess="$(echo "$sel" | cut -f2)"
-        target_origin="$(echo "$sel" | cut -f4)"
 
-        if [ -n "$target_origin" ]; then
-          tmux switch-client -t "$target_origin" 2>/dev/null || true
-        fi
-
-        tmux attach-session -t "$target_sess"
+        tmux switch-client -t "$target_sess"
         ;;
 
       bell)
@@ -170,7 +165,7 @@ let
     tmux set-option -t "$session" detach-on-destroy on 2>/dev/null || true
 
     case "$current_session" in
-      agy-*|term-*|opencode-*|pi-*)
+      agy-*|term-*|opencode-*|pi-*|btop-*)
         tmux switch-client -t "$session"
         ;;
       *)
@@ -275,6 +270,7 @@ in
           set -g @resurrect-capture-pane-contents 'on'
           set -g @resurrect-strategy-vim 'session'
           set -g @resurrect-strategy-nvim 'session'
+          set-hook -g client-detached 'run-shell "${pkgs.tmuxPlugins.resurrect}/share/tmux-plugins/resurrect/scripts/save.sh"'
         '';
       }
 
@@ -282,7 +278,7 @@ in
         plugin = continuum;
         extraConfig = ''
           set -g @continuum-restore 'on'
-          set -g @continuum-save-interval '15'
+          set -g @continuum-save-interval '5'
         '';
       }
 
@@ -410,16 +406,22 @@ in
                   bind -r k resize-pane -U 5
                   bind -r l resize-pane -R 5
 
-                  bind v split-window -h -c "#{pane_current_path}"
-                  bind s split-window -v -c "#{pane_current_path}"
-                  bind y setw synchronize-panes
+                  bind v if-shell -F '#{m:agy-*,#{session_name}}' 'split-window -h -c "#{pane_current_path}" "agy --dangerously-skip-permissions"' \
+                    'if-shell -F "#{m:opencode-*,#{session_name}}" "split-window -h -c \"#{pane_current_path}\" opencode" \
+                    "if-shell -F \"#{m:pi-*,#{session_name}}\" \"split-window -h -c \\\"#{pane_current_path}\\\" pi\" \"split-window -h -c \\\"#{pane_current_path}\\\"\""'
+                  bind s if-shell -F '#{m:agy-*,#{session_name}}' 'split-window -v -c "#{pane_current_path}" "agy --dangerously-skip-permissions"' \
+                    'if-shell -F "#{m:opencode-*,#{session_name}}" "split-window -v -c \"#{pane_current_path}\" opencode" \
+                    "if-shell -F \"#{m:pi-*,#{session_name}}\" \"split-window -v -c \\\"#{pane_current_path}\\\" pi\" \"split-window -v -c \\\"#{pane_current_path}\\\"\""'
+                  bind Y setw synchronize-panes
 
                   # ---------------------------------------------------------------------
                   # Session / window workflow
                   # ---------------------------------------------------------------------
 
                   bind C new-session
-                  bind w new-window -c "#{pane_current_path}"
+                  bind w if-shell -F '#{m:agy-*,#{session_name}}' 'new-window -c "#{pane_current_path}" "agy --dangerously-skip-permissions"' \
+                    'if-shell -F "#{m:opencode-*,#{session_name}}" "new-window -c \"#{pane_current_path}\" opencode" \
+                    "if-shell -F \"#{m:pi-*,#{session_name}}\" \"new-window -c \\\"#{pane_current_path}\\\" pi\" \"new-window -c \\\"#{pane_current_path}\\\"\""'
                   bind o choose-tree -Zw
 
                   bind x kill-pane
@@ -481,6 +483,7 @@ in
                   set-hook -g alert-bell "run-shell -b '${tmuxAgyHatch}/bin/tmux-agy-hatch bell #{q:hook_session_name}'"
                   bind -r y run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper opencode "#{pane_current_path}" "opencode"'
                   bind -r P run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper pi "#{pane_current_path}" "pi"'
+                  bind -r b run-shell '${tmuxPopupHelper}/bin/tmux-popup-helper btop "#{pane_current_path}" "${pkgs.btop}/bin/btop"'
 
                   # ---------------------------------------------------------------------
                   # Appearance not managed by dotbar
