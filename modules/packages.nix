@@ -19,7 +19,9 @@
     zstd
 
     # Core CLI utilities
+    rumdl
     fastfetch
+    hyperfine
     magika
     cliphist
     fd
