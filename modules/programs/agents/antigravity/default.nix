@@ -30,5 +30,8 @@ in
     ".gemini/antigravity-cli/mcp_config.json" = {
       text = builtins.toJSON mcpConfig;
     };
+    ".gemini/config/mcp_config.json" = {
+      text = builtins.toJSON mcpConfig;
+    };
   };
 }

@@ -29,6 +29,17 @@
     enabled = true;
   };
 
+  playwright-headless = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "@playwright/mcp@latest"
+        "--headless"
+      ];
+    };
+    enabled = true;
+  };
+
   github = {
     local = {
       argv = [
@@ -90,6 +101,22 @@
         "${pkgs.nodejs}/bin/npx"
         "-y"
         "@mozilla/firefox-devtools-mcp@latest"
+        "--viewport"
+        "1280x720"
+      ];
+      env = {
+        START_URL = "about:blank";
+      };
+    };
+    enabled = true;
+  };
+
+  firefox-devtools-headless = {
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "@mozilla/firefox-devtools-mcp@latest"
         "--headless"
         "--viewport"
         "1280x720"
@@ -97,6 +124,16 @@
       env = {
         START_URL = "about:blank";
       };
+    };
+    enabled = true;
+  };
+
+  colab-mcp = {
+    local = {
+      argv = [
+        "${pkgs.uv}/bin/uvx"
+        "git+https://github.com/googlecolab/colab-mcp"
+      ];
     };
     enabled = true;
   };
