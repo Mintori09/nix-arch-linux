@@ -54,36 +54,15 @@ export interface FileHandler {
 }
 
 export const FILE_HANDLERS: Record<string, FileHandler> = {
-  // Markdown
-  ".md": {
-    parser: "markdown",
-    preprocess: processMarkdownContent,
-  },
-  ".markdown": {
-    parser: "markdown",
-    preprocess: processMarkdownContent,
-  },
+  // Markdown / Text
   ".mdx": { parser: "mdx" },
   ".txt": { parser: "markdown" },
 
   // Data / Config
   ".yaml": { parser: "yaml" },
   ".yml": { parser: "yaml" },
-  ".json": { parser: "json" },
-  ".json5": { parser: "json5" },
 
-  // JavaScript / TypeScript
-  ".ts": { parser: "typescript" },
-  ".tsx": { parser: "typescript" },
-  ".js": { parser: "babel" },
-  ".jsx": { parser: "babel" },
-  ".mjs": { parser: "babel" },
-  ".cjs": { parser: "babel" },
-  ".cts": { parser: "typescript" },
-  ".mts": { parser: "typescript" },
-
-  // Styles
-  ".css": { parser: "css" },
+  // Styles (Sass / Less still handled by Prettier)
   ".scss": { parser: "scss" },
   ".less": { parser: "less" },
 
@@ -109,6 +88,28 @@ export const FORMATTER_COMMANDS: Record<
   string,
   (filePath: string) => string[]
 > = {
+  // Markdown (Rumdl - Rust)
+  ".md": (fp) => ["rumdl", "fmt", "--silent", fp],
+  ".markdown": (fp) => ["rumdl", "fmt", "--silent", fp],
+
+  // JS / TS / Web / JSON / CSS (Biome - Rust)
+  ".js": (fp) => ["biome", "format", "--write", fp],
+  ".jsx": (fp) => ["biome", "format", "--write", fp],
+  ".mjs": (fp) => ["biome", "format", "--write", fp],
+  ".cjs": (fp) => ["biome", "format", "--write", fp],
+  ".ts": (fp) => ["biome", "format", "--write", fp],
+  ".tsx": (fp) => ["biome", "format", "--write", fp],
+  ".cts": (fp) => ["biome", "format", "--write", fp],
+  ".mts": (fp) => ["biome", "format", "--write", fp],
+  ".json": (fp) => ["biome", "format", "--write", fp],
+  ".json5": (fp) => ["biome", "format", "--write", fp],
+  ".css": (fp) => ["biome", "format", "--write", fp],
+
+  // Nix & Typst (Rust)
+  ".nix": (fp) => ["alejandra", "-q", fp],
+  ".typ": (fp) => ["typstyle", "-i", "-q", fp],
+
+  // XML / E-books
   ".xml": (fp) => ["xmllint", "--format", "--output", fp, fp],
   ".opf": (fp) => ["xmllint", "--format", "--output", fp, fp],
   ".ncx": (fp) => ["xmllint", "--format", "--output", fp, fp],
@@ -120,7 +121,6 @@ export const FORMATTER_COMMANDS: Record<
   ".py": (fp) => ["ruff", "format", fp],
   ".go": (fp) => ["gofmt", "-w", fp],
   ".zig": (fp) => ["zig", "fmt", fp],
-  ".nix": (fp) => ["nixfmt", fp],
   ".cpp": (fp) => ["clang-format", "-i", fp],
   ".cc": (fp) => ["clang-format", "-i", fp],
   ".cxx": (fp) => ["clang-format", "-i", fp],
@@ -358,12 +358,24 @@ async function formatFileWithPrettierInSubprocess(
 export async function formatWithPrettierInSubprocess(
   options: FormatWithPrettierInSubprocessOptions,
 ): Promise<string> {
-  const extension = options.parser === "markdown" ? ".md" : ".txt";
+  const extensionMap: Record<string, string> = {
+    markdown: ".txt",
+    yaml: ".yaml",
+    html: ".html",
+    scss: ".scss",
+    less: ".less",
+  };
+  const extension = extensionMap[options.parser] || ".yaml";
   const tempFilePath = `/tmp/format-file-${process.pid}-${Date.now()}${extension}`;
   writeFileSync(tempFilePath, options.content, "utf-8");
-  const result = await formatFileWithPrettierInSubprocess(tempFilePath);
-  void result;
-  return readFileSync(tempFilePath, "utf-8");
+  try {
+    await formatFileWithPrettierInSubprocess(tempFilePath);
+    return readFileSync(tempFilePath, "utf-8");
+  } finally {
+    try {
+      rmSync(tempFilePath, { force: true });
+    } catch {}
+  }
 }
 
 function getAllFilesRecursively(dir: string): string[] {
@@ -531,7 +543,7 @@ Supported Formats:
                      .xml, .svg, .astro, .ejs, .hbs, .handlebars, .pug,
                      .graphql, .gql
   E-books:           .epub, .opf, .ncx
-  Languages:         .rs, .py, .go, .zig, .nix, .c, .cpp, .h, .hpp, .cc, .cxx, .hxx,
+  Languages:         .rs, .py, .go, .zig, .nix, .typ, .c, .cpp, .h, .hpp, .cc, .cxx, .hxx,
                      .php, .blade.php, .rb, .java, .kt, .kts, .cs, .swift, .dart,
                      .ex, .exs, .erl, .hrl, .hs, .clj, .cljs,
                      .sh, .bash, .zsh, .fish, .tf, .hcl, .sql, .prisma,

@@ -11,7 +11,7 @@ _format() {
     hxx java js json json5 jsx kdl kt kts less lua
     markdown md mdx mjs mts ncx nix opf php prisma
     proto pug py rb ron rs scss sh slint sql
-    svelte svg tf toml ts tsx txt vue xhtml xml
+    svelte svg tf toml ts tsx txt typ vue xhtml xml
     yaml yml zig zsh
   )
 

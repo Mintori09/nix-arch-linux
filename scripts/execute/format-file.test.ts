@@ -12,6 +12,7 @@ import {
   resolvePrettierModuleSpecifier,
   formatEpubFile,
   printHelp,
+  FORMATTER_COMMANDS,
 } from "./format-file.ts";
 import { spawnAsync } from "./utils.ts";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -72,33 +73,58 @@ it("terminal output helpers - renders result lines without the legacy START pref
   );
 });
 
-it("formatWithPrettierInSubprocess - formats markdown in a subprocess so the caller can stay responsive", async () => {
+it("formatWithPrettierInSubprocess - formats text/code in a subprocess so the caller can stay responsive", async () => {
   const formatted = await formatWithPrettierInSubprocess({
-    content: "alpha\nbeta\n",
-    parser: "markdown",
+    content: "a:    1\nb:  2\n",
+    parser: "yaml",
   });
 
-  assert.strictEqual(formatted, "alpha\n\nbeta\n");
+  assert.strictEqual(formatted, "a: 1\nb: 2\n");
 });
 
-it("formatFileWithPrettier - formats a markdown file in place and reports unchanged on the second run", async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), "format-file-test-"));
+it("FORMATTER_COMMANDS - formats markdown using rumdl", async () => {
+  const cmd = FORMATTER_COMMANDS[".md"]("test.md");
+  assert.deepEqual(cmd, ["rumdl", "fmt", "--silent", "test.md"]);
+
+  const tempDir = await mkdtemp(join(tmpdir(), "format-rumdl-test-"));
   const filePath = join(tempDir, "sample.md");
 
   try {
-    await writeFile(filePath, "alpha\nbeta\n");
+    await writeFile(filePath, "# Title   \n\nSome   content.\n");
+    const runCmd = FORMATTER_COMMANDS[".md"](filePath);
+    const res = await spawnAsync(runCmd[0], runCmd.slice(1));
+    assert.strictEqual(res.exitCode, 0);
 
-    assert.deepEqual(await formatFileWithPrettier(filePath), {
-      status: "updated",
-    });
-    assert.strictEqual(await readFile(filePath, "utf8"), "alpha\n\nbeta\n");
-
-    assert.deepEqual(await formatFileWithPrettier(filePath), {
-      status: "unchanged",
-    });
+    const formatted = await readFile(filePath, "utf8");
+    assert.strictEqual(formatted, "# Title\n\nSome content.\n");
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
+});
+
+it("FORMATTER_COMMANDS - formats js/ts/json/css using biome", async () => {
+  assert.deepEqual(FORMATTER_COMMANDS[".ts"]("test.ts"), ["biome", "format", "--write", "test.ts"]);
+  assert.deepEqual(FORMATTER_COMMANDS[".json"]("test.json"), ["biome", "format", "--write", "test.json"]);
+
+  const tempDir = await mkdtemp(join(tmpdir(), "format-biome-test-"));
+  const filePath = join(tempDir, "sample.ts");
+
+  try {
+    await writeFile(filePath, "const  x :  number=  42 ; \n");
+    const runCmd = FORMATTER_COMMANDS[".ts"](filePath);
+    const res = await spawnAsync(runCmd[0], runCmd.slice(1));
+    assert.strictEqual(res.exitCode, 0);
+
+    const formatted = await readFile(filePath, "utf8");
+    assert.strictEqual(formatted, "const x: number = 42;\n");
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+it("FORMATTER_COMMANDS - formats nix using alejandra and typst using typstyle", () => {
+  assert.deepEqual(FORMATTER_COMMANDS[".nix"]("test.nix"), ["alejandra", "-q", "test.nix"]);
+  assert.deepEqual(FORMATTER_COMMANDS[".typ"]("test.typ"), ["typstyle", "-i", "-q", "test.typ"]);
 });
 
 it("printHelp - writes usage and format information including epub to stdout", () => {

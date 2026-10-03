@@ -19,6 +19,8 @@ let
   formatterPackages = [
     pkgs.bun
     pkgs.prettier
+    pkgs.biome
+    pkgs.rumdl
     pkgs.taplo
     pkgs.fmtron
     pkgs.kdlfmt
@@ -26,7 +28,8 @@ let
     pkgs.stylua
     pkgs.ruff
     pkgs.go
-    pkgs.nixfmt
+    pkgs.alejandra
+    pkgs.typstyle
     pkgs.dart
     pkgs.elixir
     pkgs.erlfmt
