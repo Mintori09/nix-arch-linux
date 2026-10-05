@@ -30,5 +30,6 @@ in
     inter
     nerd-fonts.jetbrains-mono
     nerd-fonts.hack
+    times-newer-roman
   ];
 }
