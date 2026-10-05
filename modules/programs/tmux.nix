@@ -390,11 +390,13 @@ in
                   # Pane navigation / resize
                   # ---------------------------------------------------------------------
 
-                  # Chuyển focus giữa các tab / window (Trái / Phải)
-                  bind -r Left previous-window
-                  bind -r Right next-window
+                  # Chuyển focus & đổi thứ tự các tab / window
+                  bind -n C-PageUp previous-window
+                  bind -n C-PageDown next-window
                   bind -r S-h previous-window
                   bind -r S-l next-window
+                  bind -r < swap-window -d -t -1
+                  bind -r > swap-window -d -t +1
 
                   bind -r C-h select-pane -L
                   bind -r C-j select-pane -D
