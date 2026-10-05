@@ -3,6 +3,7 @@
 {
   home.shellAliases = {
     gst = "${pkgs.git}/bin/git status";
+    gdf = "${pkgs.git}/bin/git diff --stat";
     gcw = "${pkgs.git}/bin/git clone $(${pkgs.wl-clipboard}/bin/wl-paste)";
     gcwd = ''
       url="$(${pkgs.wl-clipboard}/bin/wl-paste)"
