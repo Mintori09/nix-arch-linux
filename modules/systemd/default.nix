@@ -7,5 +7,6 @@
     ./keyboard-rs.nix
     ./kglance.nix
     ./bluetooth.nix
+    ./copyq.nix
   ];
 }
