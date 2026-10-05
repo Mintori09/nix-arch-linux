@@ -23,6 +23,9 @@
     fastfetch
     hyperfine
     magika
+    mdbook
+    mdbook-toc
+    mdbook-epub
     cliphist
     fd
     ripgrep
