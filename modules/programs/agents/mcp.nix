@@ -2,8 +2,7 @@
   pkgs,
   config,
   ...
-}:
-{
+}: {
   context7 = {
     local = {
       argv = [
@@ -138,4 +137,15 @@
     enabled = true;
   };
 
+  notebooklm = {
+    local = {
+      argv = [
+        "${pkgs.uv}/bin/uvx"
+        "--from"
+        "notebooklm-mcp-cli"
+        "notebooklm-mcp"
+      ];
+    };
+    enabled = true;
+  };
 }
