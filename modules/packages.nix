@@ -26,6 +26,14 @@
     mdbook
     mdbook-toc
     mdbook-epub
+    mdbook-mermaid
+    mdbook-d2
+    mdbook-pdf
+    mdbook-katex
+    mdbook-pandoc
+    mdbook-cmdrun
+    mdbook-yml-header
+    mdbook-footnote
     cliphist
     fd
     ripgrep
