@@ -5,8 +5,10 @@ cmd="${1:-}"
 
 case "$cmd" in
   launch)
-    path="${2:-$PWD}"
+    raw_path="${2:-$PWD}"
     origin="${3:-}"
+    git_root="$(git -C "$raw_path" rev-parse --show-toplevel 2>/dev/null || true)"
+    path="${git_root:-$raw_path}"
     session="agy-$(echo "$path" | md5sum | cut -c1-8)"
 
     current_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
