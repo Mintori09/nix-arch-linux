@@ -12,7 +12,7 @@
     ./direnv.nix
     ./fastfetch.nix
     ./git.nix
-    ./tmux.nix
+    ./tmux
     ./helix
     ./nushell.nix
     ./agents
