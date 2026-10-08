@@ -50,9 +50,9 @@
       exec nix-collect-garbage --delete-older-than 2d --cores 16
     '')
 
-    # ai-rename: Rename files using Ollama/gemma3 model
+    # ai-rename: Alias to ai-renamer
     (pkgs.writeShellScriptBin "ai-rename" ''
-      exec ai-renamer --provider=ollama ---model=gemma3:4b-it-qat --chars 100 --language English "$@"
+      exec ai-renamer "$@"
     '')
   ];
 }

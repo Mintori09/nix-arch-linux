@@ -7,6 +7,7 @@ User: `mintori`, host: `endeavour-desktop`, system: `x86_64-linux`.
 
 > [!IMPORTANT]
 > Always rebuild home-manager after making changes to any configuration files or scripts so they take effect immediately:
+>
 > ```bash
 > nh home switch ~/.config/home-manager
 > ```
@@ -47,11 +48,12 @@ Do NOT edit `config.json` directly — edit the Nix source and run `hms`.
 ## MCP servers
 
 Shared across agents via `modules/programs/agents/mcp.nix`:
+
 - **OpenCode** (`opencode/mcp.nix`): transforms format into `local` and `remote` types.
 - **Claude** (`claude/mcp.nix`): supports local servers, plus conditionally adds `codex` MCP and `work-docs` on `work-laptop`.
 - **Antigravity CLI** (`antigravity/mcp.nix` & `default.nix`): generates `~/.gemini/antigravity-cli/mcp_config.json`, includes custom zsh completion (`_agy`).
 - **Copilot CLI** (`copilot-cli/mcp.nix` & `default.nix`): generates `~/.copilot/mcp-config.json` with `local` and `http` server definitions.
-Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, tavily (disabled by default).
+  Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, tavily (disabled by default).
 
 ## oc-go-cc proxy
 
@@ -77,7 +79,7 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 
 ## Custom scripts & packages
 
-- Custom scripts (in `modules/scripts/`): `auto-click`, `caffeinate`, `cleartext-wifi`, `compress-wrap`, `copy-files`, `direnv-wrap`, `each`, `extract`, `fcitx5-remote`, `format`, `fzf-preview`, `fzf-rg-edit`, `keyboard-control`, `nano_usage`, `nix-rebuild`, `open`, `quick-aliases`, `rclone-sync`, `read`, `remove`, `scratch`, `select-and-open-video`, `sleep-cycles`, `telepush`, `which_file`. Shared helpers in `_helpers.nix`.
+- Custom scripts (in `modules/scripts/`): `ai-renamer`, `auto-click`, `caffeinate`, `cleartext-wifi`, `compress-wrap`, `copy-files`, `direnv-wrap`, `each`, `extract`, `fcitx5-remote`, `format`, `fzf-preview`, `fzf-rg-edit`, `keyboard-control`, `nano_usage`, `nix-rebuild`, `open`, `quick-aliases`, `rclone-sync`, `read`, `remove`, `scratch`, `select-and-open-video`, `sleep-cycles`, `telepush`, `which_file`. Shared helpers in `_helpers.nix`.
 - Custom packages (in `modules/packages/` from `packages/`): `ai-bridge`, `anki-tool`, `anyflip-downloader`, `bookokrat`, `cv-cli` (`cv`), `dbx`, `fitgirl-link-extractor` (`mle`), `fmtron`, `generate-toc` (`gentoc`), `hoppscotch`, `keyboard-rs`, `kmp-lsp`, `magika`, `qbittorrent`, `vicinae`, `zap`, `zed-editor`.
 
 Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging

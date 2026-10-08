@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./ai-renamer.nix
     ./format.nix
     ./each.nix
     ./which_file.nix

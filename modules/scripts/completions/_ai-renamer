@@ -1,0 +1,17 @@
+#compdef ai-renamer ai-rename
+
+_ai-renamer() {
+  _arguments -s : \
+    '(-p --prompt --hint)'{-p,--prompt,--hint}'[Custom instruction / naming hint]:prompt string: ' \
+    '(-n -d --dry-run)'{-n,-d,--dry-run}'[Preview proposed renames without modifying files]' \
+    '(-y --yes)'{-y,--yes}'[Automatically apply renames without confirmation]' \
+    '(-r --recursive)'{-r,--recursive}'[Recursively scan directories]' \
+    '(-m --model)'{-m,--model}'[Choose Gemini model]:model:(gemini-3.5-flash-lite gemini-3.5-flash gemini-2.5-flash gemini-2.5-pro)' \
+    '--case[Enforce case convention]:case style:(kebab snake camel pascal lower preserve)' \
+    '--no-content[Do not read file content snippets for context]' \
+    '(-v --verbose)'{-v,--verbose}'[Print verbose debug output]' \
+    '(-h --help)'{-h,--help}'[Show help message]' \
+    '*:file:_files'
+}
+
+_ai-renamer "$@"
