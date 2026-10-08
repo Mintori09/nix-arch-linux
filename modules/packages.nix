@@ -22,6 +22,7 @@
     rumdl
     fastfetch
     hyperfine
+    defuddle
     magika
     mdbook
     mdbook-toc
@@ -61,7 +62,6 @@
     hexyl
     glow
     nixfmt
-    lazygit
     lazydocker
     spicetify-cli
     rclone
@@ -166,7 +166,7 @@
     anyflip-downloader
     cv-cli
     anki-tool
-    ai-bridge
+    # ai-bridge
     generate-toc
     fitgirl-link-extractor
     keyboard-rs
