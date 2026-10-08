@@ -12,6 +12,7 @@
     ./direnv.nix
     ./fastfetch.nix
     ./git.nix
+    ./lazygit.nix
     ./tmux
     ./helix
     ./nushell.nix
@@ -22,7 +23,6 @@
     ./pinta.nix
     ./alacritty.nix
     ./packages
-    ./yt-dlp.nix
     ./obs.nix
     ./mcfly.nix
     ./pandoc.nix
