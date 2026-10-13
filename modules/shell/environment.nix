@@ -45,6 +45,14 @@ in
     FZF_COMPLETION_DIR_OPTS = "--walker dir,follow";
     INTELLI_HOME = c.intelliHome;
     # MANGOHUD = "1";
+
+    # Compiler cache (sccache for Rust & C/C++ dependencies like mupdf)
+    RUSTC_WRAPPER = "sccache";
+    CARGO_INCREMENTAL = "0";
+    CC = "sccache clang";
+    CXX = "sccache clang++";
+    CMAKE_C_COMPILER_LAUNCHER = "sccache";
+    CMAKE_CXX_COMPILER_LAUNCHER = "sccache";
   };
 
   home.sessionPath = c.systemPathPriority ++ [

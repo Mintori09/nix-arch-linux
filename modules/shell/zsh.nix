@@ -112,6 +112,15 @@ in
           'pkg="''${word% }"; pacman -Qi "$pkg" 2>/dev/null || yay -Si "$pkg" 2>/dev/null'
 
         # Env
+        [[ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]] && source "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+        export RUSTC_WRAPPER="sccache"
+        export CARGO_INCREMENTAL="0"
+        export CC="sccache clang"
+        export CXX="sccache clang++"
+        export CMAKE_C_COMPILER_LAUNCHER="sccache"
+        export CMAKE_CXX_COMPILER_LAUNCHER="sccache"
+        export SCCACHE_BASE_DIR="$HOME/Projects"
+
         export ZSH_AUTOSUGGEST_USE_ASYNC=1
         export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
         export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#838ba7'
