@@ -1,0 +1,59 @@
+#compdef rust-script
+
+_rust-script_toolchains() {
+  local -a toolchains
+  if (( $+commands[rustup] )); then
+    toolchains=(${${(f)"$(rustup toolchain list 2>/dev/null)"}%% *})
+  fi
+  if (( ${#toolchains} > 0 )); then
+    _describe -t toolchains 'toolchain' toolchains
+  else
+    _values 'toolchain' stable beta nightly
+  fi
+}
+
+_rust-script() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  zstyle ':completion:*:*:rust-script:*' prefix-needed false
+
+  _arguments -s -S -C \
+    '(-e --expr -l --loop)'{-e,--expr}'[Execute script as a literal expression and display result]' \
+    '(-e --expr -l --loop)'{-l,--loop}'[Execute script as a literal closure once for each line from stdin]' \
+    '(-b --base-path)'{-b+,--base-path=}'[Base path for resolving dependencies]:base path:_files -/' \
+    '(-c --cargo-output)'{-c,--cargo-output}'[Show output from cargo when building]' \
+    '--count[Invoke loop closure with line and line number]' \
+    '--debug[Build a debug executable, not an optimised one]' \
+    '*'{-d+,--dep=}'[Add a dependency (name or name=version)]:dependency:' \
+    '*'{-x+,--extern=}'[Add macro_use extern crate item]:crate name:' \
+    '*'{-u+,--unstable-feature=}'[Add feature declaration]:unstable feature:' \
+    '--clear-cache[Clears out the script cache]' \
+    '(-f --force)'{-f,--force}'[Force the script to be rebuilt]' \
+    '(-p --package)'{-p,--package}'[Generate Cargo package without compiling or running]' \
+    '--pkg-path=[Specify where to place generated Cargo package]:package path:_files -/' \
+    '--test[Compile and run tests]' \
+    '--bench[Compile and run benchmarks (requires nightly toolchain)]' \
+    '(-t --toolchain)'{-t+,--toolchain=}'[Build script using given toolchain version]:toolchain:_rust-script_toolchains' \
+    '(-w --wrapper)'{-w+,--wrapper=}'[Wrapper injected before command to run]:wrapper command:_command_names -e' \
+    '(-h --help)'{-h,--help}'[Print help information]' \
+    '(-V --version)'{-V,--version}'[Print version information]' \
+    '1:script:->script_target' \
+    '*:script argument:_files' && ret=0
+
+  case "$state" in
+    script_target)
+      if [[ -n "${opt_args[(i)-e|--expr]}" || -n "${opt_args[(i)-l|--loop]}" ]]; then
+        _message 'expression or closure'
+      else
+        _alternative \
+          'rust-scripts:Rust script files:_files -g "*.{rs,ers}(#q.)"' \
+          'all-files:all files:_files' && ret=0
+      fi
+      ;;
+  esac
+
+  return ret
+}
+
+_rust-script "$@"

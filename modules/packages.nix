@@ -108,6 +108,7 @@
     qpdf
 
     # Rust & Cargo Ecosystem
+    sccache
     rustc
     cargo
     rust-script
