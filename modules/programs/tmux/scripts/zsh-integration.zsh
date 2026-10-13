@@ -21,7 +21,8 @@ t() {
 	# No argument: find main session (ignore popups: agy-*, term-*, opencode-*, pi-*, btop-*, lazygit-*)
 	local current_dir="$PWD"
 	local git_root
-	git_root="$(command git rev-parse --show-toplevel 2>/dev/null || true)"
+	git_root="$(command git worktree list --porcelain 2>/dev/null | awk '/^worktree / { print substr($0, 10); exit }' || true)"
+	git_root="${git_root:-$(command git rev-parse --show-toplevel 2>/dev/null || true)}"
 	local target_dir="${git_root:-$current_dir}"
 	local matched_sess
 

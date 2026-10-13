@@ -24,7 +24,8 @@ fi
 
 case "$prefix" in
 opencode | pi | lazygit)
-	git_root="$(git -C "$raw_path" rev-parse --show-toplevel 2>/dev/null || true)"
+	git_root="$(git -C "$raw_path" worktree list --porcelain 2>/dev/null | awk '/^worktree / { print substr($0, 10); exit }' || true)"
+	git_root="${git_root:-$(git -C "$raw_path" rev-parse --show-toplevel 2>/dev/null || true)}"
 	path="${git_root:-$raw_path}"
 	;;
 *)

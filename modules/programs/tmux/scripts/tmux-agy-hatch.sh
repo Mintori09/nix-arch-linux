@@ -27,8 +27,9 @@ launch)
 		fi
 	fi
 
-	# Resolve git root based on the active tab/window's path
-	git_root="$(git -C "$raw_path" rev-parse --show-toplevel 2>/dev/null || true)"
+	# Resolve git root based on the active tab/window's path (main worktree root if in a worktree)
+	git_root="$(git -C "$raw_path" worktree list --porcelain 2>/dev/null | awk '/^worktree / { print substr($0, 10); exit }' || true)"
+	git_root="${git_root:-$(git -C "$raw_path" rev-parse --show-toplevel 2>/dev/null || true)}"
 	path="${git_root:-$raw_path}"
 	session="agy-$(echo "$path" | md5sum | cut -c1-8)"
 
@@ -132,7 +133,7 @@ picker)
 
 	target_sess="$(echo "$sel" | cut -f2)"
 
-	tmux switch-client -t "$target_sess"
+	exec tmux attach-session -t "$target_sess"
 	;;
 
 bell)
