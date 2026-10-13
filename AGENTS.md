@@ -53,7 +53,7 @@ Shared across agents via `modules/programs/agents/mcp.nix`:
 - **Claude** (`claude/mcp.nix`): supports local servers, plus conditionally adds `codex` MCP and `work-docs` on `work-laptop`.
 - **Antigravity CLI** (`antigravity/mcp.nix` & `default.nix`): generates `~/.gemini/antigravity-cli/mcp_config.json`, includes custom zsh completion (`_agy`).
 - **Copilot CLI** (`copilot-cli/mcp.nix` & `default.nix`): generates `~/.copilot/mcp-config.json` with `local` and `http` server definitions.
-  Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, tavily (disabled by default).
+  Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, notebooklm, cloudflare, tavily (disabled by default).
 
 ## oc-go-cc proxy
 

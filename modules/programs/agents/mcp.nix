@@ -148,4 +148,26 @@
     };
     enabled = true;
   };
+
+  cloudflare = {
+    remote = {
+      url = "https://mcp.cloudflare.com/mcp";
+      headers = {
+        Authorization = "Bearer $CLOUDFLARE_API_TOKEN";
+      };
+      timeout = 10000;
+    };
+    local = {
+      argv = [
+        "${pkgs.nodejs}/bin/npx"
+        "-y"
+        "mcp-remote"
+        "https://mcp.cloudflare.com/mcp"
+      ];
+      env = {
+        CLOUDFLARE_API_TOKEN = "$CLOUDFLARE_API_TOKEN";
+      };
+    };
+    enabled = true;
+  };
 }
