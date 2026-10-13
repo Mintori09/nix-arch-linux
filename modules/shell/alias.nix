@@ -17,6 +17,9 @@ in
     hms = lib.mkForce "nh home switch ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
 
+    # Antigravity
+    a = "agy --dangerously-skip-permissions -p";
+
     # NAVIGATION & SHELL BASICS
     ".." = "cd ..";
     ".2" = "cd ..";
