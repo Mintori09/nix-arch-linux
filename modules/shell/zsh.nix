@@ -510,12 +510,35 @@ in
 
         # Carapace completion integration (must run after compinit)
         source <(${pkgs.carapace}/bin/carapace _carapace zsh)
+
         # Retain zsh native completion
+        source <(${pkgs.just}/bin/just --completions zsh)
+        compdef _make make
         compdef _systemctl systemctl
         compdef _yay yay
+        compdef _pacman pacman
         compdef _sh sh
         compdef _sh bash
         compdef _files nvim vim vi
+        compdef _mv mv
+        compdef _cp cp
+        compdef _rm rm
+        compdef _ls ls
+        compdef _chmod chmod
+        compdef _chown chown
+        compdef _mkdir mkdir
+        compdef _rmdir rmdir
+        compdef _touch touch
+        compdef _ln ln
+        compdef _cat cat
+        compdef _kill kill
+        compdef _pgrep pkill
+        compdef _git git
+        compdef _cargo cargo
+        compdef _tar tar
+        compdef _zip zip
+        compdef _unzip unzip
+
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
     ];
