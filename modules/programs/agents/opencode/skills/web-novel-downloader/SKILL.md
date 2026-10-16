@@ -443,9 +443,9 @@ Some sites lock chapters behind paywalls:
 
 ### 3A. Check for Existing Code
 
-- [ ] Look in the project for existing adapters at `{domain}/scrape-{domain}.ts`
-- [ ] If the domain already has one, use it directly. Skip to Step 4.
-- [ ] Otherwise, write a new one.
+- [ ] Look in the project for existing adapters at `{domain}/scrape-{domain}.ts` (or `lib/download.ts` mapping)
+- [ ] If the domain already has one, use it directly via `just run <url>` or `npx tsx lib/download.ts <url>`. Skip to Step 4.
+- [ ] Otherwise, write a new adapter. After creating a new adapter, register it into `lib/download.ts` (`ADAPTERS` map) so it can be called seamlessly via `just run <url>`.
 
 ### 3B. Derive Paths
 
@@ -1064,7 +1064,10 @@ Before declaring done, confirm all items:
 - [ ] If the novel has images, spot-check that `<img>` tags were preserved
 
 If any check fails → **fix the issue** (update adapter and re-run) before declaring complete.
-Then add to justfile command to run this scripts or create justfile (if not exist).
+Then ensure the adapter is registered in `lib/download.ts` and `justfile` so it can be run via:
+```bash
+just run <url>
+```
 
 ---
 
