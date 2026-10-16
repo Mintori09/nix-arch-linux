@@ -76,7 +76,7 @@ pnpm start video.mp4 video.webm -- -b:v 2M
 | mp4, mkv, mov, avi, webm, flv | mp4, mkv, webm        | ffmpeg              |
 | mp4, wav, flac, m4a, ogg, mp3 | mp3, wav, ogg         | ffmpeg              |
 | gif                           | mp4                   | ffmpeg              |
-| png, jpg, webp, svg, ...      | png, jpg, webp        | magick              |
+| png, jpg, webp, avif, svg, ...| png, jpg, webp, avif  | magick              |
 | mhtml                         | png, jpg, webp        | chromium + magick   |
 | md                            | pdf                   | pandoc + weasyprint |
 | md                            | docx, html, epub      | pandoc              |

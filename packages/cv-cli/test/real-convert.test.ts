@@ -77,6 +77,7 @@ const BINARY = [
   "webp",
   "tiff",
   "bmp",
+  "avif",
   "heic",
   "icns",
   "svg",
@@ -159,7 +160,7 @@ before(() => {
   }
 
   if (which("magick") && FIXTURES_READY.has("png")) {
-    for (const t of ["jpg", "gif", "webp", "tiff", "bmp"]) {
+    for (const t of ["jpg", "gif", "webp", "tiff", "bmp", "avif"]) {
       if (toolSpawn("magick", [pngP, fp(t)])) FIXTURES_READY.add(t);
     }
   }
