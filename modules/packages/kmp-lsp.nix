@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  version = "0.26.0";
+  version = "0.27.0";
 in
 
 pkgs.stdenv.mkDerivation {
@@ -9,8 +9,8 @@ pkgs.stdenv.mkDerivation {
   inherit version;
 
   src = pkgs.fetchurl {
-    url = "https://github.com/Hessesian/kmp-lsp/releases/download/v\${version}/kmp-lsp-linux-x86_64.tar.gz";
-    hash = "sha256-E9YLRHErp5GalGnGtNgmFbp6IpRnRq8DRb31r+5mz0w=";
+    url = "https://github.com/Hessesian/kmp-lsp/releases/download/v${version}/kmp-lsp-linux-x86_64.tar.gz";
+    hash = "sha256-wU4Jlx7l9TiVqmvDAkL9vMNYCq51HDmJmSOu4aOWJJI=";
   };
 
   sourceRoot = ".";

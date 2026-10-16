@@ -2,11 +2,11 @@
 
 let
   pname = "qbittorrent";
-  version = "5.2.3";
+  version = "5.2.4";
 
   src = pkgs.fetchurl {
     url = "https://github.com/qbittorrent/qBittorrent/releases/download/release-${version}/qbittorrent-${version}_x86_64.AppImage";
-    hash = "sha256-wUZ6cTkpMjqvJT4CFEmZKsKZpsgwqTNkOwIwB9hkHtA=";
+    hash = "sha256-mrDpejJFodWWJxh4p1qiCAScxivotoKqPzEJURxfF7c=";
   };
 
   appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
