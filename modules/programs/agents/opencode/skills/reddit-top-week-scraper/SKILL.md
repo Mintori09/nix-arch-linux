@@ -76,7 +76,7 @@ Với mỗi sub, lọc giữ lại 4 tới 6 bài đáng chú ý nhất:
 
 ### 6. Tiêu chuẩn tóm tắt & Ghi file kết quả
 
-Mỗi sub lưu vào một file `reddit_digest_week/<Sub>.md`. Viết dưới dạng văn xuôi liền mạch, phong cách bài phân tích chuyên sâu, **tuyệt đối không dùng ký tự gạch đầu dòng (`-`, `*`, `•`)**. Dùng tiêu đề `###` để phân tách từng bài viết rõ ràng.
+Mỗi sub lưu vào một file theo định dạng thư mục ngày `reddit_digest_week/<YYYY-MM-DD>/<Sub>.md` (ví dụ: `reddit_digest_week/2026-10-14/ObsidianMD.md` với `YYYY-MM-DD` là ngày hiện tại chạy cào bài). Lưu ý file cache `.seen_urls.json` vẫn nằm ở thư mục gốc `reddit_digest_week/.seen_urls.json` để dùng chung giữa các lần chạy. Viết dưới dạng văn xuôi liền mạch, phong cách bài phân tích chuyên sâu, **tuyệt đối không dùng ký tự gạch đầu dòng (`-`, `*`, `•`)**. Dùng tiêu đề `###` để phân tách từng bài viết rõ ràng.
 
 #### Tiêu chuẩn của một bản tóm tắt chất lượng cao:
 
