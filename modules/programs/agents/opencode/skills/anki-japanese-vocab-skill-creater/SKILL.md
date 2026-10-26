@@ -1,6 +1,10 @@
 ---
 name: anki-jp-vocab-generator
-description: Generate structured 2026-optimized Japanese Anki vocabulary card JSON data for anki-generator-node (`--type jp_vocab`). ALWAYS use when user asks to create Japanese Anki flashcards, generate Japanese vocabulary cards, or needs structured Japanese JSON with furigana, pitch accent, sentence mining (N+1), cloze deletion, and Vietnamese translation. Handles single words, verbs (transitive/intransitive), idioms, and phrases. Output JSON array has fields matching the 2026 optimized schema (meta, vocabulary, context, media, notes). Vietnamese triggers: "tạo thẻ tiếng Nhật", "tạo Anki tiếng Nhật", "tạo json tiếng Nhật", "anki jp", "jp vocab json", "từ mới tiếng Nhật".
+description: >
+  Generate structured 2026-optimized Japanese Anki vocabulary card JSON data for anki-generator-node (`--type jp_vocab`).
+  ALWAYS use when user asks to create Japanese Anki flashcards, generate Japanese vocabulary cards, or needs structured Japanese JSON with furigana, pitch accent, sentence mining (N+1), cloze deletion, and Vietnamese translation.
+  Handles single words, verbs (transitive/intransitive), idioms, and phrases. Output JSON array has fields matching the 2026 optimized schema (meta, vocabulary, context, media, notes).
+  Vietnamese triggers: "tạo thẻ tiếng Nhật", "tạo Anki tiếng Nhật", "tạo json tiếng Nhật", "anki jp", "jp vocab json", "từ mới tiếng Nhật".
 ---
 
 # Japanese Vocabulary Card Generator (2026 Optimized Schema)

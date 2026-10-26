@@ -1,6 +1,10 @@
 ---
 name: anki-jp-grammar-generator
-description: Generate structured Japanese Anki grammar card JSON data for anki-generator-node (`--type jp_grammar`). ALWAYS use when user asks to create Japanese grammar Anki flashcards, generate Japanese grammar cards, or needs structured Japanese JSON with pattern, reading, formula, 3-language translations (VI, EN, JP), example sentence with furigana, usage notes, and JLPT levels. Handles N5, N4, N3, N2, N1 grammar points. Output JSON array has fields matching the schema (meta, grammar, example, media, notes). Vietnamese triggers: "tạo thẻ ngữ pháp tiếng Nhật", "tạo Anki ngữ pháp tiếng Nhật", "tạo json ngữ pháp", "ngữ pháp tiếng Nhật", "anki jp grammar", "jp grammar json", "tạo thẻ jp_grammar".
+description: >
+  Generate structured Japanese Anki grammar card JSON data for anki-generator-node (`--type jp_grammar`).
+  ALWAYS use when user asks to create Japanese grammar Anki flashcards, generate Japanese grammar cards, or needs structured Japanese JSON with pattern, reading, formula, 3-language translations (VI, EN, JP), example sentence with furigana, usage notes, and JLPT levels.
+  Handles N5, N4, N3, N2, N1 grammar points. Output JSON array has fields matching the schema (meta, grammar, example, media, notes).
+  Vietnamese triggers: "tạo thẻ ngữ pháp tiếng Nhật", "tạo Anki ngữ pháp tiếng Nhật", "tạo json ngữ pháp", "ngữ pháp tiếng Nhật", "anki jp grammar", "jp grammar json", "tạo thẻ jp_grammar".
 ---
 
 # Japanese Grammar Card Generator (Schema `jp_grammar`)

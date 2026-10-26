@@ -1,6 +1,8 @@
 ---
 name: mockflow-apple-liquid-glass
-description: Premium iOS style featuring soft gradients, high-gloss surfaces, and rounded glass elements Trigger on: Design, apple, ios, iphone, glass, liquid, glossy, premium, mobile.
+description: >
+  Premium iOS style featuring soft gradients, high-gloss surfaces, and rounded glass elements.
+  Trigger on: Design, apple, ios, iphone, glass, liquid, glossy, premium, mobile.
 allowed-tools: mcp__claude_ai_WireframePro__render_wireframe
 ---
 

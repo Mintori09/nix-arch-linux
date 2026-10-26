@@ -1,6 +1,9 @@
 ---
 name: exam-reviewer
-description: Format test/exam results (especially English/TOEIC tests) in markdown, highlight incorrect questions, and generate a detailed weakness analysis and action plan at the end of the document. Trigger this skill whenever the user asks to format test results, check wrong answers, review test files, or write a summary of weaknesses for a test/exam. Vietnamese trigger phrases include: "format bài thi", "đánh dấu câu sai", "nhận xét bài thi", "review bài tập", "phân tích lỗi sai", "phân tích câu sai".
+description: >
+  Format test/exam results (especially English/TOEIC tests) in markdown, highlight incorrect questions, and generate a detailed weakness analysis and action plan at the end of the document.
+  Trigger this skill whenever the user asks to format test results, check wrong answers, review test files, or write a summary of weaknesses for a test/exam.
+  Vietnamese trigger phrases include: "format bài thi", "đánh dấu câu sai", "nhận xét bài thi", "review bài tập", "phân tích lỗi sai", "phân tích câu sai".
 ---
 
 # Exam Reviewer & Formatter Skill

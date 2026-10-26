@@ -456,301 +456,102 @@ Before writing the adapter, derive these from the URL:
 
 ### 3C. Adapter Template — SSR Sites
 
-Follow this pattern. The key insight: each adapter is just three things — a way to find chapters, a way to extract content from a chapter page, and a main loop that connects them.
+Follow this pattern. The key insight: each adapter only needs to define site-specific logic (`extractSeriesMeta`, `fetchChapterUrls`, `scrapeChapter`), and leverages shared utilities from `../lib/adapter-utils` (and `../lib/cover`):
 
-- [ ] Write adapter script using the template below, customizing `fetchChapterUrls()` and `scrapeChapter()`:
+- [ ] Write adapter script using the template below:
 
 ```ts
 import * as cheerio from "cheerio";
 import TurndownService from "turndown";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  parseCliArgs,
+  slugify,
+  domainFromUrl,
+  padNum,
+  saveMetaJson,
+  generateEpubFile,
+  type NovelMeta,
+  type ChapterLink,
+  type ChapterContent,
+} from "../lib/adapter-utils";
+import { downloadCover } from "../lib/cover";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const BATCH_SIZE = 5;
+const BATCH_DELAY_MS = 2000;
 
-// --- Cookie jar for Cloudflare cf_clearance reuse ---
+// --- SITE-SPECIFIC: customize these three functions ---
 
-class CookieJar {
-  private map = new Map<string, string>();
-
-  set(url: string, rawHeaders: string[] | undefined) {
-    if (!rawHeaders) return;
-    const domain = new URL(url).hostname;
-    for (const raw of rawHeaders) {
-      const parts = raw.split(";")[0];
-      const eq = parts.indexOf("=");
-      if (eq === -1) continue;
-      this.map.set(`${domain}:${parts.slice(0, eq)}`, parts);
-    }
-  }
-
-  getHeader(url: string): string {
-    const domain = new URL(url).hostname;
-    const cookies: string[] = [];
-    for (const [k, v] of this.map) {
-      if (k.startsWith(domain + ":")) cookies.push(v);
-    }
-    return cookies.join("; ");
-  }
-}
-
-// --- Cloudflare bypass: Tier 1 — fetch with cookie support ---
-
-async function fetchWithCookies(
-  url: string,
-  jar: CookieJar,
-  extraHeaders?: Record<string, string>,
-): Promise<Response> {
-  const cookie = jar.getHeader(url);
-  const headers: Record<string, string> = {
-    "User-Agent":
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
-    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Dest": "document",
-    ...(cookie ? { Cookie: cookie } : {}),
-    ...extraHeaders,
-  };
-  const res = await fetch(url, { headers });
-  // @ts-ignore - getSetCookie available in Node 22+
-  jar.set(url, res.headers.getSetCookie?.());
-  return res;
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/['’"“”]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function domainFromUrl(url: string): string {
-  return new URL(url).hostname.replace(/^www\./, "").split(".")[0];
-}
-
-interface ChapterLink {
-  num: string;
-  title: string;
-  url: string;
-}
-
-// --- METADATA ---
-
-interface NovelMeta {
-  title: string;
-  author?: string;
-  description?: string;
-  coverUrl?: string;
-  genres?: string[];
-  status?: string;
-  totalChapters: number;
-  freeChapters: number;
-}
-
-async function extractSeriesMeta(
-  seriesUrl: string,
-  jar: CookieJar,
-): Promise<NovelMeta> {
-  const res = await fetchWithCookies(seriesUrl, jar);
-  const $ = cheerio.load(await res.text());
-  const bodyText = $("body").text();
-
-  const title =
-    $("h1").first().text().trim() ||
-    $('meta[property="og:title"]').attr("content") ||
-    "";
-
-  const coverUrl =
-    $('meta[property="og:image"]').attr("content") ||
-    $(
-      ".attachment-thumbnail, .series-cover img, .novel-cover img, .wp-post-image",
-    )
-      .first()
-      .attr("src");
-
-  const description =
-    $('meta[property="og:description"]').attr("content") ||
-    $('meta[name="description"]').attr("content") ||
-    $(".series-summary, .summary, .description").first().text().trim();
-
-  const author =
-    $('meta[property="books:author"]').attr("content") ||
-    $('meta[name="author"]').attr("content") ||
-    $(".author, .entry-author").first().text().trim();
-
-  const genres: string[] = [];
-  $(".genre a, .genres a, a[rel='tag']").each((_, el) => {
-    const g = $(el).text().trim();
-    if (g) genres.push(g);
+async function extractSeriesMeta(seriesUrl: string): Promise<NovelMeta> {
+  const res = await fetch(seriesUrl, {
+    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
   });
+  const $ = cheerio.load(await res.text());
 
-  const statusMatch = bodyText.match(
-    /(?:Status|Tiến độ|Tình trạng)\s*:?\s*(Ongoing|Completed|Oneshot|Đang ra|Hoàn thành|Đã hoàn)/i,
-  );
-  let status = statusMatch?.[1];
-  if (status === "Đang ra") status = "Ongoing";
-  else if (status === "Hoàn thành" || status === "Đã hoàn")
-    status = "Completed";
+  const title = $("h1").first().text().trim() || $('meta[property="og:title"]').attr("content") || "Unknown";
+  const coverUrl = $('meta[property="og:image"]').attr("content") || $(".series-cover img").first().attr("src");
+  const description = $('meta[property="og:description"]').attr("content") || $(".summary").first().text().trim();
+  const author = $('meta[name="author"]').attr("content") || $(".author").first().text().trim();
 
-  const allMatch = bodyText.match(/All\s*\(\s*(\d+)\s*\)/i);
-  const freeMatch = bodyText.match(/Free\s*\(\s*(\d+)\s*\)/i);
-
-  return {
-    title: title || "Unknown",
-    totalChapters: allMatch ? parseInt(allMatch[1], 10) : 0,
-    freeChapters: freeMatch ? parseInt(freeMatch[1], 10) : 0,
-    author,
-    description,
-    coverUrl,
-    genres: genres.length ? genres : undefined,
-    status,
-  };
+  return { title, author, description, coverUrl };
 }
 
-// --- SITE-SPECIFIC: customize these two functions ---
-
-async function fetchChapterUrls(
-  seriesUrl: string,
-  jar: CookieJar,
-): Promise<ChapterLink[]> {
-  const res = await fetchWithCookies(seriesUrl, jar);
+async function fetchChapterUrls(seriesUrl: string): Promise<ChapterLink[]> {
+  const res = await fetch(seriesUrl, {
+    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
+  });
   const $ = cheerio.load(await res.text());
   const links: ChapterLink[] = [];
-  $("YOUR-LIST-SELECTOR").each((_, el) => {
+
+  $("YOUR-LIST-SELECTOR").each((i, el) => {
     const href = $(el).attr("href");
-    // extract chapter number and title
-    links.push({ num, title, url });
+    const title = $(el).text().trim();
+    if (href) {
+      links.push({ num: padNum(i + 1), title, url: href });
+    }
   });
   return links;
 }
 
-async function scrapeChapter(
-  url: string,
-  jar: CookieJar,
-): Promise<{ title: string; body: string } | null> {
-  const res = await fetchWithCookies(url, jar);
+async function scrapeChapter(url: string): Promise<ChapterContent | null> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
+  });
+  if (!res.ok) return null;
   const $ = cheerio.load(await res.text());
 
-  // check premium
+  // Check premium/locked
   if ($("body").text().includes('"is_premium":true')) return null;
 
   const title = $("h1, .entry-title").first().text().trim();
   const content = $("YOUR-CONTENT-SELECTOR").first();
   content.find("script, style, nav, button, svg, iframe, .sharedaddy").remove();
 
-  const turndown = new TurndownService({
-    headingStyle: "atx",
-    codeBlockStyle: "fenced",
-  });
+  const turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
   const body = turndown.turndown(content.html() || "").trim();
+  if (!body) return null;
+
   return { title, body };
 }
 
-// --- COVER ---
-
-async function downloadCover(
-  url: string | undefined,
-  outDir: string,
-  jar: CookieJar,
-): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const res = await fetchWithCookies(url, jar);
-    if (!res.ok) return null;
-    const ct = res.headers.get("content-type") || "";
-    const ext = ct.includes("png")
-      ? "png"
-      : ct.includes("webp")
-        ? "webp"
-        : "jpg";
-    const buf = await res.arrayBuffer();
-    const filename = `cover.${ext}`;
-    await writeFile(join(outDir, filename), new Uint8Array(buf));
-    return filename;
-  } catch {
-    return null;
-  }
-}
-
-// --- EPUB ---
-
-async function generateEpub(
-  outDir: string,
-  meta: NovelMeta,
-  chapters: Array<{ title: string; body: string }>,
-  coverFilename: string | null,
-): Promise<void> {
-  const { default: EPub } = await import("epub-gen");
-
-  const contentHtml = chapters.map((ch) => {
-    const turndown = new TurndownService({ headingStyle: "atx" });
-    const html = ch.body.replace(/\n\n/g, "</p><p>");
-    return {
-      title: ch.title,
-      data: `<h1>${ch.title}</h1><p>${html}</p>`,
-    };
-  });
-
-  const opt = {
-    title: meta.title,
-    author: meta.author || "Unknown",
-    cover: coverFilename ? join(outDir, coverFilename) : undefined,
-    description: meta.description,
-    showContents: true,
-    content: contentHtml,
-  };
-
-  const epubPath = join(outDir, `${slugify(meta.title)}.epub`);
-  await new EPub(opt, epubPath).promise;
-  console.log(`  Epub saved: ${epubPath}`);
-}
-
-// --- SAVE METADATA ---
-
-async function saveMetaJson(
-  outDir: string,
-  meta: NovelMeta,
-  coverFilename?: string | null,
-): Promise<void> {
-  const { totalChapters, freeChapters, coverUrl, ...rest } = meta;
-  const printable: Record<string, unknown> = {
-    ...rest,
-    totalChapters,
-    freeChapters,
-  };
-  if (coverFilename) printable["cover-image"] = coverFilename;
-  await writeFile(
-    join(outDir, "metadata.json"),
-    JSON.stringify(printable, null, 2),
-    "utf8",
-  );
-}
-
-// --- MAIN ---
+// --- MAIN RUNNER WITH RESUME & BATCHING ---
 
 async function main() {
-  const seriesUrl = process.argv[2];
+  const { seriesUrl, limit, start, force } = parseCliArgs();
   if (!seriesUrl) {
-    console.error("Usage: npx tsx <this-file>.ts <series-url>");
+    console.error("Usage: npx tsx <this-file>.ts <series-url> [--limit N] [--start N] [--force]");
     process.exit(1);
   }
 
   const domain = domainFromUrl(seriesUrl);
-  const jar = new CookieJar();
 
   // 1. Extract metadata from series page
   console.log("Extracting series metadata...");
-  const meta = await extractSeriesMeta(seriesUrl, jar);
+  const meta = await extractSeriesMeta(seriesUrl);
   console.log(`  Title: ${meta.title}`);
   if (meta.author) console.log(`  Author: ${meta.author}`);
-  console.log(
-    `  Chapters: ${meta.freeChapters} free / ${meta.totalChapters} total`,
-  );
 
   // 2. Derive paths
   const novelSlug = slugify(meta.title);
@@ -758,29 +559,89 @@ async function main() {
   await mkdir(outDir, { recursive: true });
 
   // 3. Download cover
-  const coverFile = meta.coverUrl
-    ? await downloadCover(meta.coverUrl, outDir, jar)
-    : null;
+  const coverFile = meta.coverUrl ? await downloadCover(meta.coverUrl, outDir) : null;
   if (coverFile) console.log(`  Cover saved: ${coverFile}`);
 
-  // 4. Fetch chapter list (uses cookies from metadata fetch)
-  const chapters = await fetchChapterUrls(seriesUrl, jar);
+  // 4. Fetch chapter list
+  let chapters = await fetchChapterUrls(seriesUrl);
   console.log(`Found ${chapters.length} chapters`);
 
-  // ... download loop (batching, error handling) ...
-  const downloaded: Array<{ title: string; body: string }> = [];
-  // (populate downloaded with results from scrapeChapter)
+  if (start && start > 1) {
+    chapters = chapters.slice(start - 1);
+  }
+  if (limit && limit > 0) {
+    chapters = chapters.slice(0, limit);
+  }
 
-  // 5. Save metadata.json (includes cover-image field)
+  // 5. Download chapters with Incremental Resume & Batching
+  const downloaded: ChapterContent[] = [];
+  let success = 0;
+  let skipped = 0;
+  const failed: Array<{ num: string; reason: string }> = [];
+
+  for (let i = 0; i < chapters.length; i += BATCH_SIZE) {
+    const batch = chapters.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(async (ch) => {
+        const filename = `chapter-${ch.num}-${slugify(ch.title)}.md`;
+        const filepath = join(outDir, filename);
+
+        // Incremental check (unless --force)
+        if (!force) {
+          try {
+            await access(filepath);
+            return { skipped: true, num: ch.num, filename };
+          } catch {}
+        }
+
+        const content = await scrapeChapter(ch.url);
+        if (!content) return { premium: true, num: ch.num };
+
+        const md = `# ${content.title}\n\n${content.body}\n`;
+        await writeFile(filepath, md, "utf8");
+        return { success: true, num: ch.num, content, filename };
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        const val = r.value;
+        if ("skipped" in val) {
+          skipped++;
+          console.log(`  [${val.num}] Skipped (exists)`);
+        } else if ("premium" in val) {
+          skipped++;
+          console.log(`  [${val.num}] Skipped (premium/locked)`);
+        } else if ("success" in val) {
+          downloaded.push(val.content!);
+          success++;
+          console.log(`  [${val.num}] Saved: ${val.filename}`);
+        }
+      } else {
+        failed.push({ num: "unknown", reason: r.reason?.message || String(r.reason) });
+      }
+    }
+
+    if (i + BATCH_SIZE < chapters.length) await sleep(BATCH_DELAY_MS);
+  }
+
+  // 6. Save metadata.json
+  meta.totalChapters = chapters.length;
+  meta.downloadedChapters = success;
   await saveMetaJson(outDir, meta, coverFile);
 
-  // 6. Generate epub
-  await generateEpub(outDir, meta, downloaded, coverFile);
+  // 7. Generate epub
+  if (downloaded.length > 0) {
+    await generateEpubFile(outDir, meta, downloaded, coverFile);
+  }
 
-  console.log("Done! Check outDir for output.");
+  console.log(`\nFinished: ${success} downloaded, ${skipped} skipped, ${failed.length} failed`);
 }
 
-main();
+main().catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});
 ```
 
 - [ ] **For SPA sites**, use Playwright + browser tools instead of fetch+cheerio:
@@ -795,20 +656,20 @@ main();
   `);
   ```
 
-### 3D. Shared Utilities
+### 3D. Shared Utilities (`lib/`)
 
-- [ ] Include these inline in new adapter files:
-  - `slugify(text)` — convert text to filename-safe slug
-  - `domainFromUrl(url)` — extract hostname prefix from URL
-  - `extractChapterNum(url)` — extract chapter number, zero-pad to 3 digits
-  - `buildFilename(title, url)` — produce `chapter-{NNN}-{slug}.md`
-  - `sleep(ms)` — delay helper for rate limiting
-  - `extractSeriesMeta(url)` — returns `NovelMeta`
-  - `downloadCover(url, outDir)` — download cover image
-  - `saveMetaJson(outDir, meta)` — write `metadata.json`
-  - `generateEpub(outDir, meta, chapters, coverFilename?)` — create epub
+- [ ] Leverage shared utilities in `lib/` instead of re-implementing:
+  - `lib/adapter-utils.ts`:
+    - `parseCliArgs()`: Parses `--limit N`, `--start N`, `--force`, `--test`, and URL automatically.
+    - `slugify(text)`: Converts title to filesystem-safe slug.
+    - `domainFromUrl(url)`: Extracts domain/hostname identifier.
+    - `padNum(n, width)`: Formats zero-padded numbers (`001`, `002`).
+    - `saveMetaJson(outDir, meta, coverFile)`: Writes standardized `metadata.json`.
+    - `generateEpubFile(outDir, meta, chapters, coverFile)`: Generates `.epub` via `epub-gen`.
+  - `lib/cover.ts`:
+    - `downloadCover(url, outDir)`: Downloads image with correct format/extension detection.
 
-- [ ] File naming: `chapter-{NNN}-{slugified-title}.md` where NNN is zero-padded
+- [ ] File naming: `chapter-{NNN}-{slugified-title}.md` where NNN is zero-padded.
 
 ### 3E. Output Format
 

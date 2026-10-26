@@ -67,7 +67,8 @@ Model tiers: default (v4-flash), think/complex (v4-pro), long_context (glm-5.1).
 Sourced from external flake inputs (anthropic-skills, vercel-skills, agent-toolkit, superpowers, etc.) and local skills (`modules/programs/agents/opencode/skills/`).
 Symlinked to `~/.config/opencode/skill/`, `~/.claude/skills/`, `~/.codex/skills/`, `~/.gemini/skills/`, and `~/.copilot/skills/` via `programs.agent-skills`.
 Enabled skills: skill-creator, webapp-testing, frontend-design, react-best-practices, technical-writing,
-blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers, anki-vocab-generator, plus all from `opencode-local` (e.g. `novel-vi-translator`, `doc-to-jp-vocab`) and `superpowers`.
+blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers, anki-vocab-generator,
+orca-cli, orchestration, orca-per-workspace-env, plus all from `opencode-local` (e.g. `novel-vi-translator`, `doc-to-jp-vocab`) and `superpowers`.
 Conditional: `work-laptop` host adds `work/agent-skills`.
 
 ## Git

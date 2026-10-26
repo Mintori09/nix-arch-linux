@@ -255,11 +255,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1792102121,
-        "narHash": "sha256-BvpKHJ4+8DCgfDA3QPXPXrvWQwTjXLK9nEdMLlDez7U=",
+        "lastModified": 1792987030,
+        "narHash": "sha256-t//ltF7M58hc9Rqags5IQCLyzMOPgAuyxkzDwcn1bj0=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "3d806e70ceb5a99c57f2b16243a43e05fd64cf3e",
+        "rev": "a5500f41321b0a6b68407500f26dd55dbeb5793f",
         "type": "github"
       },
       "original": {
@@ -406,6 +406,22 @@
         "type": "github"
       }
     },
+    "orca-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792218184,
+        "narHash": "sha256-GhN01kHgNBLQJ4AObuZR0aIpEHDSsVd66NuAt2nN4dA=",
+        "owner": "stablyai",
+        "repo": "orca",
+        "rev": "5b69634c0a063082b98a863285864f74782bdaa3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "stablyai",
+        "repo": "orca",
+        "type": "github"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -444,6 +460,7 @@
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_3",
         "nu-scripts": "nu-scripts",
+        "orca-skills": "orca-skills",
         "pre-commit-hooks": "pre-commit-hooks",
         "skill-seekers": "skill-seekers",
         "sops-nix": "sops-nix",

@@ -3,9 +3,10 @@
   imports = [
     ./skills.nix
     ./opencode
-    ./claude
-    ./oc-go-cc
+    # ./claude
+    # ./oc-go-cc
     ./antigravity
-    ./copilot-cli
+    ./pi
+    # ./copilot-cli
   ];
 }

@@ -12,30 +12,56 @@ Dịch toàn bộ truyện tiếng Anh sang tiếng Việt bằng AI, không vi�
 - User đưa các file kiểu `chapter-content-*.md`, mỗi file gộp nhiều chương, mỗi chương một dòng rất dài, mở đầu kiểu `#1Chapter 1 ...`, lẫn tag máy dịch như `gemini-3.5-flash-lite`, `deepseek-v4-flash`.
 - User nói: "dịch tất cả truyện", "dịch như này", "lưu vào từng file markdown", "mỗi file là một chap".
 
-## Quy trình
+## Quy trình Fast-Path (Hành động ngay, cấm thăm dò thừa thãi)
 
-### 1. Khảo sát nguồn
+> [!IMPORTANT]
+> **Quy tắc Tối đa 2 Lệnh Chuẩn Bị (Fast-Path Rule):**
+> Tuyệt đối KHÔNG viết script Python phân tích/thống kê file, KHÔNG kiểm tra dung lượng min/max, KHÔNG đọc trước hàng loạt chương để mò mẫm tìm tên riêng, KHÔNG viết script chia batch vào file `/tmp/`.
+> - **Lệnh 1:** `mkdir -p vi` và lấy danh sách file nguồn cần dịch (ví dụ: `ls chapter-*.md` hoặc kiểm tra xem chương nào chưa có trong `vi/`).
+> - **Lệnh 2 (nếu cần):** Đọc nhanh tiêu đề/đoạn đầu của chương 1 để lấy tên nhân vật chính nếu chưa có glossary.
+> - **Ngay từ bước tiếp theo:** Phải spawn Subagents dịch ngay lập tức! Mọi logic chia mảng 3–5 chương/subagent phải được Agent tự tính toán trong bộ nhớ (in-memory), không chạy script shell.
 
-- Dùng `read` thư mục để liệt kê file nguồn.
-- Kiểm tra độ dài: file thường ~25k ký tự, dòng >2000 ký tự sẽ bị `read` cắt cụt. Không cố đọc nguyên file một lần.
-- Tách chương bằng marker `#<số>Chapter`: dùng `bash` + `python3 -c` chỉ để **tách và bọc dòng** (wrap mỗi 600-800 ký tự tại dấu cách gần nhất), tuyệt đối không dịch bằng script. Ví dụ tách ra `/tmp/novel_en/chap_raw_XX.md` để đọc tiếp.
+### 1. Phân loại nguồn & Chuẩn bị
+- **Trường hợp A: Nguồn đã là các file riêng lẻ (`chapter-001-*.md`, ...):**
+  - Không cần tiền xử lý hay tách file. Bỏ qua bước tách chương.
+  - Kiểm tra các chương chưa có trong `vi/` để dịch tiếp.
+- **Trường hợp B: Nguồn là 1 file gộp lớn (`chapter-content-*.md`):**
+  - Chỉ dùng đúng 1 lệnh python ngắn gọn để tách ra các file chương nguồn nếu dòng quá dài bị cắt cụt.
+- Tạo nhanh bảng tên riêng (Glossary) ngắn gọn cho các nhân vật chính/địa danh xuất hiện ở đầu truyện (ví dụ: Ye You → Diệp Du, Xia Feng → Hạ Phong). Các tên phụ khác subagent tự suy luận dịch chuẩn Hán-Việt.
 
-### 2. Xác định danh sách chương thật
+### 2. Tự động dịch liên tục toàn bộ (Mặc định dùng Subagents song song)
 
-- Mỗi marker là một chương. Giữ số chương gốc.
-- Nếu chương chỉ chứa thông báo paywall / "AI Translation Requires Registration" / "Security Check Required" thì không bịa truyện. Tạo file ghi chú ngắn giữ mạch số chương, hẹn gặp chương sau.
-- Chuẩn hóa tên riêng ngay từ chương 1 và giữ xuyên suốt. Ví dụ gợi ý: Ye You → Diệp Du, Jiang Yumeng → Khương Dư Mộng, Jiang Yaqin → Khương Nhã Cầm, Su Qinglong → Tô Thanh Long, Baiyujing Academy → Học viện Bạch Ngọc Kinh, Magic City → Ma Đô, Daxia → Đại Hạ. Nếu truyện khác, tự đặt bảng tên nhất quán từ đầu.
-- Kiểm tra không được để các dữ dính vào nhau.
+- **Mặc định bắt buộc sử dụng subagents**:
+  - Tách và chuẩn bị sẵn các chương/file raw nguồn.
+  - Thiết lập bảng thuật ngữ / tên riêng chuẩn (glossary) cố định để truyền kèm vào prompt cho tất cả các subagent, đảm bảo tính nhất quán giữa các chương.
+  - **Tối ưu phân bổ (Batching):** Giao **3 đến 5 chương** cho mỗi subagent. Đây là điểm cân bằng vàng giữa chi phí overhead token, bộ nhớ context và tránh chạm trần output token.
+  - **Giới hạn luồng chạy đồng thời (Concurrency Limit):** Chỉ chạy song song **tối đa 3 đến 5 subagents cùng lúc**. Nếu có nhiều chương hơn, chia theo hàng đợi (queue) chạy cuốn chiếu từng đợt để tránh nghẽn TPM/RPM (lỗi 429 Rate Limit) và bảo đảm bộ nhớ.
+  - **Quy tắc Zero-Overhead Token cho Subagent (Chống gọi lệnh thừa/đốt token):**
+    - Nhúng trực tiếp toàn bộ nội dung raw của chương cần dịch vào trong `Prompt` giao việc cho subagent (không bắt subagent phải gọi tool đọc file từ đĩa).
+    - Subagent chỉ được thực hiện đúng **duy nhất 1 tool call**: `write_file` để lưu bản dịch hoàn chỉnh vào file đích trong thư mục `vi/`.
+    - **Nghiêm cấm** subagent chạy lệnh bash/shell (cấm `ls`, `cat`, `grep`, script python kiểm tra), cấm đọc lại file hay giải thích dông dài sau khi dịch.
+- **Template Prompt chuẩn truyền cho Subagent:**
+  ```text
+  Nhiệm vụ: Dịch chương truyện sau sang tiếng Việt và lưu trực tiếp vào: <path_đích> (ví dụ: vi/chuong-01-slug.md).
 
-### 3. Tự động dịch liên tục toàn bộ (Hỗ trợ chạy song song bằng Subagents)
+  BẢNG THUẬT NGỮ / TÊN RIÊNG:
+  <danh sách tên riêng: Ye You -> Diệp Du, ...>
 
-- **Tuyệt đối không dừng lại giữa chừng để hỏi user có dịch tiếp không.** Tự động xử lý lần lượt hoặc song song cho đến khi hoàn thành 100% các chương nguồn.
-- **Dịch song song bằng subagents (khuyến khích nếu môi trường hỗ trợ):**
-  - Trước khi gọi subagents, thiết lập bảng thuật ngữ / tên riêng chuẩn (glossary) cố định để truyền kèm vào prompt của các subagent, đảm bảo tính nhất quán trên toàn bộ các chương.
-  - Chia danh sách chương và kích hoạt các subagent xử lý song song (mỗi subagent nhận 1 hoặc vài chương).
-  - Mỗi subagent tự dịch, tự kiểm tra lỗi (regex Hán tự, thẻ tag máy dịch...) và ghi trực tiếp vào file markdown đích tương ứng trong `vi/`.
-- **Nếu chạy đơn luồng (không có tool subagent hoặc subagent bị giới hạn):**
-  - Dịch cuốn chiếu từng lượt 1-2 chương để đảm bảo chất lượng, sau đó ngay lập tức chuyển sang các chương tiếp theo trong cùng chuỗi hành động mà không dừng lại hỏi user.
+  QUY TẮC BẮT BUỘC (TIẾT KIỆM TOKEN):
+  1. KHÔNG chạy lệnh bash (cấm bash, cấm script python, cấm đọc lại thư mục hay kiểm tra file).
+  2. Dịch toàn văn, giữ nguyên ngôi kể, hội thoại mỗi lời một dòng ngoặc kép, không tóm tắt, không sót cảnh, không dính ký tự Hán tự/pinyin.
+  3. Format theo chuẩn:
+     # Chương <N>: <Tên chương tiếng Việt>
+
+     <nội dung đoạn...>
+  4. CHỈ ĐƯỢC GỌI DUY NHẤT 1 TOOL: Dùng `write_file` để lưu nội dung dịch vào file đích. Sau đó trả lời "Xong" và dừng lại ngay lập tức.
+
+  NỘI DUNG CHƯƠNG NGUỒN CẦN DỊCH:
+  <dán nội dung raw của chương vào đây>
+  ```
+- **Tuyệt đối không dừng lại giữa chừng để hỏi user có dịch tiếp không.** Tự động điều phối các subagent xử lý cho đến khi hoàn thành 100% các chương nguồn.
+- **Dự phòng (chỉ khi môi trường hoàn toàn không hỗ trợ tạo/gọi subagent):**
+  - Dịch cuốn chiếu từng lượt 1-2 chương trong cùng chuỗi hành động và tự động tiếp tục cho đến khi xong toàn bộ mà không dừng lại hỏi user.
 - Loại bỏ tag máy như `gemini-3.5-flash-lite`, tiêu đề kép `Chapter 1: ...Chapter 1: ...` — chỉ giữ một tiêu đề Việt.
 - Dịch toàn văn, không tóm tắt, không cắt cảnh nhạy cảm, giữ ngôi kể, hội thoại, trình tự gốc.
 - Viết tiếng Việt thuần túy, văn ngôn tình / đô thị tự nhiên. Tuyệt đối không để lọt ký tự Hán / pinyin trong output. Sau mỗi file, tự kiểm tra regex `[\u4e00-\u9fff]` — nếu còn là lỗi, sửa ngay.
@@ -90,7 +116,8 @@ Dịch toàn bộ truyện tiếng Anh sang tiếng Việt bằng AI, không vi�
 
 ## Không làm
 
-- **Không dừng lại sau mỗi chương để hỏi người dùng có dịch tiếp không.** Phải chủ động dịch toàn bộ cho đến khi xong hết tất cả các chương.
-- Không viết script Python/Node để dịch hàng loạt, không gọi API dịch máy ngoài AI hiện tại.
+- **Tuyệt đối KHÔNG chạy vòng lặp lệnh thăm dò/phân tích trước khi dịch**: Không viết script thống kê min/max size file, không in metadata nhiều lần, không viết script chia batch ra file `/tmp/plan.py`, không đọc hết 3-5 chương đầu chỉ để tìm tên riêng. Càng làm rườm rà càng đốt token và làm gián đoạn tiến độ.
+- **Không dừng lại sau mỗi chương để hỏi người dùng có dịch tiếp không.** Phải chủ động điều phối subagents cho đến khi xong hết 100% các chương nguồn.
+- Không viết script Python/Node để dịch hàng loạt bằng máy, không gọi API dịch ngoài AI hiện tại.
 - Không bịa nội dung cho chương paywall.
 - Không gộp nhiều chương vào một file Việt, trừ khi user yêu cầu rõ.

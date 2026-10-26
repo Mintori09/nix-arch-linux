@@ -60,6 +60,11 @@ in
         subdir = "skills";
       };
 
+      orca = {
+        path = inputs.orca-skills.outPath;
+        subdir = "skills";
+      };
+
       opencode-local = {
         path = ./opencode/skills;
       };
@@ -88,6 +93,9 @@ in
       "commit-work"
       "skill-seekers"
       "anki-vocab-generator"
+      "orca-cli"
+      "orchestration"
+      "orca-per-workspace-env"
     ];
 
     targets = {
@@ -111,13 +119,19 @@ in
 
       antigravity = {
         enable = true;
-        dest = ".gemini/skills";
+        dest = ".gemini/config/skills";
         structure = "link";
       };
 
       copilot = {
         enable = true;
         dest = ".copilot/skills";
+        structure = "link";
+      };
+
+      pi = {
+        enable = true;
+        dest = ".pi/agent/skills";
         structure = "link";
       };
     };

@@ -1,17 +1,11 @@
 ---
 name: plan-auditor
 description: >
-  Interactive multi-perspective architectural review, code validation, external evidence verification, and historical comparison
-  for technical plans, bug fixes, and feature proposals. When no plan exists, investigates the problem, explores the codebase,
-  searches online docs, and synthesizes a high-confidence plan from scratch. Analyzes plans against the actual codebase and validates
-  with reputable online documentation/RFCs/official sources. Cross-examines competing ideas/hypotheses in comparative tables to determine
-  the most sound approach, interactively asks clarifying questions across critical vectors (stability, performance, edge cases,
-  security, architecture, test strategy), compares with past plans/reports, and writes structured audit reports
-  with detailed, granular implementation steps.
-  ALWAYS use when user wants to validate a plan, draft a plan from a bug/feature request, review an architecture proposal,
-  audit a bug fix design, verify against official internet standards/docs, or perform regression/comparison analysis.
-  Triggers (VN): "audit plan", "review plan", "đánh giá plan", "kiểm tra plan với code", "so sánh plan", "so sánh báo cáo", "phản biện plan", "validate plan", "so sánh suy đoán", "tra cứu tài liệu", "kiểm chứng nguồn", "lập plan cho lỗi", "tìm hiểu và viết plan", "draft plan từ vấn đề".
-  Triggers (EN): "audit plan", "review plan", "validate plan against code", "draft plan", "create plan from issue", "compare plans", "plan peer review", "architectural plan audit", "hypothesis comparison", "external validation", "fact check with docs".
+  Interactive architectural review, code validation, official doc verification, and hypothesis comparison for technical plans and bug fixes.
+  Drafts plans from issues/codebase, cross-examines competing approaches in comparative tables, asks targeted clarifying questions, and outputs rigorous, step-by-step implementation plans.
+  ALWAYS use when user wants to validate/draft/audit a plan, check design against codebase, or compare hypotheses.
+  Triggers (VN): "audit plan", "review plan", "đánh giá plan", "kiểm tra plan", "so sánh plan", "phản biện plan", "validate plan", "lập plan".
+  Triggers (EN): "audit plan", "review plan", "validate plan", "draft plan", "plan peer review", "compare plans".
 ---
 
 # Plan Auditor & Codebase Validator (with Investigation & Fact-Checked Planning)

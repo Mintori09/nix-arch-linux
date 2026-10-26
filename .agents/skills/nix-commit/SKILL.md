@@ -1,5 +1,5 @@
 ---
-name: nix:commit
+name: nix-commit
 description: Autonomously commit Nix/Home Manager changes and all source files belonging to Nix-managed features.
 ---
 

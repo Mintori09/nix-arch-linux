@@ -81,6 +81,11 @@
       flake = false;
     };
 
+    orca-skills = {
+      url = "github:stablyai/orca";
+      flake = false;
+    };
+
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
