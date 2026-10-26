@@ -18,12 +18,10 @@
     ./nushell.nix
     ./agents
     ./yt-dlp.nix
-    ./neovim.nix
     ./kitty.nix
     ./pinta.nix
     ./alacritty.nix
     ./packages
-    ./obs.nix
     ./mcfly.nix
     ./pandoc.nix
     ./navi

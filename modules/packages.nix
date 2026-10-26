@@ -80,6 +80,7 @@
     # AI tools
     aichat
     shell-gpt
+    llm-agents.orca
 
     # Web & Node runtime / packages
     bun
@@ -127,8 +128,11 @@
     cargo-show-asm
     cargo-outdated
 
-    # Formatters & linters
+    # Formatters & linters & LSPs
     gofumpt
+    golangci-lint
+    gomodifytags
+    impl
     hadolint
     kdlfmt
     ruff
@@ -137,6 +141,27 @@
     sql-formatter
     stylua
     taplo
+    prettier
+    eslint
+    python3Packages.black
+    python3Packages.isort
+    python3Packages.pyflakes
+    python3Packages.pynvim
+
+    # Language Servers & Dev tooling
+    rust-analyzer
+    tree-sitter
+    yaml-language-server
+    typescript-language-server
+    vtsls
+    basedpyright
+    lua-language-server
+    cmake-language-server
+    dockerfile-language-server
+    tailwindcss-language-server
+    intelephense
+    slint-lsp
+    live-server
 
     # Typst Ecosystem
     typstyle
@@ -147,7 +172,6 @@
     gitleaks
 
     # Desktop & GUI apps
-    slack
     signal-desktop
     foliate
     aspell

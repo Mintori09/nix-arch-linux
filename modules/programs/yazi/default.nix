@@ -13,13 +13,13 @@ let
 
     if [ -z "$OUTPUT_FILE" ]; then
       OUTPUT_FILE="$(mktemp -t yazi-selected-XXXXXX)"
-      kitty --class yazi-filepicker -e ${pkgs.yazi}/bin/yazi "$DEFAULT_DIR" --chooser-file="$OUTPUT_FILE"
+      kitty --class yazi-filepicker -e yazi "$DEFAULT_DIR" --chooser-file="$OUTPUT_FILE"
       if [ -s "$OUTPUT_FILE" ]; then
         cat "$OUTPUT_FILE"
       fi
       rm -f "$OUTPUT_FILE"
     else
-      kitty --class yazi-filepicker -e ${pkgs.yazi}/bin/yazi "$DEFAULT_DIR" --chooser-file="$OUTPUT_FILE"
+      kitty --class yazi-filepicker -e yazi "$DEFAULT_DIR" --chooser-file="$OUTPUT_FILE"
     fi
   '';
 in
@@ -30,6 +30,7 @@ in
 
   programs.yazi = {
     enable = true;
+    package = null;
     enableZshIntegration = true;
     enableNushellIntegration = true;
     shellWrapperName = "y";
@@ -46,18 +47,43 @@ in
       opener = {
         edit = [
           {
-            run = ''$EDITOR "$@"'';
+            run = "\${EDITOR:-vi} %s";
             block = true;
             for = "unix";
           }
         ];
         open = [
           {
-            run = ''xdg-open "$@"'';
+            run = "xdg-open %s1";
             desc = "Open with default app";
           }
         ];
       };
+    };
+
+    keymap = {
+      mgr.prepend_keymap = [
+        {
+          on = [ "T" ];
+          run = "plugin toggle-pane max-current";
+          desc = "Show or hide the preview pane";
+        }
+        {
+          on = [ "<Space>" ];
+          run = "shell --orphan -- kglance %h";
+          desc = "Open hovered file with kglance";
+        }
+        {
+          on = [ "z" ];
+          run = "plugin zoxide";
+          desc = "Jump to a directory via zoxide";
+        }
+        {
+          on = [ "F" ];
+          run = "filter_do --done (?i)\\\\.(mp4|mkv|webm|avi|mov|wmv|flv|m4v|ts|vob|m2ts|mts|3gp)$";
+          desc = "Filter only video files in current directory";
+        }
+      ];
     };
 
     plugins = {
@@ -85,7 +111,7 @@ in
     genericName = "File Manager";
     comment = "Blazing fast terminal file manager";
     icon = "system-file-manager";
-    exec = "kitty -e ${pkgs.yazi}/bin/yazi %u";
+    exec = "kitty -e yazi %u";
     terminal = false;
     categories = [
       "System"

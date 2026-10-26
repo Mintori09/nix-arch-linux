@@ -2,7 +2,7 @@
   imports = [
     ./_desktop-db.nix
     ./spicetify.nix
-    ./vicinae.nix
+    # ./vicinae.nix
     ./kcolorchooser.nix
     # ./obsidian.nix
     ./gimp.nix
