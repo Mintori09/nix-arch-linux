@@ -12,10 +12,20 @@
       Type = "simple";
       ExecStart = "/usr/bin/anyrun daemon";
       ExecReload = "/usr/bin/anyrun reload";
-      ExecStop = "/usr/bin/anyrun quit";
+
+      Environment = [
+        "GDK_BACKEND=wayland"
+      ];
+      UnsetEnvironment = [
+        "DISPLAY"
+      ];
+
+      MemoryHigh = "300M";
+      MemoryMax = "450M";
+
+      TimeoutStopSec = "5s";
       Restart = "on-failure";
-      RestartSec = "1s";
-      KillMode = "process";
+      RestartSec = "2s";
     };
 
     Install = {

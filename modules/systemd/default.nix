@@ -3,7 +3,7 @@
   imports = [
     ./9router.nix
     ./watchexec
-    ./anyrun.nix
+    # ./anyrun.nix
     ./keyboard-rs.nix
     ./kglance.nix
     ./bluetooth.nix
