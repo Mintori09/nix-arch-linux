@@ -538,6 +538,8 @@ in
         compdef _tar tar
         compdef _zip zip
         compdef _unzip unzip
+        compdef _tmux tmux ta tn tk td tls tl
+        compdef _tmux-attach-session t
 
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')

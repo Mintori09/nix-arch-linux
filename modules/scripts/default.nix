@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./ai-popup.nix
     ./ai-renamer.nix
     ./format.nix
     ./each.nix
