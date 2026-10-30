@@ -2,11 +2,11 @@
 
 let
   pname = "vicinae";
-  version = "0.29.1";
+  version = "0.29.2";
 
   src = pkgs.fetchurl {
     url = "https://github.com/vicinaehq/vicinae/releases/download/v${version}/Vicinae-x86_64.AppImage";
-    hash = "sha256-RJBvIpDwk0Vy8Zd96KpSnDtn0QQCWkibMvIm/jsPPdk=";
+    hash = "sha256-LH8iKwk1UYajsEfoAY/tPi9UOHeMA5IUrUevh4rEU/w=";
   };
 
   appimageContents = pkgs.appimageTools.extract { inherit pname version src; };

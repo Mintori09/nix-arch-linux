@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  version = "0.1.14";
+  version = "0.1.15";
 in
 
 pkgs.stdenv.mkDerivation {
@@ -10,7 +10,7 @@ pkgs.stdenv.mkDerivation {
 
   src = pkgs.fetchurl {
     url = "https://github.com/Lofter1/anyflip-downloader/releases/download/v${version}/anyflip-downloader_${version}_linux_amd64.tar.gz";
-    hash = "sha256-/PndrBIjiC1KkDRIA57/tO81HoKM1tHLQLAOoqjBQww=";
+    hash = "sha256-hFppa5ekjGY4raZm6+M1bFmV6IR/MfJjpcH1xBZ0NoE=";
   };
 
   sourceRoot = ".";
