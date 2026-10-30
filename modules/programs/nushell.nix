@@ -15,6 +15,7 @@
   };
 
   xdg.configFile."nushell/nu_scripts".source = inputs.nu-scripts;
+  xdg.configFile."nushell/completions".source = ./nushell/completions;
 
   programs.starship = {
     enable = true;

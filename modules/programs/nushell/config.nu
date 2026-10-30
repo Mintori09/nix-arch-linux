@@ -74,6 +74,11 @@ use nu_scripts/custom-completions/cargo/cargo-completions.nu *
 use nu_scripts/custom-completions/nix/nix-completions.nu *
 use nu_scripts/custom-completions/bat/bat-completions.nu *
 
+# Custom local completions
+use completions/agy-completions.nu *
+use completions/opencode-completions.nu *
+use completions/scripts-completions.nu *
+
 # Quick Utility Aliases
 alias ll = eza -l --icons --git
 alias la = eza -la --icons --git
@@ -142,6 +147,16 @@ $env.config = ($env.config | merge {
         send: executehostcommand
         cmd: "let cmd = (history | get command | reverse | uniq | str join (char newline) | fzf --height=40% --reverse --no-preview | str trim); if not ($cmd | is-empty) { commandline edit --insert $cmd }"
       }
+    }
+    {
+      name: open_editor_and_run
+      modifier: none
+      keycode: space
+      mode: [vi_normal]
+      event: [
+        { send: OpenEditor }
+        { send: Submit }
+      ]
     }
   ]
 })
