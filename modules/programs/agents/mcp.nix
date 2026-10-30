@@ -2,7 +2,8 @@
   pkgs,
   config,
   ...
-}: {
+}:
+{
   context7 = {
     local = {
       argv = [
@@ -25,7 +26,7 @@
         "@playwright/mcp@latest"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   playwright-headless = {
@@ -36,7 +37,7 @@
         "--headless"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   github = {
@@ -50,7 +51,7 @@
         GITHUB_PERSONAL_ACCESS_TOKEN = "$(${pkgs.gh}/bin/gh auth token)";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 
   deepwiki = {
@@ -91,7 +92,7 @@
         "@figwright/mcp@latest"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   firefox-devtools = {
@@ -107,7 +108,7 @@
         START_URL = "about:blank";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 
   firefox-devtools-headless = {
@@ -124,7 +125,7 @@
         START_URL = "about:blank";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 
   colab-mcp = {
@@ -146,7 +147,7 @@
         "notebooklm-mcp"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   cloudflare = {
@@ -168,6 +169,6 @@
         CLOUDFLARE_API_TOKEN = "$CLOUDFLARE_API_TOKEN";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 }
