@@ -45,24 +45,6 @@ in
       vim-tmux-navigator
 
       {
-        plugin = resurrect;
-        extraConfig = ''
-          set -g @resurrect-capture-pane-contents 'on'
-          set -g @resurrect-strategy-vim 'session'
-          set -g @resurrect-strategy-nvim 'session'
-          set-hook -g client-detached 'run-shell "${pkgs.tmuxPlugins.resurrect}/share/tmux-plugins/resurrect/scripts/save.sh"'
-        '';
-      }
-
-      {
-        plugin = continuum;
-        extraConfig = ''
-          set -g @continuum-restore 'on'
-          set -g @continuum-save-interval '5'
-        '';
-      }
-
-      {
         plugin = pkgs.tmuxPlugins.mkTmuxPlugin {
           pluginName = "dotbar";
           version = "0.3.2";
