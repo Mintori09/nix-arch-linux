@@ -187,7 +187,6 @@
     # Custom packages (prebuilt from GitHub / local)
     bookokrat
     dbx
-    zap
     anyflip-downloader
     cv-cli
     anki-tool
@@ -198,6 +197,7 @@
     qbittorrent
     hoppscotch
     kmp-lsp
+    caesium-clt
     fmtron
     samply
   ];

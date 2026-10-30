@@ -10,7 +10,7 @@ PACKAGES=(
     "magika|$HOME/.config/home-manager/modules/packages/magika.nix|google/magika|https://github.com/{repo}/releases/download/cli/v{version}/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
     "qbittorrent|$HOME/.config/home-manager/modules/packages/qbittorrent.nix|qbittorrent/qBittorrent|https://github.com/{repo}/releases/download/release-{version}/qbittorrent-{version}_x86_64.AppImage"
     "vicinae|$HOME/.config/home-manager/modules/packages/vicinae.nix|vicinaehq/vicinae|https://github.com/{repo}/releases/download/v{version}/Vicinae-x86_64.AppImage"
-    "zap|$HOME/.config/home-manager/modules/packages/zap.nix|zerx-lab/zap|https://github.com/{repo}/releases/download/v{version}/zap_{version}_amd64.deb"
+    "caesium-clt|$HOME/.config/home-manager/modules/packages/caesium-clt.nix|Lymphatus/caesium-clt|https://github.com/{repo}/releases/download/v{version}/caesiumclt-v{version}-x86_64-unknown-linux-musl.tar.gz"
     # "zed-editor|$HOME/.config/home-manager/modules/packages/zed-editor.nix|zed-industries/zed|https://github.com/{repo}/releases/download/v{version}/zed-linux-x86_64.tar.gz"
 )
 

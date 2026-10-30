@@ -6,7 +6,6 @@
     (final: prev: {
       bookokrat = final.callPackage ./packages/bookokrat.nix { };
       dbx = final.callPackage ./packages/dbx.nix { };
-      zap = final.callPackage ./packages/zap.nix { };
       anyflip-downloader = final.callPackage ./packages/anyflip-downloader.nix { };
       cv-cli = final.callPackage ./packages/cv-cli.nix { };
       anki-tool = final.callPackage ./packages/anki-tool.nix { };
@@ -19,6 +18,7 @@
       qbittorrent = final.callPackage ./packages/qbittorrent.nix { };
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
+      caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
       fmtron = final.callPackage ./packages/fmtron.nix {
         src = inputs.fmtron;
       };
