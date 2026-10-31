@@ -4,7 +4,7 @@ description: >
   Automatically packages applications or CLI tools from GitHub Releases (AppImage,
   Debian .deb, tarball/tar.xz/tar.gz, prebuilt binary) into this Nix Home-Manager
   configuration, registers them into `flake.nix` overlay and `modules/packages.nix`,
-  and configures auto-updating in `scripts/update-nix-packages.sh`.
+  and configures auto-updating via nvfetcher (preferred) or manual fallback.
   ALWAYS use when user provides a GitHub repository link or asks to add/package
   a program from GitHub release into Home-Manager / Nix.
   Triggers (VN): "thêm package", "đóng gói appimage", "thêm appimage", "thêm app từ github", "tải appimage từ github", "thêm deb vào nix".
@@ -13,92 +13,109 @@ description: >
 
 # Add Nix GitHub Package
 
-Skill này hướng dẫn quy trình tiêu chuẩn để tích hợp một chương trình từ GitHub Releases (dưới dạng AppImage, .deb, .tar.gz / binary prebuilt) vào hệ thống Home-Manager Nix Flake này và tích hợp vào script tự động cập nhật `scripts/update-nix-packages.sh`.
+Skill này hướng dẫn quy trình tiêu chuẩn để tích hợp một chương trình từ GitHub Releases (AppImage, .deb, .tar.gz / binary prebuilt) vào hệ thống Home-Manager Nix Flake này.
+
+> [!IMPORTANT]
+> **CHIẾN LƯỢC QUẢN LÝ NGUỒN (SOURCE MANAGEMENT STRATEGY):**
+> 1. **Ưu tiên 1 (Mặc định)**: Sử dụng **`nvfetcher`** (`nvfetcher.toml` + `modules/packages/_sources/generated.nix`). Tự động theo dõi release, tính SHA256 SRI hash, và quản lý metadata tập trung.
+> 2. **Fallback**: Chỉ dùng hardcoded `fetchurl` với hash thủ công trực tiếp trong file `.nix` khi package có cơ chế release quá đặc thù mà `nvfetcher` không hỗ trợ hoặc theo yêu cầu đặc biệt.
 
 ---
 
-## Tổng quan quy trình
+## Tổng quan quy trình chuẩn (với nvfetcher)
 
-Khi người dùng cung cấp link GitHub Release hoặc yêu cầu thêm package:
-
-1. **Kiểm tra thông tin release trên GitHub**: Lấy tag name, danh sách assets, tên repo, description, license.
-2. **Tải asset & tính toán SRI Hash**: Dùng `curl` tải về `/tmp` và dùng `nix hash file ... --sri` để lấy checksum chính xác.
-3. **Phân tích cấu trúc package**:
-   - Nếu là **AppImage**: dùng `pkgs.appimageTools.extract` để kiểm tra tên file `.desktop` và icon (`.svg`, `.png`).
-   - Nếu là **Debian package (.deb)**: giải nén `ar x` & `tar xf data.tar.*` để xem đường dẫn file nhị phân và desktop file/icon.
-   - Nếu là **Tarball / Binary**: xác định đường dẫn binary bên trong archive.
-4. **Tạo module Derivation**: Tạo `modules/packages/<pkg-name>.nix`.
-5. **Khai báo vào Flake & Packages**:
-   - Thêm vào overlay trong `flake.nix`.
-   - Thêm vào danh sách `home.packages` trong `modules/packages.nix`.
-6. **Cấu hình tự động cập nhật trong script**:
-   - Thêm entry vào mảng `PACKAGES` trong `scripts/update-nix-packages.sh`.
-   - Đảm bảo regex tách version trong script hỗ trợ đúng tiền tố tag của repo (ví dụ: `v`, `release-`, `cli/v`,...).
-7. **Kiểm thử**:
-   - Chạy `bash ./scripts/update-nix-packages.sh <pkg-name>` để xác nhận script hoạt động.
-   - Kiểm tra `git status`.
+1. **Khảo sát GitHub Release**:
+   - Kiểm tra tag name format (`vX.Y.Z`, `release-X.Y.Z`, `X.Y.Z`,...) và tên asset trên release page.
+2. **Khai báo vào `nvfetcher.toml`**:
+   - Thêm block cấu hình theo dõi release upstream và URL asset download.
+3. **Sinh nguồn tự động với `nvfetcher`**:
+   - Chạy lệnh cập nhật để sinh metadata vào `modules/packages/_sources/generated.nix`.
+4. **Phân tích cấu trúc file nhị phân / asset**:
+   - Trích xuất file `.desktop`, icon hoặc binary path.
+5. **Tạo module Derivation (`modules/packages/<pkg-name>.nix`)**:
+   - Đọc trực tiếp từ `sources.<pkg-name>`.
+6. **Đăng ký vào Flake & Packages**:
+   - Thêm vào overlay trong `flake.nix` (hoặc `modules/packages.nix` nếu cần).
+   - Thêm vào `home.packages`.
+7. **Kiểm thử & Switch**:
+   - Build và apply bằng `nh home switch ~/.config/home-manager`.
 
 ---
 
 ## Chi tiết các bước thực hiện
 
-### Bước 1: Thu thập thông tin từ GitHub
+### Bước 1: Khảo sát Release từ GitHub
 
-Sử dụng lệnh sau để kiểm tra version và danh sách asset mới nhất:
+Kiểm tra release mới nhất và danh sách các asset:
 
 ```bash
 curl -sL https://api.github.com/repos/<owner>/<repo>/releases/latest | jq '{tag_name: .tag_name, assets: [.assets[].name]}'
 ```
 
 Xác định:
-
-- `owner/repo`
-- Format tag name (vd: `v1.2.3`, `release-1.2.3`, `1.2.3`)
-- Tên chính xác của file asset cho kiến trúc x86_64 Linux (`.AppImage`, `.deb`, `.tar.gz`,...)
-- Phiên bản clean (bỏ tiền tố `v`, `release-`,...)
+- `<owner>/<repo>`
+- Tiền tố tag: `v`, `release-`, `cli/v`,...
+- Định dạng tên file asset x86_64 Linux: ví dụ `<name>_$ver_linux_amd64.tar.gz`, `<name>-$ver.AppImage`, `<name>_$ver_amd64.deb`.
 
 ---
 
-### Bước 2: Tải và tính toán SRI Hash
+### Bước 2 (Ưu tiên): Khai báo vào `nvfetcher.toml` & Sinh nguồn
 
-Tải file asset về thư mục tạm và chạy lệnh tính hash:
+Mở file `nvfetcher.toml` tại root repo và thêm cấu hình:
+
+```toml
+[<pkg-name>]
+src.github = "<owner>/<repo>"
+src.prefix = "<tag_prefix>"  # Ví dụ: "v", hoặc "release-", hoặc "cli/v"
+fetch.url = "https://github.com/<owner>/<repo>/releases/download/<tag_prefix>$ver/<filename_pattern_with_$ver>"
+```
+
+*Lưu ý:*
+- Biến `$ver` là số phiên bản đã được cắt bỏ `src.prefix`.
+- Ví dụ với tag `v1.2.3`: đặt `src.prefix = "v"`, thì `$ver` sẽ là `1.2.3`. URL download sẽ dùng `<tag_prefix>$ver` (tức `v$ver`).
+
+Chạy `nvfetcher` để tự động fetch và sinh hash:
 
 ```bash
-tmp=$(mktemp)
-curl -sL -o "$tmp" "<URL_ASSET>"
-nix hash file "$tmp" --sri
-rm -f "$tmp"
+nvfetcher -c nvfetcher.toml -o modules/packages/_sources -f <pkg-name>
+```
+
+Sau khi chạy xong, kiểm tra `modules/packages/_sources/generated.nix` sẽ có entry:
+```nix
+<pkg-name> = {
+  pname = "<pkg-name>";
+  version = "...";
+  src = fetchurl { ... sha256 = "..."; };
+};
 ```
 
 ---
 
-### Bước 3: Phân tích nội dung (Inspect Assets)
+### Bước 3: Phân tích cấu trúc Asset (Inspect)
 
-#### Trường hợp 1: AppImage
-
-Kiểm tra file `.desktop` và file icon bên trong AppImage:
+#### 1. Đối với AppImage
+Dùng `appimageTools.extract` để kiểm tra tên file `.desktop` và icon:
 
 ```bash
-nix build --impure --expr 'with import <nixpkgs> {}; appimageTools.extract { pname = "<pkg-name>"; version = "<version>"; src = fetchurl { url = "<URL_ASSET>"; hash = "<SRI_HASH>"; }; }' -o /tmp/<pkg-name>-extracted
+nix build --impure --expr 'with import <nixpkgs> {}; let sources = callPackage ./modules/packages/_sources/generated.nix {}; in appimageTools.extract { inherit (sources.<pkg-name>) pname version src; }' -o /tmp/<pkg-name>-extracted
 ls -la /tmp/<pkg-name>-extracted
 rm -f /tmp/<pkg-name>-extracted
 ```
 
-#### Trường hợp 2: Debian Package (.deb)
-
-Kiểm tra cấu trúc debian archive:
+#### 2. Đối với Debian Package (.deb)
+Kiểm tra đường dẫn nhị phân và desktop file:
 
 ```bash
-tmp_deb=$(mktemp)
-curl -sL -o "$tmp_deb" "<URL_ASSET>"
-tmp_dir=$(mktemp -d)
-cd "$tmp_dir" && ar x "$tmp_deb" && tar tf data.tar.*
-rm -rf "$tmp_deb" "$tmp_dir"
+nix build --impure --expr 'with import <nixpkgs> {}; let sources = callPackage ./modules/packages/_sources/generated.nix {}; in runCommand "inspect" {} "ar x ${sources.<pkg-name>.src} && tar tf data.tar.* > $out"' -o /tmp/deb-content
+cat /tmp/deb-content
+rm -f /tmp/deb-content
 ```
 
 ---
 
-### Bước 4: Tạo file Derivation (`modules/packages/<pkg-name>.nix`)
+### Bước 4: Tạo Derivation (`modules/packages/<pkg-name>.nix`)
+
+Tất cả derivation sử dụng `sources = pkgs.callPackage ./_sources/generated.nix { };`.
 
 #### Template 1: AppImage (dùng `appimageTools.wrapType2`)
 
@@ -106,13 +123,8 @@ rm -rf "$tmp_deb" "$tmp_dir"
 { pkgs, ... }:
 
 let
-  pname = "<pkg-name>";
-  version = "<version>";
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/<owner>/<repo>/releases/download/<tag_prefix>\${version}/<filename_pattern>";
-    hash = "<SRI_HASH>";
-  };
+  sources = pkgs.callPackage ./_sources/generated.nix { };
+  inherit (sources.<pkg-name>) pname version src;
 
   appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
 in
@@ -121,8 +133,10 @@ pkgs.appimageTools.wrapType2 {
   inherit pname version src;
 
   extraInstallCommands = ''
-    install -m 444 -D \${appimageContents}/<app-id>.desktop $out/share/applications/<app-id>.desktop
-    install -m 444 -D \${appimageContents}/<icon-name>.svg $out/share/icons/hicolor/scalable/apps/<icon-name>.svg
+    install -m 444 -D ${appimageContents}/<app-id>.desktop $out/share/applications/<app-id>.desktop
+    substituteInPlace $out/share/applications/<app-id>.desktop \
+      --replace-fail 'Exec=<old_exec>' "Exec=$out/bin/${pname}"
+    install -m 444 -D ${appimageContents}/<icon-name>.svg $out/share/icons/hicolor/scalable/apps/<icon-name>.svg
   '';
 
   meta = with pkgs.lib; {
@@ -141,17 +155,11 @@ pkgs.appimageTools.wrapType2 {
 { pkgs, ... }:
 
 let
-  pname = "<pkg-name>";
-  version = "<version>";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  inherit pname version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/<owner>/<repo>/releases/download/v\${version}/<filename_pattern>.deb";
-    hash = "<SRI_HASH>";
-  };
+  inherit (sources.<pkg-name>) pname version src;
 
   dontUnpack = true;
 
@@ -181,17 +189,11 @@ pkgs.stdenv.mkDerivation {
 { pkgs, ... }:
 
 let
-  pname = "<pkg-name>";
-  version = "<version>";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  inherit pname version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/<owner>/<repo>/releases/download/v\${version}/<filename_pattern>.tar.gz";
-    hash = "<SRI_HASH>";
-  };
+  inherit (sources.<pkg-name>) pname version src;
 
   sourceRoot = ".";
 
@@ -215,7 +217,7 @@ pkgs.stdenv.mkDerivation {
 
 ### Bước 5: Đăng ký vào Flake & Packages
 
-1. **`flake.nix`**: Thêm derivation vào danh sách overlay:
+1. **`flake.nix`**: Thêm derivation vào overlay (nếu package độc lập):
    ```nix
    <pkg-name> = final.callPackage ./modules/packages/<pkg-name>.nix { };
    ```
@@ -223,24 +225,44 @@ pkgs.stdenv.mkDerivation {
 
 ---
 
-### Bước 6: Thêm vào script tự động cập nhật (`scripts/update-nix-packages.sh`)
+### Bước 6: Kiểm thử & Áp dụng
 
-1. Thêm một dòng định dạng `"Name|NixFile|GitHubRepo|URLPattern"` vào mảng `PACKAGES` trong `scripts/update-nix-packages.sh`:
+1. **Theo dõi file mới trong git**:
    ```bash
-   "<pkg-name>|$HOME/.config/home-manager/modules/packages/<pkg-name>.nix|<owner>/<repo>|https://github.com/{repo}/releases/download/<tag_prefix>{version}/<filename_pattern>"
+   git add -N nvfetcher.toml modules/packages/_sources/ modules/packages/<pkg-name>.nix
    ```
-2. Kiểm tra phần tách version bằng regex trong hàm `update_pkg()`:
+2. **Test cập nhật với script**:
    ```bash
-   latest=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" | jq -r '.tag_name // empty' | sed -E 's/^(cli\/v|release-|v)//')
+   scripts/update-nix-packages.sh <pkg-name>
    ```
-   Nếu repo dùng tiền tố tag khác biệt, hãy đảm bảo `sed -E` xử lý chuẩn để lấy đúng số version sạch.
+3. **Áp dụng cấu hình Home-Manager**:
+   ```bash
+   nh home switch ~/.config/home-manager
+   ```
+4. **Kiểm tra binary**:
+   ```bash
+   which <pkg-name>
+   ```
 
 ---
 
-### Bước 7: Kiểm thử & Xác nhận
+## Phương án Fallback (Thủ công không qua nvfetcher)
 
-1. Chạy test script cập nhật:
+Chỉ sử dụng khi package có URL download phức tạp, asset tên không cố định hoặc dynamic token mà nvfetcher không xử lý được:
+
+1. **Tải asset & tính hash thủ công**:
    ```bash
-   bash ./scripts/update-nix-packages.sh <pkg-name>
+   tmp=$(mktemp)
+   curl -sL -o "$tmp" "<URL_ASSET>"
+   nix hash file "$tmp" --sri
+   rm -f "$tmp"
    ```
-2. Kiểm tra `git status` và thông báo tóm tắt các thay đổi cho người dùng.
+2. **Khai báo trực tiếp `fetchurl` trong `.nix`**:
+   ```nix
+   version = "<version>";
+   src = pkgs.fetchurl {
+     url = "<DIRECT_URL>";
+     hash = "<SRI_HASH>";
+   };
+   ```
+3. Đăng ký vào `flake.nix` và `modules/packages.nix` như bình thường.
