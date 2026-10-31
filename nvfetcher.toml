@@ -1,0 +1,46 @@
+# nvfetcher configuration for custom packages
+
+[anyflip-downloader]
+src.github = "Lofter1/anyflip-downloader"
+src.prefix = "v"
+fetch.url = "https://github.com/Lofter1/anyflip-downloader/releases/download/v$ver/anyflip-downloader_$ver_linux_amd64.tar.gz"
+
+[dbx]
+src.github = "t8y2/dbx"
+src.prefix = "v"
+fetch.url = "https://github.com/t8y2/dbx/releases/download/v$ver/DBX_$ver_amd64.deb"
+
+[hoppscotch]
+src.github = "hoppscotch/releases"
+src.prefix = "v"
+fetch.url = "https://github.com/hoppscotch/releases/releases/download/v$ver/Hoppscotch_linux_x64.AppImage"
+
+[kmp-lsp]
+src.github = "Hessesian/kmp-lsp"
+src.prefix = "v"
+fetch.url = "https://github.com/Hessesian/kmp-lsp/releases/download/v$ver/kmp-lsp-linux-x86_64.tar.gz"
+
+[magika]
+src.github = "google/magika"
+src.prefix = "cli/v"
+fetch.url = "https://github.com/google/magika/releases/download/cli/v$ver/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
+
+[qbittorrent]
+src.github = "qbittorrent/qBittorrent"
+src.prefix = "release-"
+fetch.url = "https://github.com/qbittorrent/qBittorrent/releases/download/release-$ver/qbittorrent-$ver_x86_64.AppImage"
+
+[vicinae]
+src.github = "vicinaehq/vicinae"
+src.prefix = "v"
+fetch.url = "https://github.com/vicinaehq/vicinae/releases/download/v$ver/vicinae-linux-x86_64-v$ver.tar.gz"
+
+[caesium-clt]
+src.github = "Lymphatus/caesium-clt"
+src.prefix = "v"
+fetch.url = "https://github.com/Lymphatus/caesium-clt/releases/download/v$ver/caesiumclt-v$ver-x86_64-unknown-linux-musl.tar.gz"
+
+[obsidian]
+src.github = "obsidianmd/obsidian-releases"
+src.prefix = "v"
+fetch.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v$ver/Obsidian-$ver.AppImage"

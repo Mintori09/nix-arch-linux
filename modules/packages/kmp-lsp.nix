@@ -1,17 +1,11 @@
 { pkgs, ... }:
 
 let
-  version = "0.27.0";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  pname = "kmp-lsp";
-  inherit version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/Hessesian/kmp-lsp/releases/download/v${version}/kmp-lsp-linux-x86_64.tar.gz";
-    hash = "sha256-wU4Jlx7l9TiVqmvDAkL9vMNYCq51HDmJmSOu4aOWJJI=";
-  };
+  inherit (sources.kmp-lsp) pname version src;
 
   sourceRoot = ".";
 

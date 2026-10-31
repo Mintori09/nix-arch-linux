@@ -19,6 +19,7 @@
     zstd
 
     # Core CLI utilities
+    nvfetcher
     rumdl
     fastfetch
     hyperfine
@@ -198,6 +199,8 @@
     hoppscotch
     kmp-lsp
     caesium-clt
+    neovim-nightly
+    yazi-nightly
     fmtron
     samply
   ];

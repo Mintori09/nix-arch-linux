@@ -1,16 +1,36 @@
 { pkgs, ... }:
+
 let
+  sources = pkgs.callPackage ../../packages/_sources/generated.nix { };
+  inherit (sources.obsidian) pname version src;
+
+  appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
+
+  obsidianPkg = pkgs.appimageTools.wrapType2 {
+    inherit pname version src;
+
+    extraInstallCommands = ''
+      install -m 444 -D ${appimageContents}/md.obsidian.Obsidian.desktop $out/share/applications/obsidian.desktop
+      cp -r ${appimageContents}/usr/share/icons $out/share/
+    '';
+
+    meta = with pkgs.lib; {
+      description = "A powerful knowledge base that works on top of a local folder of plain text Markdown files";
+      homepage = "https://obsidian.md";
+      license = licenses.unfree;
+      platforms = [ "x86_64-linux" ];
+      mainProgram = "obsidian";
+    };
+  };
+
   inherit (import ../_nixgl-wrappers.nix { inherit pkgs; }) mkWrappedBinary;
   obsidian = mkWrappedBinary {
     name = "obsidian";
-    package = pkgs.obsidian;
+    package = obsidianPkg;
   };
 in
 {
-  programs.obsidian = {
-    enable = true;
-    package = obsidian;
-  };
+  home.packages = [ obsidian ];
 
   xdg.desktopEntries.obsidian = {
     name = "Obsidian";
@@ -23,13 +43,9 @@ in
 
     categories = [
       "Office"
-      "Utility"
     ];
-
     mimeType = [
       "x-scheme-handler/obsidian"
     ];
-
-    icon = "obsidian";
   };
 }

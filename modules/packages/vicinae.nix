@@ -1,23 +1,38 @@
 { pkgs, ... }:
 
 let
-  pname = "vicinae";
-  version = "0.29.2";
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/vicinaehq/vicinae/releases/download/v${version}/Vicinae-x86_64.AppImage";
-    hash = "sha256-LH8iKwk1UYajsEfoAY/tPi9UOHeMA5IUrUevh4rEU/w=";
-  };
-
-  appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
+  sources = pkgs.callPackage ./_sources/generated.nix { };
+  inherit (sources.vicinae) pname version src;
 in
 
-pkgs.appimageTools.wrapType2 {
+pkgs.stdenv.mkDerivation {
   inherit pname version src;
+  sourceRoot = ".";
 
-  extraInstallCommands = ''
-    install -m 444 -D ${appimageContents}/vicinae.desktop $out/share/applications/vicinae.desktop
-    install -m 444 -D ${appimageContents}/vicinae.png $out/share/icons/hicolor/512x512/apps/vicinae.png
+  dontBuild = true;
+  dontStrip = false;
+
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out
+    cp -r bin lib libexec share $out/
+
+    # Ensure systemd user service directory exists in share
+    if [ -d $out/lib/systemd/user ]; then
+      mkdir -p $out/share/systemd/user
+      cp -r $out/lib/systemd/user/* $out/share/systemd/user/
+    fi
+
+    # Bind binary dynamically to host C++ & Qt runtime on EndeavourOS / Arch
+    for b in $out/bin/vicinae $out/libexec/vicinae/*; do
+      if [ -f "$b" ] && [ -x "$b" ]; then
+        patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$b" || true
+        patchelf --set-rpath "/usr/lib:/usr/lib64" "$b" || true
+      fi
+    done
+
+    runHook postInstall
   '';
 
   meta = with pkgs.lib; {

@@ -1,17 +1,11 @@
 { pkgs, ... }:
 
 let
-  version = "0.6.61";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  pname = "dbx";
-  inherit version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/t8y2/dbx/releases/download/v${version}/DBX_${version}_amd64.deb";
-    hash = "sha256-0e4o6FWLvztKtjQZGtQP30BVCesOtDizJCzyam7Xwek=";
-  };
+  inherit (sources.dbx) pname version src;
 
   dontUnpack = true;
 

@@ -1,13 +1,8 @@
 { pkgs, ... }:
 
 let
-  pname = "hoppscotch";
-  version = "26.9.0-0";
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/hoppscotch/releases/releases/download/v${version}/Hoppscotch_linux_x64.AppImage";
-    hash = "sha256-QXY9fPTc7lg0X+x46todzcWDaDpT91gJ8n+xztJnjm8=";
-  };
+  sources = pkgs.callPackage ./_sources/generated.nix { };
+  inherit (sources.hoppscotch) pname version src;
 
   appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
 in

@@ -1,19 +1,13 @@
 { pkgs, ... }:
 
 let
-  version = "1.5.0";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  pname = "caesium-clt";
-  inherit version;
+  inherit (sources.caesium-clt) pname version src;
 
-  src = pkgs.fetchurl {
-    url = "https://github.com/Lymphatus/caesium-clt/releases/download/v${version}/caesiumclt-v${version}-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-IVqens3lTRylcB7gKZ0JFqoKFTuOzWPKDoMsjv3KLNU=";
-  };
-
-  sourceRoot = "caesiumclt-v${version}-x86_64-unknown-linux-musl";
+  sourceRoot = "caesiumclt-v${sources.caesium-clt.version}-x86_64-unknown-linux-musl";
 
   installPhase = ''
     install -Dm755 caesiumclt $out/bin/caesiumclt

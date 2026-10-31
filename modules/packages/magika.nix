@@ -1,16 +1,10 @@
 { pkgs, ... }:
 
 let
-  version = "1.1.0";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 pkgs.stdenv.mkDerivation {
-  pname = "magika";
-  inherit version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/google/magika/releases/download/cli/v${version}/magika-cli-x86_64-unknown-linux-gnu.tar.xz";
-    hash = "sha256-a0wQEMhNH08GIFzO9Fl/FpC813RPRthB7uJkJrwQBIU=";
-  };
+  inherit (sources.magika) pname version src;
 
   sourceRoot = "magika-cli-x86_64-unknown-linux-gnu";
 

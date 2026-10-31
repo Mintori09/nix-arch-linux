@@ -1,17 +1,11 @@
 { pkgs, ... }:
 
 let
-  version = "0.1.15";
+  sources = pkgs.callPackage ./_sources/generated.nix { };
 in
 
 pkgs.stdenv.mkDerivation {
-  pname = "anyflip-downloader";
-  inherit version;
-
-  src = pkgs.fetchurl {
-    url = "https://github.com/Lofter1/anyflip-downloader/releases/download/v${version}/anyflip-downloader_${version}_linux_amd64.tar.gz";
-    hash = "sha256-hFppa5ekjGY4raZm6+M1bFmV6IR/MfJjpcH1xBZ0NoE=";
-  };
+  inherit (sources.anyflip-downloader) pname version src;
 
   sourceRoot = ".";
 
