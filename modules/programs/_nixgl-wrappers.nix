@@ -13,6 +13,7 @@
         rm -f "$out/bin/${binaryName}"
         cat >"$out/bin/${binaryName}" <<'EOF'
         #!${pkgs.runtimeShell}
+        export PATH="${pkgs.coreutils}/bin:$HOME/.nix-profile/bin:/usr/bin:/bin:$PATH"
         exec env \
           FREETYPE_PROPERTIES="autofitter:no-stem-darkening=1 cff:no-stem-darkening=1" \
           nixGL \
