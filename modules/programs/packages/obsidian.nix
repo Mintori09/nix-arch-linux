@@ -32,10 +32,11 @@ in
 {
   home.packages = [ obsidian ];
 
-  xdg.desktopEntries.obsidian = {
+  xdg.desktopEntries."md.obsidian.Obsidian" = {
     name = "Obsidian";
     genericName = "Knowledge Base";
     comment = "Markdown knowledge base";
+    icon = "obsidian";
     exec = "${obsidian}/bin/obsidian %u";
     terminal = false;
 
@@ -47,5 +48,30 @@ in
     mimeType = [
       "x-scheme-handler/obsidian"
     ];
+    settings = {
+      StartupWMClass = "md.obsidian.Obsidian";
+    };
+  };
+
+  # Keep obsidian.desktop as an alias for compatibility and URI handling
+  xdg.desktopEntries.obsidian = {
+    name = "Obsidian";
+    genericName = "Knowledge Base";
+    comment = "Markdown knowledge base";
+    icon = "obsidian";
+    exec = "${obsidian}/bin/obsidian %u";
+    terminal = false;
+
+    startupNotify = true;
+
+    categories = [
+      "Office"
+    ];
+    mimeType = [
+      "x-scheme-handler/obsidian"
+    ];
+    settings = {
+      StartupWMClass = "md.obsidian.Obsidian";
+    };
   };
 }
