@@ -7,7 +7,7 @@ SOURCES_DIR="$REPO_DIR/modules/packages/_sources"
 
 TARGET="${1:-all}"
 
-echo "🚀 Bắt đầu kiểm tra và cập nhật packages qua nvfetcher..."
+echo "Checking and updating packages via nvfetcher..."
 
 cd "$REPO_DIR"
 
@@ -18,10 +18,10 @@ else
 fi
 
 if ! git diff --quiet -- "$SOURCES_DIR"; then
-    echo "📦 Đã phát hiện thay đổi trong sources. Đang chuẩn bị commit..."
+    echo "Changes detected in sources. Preparing commit..."
     git add "$SOURCES_DIR"
     git commit -m "chore(packages): update nvfetcher generated sources"
-    echo "🎉 Đã commit thành công!"
+    echo "Committed successfully!"
 else
-    echo "✅ Tất cả package đều ở phiên bản mới nhất!"
+    echo "✅ All packages are already up to date!"
 fi
