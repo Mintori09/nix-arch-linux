@@ -167,6 +167,9 @@ in
   };
 
   xdg.configFile."kitty/kitty.conf".force = true;
+  xdg.configFile."xdg-terminals.list".text = ''
+    kitty.desktop
+  '';
 
   xdg.desktopEntries.kitty = {
     name = "kitty";
