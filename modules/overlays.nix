@@ -5,6 +5,7 @@
     inputs.llm-agents.overlays.shared-nixpkgs
     (final: prev: {
       bookokrat = final.callPackage ./packages/bookokrat.nix { };
+      disktree = final.callPackage ./packages/disktree.nix { };
       dbx = final.callPackage ./packages/dbx.nix { };
       anyflip-downloader = final.callPackage ./packages/anyflip-downloader.nix { };
       cv-cli = final.callPackage ./packages/cv-cli.nix { };
@@ -19,6 +20,9 @@
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
+      neovide = final.callPackage ./packages/neovide.nix { };
+      neovim-nightly = final.callPackage ./packages/neovim-nightly.nix { };
+      yazi-nightly = final.callPackage ./packages/yazi-nightly.nix { };
       fmtron = final.callPackage ./packages/fmtron.nix {
         src = inputs.fmtron;
       };

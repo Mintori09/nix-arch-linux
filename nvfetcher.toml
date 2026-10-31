@@ -44,3 +44,12 @@ fetch.url = "https://github.com/Lymphatus/caesium-clt/releases/download/v$ver/ca
 src.github = "obsidianmd/obsidian-releases"
 src.prefix = "v"
 fetch.url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v$ver/Obsidian-$ver.AppImage"
+
+[neovide]
+src.github = "neovide/neovide"
+fetch.url = "https://github.com/neovide/neovide/releases/download/$ver/neovide.AppImage"
+
+[disktree]
+src.github = "tobi/disktree"
+src.prefix = "v"
+fetch.url = "https://github.com/tobi/disktree/releases/download/v$ver/disktree-$ver-x86_64-linux.tar.gz"

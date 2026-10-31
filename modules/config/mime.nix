@@ -63,21 +63,21 @@
       "audio/mp4" = [ "mpv.desktop" ];
       "audio/opus" = [ "mpv.desktop" ];
 
-      # Text Editor (Neovim)
-      "text/plain" = [ "nvim.desktop" ];
-      "text/markdown" = [ "nvim.desktop" ];
-      "text/x-makefile" = [ "nvim.desktop" ];
-      "text/x-c" = [ "nvim.desktop" ];
-      "text/x-c++" = [ "nvim.desktop" ];
-      "text/x-csrc" = [ "nvim.desktop" ];
-      "text/x-chdr" = [ "nvim.desktop" ];
-      "text/x-python" = [ "nvim.desktop" ];
-      "text/x-shellscript" = [ "nvim.desktop" ];
-      "application/json" = [ "nvim.desktop" ];
-      "application/toml" = [ "nvim.desktop" ];
-      "application/yaml" = [ "nvim.desktop" ];
-      "application/xml" = [ "nvim.desktop" ];
-      "application/x-yaml" = [ "nvim.desktop" ];
+      # Text Editor (Neovide GUI / Neovim)
+      "text/plain" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/markdown" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-makefile" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-c" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-c++" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-csrc" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-chdr" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-python" = [ "neovide.desktop" "nvim.desktop" ];
+      "text/x-shellscript" = [ "neovide.desktop" "nvim.desktop" ];
+      "application/json" = [ "neovide.desktop" "nvim.desktop" ];
+      "application/toml" = [ "neovide.desktop" "nvim.desktop" ];
+      "application/yaml" = [ "neovide.desktop" "nvim.desktop" ];
+      "application/xml" = [ "neovide.desktop" "nvim.desktop" ];
+      "application/x-yaml" = [ "neovide.desktop" "nvim.desktop" ];
 
       # Terminal Emulator (Kitty)
       "x-scheme-handler/terminal" = [ "kitty.desktop" ];

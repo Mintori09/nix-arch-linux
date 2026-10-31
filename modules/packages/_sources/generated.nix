@@ -30,6 +30,14 @@
       sha256 = "sha256-lx+9Xwx7xQsa0BtFUBJSpAiECSjkYOhQHChDuBD0/MA=";
     };
   };
+  disktree = {
+    pname = "disktree";
+    version = "0.11.0";
+    src = fetchurl {
+      url = "https://github.com/tobi/disktree/releases/download/v0.11.0/disktree-0.11.0-x86_64-linux.tar.gz";
+      sha256 = "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=";
+    };
+  };
   hoppscotch = {
     pname = "hoppscotch";
     version = "26.10.0-0";
@@ -52,6 +60,14 @@
     src = fetchurl {
       url = "https://github.com/google/magika/releases/download/cli/v1.1.0/magika-cli-x86_64-unknown-linux-gnu.tar.xz";
       sha256 = "sha256-a0wQEMhNH08GIFzO9Fl/FpC813RPRthB7uJkJrwQBIU=";
+    };
+  };
+  neovide = {
+    pname = "neovide";
+    version = "0.17.0";
+    src = fetchurl {
+      url = "https://github.com/neovide/neovide/releases/download/0.17.0/neovide.AppImage";
+      sha256 = "sha256-vYFUgL3pM52HHlxR0TdvfuOIh7oiKFBGDjKw8ZzoRe0=";
     };
   };
   obsidian = {

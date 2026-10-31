@@ -187,6 +187,7 @@
 
     # Custom packages (prebuilt from GitHub / local)
     bookokrat
+    disktree
     dbx
     anyflip-downloader
     cv-cli
