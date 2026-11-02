@@ -18,7 +18,8 @@ let
 in
 
 pkgs.appimageTools.wrapAppImage {
-  inherit pname version src contents;
+  inherit pname version;
+  src = contents;
 
   extraPkgs = pkgs: with pkgs; [
     libopus
