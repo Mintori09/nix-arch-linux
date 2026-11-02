@@ -12,15 +12,15 @@ in
   systemd.user.services.vicinae = {
     Unit = {
       Description = "Vicinae server daemon";
-      After = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" "plasma-workspace.target" ];
       PartOf = [ "graphical-session.target" ];
     };
 
     Service = {
       Type = "simple";
       ExecStart = "${vicinae}/bin/vicinae server --replace";
-      Restart = "always";
-      RestartSec = 60;
+      Restart = "on-failure";
+      RestartSec = 2;
       KillMode = "process";
     };
 
