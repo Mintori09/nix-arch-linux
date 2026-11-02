@@ -38,6 +38,14 @@
       sha256 = "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=";
     };
   };
+  herdr-gpui = {
+    pname = "herdr-gpui";
+    version = "20261028.1";
+    src = fetchurl {
+      url = "https://github.com/penso/herdr-gpui/releases/download/v20261028.1/Herdr-20261028.1-x86_64-unknown-linux-gnu.tar.gz";
+      sha256 = "sha256-KrUx+82TXAw4fJPxTWIMioip9TodDOzXI0qDd+5lCoU=";
+    };
+  };
   hoppscotch = {
     pname = "hoppscotch";
     version = "26.10.0-0";

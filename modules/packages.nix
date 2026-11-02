@@ -200,6 +200,7 @@
     hoppscotch
     kmp-lsp
     caesium-clt
+    herdr-gpui
     neovim-nightly
     yazi-nightly
     fmtron

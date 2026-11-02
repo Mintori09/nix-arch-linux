@@ -53,3 +53,8 @@ fetch.url = "https://github.com/neovide/neovide/releases/download/$ver/neovide.A
 src.github = "tobi/disktree"
 src.prefix = "v"
 fetch.url = "https://github.com/tobi/disktree/releases/download/v$ver/disktree-$ver-x86_64-linux.tar.gz"
+
+[herdr-gpui]
+src.github = "penso/herdr-gpui"
+src.prefix = "v"
+fetch.url = "https://github.com/penso/herdr-gpui/releases/download/v$ver/Herdr-$ver-x86_64-unknown-linux-gnu.tar.gz"

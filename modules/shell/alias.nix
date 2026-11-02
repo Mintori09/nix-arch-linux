@@ -80,5 +80,6 @@ in
     turn-off-screen = "qdbus6 org.kde.kglobalaccel /component/org_kde_powerdevil invokeShortcut 'Turn Off Screen'";
     kgs = "kglance --standalone";
     ap = "agy --dangerously-skip-permissions";
+    steam = "env -u LD_LIBRARY_PATH -u LD_PRELOAD steam";
   };
 }
