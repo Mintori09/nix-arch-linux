@@ -205,5 +205,6 @@
     yazi-nightly
     fmtron
     samply
+    zalo
   ];
 }
