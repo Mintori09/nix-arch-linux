@@ -26,6 +26,12 @@ in
     agyCompletion
   ];
 
+  home.shellAliases = {
+    # Antigravity
+    a = "${pkgs.llm-agents.antigravity-cli}/bin/agy --dangerously-skip-permissions -p";
+    agy = "${pkgs.llm-agents.antigravity-cli}/bin/agy --dangerously-skip-permissions";
+  };
+
   home.file = {
     ".gemini/antigravity-cli/mcp_config.json" = {
       text = builtins.toJSON mcpConfig;
