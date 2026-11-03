@@ -103,12 +103,14 @@
         "@mozilla/firefox-devtools-mcp@latest"
         "--viewport"
         "1280x720"
+        "--profilePath"
+        "/home/mintori/.config/mozilla/firefox/07mr586w.default-release"
       ];
       env = {
         START_URL = "about:blank";
       };
     };
-    enabled = false;
+    enabled = true;
   };
 
   firefox-devtools-headless = {
