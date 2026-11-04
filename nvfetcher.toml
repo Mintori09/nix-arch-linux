@@ -54,7 +54,7 @@ src.github = "tobi/disktree"
 src.prefix = "v"
 fetch.url = "https://github.com/tobi/disktree/releases/download/v$ver/disktree-$ver-x86_64-linux.tar.gz"
 
-[herdr-gpui]
-src.github = "penso/herdr-gpui"
+[sheprd]
+src.github = "sheprd-labs/sheprd"
 src.prefix = "v"
-fetch.url = "https://github.com/penso/herdr-gpui/releases/download/v$ver/Herdr-$ver-x86_64-unknown-linux-gnu.tar.gz"
+fetch.url = "https://github.com/sheprd-labs/sheprd/releases/download/v$ver/Sheprd-$ver-x86_64-unknown-linux-gnu.tar.gz"

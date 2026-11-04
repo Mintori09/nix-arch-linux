@@ -59,21 +59,6 @@
         },
         "version": "0.11.0"
     },
-    "herdr-gpui": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "herdr-gpui",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-KrUx+82TXAw4fJPxTWIMioip9TodDOzXI0qDd+5lCoU=",
-            "type": "url",
-            "url": "https://github.com/penso/herdr-gpui/releases/download/v20261028.1/Herdr-20261028.1-x86_64-unknown-linux-gnu.tar.gz"
-        },
-        "version": "20261028.1"
-    },
     "hoppscotch": {
         "cargoLock": null,
         "date": null,
@@ -163,6 +148,21 @@
             "url": "https://github.com/qbittorrent/qBittorrent/releases/download/release-5.3.0/qbittorrent-5.3.0_x86_64.AppImage"
         },
         "version": "5.3.0"
+    },
+    "sheprd": {
+        "cargoLock": null,
+        "date": null,
+        "extract": null,
+        "name": "sheprd",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "name": null,
+            "sha256": "sha256-kH2xewCkfYNdZG6lefK5QPofcnHhsCYSelcm3pQDsJI=",
+            "type": "url",
+            "url": "https://github.com/sheprd-labs/sheprd/releases/download/v20261104.1/Sheprd-20261104.1-x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "version": "20261104.1"
     },
     "vicinae": {
         "cargoLock": null,
