@@ -180,10 +180,8 @@
         "${pkgs.nodejs}/bin/npx"
         "-y"
         "@ankimcp/anki-mcp-server"
+        "--stdio"
       ];
-    };
-    remote = {
-      url = "http://localhost:4473/sse";
     };
     enabled = true;
   };
