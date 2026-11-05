@@ -1,8 +1,6 @@
 settings.blocklistPattern =
   /.*(colab\.google\.com|mail\.google\.com|docs\.google\.com|twitter\.com|notion\.so).*/i;
-// api.unmapAllExcept(['E','R','T'], /google.com|twitter.com/);
-settings.digitForRepeat = false; // Để Vimium C xử lý bộ đếm số (như 5j, 3k)
-api.iunmap(":"); // Tắt gợi ý emoji trong ô input
+settings.digitForRepeat = false;
 api.unmap("yd");
 api.unmap("yo");
 api.unmap("yg");
@@ -121,9 +119,20 @@ api.mapkey("ov", "Tìm kiếm Google Voz", function () {
 });
 
 api.mapkey("gh", "Tìm kiếm Google Github", function () {
+  const isGoogle = /(^|\.)google\.[a-z.]+$/i.test(window.location.hostname);
+  if (isGoogle) {
+    const url = new URL(window.location.href);
+    const q = url.searchParams.get("q") || "";
+    if (!/site:github\.com/i.test(q)) {
+      url.searchParams.set("q", (q ? q + " " : "") + "site:github.com");
+      window.location.href = url.href;
+      return;
+    }
+  }
+
   api.Front.openOmnibar({
     type: "SearchEngine",
-    extra: "h",
+    extra: "g",
   });
 });
 
