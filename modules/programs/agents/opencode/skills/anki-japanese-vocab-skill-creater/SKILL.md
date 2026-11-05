@@ -64,7 +64,8 @@ ALWAYS output valid JSON array formatted strictly as follows:
 4. **`part_of_speech`**: Include clear classification in Vietnamese (e.g., `Động từ nhóm 1 (Tự động từ)`, `Danh từ`, `Tính từ -i`).
 5. **`cloze_front`**: Use `{{c1::target_conjugated_word}}` inside `cloze_front` so Anki generates fill-in-the-blank cards cleanly.
 6. **`meaning_vi` & `sentence_translation`**: Provide natural, accurate Vietnamese translations.
-7. **`notes`**: Include mnemonic kanji breakdowns or transitive/intransitive (`自/他`) nuance notes where appropriate.
+7. **`notes.mnemonic`**: Luôn giải thích bằng tiếng Việt, ngắn gọn, dễ nhớ, áp dụng công thức: **Chiết tự bộ thủ + Âm Hán Việt + Liên tưởng hình ảnh sinh động** (ví dụ: *"Chữ 戻 (LỆ) gồm bộ Hộ 戶 (cánh cửa) và chữ Khuyển 犬 (con chó) - chú cún ngoan ngoãn quay trở về nép bên cánh cửa nhà."*). Nếu từ vựng không chứa Kanji (như từ tượng thanh tượng hình Hiragana hay từ mượn Katakana), bắt buộc ghi chính xác: `"Không có Kanji cần ghi nhớ."`.
+8. **`notes.nuance`**: Phân biệt sắc thái cách dùng, cặp tự/tha động từ (`自/他`), từ đồng nghĩa/trái nghĩa, hoặc ngữ cảnh giao tiếp cụ thể (ví dụ: trang trọng vs thân mật).
 
 ## CLI Usage
 
