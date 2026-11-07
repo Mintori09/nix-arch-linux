@@ -174,7 +174,6 @@
 
     # Desktop & GUI apps
     signal-desktop
-    foliate
     aspell
     telegram-desktop
     kdePackages.kamoso
@@ -201,6 +200,7 @@
     kmp-lsp
     caesium-clt
     sheprd
+    gdown
     neovim-nightly
     yazi-nightly
     fmtron

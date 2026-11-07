@@ -59,6 +59,21 @@
         },
         "version": "0.11.0"
     },
+    "gdown": {
+        "cargoLock": null,
+        "date": null,
+        "extract": null,
+        "name": "gdown",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "name": null,
+            "sha256": "sha256-0zVzIh28K2WJJbKew0EoieYSXzdv3k/ouRWeCDW8wks=",
+            "type": "url",
+            "url": "https://github.com/wkentaro/gdown/archive/refs/tags/v6.5.1.tar.gz"
+        },
+        "version": "6.5.1"
+    },
     "hoppscotch": {
         "cargoLock": null,
         "date": null,
@@ -88,6 +103,21 @@
             "url": "https://github.com/Hessesian/kmp-lsp/releases/download/v0.27.0/kmp-lsp-linux-x86_64.tar.gz"
         },
         "version": "0.27.0"
+    },
+    "koodo-reader": {
+        "cargoLock": null,
+        "date": null,
+        "extract": null,
+        "name": "koodo-reader",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "name": null,
+            "sha256": "sha256-aYpKBWkhFxw0CKvT4zprdR0rY7PwN5jqhkHtyglw6Qc=",
+            "type": "url",
+            "url": "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.6/Koodo-Reader-2.4.6-amd64.deb"
+        },
+        "version": "2.4.6"
     },
     "magika": {
         "cargoLock": null,

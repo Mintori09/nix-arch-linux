@@ -38,6 +38,14 @@
       sha256 = "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=";
     };
   };
+  gdown = {
+    pname = "gdown";
+    version = "6.5.1";
+    src = fetchurl {
+      url = "https://github.com/wkentaro/gdown/archive/refs/tags/v6.5.1.tar.gz";
+      sha256 = "sha256-0zVzIh28K2WJJbKew0EoieYSXzdv3k/ouRWeCDW8wks=";
+    };
+  };
   hoppscotch = {
     pname = "hoppscotch";
     version = "26.10.0-0";
@@ -52,6 +60,14 @@
     src = fetchurl {
       url = "https://github.com/Hessesian/kmp-lsp/releases/download/v0.27.0/kmp-lsp-linux-x86_64.tar.gz";
       sha256 = "sha256-wU4Jlx7l9TiVqmvDAkL9vMNYCq51HDmJmSOu4aOWJJI=";
+    };
+  };
+  koodo-reader = {
+    pname = "koodo-reader";
+    version = "2.4.6";
+    src = fetchurl {
+      url = "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.6/Koodo-Reader-2.4.6-amd64.deb";
+      sha256 = "sha256-aYpKBWkhFxw0CKvT4zprdR0rY7PwN5jqhkHtyglw6Qc=";
     };
   };
   magika = {

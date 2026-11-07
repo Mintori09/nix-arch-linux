@@ -22,6 +22,7 @@
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
       sheprd = final.callPackage ./packages/sheprd.nix { };
+      gdown = final.callPackage ./packages/gdown.nix { };
       neovide = final.callPackage ./packages/neovide.nix { };
       neovim-nightly = final.callPackage ./packages/neovim-nightly.nix { };
       yazi-nightly = final.callPackage ./packages/yazi-nightly.nix { };
