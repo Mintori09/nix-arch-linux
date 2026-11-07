@@ -181,16 +181,17 @@ Do you want to:
 
 ### Step 6: Cleanup (Upon Approval)
 
-When user confirms merging:
+When user confirms Option 1 (merge changes):
 ```bash
-BRANCH="wt/<TASK_SLUG>"
+SPAWN_SCRIPT="${HOME}/.config/home-manager/modules/programs/agents/opencode/skills/herdr-worktree-coder/scripts/spawn-worktree-agy.sh"
+TASK_SLUG="<TASK_SLUG>"
+BRANCH="wt/${TASK_SLUG}"
 
 # 1. Merge into main branch
 git merge "${BRANCH}"
 
-# 2. Remove worktree workspace from Herdr
-herdr worktree remove "${WORKTREE_PATH}"
-
-# 3. Clean up branch
-git branch -d "${BRANCH}"
+# 2. Automatically close Herdr workspace, remove worktree checkout, and delete branch
+"${SPAWN_SCRIPT}" cleanup "${TASK_SLUG}"
 ```
+
+*(Or manually: `herdr workspace close <WORKSPACE_ID>`, `herdr worktree remove <WORKTREE_PATH>`, `git branch -d <BRANCH>`)*

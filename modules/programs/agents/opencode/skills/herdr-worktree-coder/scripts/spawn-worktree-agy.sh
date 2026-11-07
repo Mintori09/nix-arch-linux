@@ -142,8 +142,42 @@ EOF
 EOF
     ;;
 
+  cleanup)
+    # Stage 3: Merge, remove worktree checkout, close Herdr workspace, and delete branch
+    TASK_SLUG="${2:?Task slug required for cleanup}"
+    BRANCH="wt/${TASK_SLUG}"
+    WORKTREE_PATH=".worktrees/${TASK_SLUG}"
+    META_FILE="${WORKTREE_PATH}/.herdr-session.json"
+
+    WORKSPACE_ID=""
+    if [ -f "$META_FILE" ]; then
+      WORKSPACE_ID=$(jq -r '.workspace_id // empty' "$META_FILE")
+    fi
+
+    # 1. Close workspace in Herdr if it was open
+    if [ -n "$WORKSPACE_ID" ]; then
+      herdr workspace close "$WORKSPACE_ID" 2>/dev/null || true
+    fi
+
+    # 2. Remove worktree checkout
+    if [ -d "$WORKTREE_PATH" ]; then
+      herdr worktree remove "${WORKTREE_PATH}" 2>/dev/null || git worktree remove "${WORKTREE_PATH}" --force 2>/dev/null || rm -rf "${WORKTREE_PATH}"
+    fi
+
+    # 3. Clean up branch
+    git branch -D "${BRANCH}" 2>/dev/null || true
+
+    cat <<EOF
+{
+  "task_slug": "${TASK_SLUG}",
+  "workspace_id": "${WORKSPACE_ID}",
+  "status": "cleaned"
+}
+EOF
+    ;;
+
   *)
-    echo >&2 "Usage: $0 {init <prefix> | launch <task_slug>}"
+    echo >&2 "Usage: $0 {init <prefix> | launch <task_slug> | cleanup <task_slug>}"
     exit 1
     ;;
 esac
