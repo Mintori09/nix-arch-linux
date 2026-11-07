@@ -18,6 +18,7 @@
     ./nushell.nix
     ./agents
     ./yt-dlp.nix
+    ./gallery-dl.nix
     ./kitty.nix
     ./pinta.nix
     ./alacritty.nix
