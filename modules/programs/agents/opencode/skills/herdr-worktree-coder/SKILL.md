@@ -3,8 +3,8 @@ name: herdr-worktree-coder
 description: >
   Dispatch a dedicated Antigravity CLI (agy) coding & validation session inside an isolated Git worktree workspace via Herdr UI.
   Packages rich context directly into `.worktrees/<slug>/.task-brief.local.md` (zero root pollution, concurrency-safe for multiple agents),
-  uses `spawn-worktree-agy.sh` pipeline (init -> write brief -> launch) to provision the workspace and start an interactive `agy` session without focus theft,
-  monitors execution in the background via Herdr Agent API, and presents verified diffs for user review before merging.
+  uses `spawn-worktree-agy.sh` pipeline (init -> write brief -> launch) with automatic Herdr source workspace resolution (eliminating not_git_worktree errors),
+  starts an interactive `agy` session without focus theft, monitors execution in the background via Herdr Agent API, and presents verified diffs for user review before merging.
   ALWAYS use when user wants to implement or validate code in an isolated git worktree, delegate coding tasks to a fresh agy session in Herdr,
   or combine Herdr workspaces with Antigravity validation.
   Triggers (VN): "code trong worktree", "chạy agy trong worktree", "validate bằng worktree", "mở worktree herdr", "tạo session agy mới trong worktree", "cô lập code test", "mở agy bằng herdr".
@@ -15,7 +15,7 @@ description: >
 
 An empirical, concurrency-safe coding workflow that orchestrates a pristine **Antigravity CLI (`agy`)** interactive session inside a dedicated **Git Worktree Workspace** managed directly by **Herdr UI**.
 
-It guarantees **Zero Root Pollution & Concurrency Safety**: multiple agents on `main` can run simultaneously without file collisions or race conditions. All brief files are written directly inside their isolated worktree directories (`.worktrees/<slug>/.task-brief.local.md`), completely avoiding the root working tree.
+It guarantees **Zero Root Pollution & Auto-Resolved Workspace Topology**: multiple agents on `main` can run simultaneously without file collisions or workspace mismatch errors. The bundled helper script automatically resolves the base Herdr workspace for the current repository, provisions the worktree tab, and starts `agy` cleanly in the background.
 
 ---
 
@@ -27,7 +27,7 @@ It guarantees **Zero Root Pollution & Concurrency Safety**: multiple agents on `
                          ▼
           ┌─────────────────────────────┐
           │ Step 1: Init Worktree       │ ──► `spawn-worktree-agy.sh init <prefix>`
-          │ (Unique slug + Herdr WS)    │     Generates `fix-<ts>-<hex>` & creates worktree dir
+          │ (Auto Source WS Resolution) │     Auto-binds repo WS, creates `.worktrees/<slug>`
           └──────────────┬──────────────┘
                          │
                          ▼
@@ -70,16 +70,16 @@ INIT_JSON=$("${SPAWN_SCRIPT}" init "fix-auth")
 echo "$INIT_JSON"
 ```
 
-The script returns unique, collision-proof JSON:
+The script automatically detects the base repository workspace in Herdr, creates the worktree and pane, and returns:
 ```json
 {
-  "task_slug": "fix-auth-1731000000-a1b2",
-  "branch": "wt/fix-auth-1731000000-a1b2",
-  "worktree_path": ".worktrees/fix-auth-1731000000-a1b2",
-  "workspace_id": "wR",
-  "pane_id": "wR:p1",
-  "agent_name": "agy-fix-auth-1731000000-a1b2",
-  "brief_target_path": ".worktrees/fix-auth-1731000000-a1b2/.task-brief.local.md",
+  "task_slug": "fix-auth",
+  "branch": "wt/fix-auth",
+  "worktree_path": ".worktrees/fix-auth",
+  "workspace_id": "wY",
+  "pane_id": "wY:p1",
+  "agent_name": "agy-fix-auth",
+  "brief_target_path": ".worktrees/fix-auth/.task-brief.local.md",
   "status": "initialized"
 }
 ```
@@ -121,7 +121,7 @@ Template:
 
 ### Step 3: Launch `agy` Agent in Worktree Workspace
 
-Once the brief file is written, trigger the launch:
+Once the brief file is written, trigger the launch with just the task slug:
 
 ```bash
 LAUNCH_JSON=$("${SPAWN_SCRIPT}" launch "<TASK_SLUG>")
@@ -159,8 +159,8 @@ Present the full diff, test output, and Herdr workspace location to the user:
 
 ```markdown
 ### 🚀 Worktree Validation Summary
-- **Worktree Path**: `.worktrees/fix-auth-1731000000-a1b2`
-- **Herdr Workspace ID**: `wR` (Agent: `agy-fix-auth-1731000000-a1b2`)
+- **Worktree Path**: `.worktrees/fix-auth`
+- **Herdr Workspace ID**: `wY` (Agent: `agy-fix-auth`)
 - **Status**: ✅ All tests passing empirically
 - **Changed Files**:
   - `src/lib/feature.ts`: Fixed edge case
@@ -170,10 +170,10 @@ Present the full diff, test output, and Herdr workspace location to the user:
 [Insert git diff here]
 ```
 
-💡 *Bạn có thể switch sang workspace `wR` trong Herdr UI để xem trực tiếp phiên làm việc của `agy`.*
+💡 *Bạn có thể switch sang workspace `wY` trong Herdr UI để xem trực tiếp phiên làm việc của `agy`.*
 
 Do you want to:
-1. Merge branch `wt/fix-auth-...` into current branch and remove worktree?
+1. Merge branch `wt/fix-auth` into current branch and remove worktree?
 2. Keep worktree workspace open in Herdr for further manual inspection?
 ```
 
