@@ -2,7 +2,7 @@
 name: herdr-worktree-coder
 description: >
   Dispatch a dedicated Antigravity CLI (agy) coding & validation session inside an isolated Git worktree workspace via Herdr UI.
-  Packages rich context into a `.task-brief.md` markdown file, creates an isolated worktree workspace in Herdr (`herdr worktree create --no-focus`),
+  Packages rich context into a `.task-brief.local.md` markdown file, creates an isolated worktree workspace in Herdr (`herdr worktree create --no-focus`),
   starts a live interactive `agy` session in that worktree's pane (`herdr agent start --kind agy`), prompts it with the task brief,
   monitors its execution in the background via Herdr Agent API, inspects empirical test & diff proofs, and reports back for user review before merging.
   ALWAYS use when user wants to implement or validate code in an isolated git worktree, delegate coding tasks to a fresh agy session in Herdr,
@@ -26,7 +26,7 @@ This prevents context pollution, keeps the primary working directory clean, guar
                          │
                          ▼
           ┌─────────────────────────────┐
-          │ Step 1: Package Context     │ ──► Generates `.task-brief.md`
+          │ Step 1: Package Context     │ ──► Generates `.task-brief.local.md`
           │ (AST symbols, files, tests) │
           └──────────────┬──────────────┘
                          │
@@ -39,7 +39,7 @@ This prevents context pollution, keeps the primary working directory clean, guar
                          ▼
           ┌─────────────────────────────┐
           │ Step 3: Start `agy` in Pane │ ──► `herdr agent start agy-<name> --kind agy`
-          │ & Submit Context Prompt     │     `herdr agent prompt agy-<name> "Read .task-brief.md..."`
+          │ & Submit Context Prompt     │     `herdr agent prompt agy-<name> "Read .task-brief.local.md..."`
           └──────────────┬──────────────┘
                          │
                          ▼
@@ -61,7 +61,7 @@ This prevents context pollution, keeps the primary working directory clean, guar
 
 ### Step 1: Context Brief Packaging
 
-Before creating worktrees or launching `agy`, package the exact requirements into a structured markdown document named `.task-brief.md`:
+Before creating worktrees or launching `agy`, package the exact requirements into a structured markdown document named `.task-brief.local.md` (which avoids accidental git commits via `*.local.*` patterns in `.gitignore`):
 
 ```markdown
 # 📋 Task Context Brief
@@ -122,9 +122,9 @@ Herdr will output JSON containing the new workspace details:
 }
 ```
 
-Write or copy the `.task-brief.md` into the root of the newly created worktree:
+Write or copy the `.task-brief.local.md` into the root of the newly created worktree:
 ```bash
-cp /path/to/.task-brief.md "${WORKTREE_PATH}/.task-brief.md"
+cp /path/to/.task-brief.local.md "${WORKTREE_PATH}/.task-brief.local.md"
 ```
 
 ---
@@ -146,7 +146,7 @@ cp /path/to/.task-brief.md "${WORKTREE_PATH}/.task-brief.md"
 3. Submit the mission prompt to the newly started `agy` agent:
    ```bash
    herdr agent prompt "${AGENT_NAME}" \
-     "Vui lòng đọc kỹ .task-brief.md. Hãy viết test tái hiện vấn đề/yêu cầu, thực hiện sửa đổi code, chạy bộ test kiểm tra pass 100%, và báo cáo tóm tắt khi hoàn thành."
+     "Vui lòng đọc kỹ .task-brief.local.md. Hãy viết test tái hiện vấn đề/yêu cầu, thực hiện sửa đổi code, chạy bộ test kiểm tra pass 100%, và báo cáo tóm tắt khi hoàn thành."
    ```
 
 ---
@@ -221,6 +221,6 @@ If running outside Herdr (`HERDR_ENV != 1`):
 1. Create git worktree manually: `git worktree add -b "${WORKTREE_BRANCH}" "${WORKTREE_PATH}" HEAD`
 2. Run headless `agy`:
    ```bash
-   (cd "${WORKTREE_PATH}" && agy --new-project --mode auto -p "Đọc .task-brief.md, viết test, sửa code và verify pass.")
+   (cd "${WORKTREE_PATH}" && agy --new-project --mode auto -p "Đọc .task-brief.local.md, viết test, sửa code và verify pass.")
    ```
 3. Inspect diff and clean up with `git worktree remove "${WORKTREE_PATH}"`.
