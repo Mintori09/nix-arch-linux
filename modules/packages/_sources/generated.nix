@@ -66,8 +66,8 @@
     pname = "koodo-reader";
     version = "2.4.6";
     src = fetchurl {
-      url = "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.6/Koodo-Reader-2.4.6-amd64.deb";
-      sha256 = "sha256-aYpKBWkhFxw0CKvT4zprdR0rY7PwN5jqhkHtyglw6Qc=";
+      url = "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.6/Koodo-Reader-2.4.6-x86_64.AppImage";
+      sha256 = "sha256-ye+xy0dTOg172vwHk2O++7VE0YfaTgMRz9Gx4z4Tkik=";
     };
   };
   magika = {

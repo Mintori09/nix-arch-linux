@@ -201,6 +201,7 @@
     caesium-clt
     sheprd
     gdown
+    koodo-reader
     neovim-nightly
     yazi-nightly
     fmtron
