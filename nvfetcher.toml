@@ -68,3 +68,8 @@ fetch.url = "https://github.com/wkentaro/gdown/archive/refs/tags/v$ver.tar.gz"
 src.github = "koodo-reader/koodo-reader"
 src.prefix = "v"
 fetch.url = "https://github.com/koodo-reader/koodo-reader/releases/download/v$ver/Koodo-Reader-$ver-x86_64.AppImage"
+
+[fluxdown]
+src.github = "zerx-lab/FluxDown"
+src.prefix = "v"
+fetch.url = "https://github.com/zerx-lab/FluxDown/releases/download/v$ver/FluxDown-$ver-linux-x64.tar.gz"

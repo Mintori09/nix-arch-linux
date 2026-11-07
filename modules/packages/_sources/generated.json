@@ -59,6 +59,21 @@
         },
         "version": "0.11.0"
     },
+    "fluxdown": {
+        "cargoLock": null,
+        "date": null,
+        "extract": null,
+        "name": "fluxdown",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "name": null,
+            "sha256": "sha256-qZkCC8J2MdhuYuwt9nell7uWwKcKpaSp0c+gVhSh1xM=",
+            "type": "url",
+            "url": "https://github.com/zerx-lab/FluxDown/releases/download/v0.6.6/FluxDown-0.6.6-linux-x64.tar.gz"
+        },
+        "version": "0.6.6"
+    },
     "gdown": {
         "cargoLock": null,
         "date": null,

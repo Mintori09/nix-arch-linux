@@ -21,6 +21,7 @@
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
+      fluxdown = final.callPackage ./packages/fluxdown.nix { };
       sheprd = final.callPackage ./packages/sheprd.nix { };
       gdown = final.callPackage ./packages/gdown.nix { };
       koodo-reader = final.callPackage ./packages/koodo-reader.nix { };

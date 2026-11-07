@@ -199,6 +199,7 @@
     hoppscotch
     kmp-lsp
     caesium-clt
+    fluxdown
     sheprd
     gdown
     koodo-reader

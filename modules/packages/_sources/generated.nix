@@ -38,6 +38,14 @@
       sha256 = "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=";
     };
   };
+  fluxdown = {
+    pname = "fluxdown";
+    version = "0.6.6";
+    src = fetchurl {
+      url = "https://github.com/zerx-lab/FluxDown/releases/download/v0.6.6/FluxDown-0.6.6-linux-x64.tar.gz";
+      sha256 = "sha256-qZkCC8J2MdhuYuwt9nell7uWwKcKpaSp0c+gVhSh1xM=";
+    };
+  };
   gdown = {
     pname = "gdown";
     version = "6.5.1";
