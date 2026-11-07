@@ -7,7 +7,6 @@
     ./neovide.nix
     ./obsidian.nix
     ./gimp.nix
-    # ./foliate.nix
     ./drawio.nix
     ./localsend.nix
     ./systemctl-tui.nix
