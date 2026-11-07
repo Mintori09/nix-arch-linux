@@ -2,9 +2,9 @@
 name: herdr-worktree-coder
 description: >
   Dispatch a dedicated Antigravity CLI (agy) coding & validation session inside an isolated Git worktree workspace via Herdr UI.
-  Packages rich context into a `.task-brief.local.md` markdown file, creates an isolated worktree workspace in Herdr (`herdr worktree create --no-focus`),
-  starts a live interactive `agy` session in that worktree's pane (`herdr agent start --kind agy`), prompts it with the task brief,
-  monitors its execution in the background via Herdr Agent API, inspects empirical test & diff proofs, and reports back for user review before merging.
+  Packages rich context into `.task-brief.local.md`, executes the fast helper script `spawn-worktree-agy.sh` to provision the workspace
+  and launch an interactive `agy` session without focus theft, monitors execution in the background via Herdr Agent API,
+  and presents verified diffs for user review before merging.
   ALWAYS use when user wants to implement or validate code in an isolated git worktree, delegate coding tasks to a fresh agy session in Herdr,
   or combine Herdr workspaces with Antigravity validation.
   Triggers (VN): "code trong worktree", "chạy agy trong worktree", "validate bằng worktree", "mở worktree herdr", "tạo session agy mới trong worktree", "cô lập code test", "mở agy bằng herdr".
@@ -13,9 +13,9 @@ description: >
 
 # Herdr Worktree Coder & Validator
 
-An empirical, isolated coding workflow that orchestrates a pristine **Antigravity CLI (`agy`)** interactive session inside a dedicated **Git Worktree Workspace** managed directly by **Herdr UI**. 
+An empirical, streamlined coding workflow that orchestrates a pristine **Antigravity CLI (`agy`)** interactive session inside a dedicated **Git Worktree Workspace** managed directly by **Herdr UI**.
 
-This prevents context pollution, keeps the primary working directory clean, guarantees reproducibility via isolated tests, runs completely in the background without stealing UI focus, and requires explicit user review before any code is merged back into the main branch.
+It assumes standard tooling (`git`, `agy`, `herdr`, `jq`) is pre-installed, performs a fail-fast one-pass verification via a bundled script, avoids redundant command probes, runs completely in the background without stealing UI focus, and requires explicit user review before merging.
 
 ---
 
@@ -32,25 +32,19 @@ This prevents context pollution, keeps the primary working directory clean, guar
                          │
                          ▼
           ┌─────────────────────────────┐
-          │ Step 2: Create Worktree WS  │ ──► `herdr worktree create --no-focus`
-          │ (Dedicated Herdr Workspace) │     Creates branch `wt/<name>` & isolated workspace
+          │ Step 2: One-Step Spawn      │ ──► Runs `spawn-worktree-agy.sh <name>`
+          │ (Herdr Worktree + agy)      │     Provisions WS, starts agy & prompts non-blocking
           └──────────────┬──────────────┘
                          │
                          ▼
           ┌─────────────────────────────┐
-          │ Step 3: Start `agy` in Pane │ ──► `herdr agent start agy-<name> --kind agy`
-          │ & Submit Context Prompt     │     `herdr agent prompt agy-<name> "Read .task-brief.local.md..."`
-          └──────────────┬──────────────┘
-                         │
-                         ▼
-          ┌─────────────────────────────┐
-          │ Step 4: Autonomous Monitor  │ ◄── `herdr agent wait --until done --until idle`
+          │ Step 3: Autonomous Monitor  │ ◄── `herdr agent wait --until done --until idle`
           │ in Background & Read Output │     `herdr agent read agy-<name>` + `git diff`
           └──────────────┬──────────────┘
                          │
                          ▼
           ┌─────────────────────────────┐
-          │ Step 5: Diff Review &       │ ──► User reviews diff; can view live in Herdr UI;
+          │ Step 4: Diff Review &       │ ──► User reviews diff; can view live in Herdr UI;
           │ Workspace Cleanup Gate      │     Confirms before merge and worktree removal
           └─────────────────────────────┘
 ```
@@ -61,7 +55,7 @@ This prevents context pollution, keeps the primary working directory clean, guar
 
 ### Step 1: Context Brief Packaging
 
-Before creating worktrees or launching `agy`, package the exact requirements into a structured markdown document named `.task-brief.local.md` (which avoids accidental git commits via `*.local.*` patterns in `.gitignore`):
+First, package the exact task scope into a structured markdown document named `.task-brief.local.md` in the current project root:
 
 ```markdown
 # 📋 Task Context Brief
@@ -91,96 +85,64 @@ Before creating worktrees or launching `agy`, package the exact requirements int
 
 ---
 
-### Step 2: Worktree Workspace Provisioning in Herdr
+### Step 2: One-Step Worktree & Agent Spawning
 
-Ensure Herdr is active (`HERDR_ENV=1` or active Herdr socket):
+Execute the bundled helper script to handle prerequisite checks, worktree creation, file copying, agent startup, and initial prompting in **a single command**:
 
 ```bash
-# 1. Define unique branch name and worktree path
-TASK_SLUG="fix-issue-$(date +%s)"
-WORKTREE_BRANCH="wt/${TASK_SLUG}"
-WORKTREE_PATH=".worktrees/${TASK_SLUG}"
+# Locate the skill helper script
+SPAWN_SCRIPT="${HOME}/.config/home-manager/modules/programs/agents/opencode/skills/herdr-worktree-coder/scripts/spawn-worktree-agy.sh"
 
-# 2. Create dedicated Git worktree and workspace in Herdr without stealing user focus
-herdr worktree create \
-  --branch "${WORKTREE_BRANCH}" \
-  --path "${WORKTREE_PATH}" \
-  --label "WT: ${TASK_SLUG}" \
-  --no-focus \
-  --trust-repository
+# Run spawn script (non-blocking, returns JSON)
+TASK_NAME="fix-issue-$(date +%s)"
+SPAWN_RESULT=$("${SPAWN_SCRIPT}" "${TASK_NAME}" .task-brief.local.md)
+echo "$SPAWN_RESULT"
 ```
 
-Herdr will output JSON containing the new workspace details:
+The script returns structured JSON:
 ```json
 {
-  "id": "cli:worktree:create",
-  "result": {
-    "open_workspace_id": "<NEW_WS_ID>",
-    "path": "/absolute/path/to/.worktrees/...",
-    ...
-  }
+  "task_name": "fix-issue-1731000000",
+  "branch": "wt/fix-issue-1731000000",
+  "worktree_path": ".worktrees/fix-issue-1731000000",
+  "workspace_id": "wR",
+  "pane_id": "wR:p1",
+  "agent_name": "agy-fix-issue-1731000000",
+  "status": "spawned"
 }
 ```
 
-Write or copy the `.task-brief.local.md` into the root of the newly created worktree:
+---
+
+### Step 3: Background Monitoring & Verification
+
+Extract `agent_name` and `worktree_path` from the JSON to monitor progress:
+
 ```bash
-cp /path/to/.task-brief.local.md "${WORKTREE_PATH}/.task-brief.local.md"
+AGENT_NAME="agy-${TASK_NAME}"
+WORKTREE_PATH=".worktrees/${TASK_NAME}"
+
+# 1. Wait until agent finishes or returns to idle
+herdr agent wait "${AGENT_NAME}" --until done --until idle --timeout 300000
+
+# 2. Read final terminal output
+herdr agent read "${AGENT_NAME}" --lines 80
+
+# 3. Empirically inspect changes in the worktree
+git -C "${WORKTREE_PATH}" status -s
+git -C "${WORKTREE_PATH}" diff
 ```
 
 ---
 
-### Step 3: Launch Interactive `agy` in the Worktree Pane
-
-1. Discover the root pane ID inside the new workspace:
-   ```bash
-   herdr pane list --workspace "<NEW_WS_ID>"
-   ```
-   Extract `.result.panes[0].pane_id` (e.g. `wR:p1`).
-
-2. Start the interactive `agy` agent in that pane:
-   ```bash
-   AGENT_NAME="agy-${TASK_SLUG}"
-   herdr agent start "${AGENT_NAME}" --kind agy --pane "<PANE_ID>"
-   ```
-
-3. Submit the mission prompt to the newly started `agy` agent:
-   ```bash
-   herdr agent prompt "${AGENT_NAME}" \
-     "Vui lòng đọc kỹ .task-brief.local.md. Hãy viết test tái hiện vấn đề/yêu cầu, thực hiện sửa đổi code, chạy bộ test kiểm tra pass 100%, và báo cáo tóm tắt khi hoàn thành."
-   ```
-
----
-
-### Step 4: Autonomous Background Monitoring
-
-While `agy` works in the background, the Main Agent can monitor the agent's lifecycle without freezing the conversation:
-
-1. Wait for completion or idle state:
-   ```bash
-   herdr agent wait "${AGENT_NAME}" --until done --until idle --timeout 300000
-   ```
-
-2. Inspect the agent's terminal output:
-   ```bash
-   herdr agent read "${AGENT_NAME}" --lines 80
-   ```
-
-3. Empirically verify the code changes in the worktree:
-   ```bash
-   git -C "${WORKTREE_PATH}" status -s
-   git -C "${WORKTREE_PATH}" diff
-   ```
-
----
-
-### Step 5: Review & User Confirmation Gate
+### Step 4: Review & User Confirmation Gate
 
 Present the full diff, test output, and Herdr location to the user:
 
 ```markdown
 ### 🚀 Worktree Validation Summary
-- **Worktree Path**: `.worktrees/fix-issue-12345`
-- **Herdr Workspace ID**: `wR` (Agent: `agy-fix-issue-12345`)
+- **Worktree Path**: `.worktrees/fix-issue-...`
+- **Herdr Workspace ID**: `wR` (Agent: `agy-fix-issue-...`)
 - **Status**: ✅ All tests passing empirically
 - **Changed Files**:
   - `src/lib/feature.ts`: Fixed edge case
@@ -193,34 +155,24 @@ Present the full diff, test output, and Herdr location to the user:
 💡 *Bạn có thể switch sang workspace `wR` trong Herdr UI để xem trực tiếp phiên làm việc của `agy`.*
 
 Do you want to:
-1. Merge branch `wt/fix-issue-12345` into current branch and remove worktree?
+1. Merge branch `wt/fix-issue-...` into current branch and remove worktree?
 2. Keep worktree workspace open in Herdr for further manual inspection?
 ```
 
 ---
 
-### Step 6: Cleanup (Upon Approval)
+### Step 5: Cleanup (Upon Approval)
 
-When user confirms merging and cleanup:
+When user confirms merging:
 ```bash
-# 1. Merge into main branch
-git merge "${WORKTREE_BRANCH}"
+BRANCH="wt/${TASK_NAME}"
 
-# 2. Remove worktree workspace from Herdr and delete worktree directory
+# 1. Merge into main branch
+git merge "${BRANCH}"
+
+# 2. Remove worktree workspace from Herdr
 herdr worktree remove "${WORKTREE_PATH}"
 
 # 3. Clean up branch
-git branch -d "${WORKTREE_BRANCH}"
+git branch -d "${BRANCH}"
 ```
-
----
-
-## 3. Fallback Mode (When Outside Herdr)
-
-If running outside Herdr (`HERDR_ENV != 1`):
-1. Create git worktree manually: `git worktree add -b "${WORKTREE_BRANCH}" "${WORKTREE_PATH}" HEAD`
-2. Run headless `agy`:
-   ```bash
-   (cd "${WORKTREE_PATH}" && agy --new-project --mode auto -p "Đọc .task-brief.local.md, viết test, sửa code và verify pass.")
-   ```
-3. Inspect diff and clean up with `git worktree remove "${WORKTREE_PATH}"`.
