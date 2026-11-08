@@ -11,6 +11,7 @@
     ./localsend.nix
     ./systemctl-tui.nix
     # ./sioyek.nix
+    ./sheprd.nix
     ./zathura.nix
     ./packettracer.nix
   ];
