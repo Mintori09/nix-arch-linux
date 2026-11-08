@@ -199,8 +199,9 @@
     hoppscotch
     kmp-lsp
     caesium-clt
+    pdfcpu
     fluxdown
-    sheprd
+    lumine-capture
     gdown
     koodo-reader
     neovim-nightly

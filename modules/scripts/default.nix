@@ -2,6 +2,7 @@
 {
   imports = [
     ./ai-popup.nix
+    ./lumine-ocr.nix
     ./ai-renamer.nix
     ./format.nix
     ./each.nix

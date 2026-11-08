@@ -78,6 +78,14 @@
       sha256 = "sha256-ye+xy0dTOg172vwHk2O++7VE0YfaTgMRz9Gx4z4Tkik=";
     };
   };
+  lumine-capture = {
+    pname = "lumine-capture";
+    version = "0.3.0";
+    src = fetchurl {
+      url = "https://github.com/Netflate/LumineCapture/releases/download/v0.3.0/lumine-capture_0.3.0-1_amd64.deb";
+      sha256 = "sha256-w97zkBbBquCn2Oetrix2arFs+YYcAbeUzvg/AzGE5Yg=";
+    };
+  };
   magika = {
     pname = "magika";
     version = "1.1.0";
@@ -100,6 +108,14 @@
     src = fetchurl {
       url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.5/Obsidian-1.14.5.AppImage";
       sha256 = "sha256-MGgV9g0V3qhhDXKIbvXlDvS35xhelS/8O7Ib7hWC2VI=";
+    };
+  };
+  pdfcpu = {
+    pname = "pdfcpu";
+    version = "0.16.4";
+    src = fetchurl {
+      url = "https://github.com/pdfcpu/pdfcpu/releases/download/v0.16.4/pdfcpu_0.16.4_Linux_x86_64.tar.xz";
+      sha256 = "sha256-MnH91m9Owy9aYoL4VjD4O5LpjU235AfMD1bZtUP2Ps0=";
     };
   };
   qbittorrent = {

@@ -73,3 +73,15 @@ fetch.url = "https://github.com/koodo-reader/koodo-reader/releases/download/v$ve
 src.github = "zerx-lab/FluxDown"
 src.prefix = "v"
 fetch.url = "https://github.com/zerx-lab/FluxDown/releases/download/v$ver/FluxDown-$ver-linux-x64.tar.gz"
+
+[lumine-capture]
+src.github = "Netflate/LumineCapture"
+src.prefix = "v"
+fetch.url = "https://github.com/Netflate/LumineCapture/releases/download/v$ver/lumine-capture_$ver-1_amd64.deb"
+
+[pdfcpu]
+src.github = "pdfcpu/pdfcpu"
+src.prefix = "v"
+fetch.url = "https://github.com/pdfcpu/pdfcpu/releases/download/v$ver/pdfcpu_$ver_Linux_x86_64.tar.xz"
+
+
