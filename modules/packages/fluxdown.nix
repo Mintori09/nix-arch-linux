@@ -23,6 +23,7 @@
   atk,
   at-spi2-atk,
   dbus,
+  libayatana-appindicator,
   libx11,
   libxcursor,
   libxrandr,
@@ -70,6 +71,7 @@ stdenv.mkDerivation {
     atk
     at-spi2-atk
     dbus
+    libayatana-appindicator
     libx11
     libxcursor
     libxrandr
@@ -86,6 +88,7 @@ stdenv.mkDerivation {
     vulkan-loader
     wayland
     libGL
+    libayatana-appindicator
   ];
 
   installPhase = ''
