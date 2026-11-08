@@ -329,6 +329,17 @@ in
           zvm_bindkey vicmd '\ez' zoxide-fzf
           bindkey -M emacs '\ez' zoxide-fzf
 
+          # Alt+A: Launch agy CLI
+          _agy_widget() {
+            zle -I
+            agy
+            redraw-prompt
+          }
+          zle -N _agy_widget
+          zvm_bindkey viins '\ea' _agy_widget
+          zvm_bindkey vicmd '\ea' _agy_widget
+          bindkey -M emacs '\ea' _agy_widget
+
           # Smart Streaming Tab Completion for yay (instant fzf UI, continuous stream)
           _yay_smart_tab() {
             local lbuf="''${LBUFFER}"
