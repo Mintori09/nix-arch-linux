@@ -200,6 +200,7 @@
     kmp-lsp
     caesium-clt
     pdfcpu
+    omnidiff
     fluxdown
     lumine-capture
     gdown

@@ -84,4 +84,9 @@ src.github = "pdfcpu/pdfcpu"
 src.prefix = "v"
 fetch.url = "https://github.com/pdfcpu/pdfcpu/releases/download/v$ver/pdfcpu_$ver_Linux_x86_64.tar.xz"
 
+[omnidiff]
+src.github = "ivankovic/omnidiff"
+src.prefix = "v"
+fetch.url = "https://github.com/ivankovic/omnidiff/releases/download/v$ver/omnidiff-x86_64-unknown-linux-musl.tar.gz"
+
 
