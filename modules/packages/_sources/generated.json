@@ -194,6 +194,21 @@
         },
         "version": "1.15.0"
     },
+    "omnidiff": {
+        "cargoLock": null,
+        "date": null,
+        "extract": null,
+        "name": "omnidiff",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "name": null,
+            "sha256": "sha256-O0dJIF43Q6v8D+qe24fVny+9XLpTDYxJq/RNRo4Nyxg=",
+            "type": "url",
+            "url": "https://github.com/ivankovic/omnidiff/releases/download/v0.4.0/omnidiff-x86_64-unknown-linux-musl.tar.gz"
+        },
+        "version": "0.4.0"
+    },
     "pdfcpu": {
         "cargoLock": null,
         "date": null,

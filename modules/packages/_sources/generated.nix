@@ -110,6 +110,14 @@
       sha256 = "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=";
     };
   };
+  omnidiff = {
+    pname = "omnidiff";
+    version = "0.4.0";
+    src = fetchurl {
+      url = "https://github.com/ivankovic/omnidiff/releases/download/v0.4.0/omnidiff-x86_64-unknown-linux-musl.tar.gz";
+      sha256 = "sha256-O0dJIF43Q6v8D+qe24fVny+9XLpTDYxJq/RNRo4Nyxg=";
+    };
+  };
   pdfcpu = {
     pname = "pdfcpu";
     version = "0.16.4";
