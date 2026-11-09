@@ -24,10 +24,10 @@
   };
   dbx = {
     pname = "dbx";
-    version = "0.6.62";
+    version = "0.6.68";
     src = fetchurl {
-      url = "https://github.com/t8y2/dbx/releases/download/v0.6.62/DBX_0.6.62_amd64.deb";
-      sha256 = "sha256-lx+9Xwx7xQsa0BtFUBJSpAiECSjkYOhQHChDuBD0/MA=";
+      url = "https://github.com/t8y2/dbx/releases/download/v0.6.68/DBX_0.6.68_amd64.deb";
+      sha256 = "sha256-7sI9HJyaAlCUG/yY3BUEqmEXLgZ1mvcSWJvbXyBdZGc=";
     };
   };
   disktree = {
@@ -56,10 +56,10 @@
   };
   hoppscotch = {
     pname = "hoppscotch";
-    version = "26.10.0-0";
+    version = "26.10.1-0";
     src = fetchurl {
-      url = "https://github.com/hoppscotch/releases/releases/download/v26.10.0-0/Hoppscotch_linux_x64.AppImage";
-      sha256 = "sha256-whmf5rBarK9swAioMCxgoEFkV5KqN4Lf8fl3zL/RzS0=";
+      url = "https://github.com/hoppscotch/releases/releases/download/v26.10.1-0/Hoppscotch_linux_x64.AppImage";
+      sha256 = "sha256-qXqfa0GTMjvByBzX+97P8s0dAqQU/bK5omZIxVZUX8g=";
     };
   };
   kmp-lsp = {
@@ -72,10 +72,10 @@
   };
   koodo-reader = {
     pname = "koodo-reader";
-    version = "2.4.6";
+    version = "2.4.7";
     src = fetchurl {
-      url = "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.6/Koodo-Reader-2.4.6-x86_64.AppImage";
-      sha256 = "sha256-ye+xy0dTOg172vwHk2O++7VE0YfaTgMRz9Gx4z4Tkik=";
+      url = "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.7/Koodo-Reader-2.4.7-x86_64.AppImage";
+      sha256 = "sha256-Sv/WG0SX65Z2qE2HUGOmFAdol7hmKV9pZP/BWn/ueOI=";
     };
   };
   lumine-capture = {
@@ -96,18 +96,18 @@
   };
   neovide = {
     pname = "neovide";
-    version = "0.17.0";
+    version = "0.17.2";
     src = fetchurl {
-      url = "https://github.com/neovide/neovide/releases/download/0.17.0/neovide.AppImage";
-      sha256 = "sha256-vYFUgL3pM52HHlxR0TdvfuOIh7oiKFBGDjKw8ZzoRe0=";
+      url = "https://github.com/neovide/neovide/releases/download/0.17.2/neovide.AppImage";
+      sha256 = "sha256-mfm5/9dNTSC7uG6hqq9G6ytmF6cZOg9xnwRlaANNl3I=";
     };
   };
   obsidian = {
     pname = "obsidian";
-    version = "1.14.5";
+    version = "1.15.0";
     src = fetchurl {
-      url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.5/Obsidian-1.14.5.AppImage";
-      sha256 = "sha256-MGgV9g0V3qhhDXKIbvXlDvS35xhelS/8O7Ib7hWC2VI=";
+      url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/Obsidian-1.15.0.AppImage";
+      sha256 = "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=";
     };
   };
   pdfcpu = {
@@ -128,18 +128,18 @@
   };
   sheprd = {
     pname = "sheprd";
-    version = "20261104.1";
+    version = "20261106.1";
     src = fetchurl {
-      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261104.1/Sheprd-20261104.1-x86_64-unknown-linux-gnu.tar.gz";
-      sha256 = "sha256-kH2xewCkfYNdZG6lefK5QPofcnHhsCYSelcm3pQDsJI=";
+      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261106.1/Sheprd-20261106.1-x86_64-unknown-linux-gnu.tar.gz";
+      sha256 = "sha256-9mRyeupXnu5kSp9U72bRK0A/uc0JbF4K12jwBaD1Jpg=";
     };
   };
   vicinae = {
     pname = "vicinae";
-    version = "0.29.2";
+    version = "0.30.0";
     src = fetchurl {
-      url = "https://github.com/vicinaehq/vicinae/releases/download/v0.29.2/vicinae-linux-x86_64-v0.29.2.tar.gz";
-      sha256 = "sha256-DcQOplhwqJqwwUEutQTZtWtDUCe0mURChvwBuUFtqg0=";
+      url = "https://github.com/vicinaehq/vicinae/releases/download/v0.30.0/vicinae-linux-x86_64-v0.30.0.tar.gz";
+      sha256 = "sha256-HYkWaOvYsORBGqccQa/bEDErAuhoRCEaVAM+IbTQv4g=";
     };
   };
 }
