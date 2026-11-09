@@ -55,6 +55,7 @@ stdenv.mkDerivation {
     mkdir -p $out/bin $out/share
     cp -r bin/* $out/bin/
     cp -r share/* $out/share/
+    rm -rf $out/share/applications
 
     runHook postInstall
   '';
