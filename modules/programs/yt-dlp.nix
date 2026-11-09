@@ -30,6 +30,15 @@ in
       # Networking
       --force-ipv4
 
+      # Sử dụng thư mục tạm trên RAM để tránh nghẽn I/O ổ đĩa
+      --paths temp:/dev/shm
+
+      # Xuất ra định dạng mkv
+      --merge-output-format mkv
+
+      # Truyền cờ giảm tải I/O/CPU cho ffmpeg
+      --downloader-args "ffmpeg:-threads 2"
+
       # Filename safety
       --trim-filenames 100
 
