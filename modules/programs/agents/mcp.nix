@@ -70,7 +70,7 @@
       };
       timeout = 10000;
     };
-    enabled = true;
+    enabled = false;
   };
 
   tavily = {
@@ -110,7 +110,7 @@
         START_URL = "about:blank";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 
   firefox-devtools-headless = {
@@ -137,7 +137,7 @@
         "git+https://github.com/googlecolab/colab-mcp"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   notebooklm = {
