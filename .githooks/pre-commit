@@ -9,6 +9,20 @@ fi
 
 cd "$(git rev-parse --show-toplevel)"
 
+# Check for secrets/key leaks in staged files
+if command -v gitleaks &>/dev/null; then
+	echo "🔍 Scanning staged files for secret/key leaks with Gitleaks..."
+	if ! gitleaks protect --staged --verbose; then
+		echo "❌ [Pre-commit] Gitleaks detected sensitive keys or secrets in staged files!"
+		echo "💡 Please remove the secret, or add '# gitleaks:allow' if this is a known false positive."
+		exit 1
+	fi
+	echo "✅ No leaked secrets detected."
+else
+	echo "⚠️  [Pre-commit] 'gitleaks' command not found. Skipping secret leak check."
+	echo "👉 Install gitleaks via Home-Manager packages to enable leak prevention."
+fi
+
 formatted=false
 
 format_file() {
