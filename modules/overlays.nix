@@ -23,7 +23,6 @@
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
       pdfcpu = final.callPackage ./packages/pdfcpu.nix { };
       omnidiff = final.callPackage ./packages/omnidiff.nix { };
-      fluxdown = final.callPackage ./packages/fluxdown.nix { };
       lumine-capture = final.callPackage ./packages/lumine-capture.nix { };
       sheprd = final.callPackage ./packages/sheprd.nix { };
       gdown = final.callPackage ./packages/gdown.nix { };

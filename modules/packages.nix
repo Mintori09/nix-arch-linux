@@ -201,7 +201,6 @@
     caesium-clt
     pdfcpu
     omnidiff
-    fluxdown
     lumine-capture
     gdown
     koodo-reader

@@ -1,272 +1,257 @@
 {
-    "anyflip-downloader": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "anyflip-downloader",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-hFppa5ekjGY4raZm6+M1bFmV6IR/MfJjpcH1xBZ0NoE=",
-            "type": "url",
-            "url": "https://github.com/Lofter1/anyflip-downloader/releases/download/v0.1.15/anyflip-downloader_0.1.15_linux_amd64.tar.gz"
-        },
-        "version": "0.1.15"
+  "anyflip-downloader": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "anyflip-downloader",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-hFppa5ekjGY4raZm6+M1bFmV6IR/MfJjpcH1xBZ0NoE=",
+      "type": "url",
+      "url": "https://github.com/Lofter1/anyflip-downloader/releases/download/v0.1.15/anyflip-downloader_0.1.15_linux_amd64.tar.gz"
     },
-    "caesium-clt": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "caesium-clt",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-IVqens3lTRylcB7gKZ0JFqoKFTuOzWPKDoMsjv3KLNU=",
-            "type": "url",
-            "url": "https://github.com/Lymphatus/caesium-clt/releases/download/v1.5.0/caesiumclt-v1.5.0-x86_64-unknown-linux-musl.tar.gz"
-        },
-        "version": "1.5.0"
+    "version": "0.1.15"
+  },
+  "caesium-clt": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "caesium-clt",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-IVqens3lTRylcB7gKZ0JFqoKFTuOzWPKDoMsjv3KLNU=",
+      "type": "url",
+      "url": "https://github.com/Lymphatus/caesium-clt/releases/download/v1.5.0/caesiumclt-v1.5.0-x86_64-unknown-linux-musl.tar.gz"
     },
-    "dbx": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "dbx",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-7sI9HJyaAlCUG/yY3BUEqmEXLgZ1mvcSWJvbXyBdZGc=",
-            "type": "url",
-            "url": "https://github.com/t8y2/dbx/releases/download/v0.6.68/DBX_0.6.68_amd64.deb"
-        },
-        "version": "0.6.68"
+    "version": "1.5.0"
+  },
+  "dbx": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "dbx",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-7sI9HJyaAlCUG/yY3BUEqmEXLgZ1mvcSWJvbXyBdZGc=",
+      "type": "url",
+      "url": "https://github.com/t8y2/dbx/releases/download/v0.6.68/DBX_0.6.68_amd64.deb"
     },
-    "disktree": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "disktree",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=",
-            "type": "url",
-            "url": "https://github.com/tobi/disktree/releases/download/v0.11.0/disktree-0.11.0-x86_64-linux.tar.gz"
-        },
-        "version": "0.11.0"
+    "version": "0.6.68"
+  },
+  "disktree": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "disktree",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-fnWvoig8i0+SkNUurb/ADZ8UwTrtLSJMzfD3gm/MBbI=",
+      "type": "url",
+      "url": "https://github.com/tobi/disktree/releases/download/v0.11.0/disktree-0.11.0-x86_64-linux.tar.gz"
     },
-    "fluxdown": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "fluxdown",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-qZkCC8J2MdhuYuwt9nell7uWwKcKpaSp0c+gVhSh1xM=",
-            "type": "url",
-            "url": "https://github.com/zerx-lab/FluxDown/releases/download/v0.6.6/FluxDown-0.6.6-linux-x64.tar.gz"
-        },
-        "version": "0.6.6"
+    "version": "0.11.0"
+  },
+  "gdown": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "gdown",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-0zVzIh28K2WJJbKew0EoieYSXzdv3k/ouRWeCDW8wks=",
+      "type": "url",
+      "url": "https://github.com/wkentaro/gdown/archive/refs/tags/v6.5.1.tar.gz"
     },
-    "gdown": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "gdown",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-0zVzIh28K2WJJbKew0EoieYSXzdv3k/ouRWeCDW8wks=",
-            "type": "url",
-            "url": "https://github.com/wkentaro/gdown/archive/refs/tags/v6.5.1.tar.gz"
-        },
-        "version": "6.5.1"
+    "version": "6.5.1"
+  },
+  "hoppscotch": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "hoppscotch",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-qXqfa0GTMjvByBzX+97P8s0dAqQU/bK5omZIxVZUX8g=",
+      "type": "url",
+      "url": "https://github.com/hoppscotch/releases/releases/download/v26.10.1-0/Hoppscotch_linux_x64.AppImage"
     },
-    "hoppscotch": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "hoppscotch",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-qXqfa0GTMjvByBzX+97P8s0dAqQU/bK5omZIxVZUX8g=",
-            "type": "url",
-            "url": "https://github.com/hoppscotch/releases/releases/download/v26.10.1-0/Hoppscotch_linux_x64.AppImage"
-        },
-        "version": "26.10.1-0"
+    "version": "26.10.1-0"
+  },
+  "kmp-lsp": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "kmp-lsp",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-wU4Jlx7l9TiVqmvDAkL9vMNYCq51HDmJmSOu4aOWJJI=",
+      "type": "url",
+      "url": "https://github.com/Hessesian/kmp-lsp/releases/download/v0.27.0/kmp-lsp-linux-x86_64.tar.gz"
     },
-    "kmp-lsp": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "kmp-lsp",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-wU4Jlx7l9TiVqmvDAkL9vMNYCq51HDmJmSOu4aOWJJI=",
-            "type": "url",
-            "url": "https://github.com/Hessesian/kmp-lsp/releases/download/v0.27.0/kmp-lsp-linux-x86_64.tar.gz"
-        },
-        "version": "0.27.0"
+    "version": "0.27.0"
+  },
+  "koodo-reader": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "koodo-reader",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-Sv/WG0SX65Z2qE2HUGOmFAdol7hmKV9pZP/BWn/ueOI=",
+      "type": "url",
+      "url": "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.7/Koodo-Reader-2.4.7-x86_64.AppImage"
     },
-    "koodo-reader": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "koodo-reader",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-Sv/WG0SX65Z2qE2HUGOmFAdol7hmKV9pZP/BWn/ueOI=",
-            "type": "url",
-            "url": "https://github.com/koodo-reader/koodo-reader/releases/download/v2.4.7/Koodo-Reader-2.4.7-x86_64.AppImage"
-        },
-        "version": "2.4.7"
+    "version": "2.4.7"
+  },
+  "lumine-capture": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "lumine-capture",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-w97zkBbBquCn2Oetrix2arFs+YYcAbeUzvg/AzGE5Yg=",
+      "type": "url",
+      "url": "https://github.com/Netflate/LumineCapture/releases/download/v0.3.0/lumine-capture_0.3.0-1_amd64.deb"
     },
-    "lumine-capture": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "lumine-capture",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-w97zkBbBquCn2Oetrix2arFs+YYcAbeUzvg/AzGE5Yg=",
-            "type": "url",
-            "url": "https://github.com/Netflate/LumineCapture/releases/download/v0.3.0/lumine-capture_0.3.0-1_amd64.deb"
-        },
-        "version": "0.3.0"
+    "version": "0.3.0"
+  },
+  "magika": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "magika",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-a0wQEMhNH08GIFzO9Fl/FpC813RPRthB7uJkJrwQBIU=",
+      "type": "url",
+      "url": "https://github.com/google/magika/releases/download/cli/v1.1.0/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
     },
-    "magika": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "magika",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-a0wQEMhNH08GIFzO9Fl/FpC813RPRthB7uJkJrwQBIU=",
-            "type": "url",
-            "url": "https://github.com/google/magika/releases/download/cli/v1.1.0/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
-        },
-        "version": "1.1.0"
+    "version": "1.1.0"
+  },
+  "neovide": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "neovide",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-mfm5/9dNTSC7uG6hqq9G6ytmF6cZOg9xnwRlaANNl3I=",
+      "type": "url",
+      "url": "https://github.com/neovide/neovide/releases/download/0.17.2/neovide.AppImage"
     },
-    "neovide": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "neovide",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-mfm5/9dNTSC7uG6hqq9G6ytmF6cZOg9xnwRlaANNl3I=",
-            "type": "url",
-            "url": "https://github.com/neovide/neovide/releases/download/0.17.2/neovide.AppImage"
-        },
-        "version": "0.17.2"
+    "version": "0.17.2"
+  },
+  "obsidian": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "obsidian",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=",
+      "type": "url",
+      "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/Obsidian-1.15.0.AppImage"
     },
-    "obsidian": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "obsidian",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=",
-            "type": "url",
-            "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/Obsidian-1.15.0.AppImage"
-        },
-        "version": "1.15.0"
+    "version": "1.15.0"
+  },
+  "omnidiff": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "omnidiff",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-O0dJIF43Q6v8D+qe24fVny+9XLpTDYxJq/RNRo4Nyxg=",
+      "type": "url",
+      "url": "https://github.com/ivankovic/omnidiff/releases/download/v0.4.0/omnidiff-x86_64-unknown-linux-musl.tar.gz"
     },
-    "omnidiff": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "omnidiff",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-O0dJIF43Q6v8D+qe24fVny+9XLpTDYxJq/RNRo4Nyxg=",
-            "type": "url",
-            "url": "https://github.com/ivankovic/omnidiff/releases/download/v0.4.0/omnidiff-x86_64-unknown-linux-musl.tar.gz"
-        },
-        "version": "0.4.0"
+    "version": "0.4.0"
+  },
+  "pdfcpu": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "pdfcpu",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-MnH91m9Owy9aYoL4VjD4O5LpjU235AfMD1bZtUP2Ps0=",
+      "type": "url",
+      "url": "https://github.com/pdfcpu/pdfcpu/releases/download/v0.16.4/pdfcpu_0.16.4_Linux_x86_64.tar.xz"
     },
-    "pdfcpu": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "pdfcpu",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-MnH91m9Owy9aYoL4VjD4O5LpjU235AfMD1bZtUP2Ps0=",
-            "type": "url",
-            "url": "https://github.com/pdfcpu/pdfcpu/releases/download/v0.16.4/pdfcpu_0.16.4_Linux_x86_64.tar.xz"
-        },
-        "version": "0.16.4"
+    "version": "0.16.4"
+  },
+  "qbittorrent": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "qbittorrent",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-HGTy6VdAvkHygi+Qn1bk3Q2iY38xIJigbaET163XQYs=",
+      "type": "url",
+      "url": "https://github.com/qbittorrent/qBittorrent/releases/download/release-5.3.0/qbittorrent-5.3.0_x86_64.AppImage"
     },
-    "qbittorrent": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "qbittorrent",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-HGTy6VdAvkHygi+Qn1bk3Q2iY38xIJigbaET163XQYs=",
-            "type": "url",
-            "url": "https://github.com/qbittorrent/qBittorrent/releases/download/release-5.3.0/qbittorrent-5.3.0_x86_64.AppImage"
-        },
-        "version": "5.3.0"
+    "version": "5.3.0"
+  },
+  "sheprd": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "sheprd",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-9mRyeupXnu5kSp9U72bRK0A/uc0JbF4K12jwBaD1Jpg=",
+      "type": "url",
+      "url": "https://github.com/sheprd-labs/sheprd/releases/download/v20261106.1/Sheprd-20261106.1-x86_64-unknown-linux-gnu.tar.gz"
     },
-    "sheprd": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "sheprd",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-9mRyeupXnu5kSp9U72bRK0A/uc0JbF4K12jwBaD1Jpg=",
-            "type": "url",
-            "url": "https://github.com/sheprd-labs/sheprd/releases/download/v20261106.1/Sheprd-20261106.1-x86_64-unknown-linux-gnu.tar.gz"
-        },
-        "version": "20261106.1"
+    "version": "20261106.1"
+  },
+  "vicinae": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "vicinae",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-HYkWaOvYsORBGqccQa/bEDErAuhoRCEaVAM+IbTQv4g=",
+      "type": "url",
+      "url": "https://github.com/vicinaehq/vicinae/releases/download/v0.30.0/vicinae-linux-x86_64-v0.30.0.tar.gz"
     },
-    "vicinae": {
-        "cargoLock": null,
-        "date": null,
-        "extract": null,
-        "name": "vicinae",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "name": null,
-            "sha256": "sha256-HYkWaOvYsORBGqccQa/bEDErAuhoRCEaVAM+IbTQv4g=",
-            "type": "url",
-            "url": "https://github.com/vicinaehq/vicinae/releases/download/v0.30.0/vicinae-linux-x86_64-v0.30.0.tar.gz"
-        },
-        "version": "0.30.0"
-    }
+    "version": "0.30.0"
+  }
 }

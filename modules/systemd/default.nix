@@ -8,6 +8,5 @@
     ./kglance.nix
     ./bluetooth.nix
     ./copyq.nix
-    ./fluxdown.nix
   ];
 }
