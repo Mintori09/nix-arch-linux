@@ -50,7 +50,7 @@ case "$ACTION" in
     TASK_SLUG=$(generate_slug "$TASK_PREFIX")
     BRANCH="wt/${TASK_SLUG}"
     WORKTREE_PATH=".worktrees/${TASK_SLUG}"
-    AGENT_NAME="agy-${TASK_SLUG}"
+    AGENT_NAME="agy-${TASK_SLUG:0:28}"
 
     SOURCE_WS=$(resolve_source_workspace)
     WS_ARGS=()
@@ -111,7 +111,7 @@ EOF
     fi
 
     PANE_ID=""
-    AGENT_NAME="agy-${TASK_SLUG}"
+    AGENT_NAME="agy-${TASK_SLUG:0:28}"
     if [ -f "$META_FILE" ]; then
       PANE_ID=$(jq -r '.pane_id // empty' "$META_FILE")
       AGENT_NAME=$(jq -r '.agent_name // empty' "$META_FILE")
