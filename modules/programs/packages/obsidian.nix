@@ -10,7 +10,6 @@ let
     inherit pname version src;
 
     extraInstallCommands = ''
-      install -m 444 -D ${appimageContents}/md.obsidian.Obsidian.desktop $out/share/applications/obsidian.desktop
       cp -r ${appimageContents}/usr/share/icons $out/share/
     '';
 
@@ -33,28 +32,6 @@ in
   home.packages = [ obsidian ];
 
   xdg.desktopEntries."md.obsidian.Obsidian" = {
-    name = "Obsidian";
-    genericName = "Knowledge Base";
-    comment = "Markdown knowledge base";
-    icon = "obsidian";
-    exec = "${obsidian}/bin/obsidian %u";
-    terminal = false;
-
-    startupNotify = true;
-
-    categories = [
-      "Office"
-    ];
-    mimeType = [
-      "x-scheme-handler/obsidian"
-    ];
-    settings = {
-      StartupWMClass = "md.obsidian.Obsidian";
-    };
-  };
-
-  # Keep obsidian.desktop as an alias for compatibility and URI handling
-  xdg.desktopEntries.obsidian = {
     name = "Obsidian";
     genericName = "Knowledge Base";
     comment = "Markdown knowledge base";
