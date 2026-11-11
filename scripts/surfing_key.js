@@ -100,7 +100,7 @@ api.addSearchAlias(
 );
 
 api.addSearchAlias(
-  "gh",
+  "h",
   "github-google",
   "https://www.google.com/search?q=site:github.com%20",
 );
@@ -110,13 +110,6 @@ api.addSearchAlias(
   "voz-google",
   "https://www.google.com/search?q=site:voz.vn%20",
 );
-
-api.mapkey("ov", "Tìm kiếm Google Voz", function () {
-  api.Front.openOmnibar({
-    type: "SearchEngine",
-    extra: "v",
-  });
-});
 
 function isGoogleSearchSite() {
   return /(^|\.)google\.[a-z.]+$/i.test(window.location.hostname);
@@ -132,6 +125,18 @@ function addSite(site) {
   }
 }
 
+api.mapkey("ov", "Tìm kiếm Google Voz", function () {
+  if (isGoogleSearchSite()) {
+    addSite("voz.vn");
+    return;
+  }
+
+  api.Front.openOmnibar({
+    type: "SearchEngine",
+    extra: "v",
+  });
+});
+
 api.mapkey("gh", "Tìm kiếm Google Github", function () {
   if (isGoogleSearchSite()) {
     addSite("github.com");
@@ -140,7 +145,7 @@ api.mapkey("gh", "Tìm kiếm Google Github", function () {
 
   api.Front.openOmnibar({
     type: "SearchEngine",
-    extra: "gh",
+    extra: "h",
   });
 });
 
@@ -255,16 +260,28 @@ function toMpvUrl(url, type = "play") {
 }
 
 api.unmap("yp");
+
+const stopVideo = () => {
+  const video = document.querySelector("video");
+
+  if (video) {
+    video.pause();
+    // video.currentTime = 0; // Resets time to 0:00 (stop)
+  }
+};
+
 api.mapkey("yp", "Download current video page", function () {
   const currentUrl = window.location.href;
   const url = toMpvUrl(currentUrl, "ytdl");
   window.location.href = url;
+  stopVideo();
 });
 
 api.mapkey("ym", "Open current URL in mpv", function () {
   const currentUrl = window.location.href;
   const url = toMpvUrl(currentUrl);
   window.location.href = url;
+  stopVideo();
 });
 
 api.mapkey("yd", "Download video by yt-dlp", function () {
