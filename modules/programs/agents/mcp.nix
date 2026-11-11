@@ -185,4 +185,22 @@
     };
     enabled = true;
   };
+
+  gns3 = {
+    local = {
+      argv = [
+        "${pkgs.uv}/bin/uvx"
+        "gns3-mcp"
+        "--host"
+        "localhost"
+        "--port"
+        "3080"
+      ];
+      env = {
+        GNS3_USER = "admin";
+        GNS3_PASSWORD = "admin";
+      };
+    };
+    enabled = true;
+  };
 }
