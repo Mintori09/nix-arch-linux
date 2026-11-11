@@ -17,7 +17,7 @@ api.unmap("gld");
 api.unmap("yu");
 api.unmap("gh");
 
-api.mapkey("yu", "Duplicate tab with parent url", function () {
+api.mapkey("yu", "Open in new tab with parent url", function () {
   var url = new URL(window.location.href);
   var newUrl;
 
@@ -100,7 +100,7 @@ api.addSearchAlias(
 );
 
 api.addSearchAlias(
-  "g",
+  "gh",
   "github-google",
   "https://www.google.com/search?q=site:github.com%20",
 );
@@ -118,25 +118,38 @@ api.mapkey("ov", "Tìm kiếm Google Voz", function () {
   });
 });
 
+function isGoogleSearchSite() {
+  return /(^|\.)google\.[a-z.]+$/i.test(window.location.hostname);
+}
+
+function addSite(site) {
+  const url = new URL(window.location.href);
+  const q = url.searchParams.get("q") || "";
+  if (!/site:github\.com/i.test(q)) {
+    url.searchParams.set("q", (q ? q + " " : "") + `site:${site}`);
+    window.location.href = url.href;
+    return;
+  }
+}
+
 api.mapkey("gh", "Tìm kiếm Google Github", function () {
-  const isGoogle = /(^|\.)google\.[a-z.]+$/i.test(window.location.hostname);
-  if (isGoogle) {
-    const url = new URL(window.location.href);
-    const q = url.searchParams.get("q") || "";
-    if (!/site:github\.com/i.test(q)) {
-      url.searchParams.set("q", (q ? q + " " : "") + "site:github.com");
-      window.location.href = url.href;
-      return;
-    }
+  if (isGoogleSearchSite()) {
+    addSite("github.com");
+    return;
   }
 
   api.Front.openOmnibar({
     type: "SearchEngine",
-    extra: "g",
+    extra: "gh",
   });
 });
 
 api.mapkey("or", "Tìm kiếm Google Reddit", function () {
+  if (isGoogleSearchSite()) {
+    addSite("reddit.com");
+    return;
+  }
+
   api.Front.openOmnibar({
     type: "SearchEngine",
     extra: "r",
@@ -156,11 +169,11 @@ api.mapkey("oc", "Open chatgpt in new tab", function () {
 });
 
 // an example to create a new mapping `ctrl-y`
-api.mapkey("<ctrl-y>", "Show me the money", function () {
-  api.Front.showPopup(
-    "a well-known phrase uttered by characters in the 1996 film Jerry Maguire (Escape to close).",
-  );
-});
+// api.mapkey("<ctrl-y>", "Show me the money", function () {
+//   api.Front.showPopup(
+//     "a well-known phrase uttered by characters in the 1996 film Jerry Maguire (Escape to close).",
+//   );
+// });
 
 api.mapkey("ge", "Edit current URL with vim editor, and reload", function () {
   api.Normal.feedkeys(";U");
