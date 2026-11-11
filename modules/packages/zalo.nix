@@ -2,10 +2,10 @@
 
 let
   pname = "zalo";
-  version = "26.10.20";
+  version = "26.11.10";
   src = pkgs.fetchurl {
-    url = "https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/${version}/Zalo-${version}%2BZaDark-26.3-20a1fe7-x86_64.AppImage";
-    hash = "sha256-siXPs20UXoxVvWQYm56Szo/E+qnwjEMwZQTbcYKB/SU=";
+    url = "https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/${version}/Zalo-${version}%2BZaDark-26.3-784f24f-x86_64.AppImage";
+    hash = "sha256-Tk0ySIFh2+p9YSiESqp/LotbqmjXolI0dnb5GOKSNkw=";
   };
 
   contents = pkgs.runCommand "${pname}-${version}-extracted" { } ''
@@ -24,6 +24,7 @@ pkgs.appimageTools.wrapAppImage {
   extraPkgs = pkgs: with pkgs; [
     libopus
     pulseaudio
+    python3
   ];
 
   extraInstallCommands = ''
