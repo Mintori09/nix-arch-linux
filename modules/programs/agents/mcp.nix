@@ -201,6 +201,6 @@
         GNS3_PASSWORD = "admin";
       };
     };
-    enabled = true;
+    enabled = false;
   };
 }
