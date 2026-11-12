@@ -209,5 +209,10 @@
     fmtron
     samply
     zalo
+
+    # lsp
+    vscode-langservers-extracted
+    bash-language-server
+    phpactor
   ];
 }
