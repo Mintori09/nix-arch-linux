@@ -46,9 +46,7 @@ _rust-script() {
       if [[ -n "${opt_args[(i)-e|--expr]}" || -n "${opt_args[(i)-l|--loop]}" ]]; then
         _message 'expression or closure'
       else
-        _alternative \
-          'rust-scripts:Rust script files:_files -g "*.{rs,ers}(#q.)"' \
-          'all-files:all files:_files' && ret=0
+        _files -g "*.{rs,ers}(#q.)" || _files
       fi
       ;;
   esac
