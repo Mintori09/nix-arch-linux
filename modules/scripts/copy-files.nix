@@ -54,35 +54,13 @@ let
       _cpath_files() {
         local selector_glob
 
-        if _cpath_has_flag --content; then
-          selector_glob="$(_cpath_selector_glob 2>/dev/null)"
-          if [[ -n "$selector_glob" ]]; then
-            _files -g "$selector_glob"
-            return
-          fi
-
-          _files
-          return
-        fi
-
-        if _cpath_has_flag --all; then
-          _alternative \
-            'files:file:_files' \
-            'directories:directory:_files -/'
-          return
-        fi
-
         selector_glob="$(_cpath_selector_glob 2>/dev/null)"
         if [[ -n "$selector_glob" ]]; then
-          _alternative \
-            "files:file:_files -g $selector_glob" \
-            'directories:directory:_files -/'
+          _files -g "$selector_glob"
           return
         fi
 
-        _alternative \
-          'files:file:_files' \
-          'directories:directory:_files -/'
+        _files
       }
 
       _cpath() {
