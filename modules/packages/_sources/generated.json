@@ -38,11 +38,11 @@
     "pinned": false,
     "src": {
       "name": null,
-      "sha256": "sha256-7sI9HJyaAlCUG/yY3BUEqmEXLgZ1mvcSWJvbXyBdZGc=",
+      "sha256": "sha256-ycQHqz87lBOEqeXhdIoTizL2wbUPImoTzdZQ+pkSwJU=",
       "type": "url",
-      "url": "https://github.com/t8y2/dbx/releases/download/v0.6.68/DBX_0.6.68_amd64.deb"
+      "url": "https://github.com/t8y2/dbx/releases/download/v0.6.69/DBX_0.6.69_amd64.deb"
     },
-    "version": "0.6.68"
+    "version": "0.6.69"
   },
   "disktree": {
     "cargoLock": null,
@@ -173,11 +173,11 @@
     "pinned": false,
     "src": {
       "name": null,
-      "sha256": "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=",
+      "sha256": "sha256-UV/0m7Jj0IhBBprcRgAtrpRWLlBB+3dis6Hct74QpRo=",
       "type": "url",
-      "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/Obsidian-1.15.0.AppImage"
+      "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.1/Obsidian-1.15.1.AppImage"
     },
-    "version": "1.15.0"
+    "version": "1.15.1"
   },
   "omnidiff": {
     "cargoLock": null,
@@ -233,11 +233,11 @@
     "pinned": false,
     "src": {
       "name": null,
-      "sha256": "sha256-9mRyeupXnu5kSp9U72bRK0A/uc0JbF4K12jwBaD1Jpg=",
+      "sha256": "sha256-HgmDNojmR8gpmkJhaA1dLrKnD13dekmqjK2qcpd7WSw=",
       "type": "url",
-      "url": "https://github.com/sheprd-labs/sheprd/releases/download/v20261106.1/Sheprd-20261106.1-x86_64-unknown-linux-gnu.tar.gz"
+      "url": "https://github.com/sheprd-labs/sheprd/releases/download/v20261109.1/Sheprd-20261109.1-x86_64-unknown-linux-gnu.tar.gz"
     },
-    "version": "20261106.1"
+    "version": "20261109.1"
   },
   "vicinae": {
     "cargoLock": null,

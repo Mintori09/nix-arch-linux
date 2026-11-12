@@ -24,10 +24,10 @@
   };
   dbx = {
     pname = "dbx";
-    version = "0.6.68";
+    version = "0.6.69";
     src = fetchurl {
-      url = "https://github.com/t8y2/dbx/releases/download/v0.6.68/DBX_0.6.68_amd64.deb";
-      sha256 = "sha256-7sI9HJyaAlCUG/yY3BUEqmEXLgZ1mvcSWJvbXyBdZGc=";
+      url = "https://github.com/t8y2/dbx/releases/download/v0.6.69/DBX_0.6.69_amd64.deb";
+      sha256 = "sha256-ycQHqz87lBOEqeXhdIoTizL2wbUPImoTzdZQ+pkSwJU=";
     };
   };
   disktree = {
@@ -96,10 +96,10 @@
   };
   obsidian = {
     pname = "obsidian";
-    version = "1.15.0";
+    version = "1.15.1";
     src = fetchurl {
-      url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/Obsidian-1.15.0.AppImage";
-      sha256 = "sha256-HdjPtZPeqmRBAb2032WxWe15hZk7ZXLdJf0TY0Wekcw=";
+      url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.1/Obsidian-1.15.1.AppImage";
+      sha256 = "sha256-UV/0m7Jj0IhBBprcRgAtrpRWLlBB+3dis6Hct74QpRo=";
     };
   };
   omnidiff = {
@@ -128,10 +128,10 @@
   };
   sheprd = {
     pname = "sheprd";
-    version = "20261106.1";
+    version = "20261109.1";
     src = fetchurl {
-      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261106.1/Sheprd-20261106.1-x86_64-unknown-linux-gnu.tar.gz";
-      sha256 = "sha256-9mRyeupXnu5kSp9U72bRK0A/uc0JbF4K12jwBaD1Jpg=";
+      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261109.1/Sheprd-20261109.1-x86_64-unknown-linux-gnu.tar.gz";
+      sha256 = "sha256-HgmDNojmR8gpmkJhaA1dLrKnD13dekmqjK2qcpd7WSw=";
     };
   };
   vicinae = {
