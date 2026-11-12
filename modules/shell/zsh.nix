@@ -546,6 +546,7 @@ in
         compdef _pgrep pkill
         compdef _git git
         compdef _cargo cargo
+        compdef _rclone rclone
         compdef _tar tar
         compdef _zip zip
         compdef _unzip unzip
