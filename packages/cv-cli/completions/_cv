@@ -204,12 +204,10 @@ _cv() {
         local input_glob="(#i)*.(${(j:|:)reply})"
         _alternative \
           "files:input file:_files -g \"$input_glob\"" \
-          'directories:input directory:_files -/' \
           'subcommands:command:compadd init' && ret=0
       else
         _alternative \
           'subcommands:command:compadd init' \
-          'directories:input directory:_files -/' \
           'files:input file:_files' && ret=0
       fi
       ;;
