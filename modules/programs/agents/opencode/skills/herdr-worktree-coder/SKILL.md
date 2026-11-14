@@ -3,8 +3,8 @@ name: herdr-worktree-coder
 description: >
   Dispatch a dedicated Antigravity CLI (agy) coding & validation session inside an isolated Git worktree workspace via Herdr UI.
   Packages rich context directly into `.worktrees/<slug>/.task-brief.local.md` (zero root pollution, concurrency-safe for multiple agents),
-  uses `spawn-worktree-agy.sh` pipeline (init -> write brief -> launch) with automatic Herdr source workspace resolution (eliminating not_git_worktree errors),
-  starts an interactive `agy` session without focus theft, monitors execution in the background via Herdr Agent API, and presents verified diffs for user review before merging.
+  uses `spawn-worktree-agy.sh` pipeline (init -> write brief -> launch) with automatic Herdr source workspace resolution and Antigravity auto-trusting (eliminating "accept this folder" prompts),
+  starts an interactive `agy` session without focus theft while keeping user CLI access (`attach`/`focus`) immediate, monitors execution in the background via Herdr Agent API, and presents verified diffs for user review before merging.
   ALWAYS use when user wants to implement or validate code in an isolated git worktree, delegate coding tasks to a fresh agy session in Herdr,
   or combine Herdr workspaces with Antigravity validation.
   Triggers (VN): "code trong worktree", "chạy agy trong worktree", "validate bằng worktree", "mở worktree herdr", "tạo session agy mới trong worktree", "cô lập code test", "mở agy bằng herdr".
@@ -15,7 +15,11 @@ description: >
 
 An empirical, concurrency-safe coding workflow that orchestrates a pristine **Antigravity CLI (`agy`)** interactive session inside a dedicated **Git Worktree Workspace** managed directly by **Herdr UI**.
 
-It guarantees **Zero Root Pollution & Auto-Resolved Workspace Topology**: multiple agents on `main` can run simultaneously without file collisions or workspace mismatch errors. The bundled helper script automatically resolves the base Herdr workspace for the current repository, provisions the worktree tab, and starts `agy` cleanly in the background.
+It guarantees **Zero Root Pollution, Pre-Trusted Workspace Authorization, & Direct User CLI Access**:
+
+- **Automatic Folder Trusting**: Pre-registers `.worktrees/<slug>` into `~/.gemini/antigravity-cli/settings.json` (`trustedWorkspaces`) during initialization so `agy` never pauses to ask the user to "accept this folder".
+- **User CLI Accessibility**: Runs in the background without focus theft, but provides immediate user access via `herdr agent attach` / `herdr agent focus` or the Herdr UI tab.
+- **Strict User-Side Review Gate**: Changes must be empirically verified, diff-checked, and explicitly confirmed by the user before any merge or cleanup.
 
 ---
 
@@ -27,7 +31,7 @@ It guarantees **Zero Root Pollution & Auto-Resolved Workspace Topology**: multip
                          ▼
           ┌─────────────────────────────┐
           │ Step 1: Init Worktree       │ ──► `spawn-worktree-agy.sh init <prefix>`
-          │ (Auto Source WS Resolution) │     Auto-binds repo WS, creates `.worktrees/<slug>`
+          │ (Auto WS & Settings Trust)  │     Auto-binds repo WS, pre-trusts dir in settings.json
           └──────────────┬──────────────┘
                          │
                          ▼
@@ -39,7 +43,7 @@ It guarantees **Zero Root Pollution & Auto-Resolved Workspace Topology**: multip
                          ▼
           ┌─────────────────────────────┐
           │ Step 3: Launch agy Session  │ ──► `spawn-worktree-agy.sh launch <slug>`
-          │ (Background, No Focus Theft)│     Starts interactive agy in pane & prompts brief
+          │ (Zero Prompts, User Access) │     Interactive agy starts smoothly; user can attach/focus
           └──────────────┬──────────────┘
                          │
                          ▼
@@ -50,8 +54,8 @@ It guarantees **Zero Root Pollution & Auto-Resolved Workspace Topology**: multip
                          │
                          ▼
           ┌─────────────────────────────┐
-          │ Step 5: Diff Review &       │ ──► User confirms before merge/cherry-pick
-          │ Workspace Cleanup Gate      │     and worktree removal
+          │ Step 5: User-Side Review &  │ ──► User confirms before merge/cherry-pick
+          │ Validation Gate (Mandatory) │     and worktree removal
           └─────────────────────────────┘
 ```
 
@@ -70,7 +74,8 @@ INIT_JSON=$("${SPAWN_SCRIPT}" init "fix-auth")
 echo "$INIT_JSON"
 ```
 
-The script automatically detects the base repository workspace in Herdr, creates the worktree and pane, and returns:
+The script automatically detects the base repository workspace in Herdr, creates the worktree and pane, pre-registers the directory into `~/.gemini/antigravity-cli/settings.json` under `trustedWorkspaces`, and returns:
+
 ```json
 {
   "task_slug": "fix-auth",
@@ -80,6 +85,8 @@ The script automatically detects the base repository workspace in Herdr, creates
   "pane_id": "wY:p1",
   "agent_name": "agy-fix-auth",
   "brief_target_path": ".worktrees/fix-auth/.task-brief.local.md",
+  "user_attach_cmd": "herdr agent attach agy-fix-auth",
+  "user_focus_cmd": "herdr agent focus agy-fix-auth",
   "status": "initialized"
 }
 ```
@@ -91,20 +98,24 @@ The script automatically detects the base repository workspace in Herdr, creates
 Use `write_file` tool to write the scoped requirements directly to `brief_target_path` (`.worktrees/<task_slug>/.task-brief.local.md`). **Never write to the root of the project!**
 
 Template:
+
 ```markdown
 # 📋 Task Context Brief
 
 ## 1. Objective
+
 - **Type**: [Bug Fix | Feature | Refactoring | Performance]
 - **Goal**: [Clear statement of expected behavior]
 
 ## 2. Scoped Targets & AST Symbols
+
 - **Target Files**:
   - `path/to/file.ts` (Lines ~L40-L90)
   - `path/to/service.ts` (Class `AuthService`, function `validateToken`)
 - **Key Dependencies**: [Internal modules or external libraries involved]
 
 ## 3. Empirical Verification Requirements
+
 - **Reproduction Command**: [e.g. `pnpm test tests/auth.test.ts`]
 - **Expected Outcome**:
   1. Add/modify test case covering the exact edge case.
@@ -112,6 +123,7 @@ Template:
   3. Ensure all tests in the package pass with zero regressions.
 
 ## 4. Boundary Constraints
+
 - Do NOT modify unrelated configuration or files outside the target scope.
 - Do NOT perform git commits or push to remote branches without instructions.
 - Provide a concise final summary of changed files and test results.
@@ -128,7 +140,21 @@ LAUNCH_JSON=$("${SPAWN_SCRIPT}" launch "<TASK_SLUG>")
 echo "$LAUNCH_JSON"
 ```
 
-This starts `agy` in the worktree's Herdr pane, submits the execution prompt, and leaves your current pane focused and responsive.
+This starts `agy` cleanly in the worktree's Herdr pane without any directory trust prompt, submits the execution prompt, and leaves your current pane focused and responsive.
+
+#### User CLI Access (Interactive Inspection)
+
+If you or the user wish to jump directly into the agent's interactive terminal session at any point:
+
+- **Attach to terminal**:
+  ```bash
+  herdr agent attach "agy-<TASK_SLUG>"
+  ```
+- **Focus pane in Herdr UI**:
+  ```bash
+  herdr agent focus "agy-<TASK_SLUG>"
+  ```
+- Or click the worktree workspace tab directly in Herdr UI.
 
 ---
 
@@ -153,14 +179,16 @@ git -C "${WORKTREE_PATH}" diff
 
 ---
 
-### Step 5: Review & User Confirmation Gate
+### Step 5: User-Side Review & Validation Gate (Mandatory)
 
-Present the full diff, test output, and Herdr workspace location to the user:
+Always present the full diff, test output, and Herdr workspace location to the user for explicit confirmation before taking further action:
 
-```markdown
+````markdown
 ### 🚀 Worktree Validation Summary
+
 - **Worktree Path**: `.worktrees/fix-auth`
 - **Herdr Workspace ID**: `wY` (Agent: `agy-fix-auth`)
+- **Interactive CLI Access**: `herdr agent attach agy-fix-auth` | `herdr agent focus agy-fix-auth`
 - **Status**: ✅ All tests passing empirically
 - **Changed Files**:
   - `src/lib/feature.ts`: Fixed edge case
@@ -169,17 +197,20 @@ Present the full diff, test output, and Herdr workspace location to the user:
 ```diff
 [Insert git diff here]
 ```
+````
 
-💡 *Bạn có thể switch sang workspace `wY` trong Herdr UI để xem trực tiếp phiên làm việc của `agy`.*
+💡 _Bạn có thể switch sang workspace `wY` trong Herdr UI hoặc chạy `herdr agent attach agy-fix-auth` để trực tiếp tương tác với CLI._
 
 Do you want to:
+
 1. Merge branch `wt/fix-auth` into current branch and remove worktree?
 2. Keep worktree workspace open in Herdr for further manual inspection?
-```
+
+````
 
 ---
 
-### Step 6: Cleanup (Upon Approval)
+### Step 6: Cleanup (Upon User Approval)
 
 When user confirms Option 1 (merge changes):
 ```bash
@@ -190,8 +221,8 @@ BRANCH="wt/${TASK_SLUG}"
 # 1. Merge into main branch
 git merge "${BRANCH}"
 
-# 2. Automatically close Herdr workspace, remove worktree checkout, and delete branch
+# 2. Automatically close Herdr workspace, untrust directory, remove worktree checkout, and delete branch
 "${SPAWN_SCRIPT}" cleanup "${TASK_SLUG}"
-```
+````
 
-*(Or manually: `herdr workspace close <WORKSPACE_ID>`, `herdr worktree remove <WORKTREE_PATH>`, `git branch -d <BRANCH>`)*
+_(Or manually: `herdr workspace close <WORKSPACE_ID>`, `herdr worktree remove <WORKTREE_PATH>`, `git branch -d <BRANCH>`, `"${SPAWN_SCRIPT}" untrust <WORKTREE_PATH>`)_
