@@ -1,7 +1,5 @@
 {
-  pkgs,
   lib,
-  config,
   ...
 }:
 let
@@ -13,6 +11,7 @@ in
     # RELOAD CONFIG
     # aider = "aider --model opencode-go/glm-5.1 --watch-files --no-auto-commits --no-show-model-warnings";
     # opencode-go/deepseek-v4-pro
+    ytdl = "nice -n 19 ionice -c 3 yt-dlp";
     reload = "source $HOME/.config/zsh/.zshrc";
     hms = lib.mkForce "nh home switch ~/.config/home-manager";
     update-packages = "yay -Syu --ignore voxtype-cuda";
