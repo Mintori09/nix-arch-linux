@@ -53,11 +53,11 @@
     "pinned": false,
     "src": {
       "name": null,
-      "sha256": "sha256-ycQHqz87lBOEqeXhdIoTizL2wbUPImoTzdZQ+pkSwJU=",
+      "sha256": "sha256-HWn4Sz/b7idG2diDN5X21PJEjN7g4UJFMXxxSEmAL9A=",
       "type": "url",
-      "url": "https://github.com/t8y2/dbx/releases/download/v0.6.69/DBX_0.6.69_amd64.deb"
+      "url": "https://github.com/t8y2/dbx/releases/download/v0.6.70/DBX_0.6.70_amd64.deb"
     },
-    "version": "0.6.69"
+    "version": "0.6.70"
   },
   "disktree": {
     "cargoLock": null,
@@ -203,11 +203,11 @@
     "pinned": false,
     "src": {
       "name": null,
-      "sha256": "sha256-O0dJIF43Q6v8D+qe24fVny+9XLpTDYxJq/RNRo4Nyxg=",
+      "sha256": "sha256-4Whj7fN3+fXJx5BEjrDqWUBQa5R/mx1GdbbW+iU1eao=",
       "type": "url",
-      "url": "https://github.com/ivankovic/omnidiff/releases/download/v0.4.0/omnidiff-x86_64-unknown-linux-musl.tar.gz"
+      "url": "https://github.com/ivankovic/omnidiff/releases/download/v0.5.0/omnidiff-x86_64-unknown-linux-musl.tar.gz"
     },
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "pdfcpu": {
     "cargoLock": null,
