@@ -69,6 +69,11 @@ in
           desc = "Show or hide the preview pane";
         }
         {
+          on = [ "P" ];
+          run = "plugin toggle-pane min-parent";
+          desc = "Show or hide the preview pane";
+        }
+        {
           on = [ "<Space>" ];
           run = "shell --orphan -- kglance %h";
           desc = "Open hovered file with kglance";
