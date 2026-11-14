@@ -84,4 +84,7 @@ src.github = "ivankovic/omnidiff"
 src.prefix = "v"
 fetch.url = "https://github.com/ivankovic/omnidiff/releases/download/v$ver/omnidiff-x86_64-unknown-linux-musl.tar.gz"
 
-
+[czg]
+src.github = "Zhengqbbb/cz-git"
+src.prefix = "v"
+fetch.url = "https://registry.npmjs.org/czg/-/czg-$ver.tgz"

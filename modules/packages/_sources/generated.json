@@ -29,6 +29,21 @@
     },
     "version": "1.5.0"
   },
+  "czg": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "czg",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-dKTJeKj8ihobEbSUelaKhpPd5Fz7nSO/3loEyZqUSlo=",
+      "type": "url",
+      "url": "https://registry.npmjs.org/czg/-/czg-1.14.0.tgz"
+    },
+    "version": "1.14.0"
+  },
   "dbx": {
     "cargoLock": null,
     "date": null,

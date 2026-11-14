@@ -22,6 +22,14 @@
       sha256 = "sha256-IVqens3lTRylcB7gKZ0JFqoKFTuOzWPKDoMsjv3KLNU=";
     };
   };
+  czg = {
+    pname = "czg";
+    version = "1.14.0";
+    src = fetchurl {
+      url = "https://registry.npmjs.org/czg/-/czg-1.14.0.tgz";
+      sha256 = "sha256-dKTJeKj8ihobEbSUelaKhpPd5Fz7nSO/3loEyZqUSlo=";
+    };
+  };
   dbx = {
     pname = "dbx";
     version = "0.6.69";

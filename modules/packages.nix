@@ -199,6 +199,7 @@
     hoppscotch
     kmp-lsp
     caesium-clt
+    czg
     pdfcpu
     omnidiff
     lumine-capture

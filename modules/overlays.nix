@@ -22,6 +22,7 @@
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
       pdfcpu = final.callPackage ./packages/pdfcpu.nix { };
+      czg = final.callPackage ./packages/czg.nix { };
       omnidiff = final.callPackage ./packages/omnidiff.nix { };
       lumine-capture = final.callPackage ./packages/lumine-capture.nix { };
       sheprd = final.callPackage ./packages/sheprd.nix { };
