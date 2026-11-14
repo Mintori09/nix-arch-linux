@@ -1,66 +1,51 @@
 # Nushell completions for Antigravity CLI (`agy`)
 
+def "nu-complete agy-enum-from-help" [help: string, flag: string] {
+  let line = (
+    $help
+    | lines
+    | where { |s| $s | str contains $"--$flag" }
+    | get 0
+    | default ""
+  )
+  if ($line | is-empty) { return [] }
+  # Extract content inside the first parenthesized group, e.g. (low|medium|high)
+  let inner = ($line | str replace -r '.*\(([^)]+)\).*' '$1')
+  # Split on | or , into individual values
+  let vals = (
+    $inner
+    | str replace -a -r '[|,]' "\n"
+    | lines
+    | str trim
+    | where { |s| ($s | str length) > 0 }
+  )
+  ($vals | each {|v| { value: $v, description: $v } })
+}
+
 def "nu-complete agy models" [] {
-  let cache_dir = ($env.XDG_CACHE_HOME? | default $"($env.HOME)/.cache/agy")
-  let cache_file = $"($cache_dir)/models.cache"
-  if ($cache_file | path exists) {
-    let lines = (open $cache_file | lines | where ($it | str trim | is-not-empty))
-    if ($lines | is-not-empty) {
-      return ($lines | each {|line|
-        let parts = ($line | split row "\t")
-        let val = ($parts | get 0)
-        let desc = ($parts | get -o 1 | default $val)
-        { value: $val, description: $desc }
-      })
+  let parsed = (try {
+    ^agy models
+    | lines
+    | where { |s| ($s | str trim) | is-not-empty }
+    | each {|line|
+      let trimmed = ($line | str trim)
+      let is_skip = (($trimmed | str contains "Fetching") or ($trimmed | str contains "available models"))
+      let parts = ($trimmed | str replace -a "\t" "\n" | lines)
+      let val = ($parts | get 0 | default "")
+      let desc = ($parts | get 1 | default $val)
+      if $is_skip { null } else { { value: $val, description: $desc } }
     }
+    | where { |s| $s != null }
+  } catch { [] })
+  if ($parsed | is-not-empty) {
+    $parsed
+  } else {
+    [
+      { value: "gemini-3.8-flash-high", description: "Gemini 3.8 Flash (High)" }
+      { value: "gemini-3.8-flash-medium", description: "Gemini 3.8 Flash (Medium)" }
+      { value: "gemini-3.8-flash-low", description: "Gemini 3.8 Flash (Low)" }
+    ]
   }
-
-  [
-    { value: "gemini-3.8-flash-high", description: "Gemini 3.8 Flash (High)" }
-    { value: "gemini-3.8-flash-medium", description: "Gemini 3.8 Flash (Medium)" }
-    { value: "gemini-3.8-flash-low", description: "Gemini 3.8 Flash (Low)" }
-    { value: "gemini-3.7-flash-high", description: "Gemini 3.7 Flash (High)" }
-    { value: "claude-sonnet-4-6", description: "Claude Sonnet 4.6 (Thinking)" }
-  ]
-}
-
-def "nu-complete agy conversations" [] {
-  let db = $"($env.HOME)/.gemini/antigravity-cli/conversation_summaries.db"
-  if ($db | path exists) and (which sqlite3 | is-not-empty) {
-    let output = (
-      ^sqlite3 -init /dev/null -csv $db "SELECT conversation_id, replace(title, ':', ' - ') FROM conversation_summaries ORDER BY last_modified_time DESC LIMIT 30;"
-      | complete
-    )
-    if $output.exit_code == 0 and ($output.stdout | is-not-empty) {
-      return ($output.stdout | from csv --noheaders | rename id title | each {|row|
-        { value: $row.id, description: ($row.title | default "conversation") }
-      })
-    }
-  }
-  []
-}
-
-def "nu-complete agy mcp-servers" [] {
-  let cfg = $"($env.HOME)/.gemini/antigravity-cli/mcp_config.json"
-  if ($cfg | path exists) {
-    try {
-      let data = (open $cfg)
-      if ($data | get -o mcpServers | is-not-empty) {
-        return ($data.mcpServers | columns | each {|s| { value: $s, description: "MCP server" } })
-      }
-    }
-  }
-  []
-}
-
-def "nu-complete agy plugins" [] {
-  try {
-    let output = (^agy plugin list | complete)
-    if $output.exit_code == 0 and ($output.stdout | is-not-empty) and not ($output.stdout | str contains "No imported plugins") {
-      return ($output.stdout | lines | where ($it | is-not-empty) | each {|p| { value: ($p | str trim), description: "Plugin" } })
-    }
-  }
-  []
 }
 
 def "nu-complete agy effort" [] {
@@ -91,6 +76,52 @@ def "nu-complete agy output-format" [] {
 
 def "nu-complete agy mcp-types" [] {
   [ "stdio", "http" ]
+}
+
+def "nu-complete agy conversations" [] {
+  let db = $"($env.HOME)/.gemini/antigravity-cli/conversation_summaries.db"
+  if ($db | path exists) and (which sqlite3 | is-not-empty) {
+    let parsed = (try {
+      ^sqlite3 -init /dev/null -csv $db "SELECT conversation_id, replace(title, ':', ' - ') FROM conversation_summaries ORDER BY last_modified_time DESC LIMIT 30;"
+      | from csv --noheaders
+      | rename id title
+      | each {|row|
+        { value: $row.id, description: ($row.title | default "conversation") }
+      }
+    } catch { [] })
+    if ($parsed | is-not-empty) {
+      return $parsed
+    }
+  }
+  []
+}
+
+def "nu-complete agy mcp-servers" [] {
+  let cfg = $"($env.HOME)/.gemini/antigravity-cli/mcp_config.json"
+  if ($cfg | path exists) {
+    try {
+      let data = (open $cfg)
+      if ($data | get -o mcpServers | is-not-empty) {
+        return ($data.mcpServers | columns | each {|s| { value: $s, description: "MCP server" } })
+      }
+    }
+  }
+  []
+}
+
+def "nu-complete agy plugins" [] {
+  let parsed = (try {
+    ^agy plugin list
+    | lines
+    | where { |s| $s | is-not-empty }
+    | where { |s| not ($s | str contains "No imported plugins") }
+    | each {|p| { value: ($p | str trim), description: "Plugin" } }
+  } catch { [] })
+  if ($parsed | is-not-empty) {
+    $parsed
+  } else {
+    []
+  }
 }
 
 # Antigravity CLI - Google DeepMind AI Coding Assistant
