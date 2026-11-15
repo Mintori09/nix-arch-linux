@@ -69,10 +69,11 @@ in
         # systemctl: prioritize services, sockets, timers and targets (hide cluttered devices)
         zstyle ':completion:*:*:systemctl:*' tag-order 'services' 'sockets' 'timers' 'targets'
 
-        # agy / opencode / yay: show both flags/options along with subcommands on Tab
+        # agy / opencode / yay / pdfcpu: show both flags/options along with subcommands on Tab
         zstyle ':completion:*:*:agy:*' prefix-needed false
         zstyle ':completion:*:*:opencode:*' prefix-needed false
         zstyle ':completion:*:*:yay:*' prefix-needed false
+        zstyle ':completion:*:*:pdfcpu:*' prefix-needed false
 
         # fzf-tab configuration: decoupled from FZF_DEFAULT_OPTS
         zstyle ':fzf-tab:*' use-fzf-default-opts no

@@ -9,8 +9,21 @@ pkgs.stdenv.mkDerivation {
 
   sourceRoot = "pdfcpu_${sources.pdfcpu.version}_Linux_x86_64";
 
+  nativeBuildInputs = [
+    pkgs.installShellFiles
+  ];
+
   installPhase = ''
+    runHook preInstall
+
     install -Dm755 pdfcpu $out/bin/pdfcpu
+
+    installShellCompletion --cmd pdfcpu \
+      --bash <($out/bin/pdfcpu completion bash) \
+      --fish <($out/bin/pdfcpu completion fish) \
+      --zsh <($out/bin/pdfcpu completion zsh)
+
+    runHook postInstall
   '';
 
   meta = with pkgs.lib; {
