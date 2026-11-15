@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./penpot.nix
     ./ai-popup.nix
     ./lumine-ocr.nix
     ./ai-renamer.nix
