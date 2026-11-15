@@ -4,21 +4,57 @@ let
   sources = pkgs.callPackage ./_sources/generated.nix { };
   inherit (sources.neovide) pname version src;
 
-  appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
-in
-
-pkgs.appimageTools.wrapType2 {
-  inherit pname version src;
-
-  extraPkgs = pkgs: [
-    pkgs.dejavu_fonts
+  runtimeLibs = [
+    pkgs.wayland
+    pkgs.libxkbcommon
+    pkgs.libglvnd
+    pkgs.libx11
+    pkgs.libxcursor
+    pkgs.libxext
+    pkgs.libxrandr
+    pkgs.libxi
+    pkgs.vulkan-loader
   ];
 
-  extraInstallCommands = ''
-    install -m 444 -D ${appimageContents}/neovide.desktop $out/share/applications/neovide.desktop
-    substituteInPlace $out/share/applications/neovide.desktop \
-      --replace-fail 'Exec=neovide %F' "Exec=$out/bin/${pname} %F"
-    install -m 444 -D ${appimageContents}/neovide.svg $out/share/icons/hicolor/scalable/apps/neovide.svg
+  libPath = pkgs.lib.makeLibraryPath runtimeLibs;
+in
+
+pkgs.stdenv.mkDerivation {
+  inherit pname version src;
+
+  sourceRoot = ".";
+
+  nativeBuildInputs = [
+    pkgs.autoPatchelfHook
+    pkgs.makeWrapper
+  ];
+
+  buildInputs = [
+    pkgs.stdenv.cc.cc.lib
+    pkgs.fontconfig
+    pkgs.freetype
+    pkgs.zlib
+    pkgs.libpng
+    pkgs.expat
+    pkgs.bzip2
+    pkgs.brotli
+  ]
+  ++ runtimeLibs;
+
+  runtimeDependencies = runtimeLibs;
+
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out/bin
+    cp neovide $out/bin/
+
+    wrapProgram $out/bin/neovide \
+      --prefix LD_LIBRARY_PATH : "${libPath}"
+
+    install -m 444 -D ${./neovide.svg} $out/share/icons/hicolor/scalable/apps/neovide.svg
+
+    runHook postInstall
   '';
 
   meta = with pkgs.lib; {

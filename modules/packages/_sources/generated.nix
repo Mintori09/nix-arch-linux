@@ -98,8 +98,8 @@
     pname = "neovide";
     version = "0.17.2";
     src = fetchurl {
-      url = "https://github.com/neovide/neovide/releases/download/0.17.2/neovide.AppImage";
-      sha256 = "sha256-mfm5/9dNTSC7uG6hqq9G6ytmF6cZOg9xnwRlaANNl3I=";
+      url = "https://github.com/neovide/neovide/releases/download/0.17.2/neovide-linux-x86_64.tar.gz";
+      sha256 = "sha256-c+LZaqfv1Az/wmAMHQF/c/sM5VRoOj86GPpfgSxcKw8=";
     };
   };
   obsidian = {
