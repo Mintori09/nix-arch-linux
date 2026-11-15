@@ -1,32 +1,39 @@
 { pkgs, ... }:
 
-let
+pkgs.stdenv.mkDerivation {
   pname = "neovim";
-  version = "nightly-20261031";
+  version = "nightly";
 
   src = pkgs.fetchurl {
-    url = "https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.appimage";
-    hash = "sha256-AYSPMEuqq37ZexgU4P5lneUgVUigOf6Ocj8Db9LoFtM=";
+    url = "https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz";
+    hash = "sha256-hwEKW6z3G3wBeSUjl8JWgZWRLL4Su8ma4IJoPLo+zYU=";
   };
 
-  appimageContents = pkgs.appimageTools.extract { inherit pname version src; };
-in
+  sourceRoot = "nvim-linux-x86_64";
 
-pkgs.appimageTools.wrapType2 {
-  inherit pname version src;
+  nativeBuildInputs = [
+    pkgs.autoPatchelfHook
+  ];
 
-  extraInstallCommands = ''
-    ln -s $out/bin/${pname} $out/bin/nvim
-    desktop_file=$(find ${appimageContents} -maxdepth 1 -name "*.desktop" | head -n 1)
-    if [ -n "$desktop_file" ]; then
-      install -m 444 -D "$desktop_file" $out/share/applications/nvim.desktop
+  buildInputs = [
+    pkgs.stdenv.cc.cc.lib
+  ];
+
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out
+    cp -r bin lib share $out/
+
+    if [ -f "$out/share/applications/org.neovim.nvim.desktop" ]; then
+      mv $out/share/applications/org.neovim.nvim.desktop $out/share/applications/nvim.desktop
       substituteInPlace $out/share/applications/nvim.desktop \
         --replace-fail 'Exec=nvim %F' "Exec=kitty -e $out/bin/nvim %F" \
         --replace-fail 'TryExec=nvim' "TryExec=$out/bin/nvim" \
         --replace-fail 'Terminal=true' 'Terminal=false'
     fi
-    install -m 444 -D ${appimageContents}/nvim.png $out/share/icons/hicolor/128x128/apps/nvim.png
-    install -m 444 -D ${appimageContents}/usr/share/man/man1/nvim.1 $out/share/man/man1/nvim.1
+
+    runHook postInstall
   '';
 
   meta = with pkgs.lib; {
