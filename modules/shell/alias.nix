@@ -71,6 +71,7 @@ in
     gdc = "git diff | wl-copy";
     catc = "cpath --content";
     cpf = "fzf | each --batch cpath";
+    cpaht = "cpath";
     wp = "wl-paste";
     open = "xdg-open";
     turn-off-screen = "qdbus6 org.kde.kglobalaccel /component/org_kde_powerdevil invokeShortcut 'Turn Off Screen'";

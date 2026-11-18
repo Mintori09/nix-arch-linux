@@ -113,6 +113,7 @@ in
           'pkg="''${word% }"; pacman -Qi "$pkg" 2>/dev/null || yay -Si "$pkg" 2>/dev/null'
 
         # Env
+        export LOCAL_NOTEBOOK_DEV=1
         [[ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]] && source "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
         export RUSTC_WRAPPER="sccache"
         export CARGO_INCREMENTAL="0"
@@ -228,7 +229,7 @@ in
           zsh-vi-yank-to-clipboard() {
             zvm_yank
             if command -v ${c.clipCopy} > /dev/null; then
-              printf "%s" "$CUTBUFFER" | ${c.clipCopy}
+              printf "%s" "$CUTBUFFER" | ${c.clipCopy} </dev/null >/dev/null 2>&1 &
             fi
           }
 
@@ -524,7 +525,8 @@ in
         source <(${pkgs.carapace}/bin/carapace _carapace zsh)
 
         # Retain zsh native completion
-        source <(${pkgs.just}/bin/just --completions zsh)
+        # Patch clap_complete's _describe with -Q so tilde paths (~/) are not escaped to \~/
+        source <(JUST_COMPLETE=zsh ${pkgs.just}/bin/just | sed "s/_describe -V 'values' dirs -S '\/' -r '\/'/_describe -V 'values' dirs -Q -S '\/' -r '\/'/; s/_describe -V 'values' other/_describe -V 'values' other -Q/")
         compdef _make make
         compdef _systemctl systemctl
         compdef _yay yay
