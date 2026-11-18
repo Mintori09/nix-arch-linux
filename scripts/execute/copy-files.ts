@@ -567,7 +567,7 @@ async function main() {
     );
 
     const child = spawn("wl-copy", [], {
-      stdio: ["pipe", "inherit", "inherit"],
+      stdio: ["pipe", "ignore", "ignore"],
     });
     child.stdin.write(clipboardContent);
     child.stdin.end();
@@ -596,7 +596,7 @@ async function main() {
     return;
   }
 
-  const child = spawn("wl-copy", [], { stdio: ["pipe", "inherit", "inherit"] });
+  const child = spawn("wl-copy", [], { stdio: ["pipe", "ignore", "ignore"] });
   child.stdin.write(clipboardContent);
   child.stdin.end();
   const exitCode = await new Promise<number>((r) => child.on("close", r));

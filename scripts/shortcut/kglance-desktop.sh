@@ -50,14 +50,18 @@ get_clipboard_files() {
 main() {
 	check_dependencies
 
-	ydotool key 29:1
-	sleep 0.05
-	ydotool key 46:1
-	sleep 0.05
-	ydotool key 46:0
-	sleep 0.05
-	ydotool key 29:0
-	sleep 0.15
+	local active_class
+	active_class="$(kdotool getactivewindow getwindowclassname 2>/dev/null || true)"
+	if [[ "$active_class" != "kitty" && "$active_class" != "Alacritty" ]]; then
+		ydotool key 29:1
+		sleep 0.05
+		ydotool key 46:1
+		sleep 0.05
+		ydotool key 46:0
+		sleep 0.05
+		ydotool key 29:0
+		sleep 0.15
+	fi
 
 	local paths_str
 	if ! paths_str=$(get_clipboard_files); then
