@@ -16,7 +16,7 @@ function createBridgeController(adapter) {
   async function dequeue() {
     if (isSubmitting) {
       console.log("[ai-bridge] dequeue skipped: currently submitting");
-      return false;
+      return "empty";
     }
 
     console.log("[ai-bridge] executing dequeue fetch...");
@@ -38,20 +38,20 @@ function createBridgeController(adapter) {
         isSubmitting = true;
         try {
           await adapter.fillInput(data.text);
-          return true; // Fetch và điền dữ liệu thành công
+          return "filled"; // Fetch và điền dữ liệu thành công
         } catch (fillErr) {
           console.error("[ai-bridge] adapter.fillInput failed:", fillErr);
-          return false;
+          return "error";
         } finally {
           isSubmitting = false;
         }
       } else {
         console.log("[ai-bridge] dequeue empty");
-        return false;
+        return "empty";
       }
     } catch (err) {
       console.warn("[ai-bridge] dequeue failed:", err);
-      return false;
+      return "error";
     }
   }
 
@@ -122,10 +122,12 @@ function createBridgeController(adapter) {
     const maxRetries = 3;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       console.log(`[ai-bridge] Fetch attempt ${attempt}/${maxRetries}`);
-      const success = await dequeue();
+      const status = await dequeue();
 
-      if (success) {
-        console.log("[ai-bridge] Fetch and submit completed successfully.");
+      if (status === "filled" || status === "empty") {
+        if (status === "filled") {
+          console.log("[ai-bridge] Fetch and submit completed successfully.");
+        }
         break;
       }
 

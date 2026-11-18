@@ -16,6 +16,7 @@ const GeminiAdapter = {
     'button[aria-label*="gửi"]',
   ],
   TURN_SELECTORS: ["model-response", "user-query"],
+  defaultHideNavigator: true,
 
   validateDOM() {
     for (const sel of this.INPUT_SELECTORS) {

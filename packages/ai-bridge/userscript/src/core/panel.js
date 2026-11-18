@@ -1,30 +1,49 @@
 function resolveFilename(name) {
-  return name
+  const cleaned = String(name || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
+    .replace(/[đĐ]/g, "d")
     .toLowerCase()
     .replace(/[^a-z0-9_-]/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "");
+
+  return cleaned || "chat-response"; // Fallback nếu chuỗi rỗng (VD: toàn emoji/CJK)
 }
 
 function createChatHistoryPanel(adapter, promptsContainerEl) {
   let panelContainer = null;
   let listEl = null;
   let toggleBtn = null;
-  const defaultHidden = Boolean(adapter && adapter.defaultHideNavigator);
+  let observer = null;
+  let mutationTimer = null;
+  let throttleTimer = null;
+  let cachedTurns = [];
+
+  const defaultHidden = Boolean(adapter?.defaultHideNavigator);
   let isOpen = !defaultHidden;
+  let isDirty = true; // Đánh dấu cần render lại khi mở panel
 
   function init() {
+    destroy(); // Dọn sạch observer và DOM cũ trước khi khởi tạo
     const prevFocus = document.activeElement;
     injectCSS();
     buildDOM();
-    setupToggle();
+    setupEvents();
     observeTurns();
     renderTurns();
     restoreInputFocus(prevFocus);
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    if (mutationTimer) clearTimeout(mutationTimer);
+    if (throttleTimer) cancelAnimationFrame(throttleTimer);
+    document.getElementById("ai-bridge-inserted-panel")?.remove();
+    document.getElementById("ai-bridge-toggle-navbar-btn")?.remove();
   }
 
   function restoreInputFocus(prevFocus) {
@@ -41,53 +60,40 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     if (document.getElementById("ai-bridge-style")) return;
     const style = document.createElement("style");
     style.id = "ai-bridge-style";
-    if (ttPolicy) {
-      style.textContent = ttPolicy.createHTML(panelCSS);
-    } else {
-      style.textContent = panelCSS;
-    }
+    const cssText = typeof panelCSS !== "undefined" ? panelCSS : "";
+    style.textContent =
+      typeof ttPolicy !== "undefined" && ttPolicy
+        ? ttPolicy.createHTML(cssText)
+        : cssText;
     document.head.appendChild(style);
   }
 
   function buildDOM() {
-    // Cleanup old instances
-    const oldPanel = document.getElementById("ai-bridge-inserted-panel");
-    if (oldPanel) oldPanel.remove();
-    const oldToggle = document.getElementById("ai-bridge-toggle-navbar-btn");
-    if (oldToggle) oldToggle.remove();
-
     panelContainer = document.createElement("div");
     panelContainer.id = "ai-bridge-inserted-panel";
-    if (defaultHidden) {
-      panelContainer.classList.add("sidebar-hidden");
-    }
+    if (defaultHidden) panelContainer.classList.add("sidebar-hidden");
 
-    // Build panel header
     const header = document.createElement("div");
     header.id = "ai-bridge-panel-header";
     const headerText = document.createElement("span");
-    headerText.textContent = "Chat Navigator";
+    headerText.textContent = "Chat navigator";
     header.appendChild(headerText);
 
-    // Build list container
     listEl = document.createElement("div");
     listEl.id = "ai-bridge-panel-list";
 
-    // Insert prompts section before list if provided
     if (promptsContainerEl) {
       panelContainer.appendChild(promptsContainerEl);
     }
 
-    // Build toggle button
     toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
     toggleBtn.id = "ai-bridge-toggle-navbar-btn";
     toggleBtn.textContent = "\u2630";
-    toggleBtn.title = "\u01afu/\u1ea8n Sidebar";
-    if (defaultHidden) {
-      toggleBtn.classList.add("btn-collapsed");
-    }
+    toggleBtn.title = "\u1ea8n/hi\u1ec7n sidebar";
+    toggleBtn.setAttribute("aria-label", "\u1ea8n/hi\u1ec7n sidebar");
+    if (defaultHidden) toggleBtn.classList.add("btn-collapsed");
 
-    // Assemble DOM tree
     panelContainer.appendChild(header);
     panelContainer.appendChild(listEl);
 
@@ -95,14 +101,72 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     document.body.appendChild(toggleBtn);
   }
 
-  function setupToggle() {
+  function flashButton(btn, symbol = "\u2713") {
+    const orig = btn.textContent;
+    btn.textContent = symbol;
+    setTimeout(() => {
+      btn.textContent = orig;
+    }, 1000);
+  }
+
+  function setupEvents() {
+    // 1. Toggle Sidebar
     toggleBtn.addEventListener("click", () => {
       panelContainer.classList.toggle("sidebar-hidden");
       toggleBtn.classList.toggle("btn-collapsed");
       isOpen = !panelContainer.classList.contains("sidebar-hidden");
-      setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
-      }, 260);
+
+      // Nếu mở lại mà có thay đổi trước đó thì mới render
+      if (isOpen && isDirty) {
+        renderTurns();
+      }
+      setTimeout(() => window.dispatchEvent(new Event("resize")), 260);
+    });
+
+    // 2. Event Delegation cho toàn bộ danh sách (Tránh gắn N*3 listener mỗi lần render)
+    listEl.addEventListener("click", async (e) => {
+      const item = e.target.closest(".turn-item");
+      if (!item) return;
+
+      const index = Number(item.dataset.index);
+      const turn = cachedTurns[index];
+      if (!turn) return;
+
+      const copyBtn = e.target.closest(".turn-copy");
+      if (copyBtn) {
+        e.stopPropagation();
+        const markdown = htmlToMarkdown(turn.htmlElement);
+        await navigator.clipboard.writeText(markdown);
+        flashButton(copyBtn);
+        return;
+      }
+
+      const dlBtn = e.target.closest(".turn-download");
+      if (dlBtn) {
+        e.stopPropagation();
+        const title = adapter._downloadTitle || getChatTitle() || turn.name;
+        const name = resolveFilename(title);
+        const markdown = htmlToMarkdown(turn.htmlElement);
+        const blob = new Blob([markdown], {
+          type: "text/markdown;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${name}-${index + 1}.md`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return;
+      }
+
+      // Click vào item để cuộn tới tin nhắn
+      if (turn.element) {
+        turn.element.scrollIntoView({ behavior: "smooth", block: "center" });
+        turn.element.classList.add("gemini-activated-highlight");
+        setTimeout(() => {
+          turn.element.classList.remove("gemini-activated-highlight");
+        }, 1500);
+      }
     });
   }
 
@@ -112,7 +176,7 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
     );
     if (activeLink) {
       const ariaLabel = activeLink.getAttribute("aria-label");
-      if (ariaLabel) return ariaLabel;
+      if (ariaLabel) return ariaLabel.trim();
       const titleEl = activeLink.querySelector(
         ".title-text, div[class*='truncate']",
       );
@@ -123,45 +187,54 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
   }
 
   function getTurns() {
-    const rawEls = Array.from(
-      document.querySelectorAll(adapter.TURN_SELECTORS.join(", ")),
-    );
-    // Keep only top-level matching turns to prevent duplicates from nested selectors
+    const selector = adapter.TURN_SELECTORS.join(", ");
+    const rawEls = Array.from(document.querySelectorAll(selector));
+
+    // Lọc nhanh phần tử cha bằng parentElement.closest() thay vì vòng lặp O(N^2)
+    const rawSet = new Set(rawEls);
     const turnEls = rawEls.filter((el) => {
-      return !rawEls.some((other) => other !== el && other.contains(el));
+      let parent = el.parentElement;
+      while (parent) {
+        if (rawSet.has(parent)) return false;
+        parent = parent.parentElement;
+      }
+      return true;
     });
 
     return turnEls.map((el, i) => ({
       element: el,
       index: i,
       name: adapter.getTurnName(el),
-      text: adapter.getResponseText(el),
+      text: adapter.getResponseText(el) || "",
       htmlElement: adapter.getResponseHTMLElement(el),
     }));
   }
 
-  let throttleTimer = null;
   function renderTurns() {
     if (!listEl) return;
+    if (!isOpen) {
+      isDirty = true;
+      return;
+    }
     if (throttleTimer) return;
+
     throttleTimer = requestAnimationFrame(() => {
       throttleTimer = null;
-      const turns = getTurns();
+      isDirty = false;
+      cachedTurns = getTurns();
 
-      if (turns.length === 0) {
+      if (cachedTurns.length === 0) {
         const empty = document.createElement("p");
+        empty.className = "ai-bridge-empty-state";
         empty.textContent =
           "Ch\u01b0a ph\u00e1t hi\u1ec7n tin nh\u1eafn n\u00e0o.";
-        empty.style.cssText =
-          "color:#666;font-size:12px;text-align:center;padding-top:20px;font-family:sans-serif;";
-        listEl.textContent = "";
-        listEl.appendChild(empty);
+        listEl.replaceChildren(empty);
         return;
       }
 
-      // Build all turn items with DOM (no innerHTML for CSP safety)
-      listEl.textContent = "";
-      turns.forEach((turn, i) => {
+      const fragment = document.createDocumentFragment();
+
+      cachedTurns.forEach((turn, i) => {
         const preview =
           turn.text.length > 80 ? turn.text.slice(0, 80) + "..." : turn.text;
         const isUser = turn.name === "User";
@@ -169,6 +242,8 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
         const item = document.createElement("div");
         item.className = "turn-item " + (isUser ? "turn-user" : "turn-gemini");
         item.dataset.index = i;
+        item.setAttribute("role", "button");
+        item.tabIndex = 0;
 
         const badge = document.createElement("div");
         badge.className =
@@ -183,70 +258,42 @@ function createChatHistoryPanel(adapter, promptsContainerEl) {
         actions.className = "turn-actions";
 
         const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
         copyBtn.className = "turn-copy";
-        copyBtn.dataset.index = i;
-        copyBtn.textContent = "\ud83d\udccb";
+        copyBtn.textContent = "\u2398";
+        copyBtn.setAttribute("aria-label", "Sao ch\u00e9p n\u1ed9i dung");
 
         const dlBtn = document.createElement("button");
+        dlBtn.type = "button";
         dlBtn.className = "turn-download";
-        dlBtn.dataset.index = i;
         dlBtn.textContent = "\u2b07";
+        dlBtn.setAttribute("aria-label", "T\u1ea3i xu\u1ed1ng Markdown");
 
-        actions.appendChild(copyBtn);
-        actions.appendChild(dlBtn);
-        item.appendChild(badge);
-        item.appendChild(previewEl);
-        item.appendChild(actions);
-        listEl.appendChild(item);
-
-        // Click to scroll to turn
-        item.addEventListener("click", (e) => {
-          if (e.target.closest(".turn-actions")) return;
-          if (turn.element) {
-            turn.element.scrollIntoView({ behavior: "smooth", block: "center" });
-            turn.element.classList.add("gemini-activated-highlight");
-            setTimeout(() => {
-              turn.element.classList.remove("gemini-activated-highlight");
-            }, 1500);
-          }
-        });
-
-        // Copy button
-        copyBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const markdown = htmlToMarkdown(turn.htmlElement);
-          navigator.clipboard.writeText(markdown);
-        });
-
-        // Download button
-        dlBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const chatTitle = getChatTitle();
-          const title = adapter._downloadTitle;
-          const name = resolveFilename(
-            title || chatTitle || turn.name || "chat-response",
-          );
-          const markdown = htmlToMarkdown(turn.htmlElement);
-          const blob = new Blob([markdown], { type: "text/markdown" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = name + ".md";
-          a.click();
-          URL.revokeObjectURL(url);
-        });
+        actions.append(copyBtn, dlBtn);
+        item.append(badge, previewEl, actions);
+        fragment.appendChild(item);
       });
+
+      listEl.replaceChildren(fragment);
     });
   }
 
-  let mutationTimer = null;
   function observeTurns() {
-    const observer = new MutationObserver(() => {
+    observer = new MutationObserver((mutations) => {
+      const hasExternalMutation = mutations.some(
+        (m) => !panelContainer || !panelContainer.contains(m.target),
+      );
+      if (!hasExternalMutation) return;
+
       if (mutationTimer) clearTimeout(mutationTimer);
       mutationTimer = setTimeout(renderTurns, 300);
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  return { init, togglePanel: () => toggleBtn && toggleBtn.click() };
+  return {
+    init,
+    destroy,
+    togglePanel: () => toggleBtn?.click(),
+  };
 }

@@ -8,7 +8,7 @@
     "build:userscript": "pnpm --prefix userscript build",
     "build": "pnpm build:daemon && pnpm build:userscript",
     "run:clipboard": "./dist/ai-bridge.js clipboard",
-    "typecheck": "pnpm --filter . exec tsc --noEmit && pnpm --filter userscript exec tsc --noEmit",
+    "typecheck": "pnpm --filter . exec tsc --noEmit && pnpm --filter ./userscript exec tsc --noEmit",
     "test": "vitest run tests --exclude '**/.direnv/**'",
     "test:watch": "vitest tests --exclude '**/.direnv/**'",
     "server": "pnpm build:daemon && ./dist/ai-bridge.js server"
