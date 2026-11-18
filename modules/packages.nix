@@ -1,4 +1,9 @@
-{ pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 {
   nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
@@ -70,7 +75,6 @@
     navi
     lazyjournal
     lazysql
-    helix
     devenv
     charm-freeze
     websocat
@@ -195,7 +199,7 @@
     generate-toc
     fitgirl-link-extractor
     keyboard-rs
-    qbittorrent
+    (config.lib.nixGL.wrap qbittorrent)
     hoppscotch
     kmp-lsp
     caesium-clt
@@ -214,6 +218,7 @@
     # lsp
     vscode-langservers-extracted
     bash-language-server
+    csharp-ls
     phpactor
   ];
 }

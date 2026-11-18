@@ -25,11 +25,6 @@ src.github = "google/magika"
 src.prefix = "cli/v"
 fetch.url = "https://github.com/google/magika/releases/download/cli/v$ver/magika-cli-x86_64-unknown-linux-gnu.tar.xz"
 
-[qbittorrent]
-src.github = "qbittorrent/qBittorrent"
-src.prefix = "release-"
-fetch.url = "https://github.com/qbittorrent/qBittorrent/releases/download/release-$ver/qbittorrent-$ver_x86_64.AppImage"
-
 [vicinae]
 src.github = "vicinaehq/vicinae"
 src.prefix = "v"
@@ -88,3 +83,7 @@ fetch.url = "https://github.com/ivankovic/omnidiff/releases/download/v$ver/omnid
 src.github = "Zhengqbbb/cz-git"
 src.prefix = "v"
 fetch.url = "https://registry.npmjs.org/czg/-/czg-$ver.tgz"
+
+[helix]
+src.github = "gj1118/helix"
+fetch.url = "https://github.com/gj1118/helix/releases/download/$ver/helix-$ver-x86_64-linux.tar.xz"

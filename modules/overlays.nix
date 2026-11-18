@@ -17,13 +17,13 @@
       keyboard-rs = final.callPackage ./packages/keyboard-rs.nix { };
       vicinae = final.callPackage ./packages/vicinae.nix { };
       zalo = final.callPackage ./packages/zalo.nix { };
-      qbittorrent = final.callPackage ./packages/qbittorrent.nix { };
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };
       pdfcpu = final.callPackage ./packages/pdfcpu.nix { };
       czg = final.callPackage ./packages/czg.nix { };
       omnidiff = final.callPackage ./packages/omnidiff.nix { };
+      helix = final.callPackage ./packages/helix.nix { };
       lumine-capture = final.callPackage ./packages/lumine-capture.nix { };
       sheprd = final.callPackage ./packages/sheprd.nix { };
       gdown = final.callPackage ./packages/gdown.nix { };

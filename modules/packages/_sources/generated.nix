@@ -32,10 +32,10 @@
   };
   dbx = {
     pname = "dbx";
-    version = "0.6.70";
+    version = "0.6.71";
     src = fetchurl {
-      url = "https://github.com/t8y2/dbx/releases/download/v0.6.70/DBX_0.6.70_amd64.deb";
-      sha256 = "sha256-HWn4Sz/b7idG2diDN5X21PJEjN7g4UJFMXxxSEmAL9A=";
+      url = "https://github.com/t8y2/dbx/releases/download/v0.6.71/DBX_0.6.71_amd64.deb";
+      sha256 = "sha256-xYTgcItO53oMbflr2r3h0qx+xu34+6aMA2Ri5SPBw7Q=";
     };
   };
   disktree = {
@@ -52,6 +52,14 @@
     src = fetchurl {
       url = "https://github.com/wkentaro/gdown/archive/refs/tags/v6.5.1.tar.gz";
       sha256 = "sha256-0zVzIh28K2WJJbKew0EoieYSXzdv3k/ouRWeCDW8wks=";
+    };
+  };
+  helix = {
+    pname = "helix";
+    version = "26.09.02";
+    src = fetchurl {
+      url = "https://github.com/gj1118/helix/releases/download/26.09.02/helix-26.09.02-x86_64-linux.tar.xz";
+      sha256 = "sha256-A99dkZVANZlxyUDfcxjmLJIlsOiIwcpTe20G6N1fBlM=";
     };
   };
   hoppscotch = {
@@ -80,10 +88,10 @@
   };
   lumine-capture = {
     pname = "lumine-capture";
-    version = "0.3.0";
+    version = "0.4.0";
     src = fetchurl {
-      url = "https://github.com/Netflate/LumineCapture/releases/download/v0.3.0/lumine-capture_0.3.0-1_amd64.deb";
-      sha256 = "sha256-w97zkBbBquCn2Oetrix2arFs+YYcAbeUzvg/AzGE5Yg=";
+      url = "https://github.com/Netflate/LumineCapture/releases/download/v0.4.0/lumine-capture_0.4.0-1_amd64.deb";
+      sha256 = "sha256-JH/5fnJREfHeSaQvZUbev/rt4UvAA8Y/+tTNmdalY28=";
     };
   };
   magika = {
@@ -126,28 +134,20 @@
       sha256 = "sha256-MnH91m9Owy9aYoL4VjD4O5LpjU235AfMD1bZtUP2Ps0=";
     };
   };
-  qbittorrent = {
-    pname = "qbittorrent";
-    version = "5.3.0";
-    src = fetchurl {
-      url = "https://github.com/qbittorrent/qBittorrent/releases/download/release-5.3.0/qbittorrent-5.3.0_x86_64.AppImage";
-      sha256 = "sha256-HGTy6VdAvkHygi+Qn1bk3Q2iY38xIJigbaET163XQYs=";
-    };
-  };
   sheprd = {
     pname = "sheprd";
-    version = "20261109.1";
+    version = "20261115.1";
     src = fetchurl {
-      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261109.1/Sheprd-20261109.1-x86_64-unknown-linux-gnu.tar.gz";
-      sha256 = "sha256-HgmDNojmR8gpmkJhaA1dLrKnD13dekmqjK2qcpd7WSw=";
+      url = "https://github.com/sheprd-labs/sheprd/releases/download/v20261115.1/Sheprd-20261115.1-x86_64-unknown-linux-gnu.tar.gz";
+      sha256 = "sha256-9J6rWjSj7rLtQznLX0Yi4L9Pnfs5G8Hw7C9qDhokwjY=";
     };
   };
   vicinae = {
     pname = "vicinae";
-    version = "0.30.0";
+    version = "0.30.1";
     src = fetchurl {
-      url = "https://github.com/vicinaehq/vicinae/releases/download/v0.30.0/vicinae-linux-x86_64-v0.30.0.tar.gz";
-      sha256 = "sha256-HYkWaOvYsORBGqccQa/bEDErAuhoRCEaVAM+IbTQv4g=";
+      url = "https://github.com/vicinaehq/vicinae/releases/download/v0.30.1/vicinae-linux-x86_64-v0.30.1.tar.gz";
+      sha256 = "sha256-/E2/RirMJtz9zgbsW5tfYNTa7wyQJGL/wNN+x2zwBas=";
     };
   };
 }
