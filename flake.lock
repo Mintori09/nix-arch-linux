@@ -466,6 +466,7 @@
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
         "superpowers": "superpowers",
+        "ux-ui-agent-skills": "ux-ui-agent-skills",
         "vercel-skills": "vercel-skills"
       }
     },
@@ -620,6 +621,22 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "ux-ui-agent-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794295218,
+        "narHash": "sha256-Jrv7AlY2JBs62TUa6J3D+he+3ndUyT13K5EGuyDA/+I=",
+        "owner": "plugin87",
+        "repo": "ux-ui-agent-skills",
+        "rev": "f823acedc3ef4e9b2ba944a28fd86fe2abdde427",
+        "type": "github"
+      },
+      "original": {
+        "owner": "plugin87",
+        "repo": "ux-ui-agent-skills",
         "type": "github"
       }
     },

@@ -76,6 +76,11 @@
       flake = false;
     };
 
+    ux-ui-agent-skills = {
+      url = "github:plugin87/ux-ui-agent-skills";
+      flake = false;
+    };
+
     superpowers = {
       url = "github:obra/superpowers";
       flake = false;

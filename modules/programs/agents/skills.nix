@@ -65,6 +65,10 @@ in
         subdir = "skills";
       };
 
+      ux-ui-agent-skills = {
+        path = inputs.ux-ui-agent-skills.outPath;
+      };
+
       opencode-local = {
         path = ./opencode/skills;
       };
@@ -79,6 +83,7 @@ in
     skills.enableAll = [
       "opencode-local"
       "superpowers"
+      "ux-ui-agent-skills"
     ];
 
     skills.enable = [
