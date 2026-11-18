@@ -5,7 +5,9 @@
     completion-trigger-len = 1;
     completion-replace = true;
     cursorline = true;
-    bufferline = "multiple";
+    bufferline = {
+      render-mode = "multiple";
+    };
     line-number = "relative";
     cursor-shape = {
       insert = "bar";
@@ -115,7 +117,10 @@
     ];
 
     # Neovim-style core keybindings
-    x = "delete_selection"; # Delete character/selection (Neovim 'x')
+    "+" = "increment"; # Increment number under cursor (Neovim '+')
+    "-" = "decrement"; # Decrement number under cursor (Neovim '-')
+    C-m = "jump_forward"; # Jump forward in jumplist (Neovim '<C-m>')
+    x = "delete_selection_noyank"; # Delete character/selection without yanking (Neovim '"_x')
     p = "paste_clipboard_after"; # Paste from clipboard after (Neovim 'p')
     P = "paste_clipboard_before"; # Paste from clipboard before (Neovim 'P')
     V = [
@@ -123,14 +128,26 @@
       "select_mode"
     ]; # Select current line and enter select mode (Neovim 'V')
     v = "select_mode"; # Enter select mode (Neovim 'v')
-    A = "goto_line_end"; # Append at end of line (Neovim 'A')
-    I = "goto_line_start"; # Insert at start of line (Neovim 'I')
+    A = "insert_at_line_end"; # Append at end of line (Neovim 'A')
+    I = "insert_at_line_start"; # Insert at start of line (Neovim 'I')
     y = [ "yank_main_selection_to_clipboard" ];
     Y = [
       "select_all"
       "yank_main_selection_to_clipboard"
     ]; # Copy all text to clipboard (Neovim map Y -> %y+)
     K = "hover";
+    d = {
+      d = [
+        "extend_to_line_bounds"
+        "delete_selection"
+      ]; # Delete current line (Neovim 'dd')
+    };
+    m = {
+      c = "keep_primary_selection"; # Clear multi-cursors (Neovim 'mc')
+    };
+    "\\" = {
+      "\\" = "buffer_picker"; # Switch Buffers (Neovim '\\')
+    };
 
     # Buffer & bracket navigation
     H = "goto_previous_buffer"; # Move to left buffer
@@ -182,8 +199,18 @@
     space = {
       space = "file_picker"; # <leader><space> -> Find Files
       "/" = "global_search"; # <leader>/ -> Live Grep
+      "," = "buffer_picker"; # <leader>, -> Buffers
+      "`" = "goto_last_accessed_file"; # <leader>` -> Switch to Other Buffer (e #)
       "-" = "hsplit"; # <leader>- -> Horizontal Split
       "|" = "vsplit"; # <leader>| -> Vertical Split
+      d = "delete_selection_noyank"; # <leader>d -> Delete without yanking (Neovim '"_d')
+      e = "file_explorer"; # <leader>e -> Explorer (Root Dir)
+      E = "file_explorer_in_current_buffer_directory"; # <leader>E -> Explorer (Current Buffer Dir)
+      K = "hover"; # <leader>K -> Keywordprg / Hover
+
+      k = {
+        k = "hover"; # <leader>kk -> LSP Hover / Show Value
+      };
 
       # Buffer management (<leader>b...)
       b = {
@@ -219,6 +246,7 @@
         d = "diagnostics_picker"; # <leader>cd -> Diagnostics
         r = "rename_symbol"; # <leader>cr -> Rename
         a = "code_action"; # <leader>ca -> Code Action
+        s = "symbol_picker"; # <leader>cs -> Outline / Document Symbols
       };
 
       # Git (<leader>g...)
@@ -227,10 +255,31 @@
         b = ":sh git blame"; # <leader>gb -> Git Blame
       };
 
+      # Open / Clipboard utilities (<leader>o...)
+      o = {
+        p = [
+          "select_all"
+          "replace_selections_with_clipboard"
+        ]; # <leader>op -> Replace entire file with clipboard
+        u = [
+          "move_prev_long_word_start"
+          "move_next_long_word_end"
+          ":pipe-to xargs -r xdg-open"
+          "collapse_selection"
+        ]; # <leader>ou -> Open URL under cursor
+      };
+
+      # Search utilities (<leader>s...)
+      s = {
+        k = "command_palette"; # <leader>sk -> Search Keymaps / Commands
+      };
+
       # Diagnostics / Quickfix-like (<leader>x...)
       x = {
         d = "diagnostics_picker";
         D = "workspace_diagnostics_picker";
+        x = "workspace_diagnostics_picker"; # <leader>xx -> Diagnostics (Trouble)
+        X = "diagnostics_picker"; # <leader>xX -> Buffer Diagnostics (Trouble)
       };
 
       # UI toggles (<leader>u...)
@@ -242,6 +291,11 @@
           ":toggle inline-diagnostics.cursor-line 'hint' 'disable'"
           ":toggle inline-diagnostics.other-lines 'error' 'disable'"
         ];
+        r = [
+          ":redraw"
+          "keep_primary_selection"
+          "collapse_selection"
+        ]; # <leader>ur -> Redraw & Clear selection
       };
 
       # Quit (<leader>q...)
@@ -258,6 +312,9 @@
       S = "workspace_symbol_picker"; # ;S -> Workspace Symbols
       e = "diagnostics_picker"; # ;e -> Document Diagnostics
       E = "workspace_diagnostics_picker"; # ;E -> Workspace Diagnostics
+      g = ":sh lazygit"; # ;g -> Lazygit
+      h = "changed_file_picker"; # ;h -> Git Changed Files / Diffs
+      k = "command_palette"; # ;k -> Search Keymaps / Commands
       t = "command_palette"; # ;t -> Command Palette / Help
       ";" = "last_picker"; # ;; -> Mở lại picker vừa dùng
     };
@@ -269,10 +326,18 @@
       "yank_main_selection_to_clipboard"
       "normal_mode"
     ];
-    x = [
-      "yank_main_selection_to_clipboard"
-      "delete_selection"
-    ];
+    x = "delete_selection_noyank"; # Delete selection without overwriting clipboard (Neovim '"_x')
+    "<" = "unindent";
+    ">" = "indent";
+    space = {
+      d = "delete_selection_noyank"; # <leader>d -> Delete selection without yanking
+      o = {
+        p = [
+          "select_all"
+          "replace_selections_with_clipboard"
+        ]; # <leader>op -> Replace entire file with clipboard
+      };
+    };
     A-j = [
       "extend_to_line_bounds"
       "delete_selection"
