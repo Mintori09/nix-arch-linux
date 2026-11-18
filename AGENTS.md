@@ -1,12 +1,10 @@
 # ~/.config/home-manager
 
-Nix home-manager standalone config for EndeavourOS (non-NixOS).
-User: `mintori`, host: `endeavour-desktop`, system: `x86_64-linux`.
+Nix home-manager standalone config for EndeavourOS (non-NixOS). User: `mintori`, host: `endeavour-desktop`, system: `x86_64-linux`.
 
 ## Apply config
 
-> [!IMPORTANT]
-> Always rebuild home-manager after making changes to any configuration files or scripts so they take effect immediately:
+> [!IMPORTANT] Always rebuild home-manager after making changes to any configuration files or scripts so they take effect immediately:
 >
 > ```bash
 > nh home switch ~/.config/home-manager
@@ -29,14 +27,11 @@ nix-collect-garbage --delete-older-than 2d  # GC cleanup
 
 ## Secrets
 
-`secrets.json` (gitignored) loaded via jq `eval` in bash/zsh initExtra (`modules/secrets.nix`).
-Secrets are exported as env vars at shell startup.
+`secrets.json` (gitignored) loaded via jq `eval` in bash/zsh initExtra (`modules/secrets.nix`). Secrets are exported as env vars at shell startup.
 
 ## OpenCode config
 
-Generated purely from Nix in `modules/programs/agents/opencode/config.nix`:
-output is written to `~/.config/opencode/config.json` as `builtins.toJSON`.
-Do NOT edit `config.json` directly — edit the Nix source and run `hms`.
+Generated purely from Nix in `modules/programs/agents/opencode/config.nix`: output is written to `~/.config/opencode/config.json` as `builtins.toJSON`. Do NOT edit `config.json` directly — edit the Nix source and run `hms`.
 
 - **Provider**: only `opencode-go` enabled; all others explicitly disabled
 - **Model**: `opencode-go/deepseek-v4-flash`
@@ -52,24 +47,15 @@ Shared across agents via `modules/programs/agents/mcp.nix`:
 - **OpenCode** (`opencode/mcp.nix`): transforms format into `local` and `remote` types.
 - **Claude** (`claude/mcp.nix`): supports local servers, plus conditionally adds `codex` MCP and `work-docs` on `work-laptop`.
 - **Antigravity CLI** (`antigravity/mcp.nix` & `default.nix`): generates `~/.gemini/antigravity-cli/mcp_config.json`, includes custom zsh completion (`_agy`).
-- **Copilot CLI** (`copilot-cli/mcp.nix` & `default.nix`): generates `~/.copilot/mcp-config.json` with `local` and `http` server definitions.
-  Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, notebooklm, cloudflare, tavily (disabled by default).
+- **Copilot CLI** (`copilot-cli/mcp.nix` & `default.nix`): generates `~/.copilot/mcp-config.json` with `local` and `http` server definitions. Servers configured: context7, playwright, playwright-headless, github (uses `gh auth token` lazily via `$()`), deepwiki (remote), apify (remote), figwright, firefox-devtools, firefox-devtools-headless, colab-mcp, notebooklm, cloudflare, tavily (disabled by default).
 
 ## oc-go-cc proxy
 
-`modules/programs/agents/oc-go-cc/` provides a local proxy that makes OpenAI-compatible models available to Claude Code.
-Runs as a systemd user service (`systemctl --user oc-go-cc`).
-Sets `ANTHROPIC_BASE_URL=http://127.0.0.1:3456` and `ANTHROPIC_AUTH_TOKEN=unused` so Claude Code routes through it.
-Model tiers: default (v4-flash), think/complex (v4-pro), long_context (glm-5.1).
+`modules/programs/agents/oc-go-cc/` provides a local proxy that makes OpenAI-compatible models available to Claude Code. Runs as a systemd user service (`systemctl --user oc-go-cc`). Sets `ANTHROPIC_BASE_URL=http://127.0.0.1:3456` and `ANTHROPIC_AUTH_TOKEN=unused` so Claude Code routes through it. Model tiers: default (v4-flash), think/complex (v4-pro), long_context (glm-5.1).
 
 ## Skills
 
-Sourced from external flake inputs (anthropic-skills, vercel-skills, agent-toolkit, superpowers, etc.) and local skills (`modules/programs/agents/opencode/skills/`).
-Symlinked to `~/.config/opencode/skill/`, `~/.claude/skills/`, `~/.codex/skills/`, `~/.gemini/skills/`, and `~/.copilot/skills/` via `programs.agent-skills`.
-Enabled skills: skill-creator, webapp-testing, frontend-design, react-best-practices, technical-writing,
-blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers, anki-vocab-generator,
-orca-cli, orchestration, orca-per-workspace-env, plus all from `opencode-local` (e.g. `novel-vi-translator`, `doc-to-jp-vocab`) and `superpowers`.
-Conditional: `work-laptop` host adds `work/agent-skills`.
+Sourced from external flake inputs (anthropic-skills, vercel-skills, agent-toolkit, superpowers, etc.) and local skills (`modules/programs/agents/opencode/skills/`). Symlinked to `~/.config/opencode/skill/`, `~/.claude/skills/`, `~/.codex/skills/`, `~/.gemini/skills/`, and `~/.copilot/skills/` via `programs.agent-skills`. Enabled skills: skill-creator, webapp-testing, frontend-design, react-best-practices, technical-writing, blog-post-writer, writing-documentation, changelog-generator, commit-work, skill-seekers, anki-vocab-generator, orca-cli, orchestration, orca-per-workspace-env, plus all from `opencode-local` (e.g. `novel-vi-translator`, `doc-to-jp-vocab`) and `superpowers`. Conditional: `work-laptop` host adds `work/agent-skills`.
 
 ## Git
 
@@ -83,11 +69,7 @@ Conditional: `work-laptop` host adds `work/agent-skills`.
 - Custom scripts (in `modules/scripts/`): `ai-renamer`, `auto-click`, `caffeinate`, `cleartext-wifi`, `compress-wrap`, `copy-files`, `direnv-wrap`, `each`, `extract`, `fcitx5-remote`, `format`, `fzf-preview`, `fzf-rg-edit`, `keyboard-control`, `nano_usage`, `nix-rebuild`, `open`, `quick-aliases`, `rclone-sync`, `read`, `remove`, `scratch`, `select-and-open-video`, `sleep-cycles`, `telepush`, `which_file`. Shared helpers in `_helpers.nix`.
 - Custom packages (in `modules/packages/` from `packages/`): `ai-bridge`, `anki-tool`, `anyflip-downloader`, `bookokrat`, `caesium-clt`, `cv-cli` (`cv`), `dbx`, `disktree`, `fitgirl-link-extractor` (`mle`), `fmtron`, `gdown`, `generate-toc` (`gentoc`), `hoppscotch`, `keyboard-rs`, `kmp-lsp`, `magika`, `qbittorrent`, `sheprd`, `vicinae`, `zed-editor`.
 
-Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging
-and zsh completion in `modules/scripts/<name>.nix` (or `completions/`). When adding/modifying
-flags, update both the source and the zsh completion spec in the same PR.
-After editing, rebuild with `nh home switch ~/.config/home-manager` to make changes available
-globally.
+Each script's source lives in `scripts/execute/<name>.ts`, with Nix packaging and zsh completion in `modules/scripts/<name>.nix` (or `completions/`). When adding/modifying flags, update both the source and the zsh completion spec in the same PR. After editing, rebuild with `nh home switch ~/.config/home-manager` to make changes available globally.
 
 ## Shell
 
@@ -103,7 +85,4 @@ globally.
 
 ## Notable deps
 
-`formatters.nix` → gofumpt, hadolint, kdlfmt, ruff, shellcheck, shfmt, stylua, taplo, sql-formatter
-LSPs → 10+ built into OpenCode config automatically
-`nodejs_22`, `pnpm`, `bun`, `uv`, `mise` for JS/Python/Dev envs
-`nixGL` overlay for GPU-accelerated apps on non-NixOS
+`formatters.nix` → gofumpt, hadolint, kdlfmt, ruff, shellcheck, shfmt, stylua, taplo, sql-formatter LSPs → 10+ built into OpenCode config automatically `nodejs_22`, `pnpm`, `bun`, `uv`, `mise` for JS/Python/Dev envs `nixGL` overlay for GPU-accelerated apps on non-NixOS
