@@ -30,10 +30,20 @@ _sh() {
       local -a runnable_files
       local cur="$words[CURRENT]"
       local search_dir=""
+      local -a fd_args=(-t f -E .git -c never)
 
-      if [[ "$cur" == */* ]]; then
-        search_dir="${cur%/*}"
-        [[ -z "$search_dir" ]] && search_dir="/"
+      if [[ "$cur" == *\*\** ]]; then
+        local prefix="${cur%%\*\**}"
+        if [[ "$prefix" == */* ]]; then
+          search_dir="${prefix%/*}"
+          [[ -z "$search_dir" ]] && search_dir="/"
+        fi
+      else
+        fd_args+=(--max-depth 1)
+        if [[ "$cur" == */* ]]; then
+          search_dir="${cur%/*}"
+          [[ -z "$search_dir" ]] && search_dir="/"
+        fi
       fi
 
       local f first_line
@@ -43,24 +53,16 @@ _sh() {
         if [[ "$f" == *.(sh|bash|zsh) ]]; then
           runnable_files+=("$f")
         elif [[ -x "$f" && ! -d "$f" ]]; then
-          read -r first_line < "$f" 2>/dev/null
-          if [[ "$first_line" == "#!"* ]]; then
+          IFS= read -r -k 2 first_line < "$f" 2>/dev/null
+          if [[ "$first_line" == "#!" ]]; then
             runnable_files+=("$f")
           fi
         fi
       done < <(
-        if (( $+commands[fd] )); then
-          if [[ -n "$search_dir" ]]; then
-            fd -t f -E .git -c never . "$search_dir" 2>/dev/null
-          else
-            fd -t f -E .git -c never 2>/dev/null
-          fi
+        if [[ -n "$search_dir" ]]; then
+          fd "${fd_args[@]}" . "$search_dir" 2>/dev/null
         else
-          if [[ -n "$search_dir" ]]; then
-            find "$search_dir" -maxdepth 5 -type f ! -path "*/.*" 2>/dev/null | sed "s|^\./||"
-          else
-            find . -maxdepth 5 -type f ! -path "*/.*" 2>/dev/null | sed "s|^\./||"
-          fi
+          fd "${fd_args[@]}" 2>/dev/null
         fi
       )
 
