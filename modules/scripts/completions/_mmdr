@@ -1,0 +1,23 @@
+#compdef mmdr
+
+zstyle ':completion:*:*:mmdr:*' prefix-needed false
+
+_mmdr() {
+  _arguments -s -S \
+    '(-i --input)'{-i,--input}'=[Input file (.mmd) or - for stdin]:input:_files -g "*.(mmd|mermaid|md)"' \
+    '(-o --output)'{-o,--output}'=[Output file (svg/png)]:output:_files' \
+    '(-e --outputFormat)'{-e,--outputFormat}'=[Output format]:format:(svg png)' \
+    '(-c --configFile)'{-c,--configFile}'=[Config JSON file]:config:_files -g "*.json"' \
+    '(-t --theme)'{-t,--theme}'=[Built-in theme preset]:theme:(default dark forest neutral modern)' \
+    '(-w --width)'{-w,--width}'=[Width]:width:' \
+    '(-H --height)'{-H,--height}'=[Height]:height:' \
+    '--preferredAspectRatio=[Preferred aspect ratio]:ratio:' \
+    '--nodeSpacing=[Node spacing]:spacing:' \
+    '--rankSpacing=[Rank spacing]:spacing:' \
+    '--dumpLayout=[Dump computed layout JSON]:path:_files' \
+    '--layoutEngine=[Layered flowchart placement engine]:engine:(current dagre auto)' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]'
+}
+
+_mmdr "$@"

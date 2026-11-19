@@ -37,5 +37,7 @@
     ./sh-completion.nix
     ./git-fzf.nix
     ./rust-script.nix
+    ./cargo.nix
+    ./extra-completions.nix
   ];
 }

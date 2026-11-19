@@ -1,0 +1,63 @@
+#compdef biome
+
+zstyle ':completion:*:*:biome:*' prefix-needed false
+
+_biome() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -S -C \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'version:Show Biome version information'
+        'rage:Print debugging information'
+        'start:Start Biome daemon server'
+        'stop:Stop Biome daemon server'
+        'check:Run formatter, linter, and import sorting'
+        'lint:Run lint checks on files'
+        'format:Run formatter on files'
+        'ci:Run formatter, linter, and import sorting in CI mode'
+        'init:Bootstrap a new biome.json config'
+        'lsp-proxy:Run LSP proxy over stdin/stdout'
+        'migrate:Update configuration for breaking changes'
+        'search:Search for Grit patterns across a project'
+        'explain:Explain lint rules or CLI concepts'
+        'clean:Clean daemon logs'
+      )
+      _describe -t subcommands 'biome command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        check|lint|format|ci)
+          _arguments -s -S \
+            '--write[Apply safe fixes and formatting]' \
+            '--unsafe[Allow unsafe fixes]' \
+            '--formatter-enabled=[Enable/disable formatter]:bool:(true false)' \
+            '--linter-enabled=[Enable/disable linter]:bool:(true false)' \
+            '--assist-enabled=[Enable/disable assist]:bool:(true false)' \
+            '--config-path=[Path to biome.json]:path:_files' \
+            '--staged[Check only staged files]' \
+            '--changed[Check only changed files since --since]' \
+            '--since=[Ref to compare against]:ref:' \
+            '--reporter=[Output reporter]:reporter:(default json json-pretty github junit summary gitlab checkstyle rdjson)' \
+            '(-h --help)'{-h,--help}'[Print help]' \
+            '*:path:_files' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '*:path:_files' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_biome "$@"

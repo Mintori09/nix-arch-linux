@@ -1,0 +1,141 @@
+#compdef typstyle
+
+autoload -U is-at-least
+
+_typstyle() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'-l+[Maximum width of each line]:LINE_WIDTH:_default' \
+'-c+[Maximum width of each line]:LINE_WIDTH:_default' \
+'--line-width=[Maximum width of each line]:LINE_WIDTH:_default' \
+'--column=[Maximum width of each line]:LINE_WIDTH:_default' \
+'-t+[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'--indent-width=[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'--tab-width=[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'(--check --diff)-i[Format the file in place]' \
+'(--check --diff)--inplace[Format the file in place]' \
+'(--diff)--check[Run in '\''check'\'' mode. Exits with 0 if input is formatted correctly. Exits with a non-zero status code if formatting is required]' \
+'(--check)--diff[Run in '\''diff'\'' mode. Shows unified diff of what formatting changes would be made. Exits with 0 if input is formatted correctly. Exits with a non-zero status code if formatting is required]' \
+'--no-reorder-import-items[Disable alphabetical reordering of import items]' \
+'--wrap-text[Wrap text in markup to fit within the line width, and collapse spaces in markup]' \
+'-a[Print the AST of the input file]' \
+'--ast[Print the AST of the input file]' \
+'-p[Print the pretty document]' \
+'--pretty-doc[Print the pretty document]' \
+'--timing[Show elapsed time taken by the formatter]' \
+'-v[Enable verbose logging]' \
+'--verbose[Enable verbose logging]' \
+'-q[Print diagnostics, but nothing else]' \
+'--quiet[Print diagnostics, but nothing else]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+'::input -- List of files or directories to format \[default\: stdin\]:_files' \
+":: :_typstyle_commands" \
+"*::: :->typstyle" \
+&& ret=0
+    case $state in
+    (typstyle)
+        words=($line[2] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:typstyle-command-$line[2]:"
+        case $line[2] in
+            (completions)
+_arguments "${_arguments_options[@]}" : \
+'-l+[Maximum width of each line]:LINE_WIDTH:_default' \
+'-c+[Maximum width of each line]:LINE_WIDTH:_default' \
+'--line-width=[Maximum width of each line]:LINE_WIDTH:_default' \
+'--column=[Maximum width of each line]:LINE_WIDTH:_default' \
+'-t+[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'--indent-width=[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'--tab-width=[Number of spaces per indentation level]:INDENT_WIDTH:_default' \
+'(--diff)--check[Run in '\''check'\'' mode. Exits with 0 if input is formatted correctly. Exits with a non-zero status code if formatting is required]' \
+'(--check)--diff[Run in '\''diff'\'' mode. Shows unified diff of what formatting changes would be made. Exits with 0 if input is formatted correctly. Exits with a non-zero status code if formatting is required]' \
+'--no-reorder-import-items[Disable alphabetical reordering of import items]' \
+'--wrap-text[Wrap text in markup to fit within the line width, and collapse spaces in markup]' \
+'-v[Enable verbose logging]' \
+'--verbose[Enable verbose logging]' \
+'-q[Print diagnostics, but nothing else]' \
+'--quiet[Print diagnostics, but nothing else]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell -- The shell to generate completions for:(bash elvish fish powershell zsh)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_typstyle__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:typstyle-help-command-$line[1]:"
+        case $line[1] in
+            (completions)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_typstyle_commands] )) ||
+_typstyle_commands() {
+    local commands; commands=(
+'completions:Generate shell completions for the given shell to stdout' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'typstyle commands' commands "$@"
+}
+(( $+functions[_typstyle__completions_commands] )) ||
+_typstyle__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'typstyle completions commands' commands "$@"
+}
+(( $+functions[_typstyle__help_commands] )) ||
+_typstyle__help_commands() {
+    local commands; commands=(
+'completions:Generate shell completions for the given shell to stdout' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'typstyle help commands' commands "$@"
+}
+(( $+functions[_typstyle__help__completions_commands] )) ||
+_typstyle__help__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'typstyle help completions commands' commands "$@"
+}
+(( $+functions[_typstyle__help__help_commands] )) ||
+_typstyle__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'typstyle help help commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_typstyle" ]; then
+    _typstyle "$@"
+else
+    compdef _typstyle typstyle
+fi

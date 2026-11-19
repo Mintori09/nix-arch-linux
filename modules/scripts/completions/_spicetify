@@ -1,0 +1,47 @@
+#compdef spicetify
+
+zstyle ':completion:*:*:spicetify:*' prefix-needed false
+
+_spicetify() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -C \
+    '(-q --quiet)'{-q,--quiet}'[Quiet mode]' \
+    '(-c --config)'{-c,--config}'[Print config file path and exit]' \
+    '(-n --no-restart)'{-n,--no-restart}'[Do not restart Spotify after action]' \
+    '(-l --live-update)'{-l,--live-update}'[Refresh CSS immediately]' \
+    '(-e --extension)'{-e,--extension}'[Use with config command to add/remove extension]' \
+    '(-a --app)'{-a,--app}'[Use with config command to add/remove custom app]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'backup:Start backing up and preprocessing Spotify files'
+        'apply:Apply customization'
+        'update:Update theme CSS and JS files'
+        'restore:Restore Spotify to original state'
+        'clear:Clear current backup files'
+        'enable-devtools:Enable Spotify developer tools'
+        'watch:Enter watch mode for live theme/extension editing'
+        'restart:Restart Spotify'
+        'path:Print path to config/userdata/app'
+        'config:Change one or more config values'
+        'config-dir:Open config directory'
+        'upgrade:Upgrade spicetify'
+        'color:Print current color scheme'
+        'auto:Automatically backup and apply'
+      )
+      _describe -t subcommands 'spicetify command' subcommands && ret=0
+      ;;
+  esac
+
+  return ret
+}
+
+_spicetify "$@"

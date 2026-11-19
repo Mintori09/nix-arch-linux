@@ -1,0 +1,58 @@
+#compdef orca
+
+zstyle ':completion:*:*:orca:*' prefix-needed false
+
+_orca() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'open:Launch Orca and wait for runtime'
+        'serve:Start headless Orca runtime server'
+        'status:Show app/runtime/graph readiness'
+        'diagnostics:Collect diagnostics'
+        'agent-context:Print machine-readable command schema'
+        'reference:Manage linked reviews and issues'
+        'search:Search full text of agent sessions'
+        'account:Manage agent accounts'
+        'skills:Manage bundled Orca skills'
+        'host:List targetable machines'
+      )
+      _describe -t subcommands 'orca command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        reference)
+          _arguments '1:action:(list add remove find)' '*:arg:' && ret=0
+          ;;
+        account)
+          _arguments '1:action:(add list select rm)' '*:arg:' && ret=0
+          ;;
+        skills)
+          _arguments '1:action:(installed share list get install update)' '*:arg:' && ret=0
+          ;;
+        host)
+          _arguments '1:action:(list)' && ret=0
+          ;;
+        diagnostics)
+          _arguments '1:action:(memory)' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '*:arg:_files' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_orca "$@"

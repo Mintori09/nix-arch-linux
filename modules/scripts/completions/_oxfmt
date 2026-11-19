@@ -1,0 +1,24 @@
+#compdef oxfmt
+
+zstyle ':completion:*:*:oxfmt:*' prefix-needed false
+
+_oxfmt() {
+  _arguments -s -S \
+    '--init[Initialize .oxfmtrc.json with default values]' \
+    '--migrate=[Migrate config from source]:source:(prettier biome)' \
+    '--lsp[Start LSP server]' \
+    '--stdin-filepath=[File path to infer parser]:file:_files' \
+    '--write[Format and write files in place]' \
+    '--check[Check if files are formatted]' \
+    '--list-different[List files that would be changed]' \
+    '(-c --config)'{-c,--config}'=[Path to config file]:config:_files' \
+    '*--ignore-path=[Path to ignore file]:ignore:_files' \
+    '--with-node-modules[Format code in node_modules]' \
+    '--no-error-on-unmatched-pattern[Do not exit with error on unmatched pattern]' \
+    '--threads=[Number of threads]:threads:' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:path:_files'
+}
+
+_oxfmt "$@"

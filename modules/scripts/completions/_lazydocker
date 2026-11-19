@@ -1,0 +1,13 @@
+#compdef lazydocker
+
+zstyle ':completion:*:*:lazydocker:*' prefix-needed false
+
+_lazydocker() {
+  _arguments -s \
+    '(-c --config)'{-c,--config}'[Print current default config]' \
+    '(-f --file)'{-f,--file}'=[Specify alternate compose files]:file:_files -g "*.y(|a)ml"' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Print version]'
+}
+
+_lazydocker "$@"

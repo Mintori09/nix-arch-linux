@@ -1,0 +1,28 @@
+#compdef duf
+
+zstyle ':completion:*:*:duf:*' prefix-needed false
+
+_duf() {
+  _arguments -s \
+    '-all[Include pseudo, duplicate, inaccessible filesystems]' \
+    '-avail-threshold=[Coloring threshold (yellow,red)]:threshold:' \
+    '-hide=[Hide specific devices (comma-separated)]:devices:(local network fuse special loops binds)' \
+    '-hide-fs=[Hide specific filesystems]:fs:' \
+    '-hide-mp=[Hide specific mount points]:mp:_files -/' \
+    '-inodes[List inode information instead of block usage]' \
+    '-json[Output all devices in JSON format]' \
+    '-only=[Show only specific devices]:devices:(local network fuse special loops binds)' \
+    '-only-fs=[Show only specific filesystems]:fs:' \
+    '-only-mp=[Show only specific mount points]:mp:_files -/' \
+    '-output=[Output fields]:fields:(mountpoint size used avail usage inodes inodes_used inodes_avail inodes_usage type filesystem)' \
+    '-sort=[Sort output by]:field:(mountpoint size used avail usage inodes inodes_used inodes_avail inodes_usage type filesystem)' \
+    '-style=[Table style]:style:(unicode ascii)' \
+    '-theme=[Color theme]:theme:(dark light ansi)' \
+    '-warnings[Output all warnings to stderr]' \
+    '-width=[Max output width]:width:' \
+    '-help[Show help]' \
+    '-version[Show version]' \
+    '*:path:_files -/'
+}
+
+_duf "$@"

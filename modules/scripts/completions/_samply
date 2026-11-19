@@ -1,0 +1,53 @@
+#compdef samply
+
+zstyle ':completion:*:*:samply:*' prefix-needed false
+
+_samply() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -S -C \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'record:Record a profile of a command'
+        'load:Load a previously recorded profile'
+        'setup:Setup samply (e.g. code signing / perf permissions)'
+        'import:Import a profile from another tool'
+        'help:Print help'
+      )
+      _describe -t subcommands 'samply command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        record)
+          _arguments -s -S \
+            '(-o --output)'{-o,--output}'=[Output profile file]:file:_files -g "*.json*"' \
+            '(-r --rate)'{-r,--rate}'=[Sampling rate in Hz]:hz:' \
+            '--save-only[Save profile without opening browser]' \
+            '--no-open[Do not open Firefox Profiler]' \
+            '(-p --pid)'{-p,--pid}'=[Attach to existing PID]:pid:' \
+            '--presymbolicate[Symbolicate profile before saving]' \
+            '(-h --help)'{-h,--help}'[Print help]' \
+            '*:command:_command_names -e' && ret=0
+          ;;
+        load)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '1:profile:_files -g "*.json*"' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_samply "$@"

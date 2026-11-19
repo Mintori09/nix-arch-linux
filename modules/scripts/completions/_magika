@@ -1,0 +1,22 @@
+#compdef magika
+
+zstyle ':completion:*:*:magika:*' prefix-needed false
+
+_magika() {
+  _arguments -s -S \
+    '(-r --recursive)'{-r,--recursive}'[Identify files within directories recursively]' \
+    '--no-dereference[Identify symbolic links as is]' \
+    '(--colors --no-colors)--colors[Print with colors regardless of terminal support]' \
+    '(--colors --no-colors)--no-colors[Print without colors]' \
+    '(-s --output-score)'{-s,--output-score}'[Print prediction score]' \
+    '(-i --mime-type)'{-i,--mime-type}'[Print MIME type]' \
+    '(-l --label)'{-l,--label}'[Print simple label]' \
+    '--json[Print in JSON format]' \
+    '--jsonl[Print in JSONL format]' \
+    '--format=[Custom output format]:format:' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:path:_files'
+}
+
+_magika "$@"

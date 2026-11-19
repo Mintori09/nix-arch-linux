@@ -1,0 +1,22 @@
+#compdef rustfmt
+
+zstyle ':completion:*:*:rustfmt:*' prefix-needed false
+
+_rustfmt() {
+  _arguments -s -S \
+    '--check[Run in check mode]' \
+    '--emit=[What data to emit]:mode:(files stdout)' \
+    '--backup[Backup any modified files]' \
+    '--config-path=[Recursively search path for rustfmt.toml]:path:_files' \
+    '--edition=[Rust edition to use]:edition:(2015 2018 2021 2024)' \
+    '--color=[Use colored output]:when:(always never auto)' \
+    '--print-config=[Dumps default or minimal config]:type:(default minimal current)' \
+    '(-l --files-with-diff)'{-l,--files-with-diff}'[Prints names of mismatched files]' \
+    '(-v --verbose)'{-v,--verbose}'[Print verbose output]' \
+    '(-q --quiet)'{-q,--quiet}'[Print less output]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:rust file:_files -g "*.rs"'
+}
+
+_rustfmt "$@"

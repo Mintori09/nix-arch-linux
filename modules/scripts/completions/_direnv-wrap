@@ -1,0 +1,13 @@
+#compdef direnv-wrap
+
+_direnv-wrap() {
+  local -a langs
+  langs=(
+    python node deno go rust ruby java qt gtk flutter bun c-cpp
+    clojure cue dhall elixir elm gleam hashi haskell haxe jupyter
+    kotlin latex lean4 nickel nim nix ocaml odin
+  )
+  _describe -t languages 'direnv template' langs
+}
+
+_direnv-wrap "$@"

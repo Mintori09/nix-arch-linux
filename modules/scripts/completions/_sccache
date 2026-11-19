@@ -1,0 +1,21 @@
+#compdef sccache
+
+zstyle ':completion:*:*:sccache:*' prefix-needed false
+
+_sccache() {
+  _arguments -s -S \
+    '--show-stats[Show cache statistics]' \
+    '--show-adv-stats[Show advanced cache statistics]' \
+    '--zero-stats[Zero cache statistics]' \
+    '--start-server[Start background server]' \
+    '--stop-server[Stop background server]' \
+    '--dist-auth[Authenticate for distributed compilation]' \
+    '--dist-status[Show distributed compilation status]' \
+    '--package-toolchain=[Package toolchain for distributed compilation]:exec:_files' \
+    '--stats-format=[Output format for stats]:format:(text json)' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:compiler command:_command_names -e'
+}
+
+_sccache "$@"

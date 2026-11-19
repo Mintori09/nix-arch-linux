@@ -1,0 +1,18 @@
+#compdef gofumpt
+
+zstyle ':completion:*:*:gofumpt:*' prefix-needed false
+
+_gofumpt() {
+  _arguments -s \
+    '-d[Display diffs instead of rewriting files]' \
+    '-e[Report all errors (not just first 10)]' \
+    '-l[List files whose formatting differs]' \
+    '-w[Write result to source file instead of stdout]' \
+    '-extra[Enable extra rules]' \
+    '-lang=[Target Go version]:version:' \
+    '-modpath=[Go module path]:path:' \
+    '-h[Show help]' \
+    '*:go file:_files -g "*.go"'
+}
+
+_gofumpt "$@"

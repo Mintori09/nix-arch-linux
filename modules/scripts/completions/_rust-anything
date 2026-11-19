@@ -1,0 +1,44 @@
+#compdef rust-anything
+
+zstyle ':completion:*:*:rust-anything:*' prefix-needed false
+
+_rust-anything() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -S -C \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'analyze:Map a repository and write a ranked migration plan'
+        'bridge:Scaffold a Rust crate with JS bindings for one unit'
+        'refresh:Regenerate bindings from signatures in port.rs'
+        'record:Record what TS functions return on inputs'
+        'build:Build the crate JS module (napi-rs or wasm-bindgen)'
+        'diff:Replay recorded cases against the Rust module'
+        'bench:Time recorded cases on TS original and Rust'
+        'profile:Run a real workload under profiler'
+        'shadow:Generate a drop-in module running TS and Rust side by side'
+        'gate:Check definition of done for a port'
+        'app:Record whole app behavior and replay any build'
+        'mcp:Serve every step as MCP tools over stdio'
+        'setup:Register rust-anything with coding agents'
+        'help:Print help'
+      )
+      _describe -t subcommands 'rust-anything command' subcommands && ret=0
+      ;;
+    subargs)
+      _arguments '(-h --help)'{-h,--help}'[Print help]' '*:path:_files' && ret=0
+      ;;
+  esac
+
+  return ret
+}
+
+_rust-anything "$@"

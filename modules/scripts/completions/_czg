@@ -1,0 +1,24 @@
+#compdef czg git-czg
+
+zstyle ':completion:*:*:czg:*' prefix-needed false
+zstyle ':completion:*:*:git-czg:*' prefix-needed false
+
+_czg() {
+  _arguments -s -S \
+    '--alias=[Directly submit defined commit message]:alias:' \
+    '--config=[Specify configuration file]:config:_files' \
+    '(-N --ai-num)'{-N,--ai-num}'=[AI return multiple subjects]:num:' \
+    '(-M --ai-model)'{-M,--ai-model}'=[AI model]:model:(gpt-4o-mini gpt-4o gpt-3.5-turbo)' \
+    '--api-key=[Setup OpenAI API secret key]:key:' \
+    '--api-model=[Setup OpenAI API model]:model:' \
+    '--api-proxy=[Setup OpenAI API proxy]:url:' \
+    '--api-endpoint=[Setup OpenAI API endpoint]:url:' \
+    '(-r --retry)'{-r,--retry}'[Retry submit by last message]' \
+    '--no-ai[Turn off AI prompt mode]' \
+    '--unset-proxy[Unset API proxy]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '1:subcommand:((ai:"OpenAI generate subject mode" break:"Append ! after type/scope" emoji:"Output message with emoji" checkbox:"Scope checkbox mode" gpg:"Use GPG sign commit"))'
+}
+
+_czg "$@"

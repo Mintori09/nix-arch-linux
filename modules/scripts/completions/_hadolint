@@ -1,0 +1,28 @@
+#compdef hadolint
+
+zstyle ':completion:*:*:hadolint:*' prefix-needed false
+
+_hadolint() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Show help text]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '(-c --config)'{-c,--config}'=[Path to configuration file]:config:_files' \
+    '--file-path-in-report=[File path referenced in report]:path:_files' \
+    '--no-fail[Do not exit with failure on rule violation]' \
+    '--no-color[Do not colorize output]' \
+    '(-V --verbose)'{-V,--verbose}'[Verbose logging to stderr]' \
+    '(-f --format)'{-f,--format}'=[Output format]:format:(tty json checkstyle codeclimate gitlab_codeclimate gnu codacy sarif sonarqube)' \
+    '*--error=[Treat rule as error]:rule:' \
+    '*--warning=[Treat rule as warning]:rule:' \
+    '*--info=[Treat rule as info]:rule:' \
+    '*--style=[Treat rule as style]:rule:' \
+    '*--ignore=[Ignore rule]:rule:' \
+    '*--trusted-registry=[Trusted registry]:registry:' \
+    '*--require-label=[Required label schema]:schema:' \
+    '--strict-labels[Require exact label schema]' \
+    '--disable-ignore-pragma[Disable inline ignore pragmas]' \
+    '(-t --failure-threshold)'{-t,--failure-threshold}'=[Failure threshold]:threshold:(error warning info style ignore none)' \
+    '*:dockerfile:_files'
+}
+
+_hadolint "$@"

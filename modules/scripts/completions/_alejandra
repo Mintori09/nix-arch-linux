@@ -1,0 +1,16 @@
+#compdef alejandra
+
+zstyle ':completion:*:*:alejandra:*' prefix-needed false
+
+_alejandra() {
+  _arguments -s -S \
+    '(-c --check)'{-c,--check}'[Check if input is formatted without writing]' \
+    '*'{-e,--exclude}'=[Files or directories to exclude]:path:_files' \
+    '--experimental-config=[Path to alejandra.toml]:config:_files -g "*.toml"' \
+    '(-q --quiet)'{-q,--quiet}'[Hide informational/error messages]' \
+    '(-h --help)'{-h,--help}'[Print help information]' \
+    '(-V --version)'{-V,--version}'[Print version information]' \
+    '*:path:_files -g "*.nix"'
+}
+
+_alejandra "$@"

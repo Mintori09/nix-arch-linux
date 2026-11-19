@@ -1,0 +1,29 @@
+#compdef websocat
+
+zstyle ':completion:*:*:websocat:*' prefix-needed false
+
+_websocat() {
+  _arguments -s -S \
+    '(-s --server-mode)'{-s,--server-mode}'[Simple server mode]' \
+    '(-t --text)'{-t,--text}'[Send message as WebSocket text]' \
+    '(-b --binary)'{-b,--binary}'[Send message as WebSocket binary]' \
+    '(-n --no-close)'{-n,--no-close}'[Do not close connection after stdin EOF]' \
+    '(-u --unidirectional)'{-u,--unidirectional}'[Inhibit copying from right to left]' \
+    '(-U --unidirectional-reverse)'{-U,--unidirectional-reverse}'[Inhibit copying from left to right]' \
+    '(-e --set-environment)'{-e,--set-environment}'[Set WEBSOCAT_* environment variables]' \
+    '(-E --exit-on-eof)'{-E,--exit-on-eof}'[Close transfer direction on EOF]' \
+    '--jsonrpc[Format messages as JSON-RPC 2.0 method calls]' \
+    '(-0 --null-terminated)'{-0,--null-terminated}'[Use NUL instead of newline]' \
+    '*'{-H,--header}'=[Add custom HTTP header]:header:' \
+    '--ping-interval=[Send WebSocket pings every N seconds]:seconds:' \
+    '--ping-timeout=[Drop connection if no pong in N seconds]:seconds:' \
+    '(-k --insecure)'{-k,--insecure}'[Accept invalid TLS certificates]' \
+    '(-v --verbose)'{-v,--verbose}'[Increase verbosity]' \
+    '(-q --quiet)'{-q,--quiet}'[Suppress most messages]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:addr1:' \
+    '2:addr2:'
+}
+
+_websocat "$@"

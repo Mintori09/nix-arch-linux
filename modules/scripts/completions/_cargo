@@ -1,0 +1,551 @@
+#compdef cargo
+
+# Hybrid Zsh completion for Cargo:
+# - Uses Cargo's built-in dynamic completer (CARGO_COMPLETE=zsh) for top-level
+#   subcommands, +toolchains, aliases, and all built-in subcommands/flags/targets/features.
+# - Provides dedicated _arguments completions for external cargo-* subcommands
+#   (nextest, deny, audit, watch, llvm-cov, clippy, fmt, outdated, machete, bloat,
+#   tarpaulin, semver-checks, flamegraph, asm) where CARGO_COMPLETE falls back.
+
+zstyle ':completion:*:*:cargo:*' prefix-needed false
+
+_cargo_dynamic_complete() {
+  local cargo_bin
+  if [[ -x "$HOME/.nix-profile/bin/cargo" ]]; then
+    cargo_bin="$HOME/.nix-profile/bin/cargo"
+  else
+    cargo_bin="${commands[cargo]:-cargo}"
+  fi
+
+  local _CLAP_COMPLETE_INDEX=$(( CURRENT - 1 ))
+  local _CLAP_IFS=$'\n'
+
+  local -a completions
+  completions=("${(@f)$( \
+    _CLAP_IFS="$_CLAP_IFS" \
+    _CLAP_COMPLETE_INDEX="$_CLAP_COMPLETE_INDEX" \
+    CARGO_COMPLETE="zsh" \
+    "$cargo_bin" -- "${words[@]}" 2>/dev/null \
+  )}")
+
+  if [[ -n "$completions" ]]; then
+    local -a dirs=()
+    local -a other=()
+    local completion
+    for completion in $completions; do
+      local value="${completion%%:*}"
+      if [[ "$value" == */ ]]; then
+        local dir_no_slash="${value%/}"
+        if [[ "$completion" == *:* ]]; then
+          local desc="${completion#*:}"
+          dirs+=("$dir_no_slash:$desc")
+        else
+          dirs+=("$dir_no_slash")
+        fi
+      else
+        other+=("$completion")
+      fi
+    done
+    [[ -n $dirs ]] && _describe -t values 'directories' dirs -S '/' -r '/'
+    [[ -n $other ]] && _describe -t values 'values' other
+    return 0
+  fi
+
+  return 1
+}
+
+# Dynamic helper: workspace packages from Cargo.toml / cargo metadata (fast grep fallback)
+_cargo_workspace_packages() {
+  local -a pkgs
+  if [[ -f Cargo.toml ]]; then
+    pkgs=(${(f)"$(cargo metadata --no-deps --format-version 1 2>/dev/null | jq -r '.packages[].name' 2>/dev/null)"})
+  fi
+  if (( ${#pkgs} > 0 )); then
+    _describe -t packages 'package' pkgs
+  else
+    _message 'package name'
+  fi
+}
+
+_cargo_nextest() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '--color=[Produce color output]:when:(auto always never)' \
+    '--no-pager[Do not pipe output through a pager]' \
+    '(-v --verbose)'{-v,--verbose}'[Verbose output]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '--config-file=[Config file]:config:_files -g "*.toml"' \
+    '--user-config-file=[User config file]:config:_files -g "*.toml"' \
+    '--override-version-check[Override minimum version check]' \
+    '(-P --profile)'{-P,--profile}'=[Nextest profile to use]:profile:' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'list:List tests in workspace'
+        'run:Build and run tests'
+        'r:Build and run tests (alias)'
+        'bench:Build and run benchmarks'
+        'b:Build and run benchmarks (alias)'
+        'archive:Build and archive tests'
+        'show-config:Show nextest configuration'
+        'self:Manage nextest installation'
+        'help:Print help'
+      )
+      _describe -t subcommands 'nextest subcommand' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        run|r|list|bench|b)
+          _arguments -s -S \
+            '--color=[Produce color output]:when:(auto always never)' \
+            '--no-pager[Do not pipe output through a pager]' \
+            '(-v --verbose)'{-v,--verbose}'[Verbose output]' \
+            '(-h --help)'{-h,--help}'[Print help]' \
+            '(-p --package)'{-p,--package}'=[Package to test]:package:_cargo_workspace_packages' \
+            '--workspace[Test all packages in the workspace]' \
+            '--exclude=[Exclude packages from the test]:package:_cargo_workspace_packages' \
+            '--lib[Test only library unit tests]' \
+            '--bin=[Test only the specified binary]:bin:' \
+            '--bins[Test all binaries]' \
+            '--example=[Test only the specified example]:example:' \
+            '--examples[Test all examples]' \
+            '--test=[Test only the specified test target]:test:' \
+            '--tests[Test all test targets]' \
+            '--bench=[Test only the specified bench target]:bench:' \
+            '--benches[Test all benches]' \
+            '--all-targets[Test all targets]' \
+            '(-F --features)'{-F,--features}'=[Space or comma separated list of features]:features:' \
+            '--all-features[Activate all available features]' \
+            '--no-default-features[Do not activate the default feature]' \
+            '--build-jobs=[Number of build jobs]:jobs:' \
+            '(-r --release)'{-r,--release}'[Build artifacts in release mode]' \
+            '--cargo-profile=[Cargo profile]:profile:' \
+            '--target=[Build for target triple]:target:' \
+            '--target-dir=[Target directory]:dir:_files -/' \
+            '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+            '--frozen[Require Cargo.lock and cache are up to date]' \
+            '--locked[Require Cargo.lock is up to date]' \
+            '--offline[Run without accessing the network]' \
+            '(-E --filter-expr)'{-E,--filter-expr}'=[Test filter expression]:expr:' \
+            '--run-ignored=[Run ignored tests]:mode:(default only all)' \
+            '--partition=[Run a subset of tests]:partition:' \
+            '(-j --test-threads)'{-j,--test-threads}'=[Number of tests to run simultaneously]:threads:' \
+            '--retries=[Number of retries for failing tests]:count:' \
+            '--fail-fast[Cancel test run on the first failure]' \
+            '--no-fail-fast[Do not cancel test run on the first failure]' \
+            '--no-capture[Do not capture stdout/stderr (alias for --success-output=immediate --failure-output=immediate --test-threads=1)]' \
+            '--failure-output=[Output behavior for failing tests]:when:(immediate final immediate-final never)' \
+            '--success-output=[Output behavior for passing tests]:when:(immediate final immediate-final never)' \
+            '--status-level=[Test statuses to display]:level:(none fail retry slow leak pass skip all)' \
+            '--final-status-level=[Test statuses to display at end]:level:(none fail retry slow leak pass skip all)' \
+            '--cargo-message-format=[Cargo message format]:fmt:(human short json json-diagnostic-short json-diagnostic-rendered-ansi json-render-diagnostics)' \
+            '--message-format=[Output format]:fmt:(human oneline json-pretty)' \
+            '(-P --profile)'{-P,--profile}'=[Nextest profile]:profile:' \
+            '*:filter:' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_cargo_deny() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '(-L --log-level)'{-L,--log-level}'=[Log level]:level:(off error warn info debug trace)' \
+    '(-f --format)'{-f,--format}'=[Output format]:format:(human json sarif)' \
+    '(-c --color)'{-c,--color}'=[Color output]:color:(auto always never)' \
+    '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '--workspace[Use all workspace packages as roots]' \
+    '--exclude=[Crates to exclude]:crate:' \
+    '(-t --target)'{-t,--target}'=[Filter crates by target triple]:target:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate the default feature]' \
+    '--features=[Features to activate]:features:' \
+    '--frozen[Require Cargo.lock and cache are up to date]' \
+    '--offline[Run without accessing the network]' \
+    '--locked[Assert Cargo.lock will remain unchanged]' \
+    '--exclude-dev[Exclude all dev-dependencies]' \
+    '--exclude-unpublished[Exclude unpublished workspace members]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'check:Checks a project'\''s crate graph'
+        'fetch:Fetches remote data'
+        'init:Creates a cargo-deny config from a template'
+        'list:Outputs a listing of all licenses and crates'
+        'help:Print help'
+      )
+      _describe -t subcommands 'deny subcommand' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        check)
+          _arguments -s -S \
+            '(-c --config)'{-c,--config}'=[Path to deny.toml]:config:_files -g "*.toml"' \
+            '--metadata-path=[Path to cargo metadata json]:json:_files -g "*.json"' \
+            '(-g --graph)'{-g,--graph}'=[Path to graph output directory]:dir:_files -/' \
+            '--hide-inclusion-graph[Hide inclusion graph]' \
+            '(-d --disable-fetch)'{-d,--disable-fetch}'[Disable fetching advisory database]' \
+            '--exclude-dev[Exclude dev-dependencies]' \
+            '--audit-compatible-output[Use cargo-audit compatible output]' \
+            '--show-stats[Show stats for each check]' \
+            '(-h --help)'{-h,--help}'[Print help]' \
+            '*:check:(advisories ban bans license licenses sources all)' && ret=0
+          ;;
+        fetch)
+          _arguments -s -S \
+            '(-c --config)'{-c,--config}'=[Path to deny.toml]:config:_files -g "*.toml"' \
+            '(-h --help)'{-h,--help}'[Print help]' \
+            '*:source:(db index all)' && ret=0
+          ;;
+        init|list)
+          _arguments -s -S \
+            '(-c --config)'{-c,--config}'=[Path to deny.toml]:config:_files -g "*.toml"' \
+            '(-h --help)'{-h,--help}'[Print help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_cargo_audit() {
+  _arguments -s -S \
+    '(-c --color)'{-c,--color}'=[Color configuration]:color:(always auto never)' \
+    '(-d --db)'{-d,--db}'=[Advisory database git repo path]:dir:_files -/' \
+    '(-D --deny)'{-D,--deny}'=[Exit with error on]:deny:(warnings unmaintained unsound yanked)' \
+    '(-f --file)'{-f,--file}'=[Cargo lockfile to inspect]:lockfile:_files -g "Cargo.lock"' \
+    '*--ignore=[Advisory id to ignore]:id:' \
+    '(-n --no-fetch)'{-n,--no-fetch}'[Do not fetch advisory DB]' \
+    '--stale[Allow stale database]' \
+    '*--target-arch=[Filter vulnerabilities by CPU]:arch:' \
+    '*--target-os=[Filter vulnerabilities by OS]:os:' \
+    '(-u --url)'{-u,--url}'=[URL for advisory database git repo]:url:' \
+    '(-q --quiet)'{-q,--quiet}'[Avoid unnecessary output]' \
+    '--format=[Output format]:format:(terminal json sarif)' \
+    '--json[Output report in JSON format]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:((fix:"Automatically upgrade vulnerable dependencies" bin:"Scan compiled binaries" help:"Print help"))'
+}
+
+_cargo_watch() {
+  _arguments -s -S \
+    '(-c --clear)'{-c,--clear}'[Clear the screen before each run]' \
+    '(-h --help)'{-h,--help}'[Display help]' \
+    '--ignore-nothing[Ignore nothing, not even target/ and .git/]' \
+    '--debug[Show debug output]' \
+    '--why[Show paths that changed]' \
+    '(-q --quiet)'{-q,--quiet}'[Suppress output from cargo-watch itself]' \
+    '--no-dot-ignores[Do not use .ignore files]' \
+    '--no-process-group[Do not use a process group]' \
+    '--no-restart[Do not restart command while running]' \
+    '--no-vcs-ignores[Do not use .gitignore files]' \
+    '(-N --notify)'{-N,--notify}'[Send desktop notification on change]' \
+    '--poll[Force polling for file changes]' \
+    '--postpone[Postpone first run until a file changes]' \
+    '--skip-local-deps[Only watch current directory]' \
+    '(-V --version)'{-V,--version}'[Display version]' \
+    '--watch-when-idle[Ignore events emitted while commands run]' \
+    '*'{-x,--exec}'=[Cargo command(s) to execute]:cmd:' \
+    '*'{-s,--shell}'=[Shell command(s) to execute]:cmd:' \
+    '(-d --delay)'{-d,--delay}'=[Debounce delay in seconds]:seconds:' \
+    '*--env-file=[Load environment variables from .env file]:file:_files' \
+    '*'{-E,--env}'=[Set environment variables]:var:' \
+    '--features=[List of features]:features:' \
+    '*'{-i,--ignore}'=[Ignore glob/gitignore pattern]:pattern:' \
+    '-B=[Inject RUST_BACKTRACE=VALUE]:value:(0 1 full)' \
+    '-L=[Inject RUST_LOG=VALUE]:value:(error warn info debug trace)' \
+    '--use-shell=[Use a different shell]:shell:(bash zsh sh fish)' \
+    '*'{-w,--watch}'=[Watch specific file(s) or folder(s)]:path:_files' \
+    '(-C --workdir)'{-C,--workdir}'=[Change working directory]:dir:_files -/'
+}
+
+_cargo_llvm_cov() {
+  _arguments -s -S \
+    '--json[Export coverage data in json format]' \
+    '--lcov[Export coverage data in lcov format]' \
+    '--cobertura[Export coverage data in cobertura XML format]' \
+    '--codecov[Export coverage data in Codecov JSON format]' \
+    '--text[Generate coverage report in text format]' \
+    '--html[Generate coverage report in HTML format]' \
+    '--open[Open HTML report in browser]' \
+    '--output-path=[Output file or directory]:path:_files' \
+    '--summary-only[Export only summary information]' \
+    '--show-instantiations[Show instantiations in report]' \
+    '(-p --package)'{-p,--package}'=[Package to test]:package:_cargo_workspace_packages' \
+    '--workspace[Test all packages in workspace]' \
+    '--exclude=[Exclude packages]:package:_cargo_workspace_packages' \
+    '--all-targets[Test all targets]' \
+    '--lib[Test only library unit tests]' \
+    '--bin=[Test only specified binary]:bin:' \
+    '--bins[Test all binaries]' \
+    '--test=[Test only specified test target]:test:' \
+    '--tests[Test all test targets]' \
+    '--doc[Test only documentation tests]' \
+    '--doctests[Include doctests in coverage]' \
+    '(-F --features)'{-F,--features}'=[Features to activate]:features:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '--release[Build in release mode]' \
+    '--profile=[Build with specified profile]:profile:' \
+    '--target=[Build for target triple]:target:' \
+    '--target-dir=[Target directory]:dir:_files -/' \
+    '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '--ignore-filename-regex=[Skip files matching regex]:regex:' \
+    '--fail-under-lines=[Fail if line coverage is under percentage]:percent:' \
+    '--fail-under-regions=[Fail if region coverage is under percentage]:percent:' \
+    '--fail-under-functions=[Fail if function coverage is under percentage]:percent:' \
+    '--no-report[Run tests without generating report]' \
+    '--no-run[Build tests without running]' \
+    '--no-clean[Do not remove existing profraw files]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:((report:"Generate coverage report" clean:"Remove generated artifacts" show-env:"Output environment variables" nextest:"Run tests with cargo nextest"))'
+}
+
+_cargo_clippy() {
+  _arguments -s -S \
+    '--no-deps[Run Clippy only on the given crate, without linting dependencies]' \
+    '--fix[Automatically apply lint suggestions]' \
+    '--explain=[Print documentation for a given lint]:lint:' \
+    '(-p --package)'{-p,--package}'=[Package to check]:package:_cargo_workspace_packages' \
+    '--workspace[Check all packages in the workspace]' \
+    '--exclude=[Exclude packages]:package:_cargo_workspace_packages' \
+    '--lib[Check only this package'\''s library]' \
+    '--bin=[Check only the specified binary]:bin:' \
+    '--bins[Check all binaries]' \
+    '--example=[Check only the specified example]:example:' \
+    '--examples[Check all examples]' \
+    '--test=[Check only the specified test target]:test:' \
+    '--tests[Check all targets that have test = true]' \
+    '--bench=[Check only the specified bench target]:bench:' \
+    '--benches[Check all benches]' \
+    '--all-targets[Check all targets]' \
+    '(-F --features)'{-F,--features}'=[Features to activate]:features:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '(-r --release)'{-r,--release}'[Check in release mode]' \
+    '--profile=[Check with specified profile]:profile:' \
+    '(-j --jobs)'{-j,--jobs}'=[Number of parallel jobs]:jobs:' \
+    '--keep-going[Do not abort on first error]' \
+    '--target=[Check for target triple]:target:' \
+    '--target-dir=[Target directory]:dir:_files -/' \
+    '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '--message-format=[Error format]:fmt:(human short json json-diagnostic-short json-diagnostic-rendered-ansi json-render-diagnostics)' \
+    '--frozen[Require Cargo.lock and cache are up to date]' \
+    '--locked[Require Cargo.lock is up to date]' \
+    '--offline[Run without accessing the network]' \
+    '(-v --verbose)'{-v,--verbose}'[Use verbose output]' \
+    '(-q --quiet)'{-q,--quiet}'[Do not print cargo log messages]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]'
+}
+
+_cargo_fmt() {
+  _arguments -s -S \
+    '(-q --quiet)'{-q,--quiet}'[No output printed to stdout]' \
+    '(-v --verbose)'{-v,--verbose}'[Use verbose output]' \
+    '--version[Print rustfmt version and exit]' \
+    '*'{-p,--package}'=[Specify package to format]:package:_cargo_workspace_packages' \
+    '--manifest-path=[Specify path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '--message-format=[Specify message-format]:fmt:(short human)' \
+    '--all[Format all packages and local path dependencies]' \
+    '--check[Run rustfmt in check mode]' \
+    '(-h --help)'{-h,--help}'[Print help]'
+}
+
+_cargo_outdated() {
+  _arguments -s -S \
+    '--format=[Output formatting]:format:(list json)' \
+    '--color=[Output coloring]:color:(auto never always)' \
+    '--features=[Space-separated list of features]:features:' \
+    '*'{-i,--ignore}'=[Dependencies to not print]:deps:' \
+    '*'{-x,--exclude}'=[Dependencies to exclude from building]:deps:' \
+    '(-m --manifest-path)'{-m,--manifest-path}'=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '(-q --quiet)'{-q,--quiet}'[Suppresses warnings]' \
+    '(-v --verbose)'{-v,--verbose}'[Use verbose output]' \
+    '--exit-code=[Exit code to return on new versions found]:code:' \
+    '*'{-p,--packages}'=[Packages to inspect]:package:_cargo_workspace_packages' \
+    '(-r --root)'{-r,--root}'=[Package to treat as root]:package:_cargo_workspace_packages' \
+    '(-d --depth)'{-d,--depth}'=[Depth in dependency chain]:depth:' \
+    '(-R --root-deps-only)'{-R,--root-deps-only}'[Only check root dependencies]' \
+    '(-w --workspace)'{-w,--workspace}'[Check all workspace members]' \
+    '(-a --aggressive)'{-a,--aggressive}'[Ignore channels for latest updates]' \
+    '(-e --ignore-external-rel)'{-e,--ignore-external-rel}'[Ignore relative external dependencies]' \
+    '(-o --offline)'{-o,--offline}'[Run without accessing network]' \
+    '(-h --help)'{-h,--help}'[Print help]'
+}
+
+_cargo_machete() {
+  _arguments -s -S \
+    '--with-metadata[Use cargo metadata (slower, more accurate)]' \
+    '--skip-target-dir[Do not analyze target directory]' \
+    '--fix[Automatically remove unused dependencies]' \
+    '--no-ignore[Do not ignore anything]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:path:_files -/'
+}
+
+_cargo_bloat() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '--lib[Build only library]' \
+    '--bin=[Build only specified binary]:bin:' \
+    '--example=[Build only specified example]:example:' \
+    '--test=[Build only specified test]:test:' \
+    '(-p --package)'{-p,--package}'=[Package to build]:package:_cargo_workspace_packages' \
+    '--release[Build in release mode]' \
+    '(-j --jobs)'{-j,--jobs}'=[Number of parallel jobs]:jobs:' \
+    '--features=[Features to activate]:features:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '--profile=[Build with specified profile]:profile:' \
+    '--target=[Build for target triple]:target:' \
+    '--target-dir=[Target directory]:dir:_files -/' \
+    '--frozen[Require Cargo.lock and cache are up to date]' \
+    '--locked[Require Cargo.lock is up to date]' \
+    '--crates[Per crate bloatedness]' \
+    '--filter=[Filter functions by crate]:crate:' \
+    '--split-std[Split std crate into core, alloc, etc.]' \
+    '--symbols-section=[Custom symbols section]:section:' \
+    '--no-relative-size[Hide File and .text columns]' \
+    '--full-fn[Print full function name]' \
+    '-n=[Number of lines to show (0 for all)]:num:' \
+    '(-w --wide)'{-w,--wide}'[Do not trim long function names]' \
+    '--message-format=[Output format]:fmt:(table json)'
+}
+
+_cargo_tarpaulin() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*'{-o,--out}'=[Output format]:fmt:(Xml Html Json Lcov Stdout Markdown)' \
+    '--output-dir=[Directory to write output files]:dir:_files -/' \
+    '--run-types=[Test types to run]:type:(Tests Doctests Benchmarks Examples Lib Bins AllTargets)' \
+    '--timeout=[Timeout for tests in seconds]:seconds:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '(-F --features)'{-F,--features}'=[Features to activate]:features:' \
+    '(-p --package)'{-p,--package}'=[Package to test]:package:_cargo_workspace_packages' \
+    '--workspace[Test all packages in workspace]' \
+    '--exclude=[Exclude packages]:package:_cargo_workspace_packages' \
+    '--ignore-tests[Ignore code in test functions]' \
+    '--follow-exec[Follow executed binaries]' \
+    '(-v --verbose)'{-v,--verbose}'[Verbose output]'
+}
+
+_cargo_semver_checks() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '--manifest-path=[Path to Cargo.toml]:manifest:_files -g "Cargo.toml"' \
+    '(-p --package)'{-p,--package}'=[Package to process]:package:_cargo_workspace_packages' \
+    '--workspace[Process all packages in workspace]' \
+    '--exclude=[Exclude packages]:package:_cargo_workspace_packages' \
+    '--current-rustdoc=[Current rustdoc JSON path]:json:_files -g "*.json"' \
+    '--target=[Target triple]:target:' \
+    '--baseline-version=[Baseline crate version]:version:' \
+    '--baseline-rev=[Baseline git revision]:rev:' \
+    '--baseline-root=[Baseline directory]:dir:_files -/' \
+    '--release-type=[Release type]:type:(major minor patch)' \
+    '--all-features[Activate all features]' \
+    '--default-features[Use default features]' \
+    '--only-explicit-features[Only use explicit features]' \
+    '--features=[Features to activate]:features:'
+}
+
+_cargo_flamegraph() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '--bin=[Binary to run]:bin:' \
+    '--example=[Example to run]:example:' \
+    '--test=[Test target to run]:test:' \
+    '--bench=[Benchmark target to run]:bench:' \
+    '--unit-test=[Unit test to run]:test:' \
+    '--dev[Profile in dev mode instead of release]' \
+    '--profile=[Build with specified profile]:profile:' \
+    '(-p --package)'{-p,--package}'=[Package to profile]:package:_cargo_workspace_packages' \
+    '(-F --features)'{-F,--features}'=[Features to activate]:features:' \
+    '--all-features[Activate all available features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '(-o --output)'{-o,--output}'=[Output SVG file]:file:_files -g "*.svg"' \
+    '--freq=[Sampling frequency in Hz]:hz:' \
+    '--root[Run perf with sudo/root]' \
+    '--open[Open output SVG in browser]' \
+    '--palette=[Color palette]:palette:(hot mem io wakeup chain java js perl rust)'
+}
+
+_cargo_asm() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '(-p --package)'{-p,--package}'=[Package to inspect]:package:_cargo_workspace_packages' \
+    '--lib[Inspect library]' \
+    '--bin=[Inspect binary]:bin:' \
+    '--example=[Inspect example]:example:' \
+    '--test=[Inspect test]:test:' \
+    '--bench=[Inspect bench]:bench:' \
+    '--dev[Build in dev mode]' \
+    '--profile=[Build with profile]:profile:' \
+    '(-F --features)'{-F,--features}'=[Features to activate]:features:' \
+    '--all-features[Activate all features]' \
+    '--no-default-features[Do not activate default feature]' \
+    '--target=[Target triple]:target:' \
+    '--rust[Show interleaved Rust source]' \
+    '--simplify[Simplify output]' \
+    '--everything[Show all functions]'
+}
+
+_cargo() {
+  local subcmd_idx=2
+  # Skip optional +toolchain argument (e.g. cargo +nightly ...)
+  if (( CURRENT > 2 )) && [[ "${words[2]}" == +* ]]; then
+    subcmd_idx=3
+  fi
+
+  if (( CURRENT > subcmd_idx )); then
+    local subcmd="${words[$subcmd_idx]}"
+    local handler="_cargo_${subcmd//-/_}"
+    if (( $+functions[$handler] )); then
+      local -a saved_words=("${words[@]}")
+      local saved_CURRENT=$CURRENT
+      words=("cargo-${subcmd}" "${words[@]:$subcmd_idx}")
+      CURRENT=$(( CURRENT - subcmd_idx + 1 ))
+      "$handler"
+      local ret=$?
+      words=("${saved_words[@]}")
+      CURRENT=$saved_CURRENT
+      return $ret
+    fi
+  fi
+
+  _cargo_dynamic_complete
+}
+
+_cargo "$@"

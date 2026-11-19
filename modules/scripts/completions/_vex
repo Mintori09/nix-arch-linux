@@ -1,0 +1,14 @@
+#compdef vex
+
+zstyle ':completion:*:*:vex:*' prefix-needed false
+
+_vex() {
+  _arguments -s -S \
+    '(-t --theme)'{-t,--theme}'=[Color theme]:theme:(catppuccin nord rose-pine tokyo-night gruvbox dracula catppuccin-latte solarized-light github-light one-light)' \
+    '(-d --delimiter)'{-d,--delimiter}'=[CSV delimiter]:char:' \
+    '--version[Show version information]' \
+    '--help[Show help message]' \
+    '1:file:_files -g "*.(xlsx|xlsm|xls|csv|tsv)"'
+}
+
+_vex "$@"

@@ -1,0 +1,27 @@
+#compdef caesiumclt
+
+zstyle ':completion:*:*:caesiumclt:*' prefix-needed false
+
+_caesiumclt() {
+  _arguments -s -S \
+    '(-q --quality)'{-q,--quality}'=[Compression quality (0-100)]:quality:' \
+    '--lossless[Use lossless compression]' \
+    '--max-size=[Target maximum file size (e.g. 100KB, 0.5MB)]:size:' \
+    '--width=[Output image width in pixels]:width:' \
+    '--height=[Output image height in pixels]:height:' \
+    '--long-edge=[Longest edge size in pixels]:pixels:' \
+    '--short-edge=[Shortest edge size in pixels]:pixels:' \
+    '--no-upscale[Prevent upscaling when resizing]' \
+    '(-o --output)'{-o,--output}'=[Output directory path]:dir:_files -/' \
+    '--same-folder-as-input[Use input file directory as output]' \
+    '--format=[Convert to selected output format]:format:(jpeg png gif webp tiff original)' \
+    '(-R --recursive)'{-R,--recursive}'[Process directories recursively]' \
+    '--keep-dates[Keep original file timestamps]' \
+    '--exif[Preserve EXIF metadata]' \
+    '--dry-run[Do not write output files]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:file:_files'
+}
+
+_caesiumclt "$@"

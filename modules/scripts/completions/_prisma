@@ -1,0 +1,54 @@
+#compdef prisma
+
+zstyle ':completion:*:*:prisma:*' prefix-needed false
+
+_prisma() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '--preview-feature[Run Preview Prisma commands]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'init:Set up Prisma for your app'
+        'bootstrap:Bootstrap a Prisma Postgres project'
+        'dev:Start a local Prisma Postgres server'
+        'generate:Generate artifacts (e.g. Prisma Client)'
+        'db:Manage database schema and lifecycle'
+        'migrate:Migrate your database'
+        'studio:Browse data with Prisma Studio'
+        'validate:Validate Prisma schema'
+        'format:Format Prisma schema'
+        'version:Display Prisma version info'
+        'debug:Display Prisma debug info'
+        'platform:Prisma Data Platform commands'
+        'postgres:Manage Prisma Postgres databases'
+        'mcp:Start MCP server for AI dev tools'
+      )
+      _describe -t subcommands 'prisma command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        db)
+          _arguments '1:action:(pull push seed execute)' '*:opt:--schema=[Path to schema]:file:_files -g "*.prisma"' && ret=0
+          ;;
+        migrate)
+          _arguments '1:action:(dev reset deploy resolve status diff)' '*:opt:--schema=[Path to schema]:file:_files -g "*.prisma"' && ret=0
+          ;;
+        *)
+          _arguments '--schema=[Path to schema]:file:_files -g "*.prisma"' '(-h --help)'{-h,--help}'[Show help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_prisma "$@"

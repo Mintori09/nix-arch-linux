@@ -1,0 +1,19 @@
+#compdef tdf
+
+zstyle ':completion:*:*:tdf:*' prefix-needed false
+
+_tdf() {
+  _arguments -s -S \
+    '(-r --r-to-l)'{-r,--r-to-l}'[Display pages right-to-left]' \
+    '(-m --max-wide)'{-m,--max-wide}'=[Max pages to display horizontally]:num:' \
+    '(-f --fullscreen)'{-f,--fullscreen}'[Fullscreen mode]' \
+    '--reload-delay=[Reload delay in ms (default 50)]:ms:' \
+    '(-p --prerender)'{-p,--prerender}'=[Pages to prerender (0 = no limit)]:num:' \
+    '(-w --white-color)'{-w,--white-color}'=[Custom white color (CSS format)]:color:' \
+    '(-b --black-color)'{-b,--black-color}'=[Custom black color (CSS format)]:color:' \
+    '--version[Print version]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '1:pdf file:_files -g "*.pdf"'
+}
+
+_tdf "$@"

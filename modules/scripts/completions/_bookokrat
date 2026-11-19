@@ -1,0 +1,47 @@
+#compdef bookokrat
+
+zstyle ':completion:*:*:bookokrat:*' prefix-needed false
+
+_bookokrat() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -S -C \
+    '(-d --directory)'{-d,--directory}'=[Library directory]:dir:_files -/' \
+    '--chapter=[Open at a given chapter]:chapter:' \
+    '--page=[Open at a given page]:page:' \
+    '--zen-mode[Hide sidebar, show content only]' \
+    '(-c --continue-reading)'{-c,--continue-reading}'[Open most recently read book]' \
+    '--test-mode[Disable persistence and auto-loading]' \
+    '--synctex-forward=[SyncTeX forward search (LINE:COLUMN:FILE)]:target:' \
+    '--print-default-keybindings[Print default keybindings as flat TOML]' \
+    '--print-default-keybindings-grouped[Print default keybindings as grouped TOML]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:file or subcommand:->first' \
+    '*::arguments:->rest' && ret=0
+
+  case "$state" in
+    first)
+      local -a subcommands
+      subcommands=(
+        'print:Print book content, TOC, or metadata to stdout'
+        'extract:Extract an EPUB into markdown chapters and metadata'
+        'help:Print help'
+      )
+      _describe -t subcommands 'bookokrat command' subcommands
+      _files -g '*.(epub|pdf|EPUB|PDF)' && ret=0
+      ;;
+    rest)
+      case "$words[1]" in
+        print|extract)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '*:file:_files -g "*.(epub|pdf|EPUB|PDF)"' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_bookokrat "$@"

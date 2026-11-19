@@ -1,0 +1,15 @@
+#compdef lazysql
+
+zstyle ':completion:*:*:lazysql:*' prefix-needed false
+
+_lazysql() {
+  _arguments -s \
+    '-config=[Config file to use]:config:_files -g "*.toml"' \
+    '-logfile=[Log file]:file:_files' \
+    '-loglevel=[Log level]:level:(debug info warn error)' \
+    '-read-only[Connect in read-only mode]' \
+    '-version[Show version]' \
+    '1:connection_url:'
+}
+
+_lazysql "$@"

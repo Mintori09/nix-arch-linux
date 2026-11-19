@@ -1,0 +1,27 @@
+#compdef shellcheck
+
+zstyle ':completion:*:*:shellcheck:*' prefix-needed false
+
+_shellcheck() {
+  _arguments -s -S \
+    '(-a --check-sourced)'{-a,--check-sourced}'[Include warnings from sourced files]' \
+    '(-C --color)'{-C,--color}'=[Use color]:when:(auto always never)' \
+    '(-i --include)'{-i,--include}'=[Consider only given warning codes]:codes:' \
+    '(-e --exclude)'{-e,--exclude}'=[Exclude given warning codes]:codes:' \
+    '--extended-analysis=[Perform dataflow analysis]:bool:(true false)' \
+    '(-f --format)'{-f,--format}'=[Output format]:format:(checkstyle diff gcc json json1 quiet tty)' \
+    '--list-optional[List checks disabled by default]' \
+    '--norc[Do not look for .shellcheckrc]' \
+    '--rcfile=[Specify .shellcheckrc file]:file:_files' \
+    '(-o --enable)'{-o,--enable}'=[List of optional checks to enable]:checks:' \
+    '(-P --source-path)'{-P,--source-path}'=[Path for sourced files]:path:_files -/' \
+    '(-s --shell)'{-s,--shell}'=[Specify shell dialect]:shell:(sh bash dash ksh busybox)' \
+    '(-S --severity)'{-S,--severity}'=[Minimum severity]:severity:(error warning info style)' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '(-W --wiki-link-count)'{-W,--wiki-link-count}'=[Number of wiki links to show]:count:' \
+    '(-x --external-sources)'{-x,--external-sources}'[Allow source outside of FILES]' \
+    '--help[Show usage summary]' \
+    '*:file:_files'
+}
+
+_shellcheck "$@"

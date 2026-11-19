@@ -1,0 +1,20 @@
+#compdef stylua
+
+zstyle ':completion:*:*:stylua:*' prefix-needed false
+
+_stylua() {
+  _arguments -s -S \
+    '(-a --allow-hidden)'{-a,--allow-hidden}'[Traverse hidden files/directories]' \
+    '(-c --check)'{-c,--check}'[Check formatting without overwriting]' \
+    '--color=[Use colored output]:color:(Always Auto Never)' \
+    '(-f --config-path)'{-f,--config-path}'=[Path to stylua.toml]:config:_files -g "*.toml"' \
+    '--search-parent-directories[Search parent directories for stylua.toml]' \
+    '--stdin-filepath=[Path to file for stdin]:file:_files -g "*.lua"' \
+    '--verify[Verify output by re-parsing]' \
+    '(-v --verbose)'{-v,--verbose}'[Verbose output]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '*:file:_files -g "*.lua"'
+}
+
+_stylua "$@"

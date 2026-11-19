@@ -1,0 +1,24 @@
+#compdef disktree
+
+zstyle ':completion:*:*:disktree:*' prefix-needed false
+
+_disktree() {
+  _arguments -s -S \
+    '(-a --apparent-size)'{-a,--apparent-size}'[Measure apparent length instead of allocated blocks]' \
+    '(-l --follow-links)'{-l,--follow-links}'[Follow symlinks]' \
+    '(-H --no-hidden)'{-H,--no-hidden}'[Skip dotfiles and dot-directories]' \
+    '(-D --disk)'{-D,--disk}'[Scan the whole disk the home directory is on]' \
+    '(-X --cross-filesystems)'{-X,--cross-filesystems}'[Also measure other disks and mounts below PATH]' \
+    '(-d --depth)'{-d,--depth}'=[Levels to draw at once (1-6, default 3)]:depth:(1 2 3 4 5 6)' \
+    '--power-efficiency=[Power efficiency preset]:preset:(miser balanced aggressive drain-my-battery)' \
+    '--scan-threads=[Fixed scan workers]:threads:' \
+    '--adaptive-threads[Experimental adaptive admission]' \
+    '--fixed-threads[Disable adaptive admission and CPU governor]' \
+    '--thread-throughput-percent=[Retain percent of sampled throughput]:percent:' \
+    '--thread-system-cpu-percent=[Best-effort host CPU budget]:percent:' \
+    '--metric=[Ranking metric]:metric:(bytes files)' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '1:path:_files -/'
+}
+
+_disktree "$@"

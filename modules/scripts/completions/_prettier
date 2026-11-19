@@ -1,0 +1,30 @@
+#compdef prettier
+
+zstyle ':completion:*:*:prettier:*' prefix-needed false
+
+_prettier() {
+  _arguments -s -S \
+    '(-c --check)'{-c,--check}'[Check if files are formatted]' \
+    '(-l --list-different)'{-l,--list-different}'[Print names of unformatted files]' \
+    '(-w --write)'{-w,--write}'[Edit files in-place]' \
+    '--config=[Path to configuration file]:config:_files' \
+    '--no-config[Do not look for configuration file]' \
+    '--ignore-path=[Path to .prettierignore]:ignore:_files' \
+    '--stdin-filepath=[Path to file to pretend stdin came from]:file:_files' \
+    '--parser=[Parser to use]:parser:(babel babel-ts typescript flow css scss less json json5 markdown yaml html vue angular graphql)' \
+    '--print-width=[Line length printer will wrap on]:width:' \
+    '--tab-width=[Spaces per indentation level]:width:' \
+    '--use-tabs[Indent lines with tabs]' \
+    '--single-quote[Use single quotes]' \
+    '--semi[Print semicolons]' \
+    '--no-semi[Do not print semicolons]' \
+    '--trailing-comma=[Print trailing commas]:mode:(all es5 none)' \
+    '--arrow-parens=[Include parens around sole arrow param]:mode:(always avoid)' \
+    '--end-of-line=[Line endings]:eol:(lf crlf cr auto)' \
+    '--log-level=[Log level]:level:(silent error warn log debug)' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '*:path:_files'
+}
+
+_prettier "$@"

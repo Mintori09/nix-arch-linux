@@ -1,0 +1,27 @@
+#compdef shfmt
+
+zstyle ':completion:*:*:shfmt:*' prefix-needed false
+
+_shfmt() {
+  _arguments -s \
+    '--version[Show version and exit]' \
+    '(-l --list)'{-l,--list}'[List files whose formatting differs]' \
+    '(-w --write)'{-w,--write}'[Write result to file instead of stdout]' \
+    '(-d --diff)'{-d,--diff}'[Error with diff when formatting differs]' \
+    '--apply-ignore[Apply EditorConfig ignore rules]' \
+    '--filename=[Name for standard input file]:file:_files' \
+    '(-ln --language-dialect)'{-ln,--language-dialect}'=[Language dialect]:dialect:(bash posix mksh bats zsh auto)' \
+    '(-p --posix)'{-p,--posix}'[Shorthand for -ln=posix]' \
+    '(-s --simplify)'{-s,--simplify}'[Simplify the code]' \
+    '(-i --indent)'{-i,--indent}'=[Indentation (0 for tabs, >0 for spaces)]:spaces:' \
+    '(-bn --binary-next-line)'{-bn,--binary-next-line}'[Binary ops may start a line]' \
+    '(-ci --case-indent)'{-ci,--case-indent}'[Indent switch cases]' \
+    '(-sr --space-redirects)'{-sr,--space-redirects}'[Follow redirect operators with a space]' \
+    '(-kp --keep-padding)'{-kp,--keep-padding}'[Keep column alignment paddings]' \
+    '(-fn --func-next-line)'{-fn,--func-next-line}'[Function opening braces on separate line]' \
+    '(-mn --minify)'{-mn,--minify}'[Minify the code]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '*:path:_files'
+}
+
+_shfmt "$@"

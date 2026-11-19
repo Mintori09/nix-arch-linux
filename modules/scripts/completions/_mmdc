@@ -1,0 +1,26 @@
+#compdef mmdc
+
+zstyle ':completion:*:*:mmdc:*' prefix-needed false
+
+_mmdc() {
+  _arguments -s -S \
+    '(-V --version)'{-V,--version}'[Output version number]' \
+    '(-t --theme)'{-t,--theme}'=[Theme of the chart]:theme:(default forest dark neutral)' \
+    '(-w --width)'{-w,--width}'=[Width of the page (default 800)]:width:' \
+    '(-H --height)'{-H,--height}'=[Height of the page (default 600)]:height:' \
+    '(-i --input)'{-i,--input}'=[Input mermaid or markdown file]:input:_files -g "*.(mmd|mermaid|md)"' \
+    '(-o --output)'{-o,--output}'=[Output file (md, svg, png, pdf)]:output:_files' \
+    '(-a --artefacts)'{-a,--artefacts}'=[Output artefacts path]:dir:_files -/' \
+    '(-e --outputFormat)'{-e,--outputFormat}'=[Output format]:format:(svg png pdf)' \
+    '(-b --backgroundColor)'{-b,--backgroundColor}'=[Background color]:color:(white transparent)' \
+    '(-c --configFile)'{-c,--configFile}'=[JSON config file]:config:_files -g "*.json"' \
+    '(-C --cssFile)'{-C,--cssFile}'=[CSS file]:css:_files -g "*.css"' \
+    '(-I --svgId)'{-I,--svgId}'=[SVG element id]:id:' \
+    '(-s --scale)'{-s,--scale}'=[Puppeteer scale factor]:scale:' \
+    '(-f --pdfFit)'{-f,--pdfFit}'[Scale PDF to fit chart]' \
+    '(-q --quiet)'{-q,--quiet}'[Suppress log output]' \
+    '(-p --puppeteerConfigFile)'{-p,--puppeteerConfigFile}'=[Puppeteer JSON config]:config:_files -g "*.json"' \
+    '(-h --help)'{-h,--help}'[Display help]'
+}
+
+_mmdc "$@"

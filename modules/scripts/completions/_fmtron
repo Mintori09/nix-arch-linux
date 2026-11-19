@@ -1,0 +1,15 @@
+#compdef fmtron
+
+zstyle ':completion:*:*:fmtron:*' prefix-needed false
+
+_fmtron() {
+  _arguments -s -S \
+    '(-i --input)'{-i,--input}'=[File to format]:ron file:_files -g "*.ron"' \
+    '-w=[Soft max line width (default 40)]:width:' \
+    '-t=[Indentation size in spaces (default 4)]:tab size:' \
+    '-d[Print output to console instead of overwriting]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]'
+}
+
+_fmtron "$@"

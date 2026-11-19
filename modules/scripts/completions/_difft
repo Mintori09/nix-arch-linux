@@ -1,0 +1,31 @@
+#compdef difft
+
+zstyle ':completion:*:*:difft:*' prefix-needed false
+
+_difft() {
+  _arguments -s -S \
+    '--context=[Number of contextual lines (default 3)]:lines:' \
+    '--width=[Terminal column width]:columns:' \
+    '--tab-width=[Tab width in spaces (default 4)]:spaces:' \
+    '--display=[Display mode]:mode:(side-by-side side-by-side-show-both inline json)' \
+    '--color=[When to use color]:when:(always auto never)' \
+    '--background=[Background color]:bg:(dark light)' \
+    '--syntax-highlight=[Enable syntax highlighting]:toggle:(on off)' \
+    '--exit-code[Set exit code to 1 if syntactic changes found]' \
+    '--strip-cr=[Strip trailing CR]:toggle:(on off)' \
+    '--check-only[Report whether files differ without printing]' \
+    '--skip-unchanged[Do not print unchanged files]' \
+    '--missing-as-empty[Treat missing file as empty]' \
+    '--override=[Override language parser (GLOB:NAME)]:spec:' \
+    '--override-binary=[Override binary file detection]:glob:' \
+    '--list-languages[Print supported languages and exit]' \
+    '--ignore-comments[Ignore comments when diffing]' \
+    '--dump-syntax=[Parse a file and dump syntax tree]:file:_files' \
+    '--dump-ts=[Parse a file and dump tree-sitter tree]:file:_files' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:old path:_files' \
+    '2:new path:_files'
+}
+
+_difft "$@"

@@ -1,0 +1,72 @@
+#compdef sheprd
+
+zstyle ':completion:*:*:sheprd:*' prefix-needed false
+
+_sheprd() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -C \
+    '--socket=[Connect to specific client socket]:socket:_files' \
+    '--session=[Connect to named session]:name:' \
+    '--dev[Use dev session]' \
+    '--build-info[Print build identity without starting GUI]' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'status:Show whether Sheprd runs, version, windows, and hosts'
+        'skill:Print agent skill describing commands'
+        'browser:Browser tabs (open, reload, list, navigate, page notes)'
+        'app:Bring app forward, hide it, or quit it'
+        'open:Open a folder in Sheprd'
+        'window:List, open, focus, resize, detach, or reconnect windows'
+        'ui:Sidebar, status bar, and terminal font size'
+        'tab:List, focus, or close app tabs'
+        'code:Show a file in code tab or open in editor'
+        'devices:Open Devices overview'
+        'orchestrator:Repository issues, pull requests, and runs'
+        'review:Open review of uncommitted changes'
+        'chat:Native views of herdr-acp chats'
+        'px0:Open px0 on local checkout'
+        'notes:Notes kept on worktrees'
+        'worktree:List app-kept worktrees or mute notifications'
+        'feedback:Notes sent to this pane'
+        'checkpoint:Agent checkpoints (list, take, diff, restore)'
+        'scripts:Repository worktree setup, run, and archive scripts'
+        'teleport:Move a worktree to another host'
+        'fan-out:Send one prompt to several agents in separate worktrees'
+        'pr:Pull request of caller branch'
+        'host:List window hosts, show one, or mute one'
+        'cloud:Saved cloud machines (list, add, run, destroy)'
+        'ports:Listening ports and port forwarding'
+        'processes:Processes running under a pane'
+        'usage:AI plan usage on selected host'
+        'system:Selected host load'
+        'security:Vulnerability reports and Dependabot alerts'
+        'automation:Open automation script approval'
+        'remote:Remote control from phone'
+        'mod:Mods (list, reload, read logs, check)'
+      )
+      _describe -t subcommands 'sheprd command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        open|code)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '*:path:_files' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' '*:arg:' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_sheprd "$@"

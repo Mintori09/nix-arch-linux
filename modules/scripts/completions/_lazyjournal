@@ -1,0 +1,29 @@
+#compdef lazyjournal
+
+zstyle ':completion:*:*:lazyjournal:*' prefix-needed false
+
+_lazyjournal() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '(-g --config)'{-g,--config}'[Show configuration of hotkeys and settings]' \
+    '(-a --audit)'{-a,--audit}'[Show audit information]' \
+    '(-d --tail-mode-disable)'{-d,--tail-mode-disable}'[Disable streaming of new events]' \
+    '(-t --tail-lines)'{-t,--tail-lines}'=[Number of log lines (200-200000)]:lines:' \
+    '(-u --update-interval)'{-u,--update-interval}'=[Update interval in seconds (2-10)]:seconds:' \
+    '(-F --filter-symbols)'{-F,--filter-symbols}'=[Minimum symbols for filtering (1-10)]:count:' \
+    '(-m --mouse-disable)'{-m,--mouse-disable}'[Disable mouse control]' \
+    '(-w --wrap-disable)'{-w,--wrap-disable}'[Disable wrap mode]' \
+    '(-o --docker-stream-only)'{-o,--docker-stream-only}'[Read Docker logs in stream mode]' \
+    '(-D --docker-context)'{-D,--docker-context}'=[Docker context]:context:' \
+    '(-K --kubernetes-context)'{-K,--kubernetes-context}'=[Kubernetes context]:context:' \
+    '(-n --namespace)'{-n,--namespace}'=[Kubernetes namespace]:ns:' \
+    '(-p --path)'{-p,--path}'=[Custom path to logs]:dir:_files -/' \
+    '(-C --color)'{-C,--color}'=[Highlighting mode]:mode:(default tailspin bat disable)' \
+    '(-c --command-color)'{-c,--command-color}'[ANSI coloring in command line mode]' \
+    '(-f --command-fuzzy)'{-f,--command-fuzzy}'[Fuzzy search in command line mode]' \
+    '(-r --command-regex)'{-r,--command-regex}'[Regex filtering in command line mode]' \
+    '(-s --ssh)'{-s,--ssh}'=[Connect to remote host via SSH]:ssh:'
+}
+
+_lazyjournal "$@"

@@ -1,0 +1,7 @@
+#compdef telepush
+
+_telepush() {
+  _arguments '1:file to send:_files'
+}
+
+_telepush "$@"

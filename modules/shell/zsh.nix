@@ -548,6 +548,7 @@ in
         compdef _kill kill
         compdef _pgrep pkill
         compdef _git git
+        zstyle ':completion:*:git-switch:*' tag-order 'branch-names' 'remote-branch-names'
         compdef _cargo cargo
         compdef _rclone rclone
         compdef _tar tar
@@ -555,6 +556,16 @@ in
         compdef _unzip unzip
         compdef _tmux tmux ta tn tk td tls tl
         compdef _tmux-attach-session t
+
+        # Alias/wrapper completions delegating to carapace target commands
+        _alias_carapace() {
+          local target="$1"
+          words[1]="$target"
+          _carapace_completer
+        }
+        compdef '_alias_carapace xh' xhs
+        compdef '_alias_carapace pnpm' pn pnpx pnx
+        compdef '_alias_carapace yarn' yarnpkg
 
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')

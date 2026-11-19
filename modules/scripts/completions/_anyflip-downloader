@@ -1,0 +1,20 @@
+#compdef anyflip-downloader
+
+zstyle ':completion:*:*:anyflip-downloader:*' prefix-needed false
+
+_anyflip-downloader() {
+  _arguments -s \
+    '-chunksize=[Amount of images converted at once (default 10)]:uint:' \
+    '-insecure[Skip certificate validation]' \
+    '-keep-download-folder[Keep temporary download folder]' \
+    '-pages-offset=[1-based page number to resume from]:int:' \
+    '-retries=[Number of download retries (default 1)]:int:' \
+    '-temp-download-folder=[Temporary download folder name]:dir:_files -/' \
+    '-threads=[Number of parallel download processes (default 1)]:int:' \
+    '-title=[Name of generated PDF document]:title:' \
+    '-waitretry=[Wait time between retries (default 1s)]:duration:' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '1:url:'
+}
+
+_anyflip-downloader "$@"

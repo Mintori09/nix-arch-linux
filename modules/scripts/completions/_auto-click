@@ -1,0 +1,13 @@
+#compdef auto-click
+
+zstyle ':completion:*:*:auto-click:*' prefix-needed false
+
+_auto-click() {
+  _arguments -s \
+    '-n=[Number of clicks (default 10)]:count:' \
+    '-m=[Minimum delay in seconds (default 3)]:seconds:' \
+    '-M=[Maximum delay in seconds (default 10)]:seconds:' \
+    '-h[Show help]'
+}
+
+_auto-click "$@"

@@ -1,0 +1,15 @@
+#compdef tsx
+
+zstyle ':completion:*:*:tsx:*' prefix-needed false
+
+_tsx() {
+  _arguments -s -S \
+    '--no-cache[Disable caching]' \
+    '--tsconfig=[Custom tsconfig.json path]:tsconfig:_files -g "tsconfig*.json"' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '1:script or command:((watch:"Run script and watch for changes"))' \
+    '*:script or args:_files -g "*.(ts|tsx|mts|cts|js|mjs|cjs)"'
+}
+
+_tsx "$@"

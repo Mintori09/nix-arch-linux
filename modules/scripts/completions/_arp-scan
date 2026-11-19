@@ -1,0 +1,22 @@
+#compdef arp-scan
+
+zstyle ':completion:*:*:arp-scan:*' prefix-needed false
+
+_arp-scan() {
+  _arguments -s -S \
+    '(-h --help)'{-h,--help}'[Display usage message]' \
+    '(-V --version)'{-V,--version}'[Display program version]' \
+    '(-I --interface)'{-I,--interface}'=[Use specified network interface]:interface:' \
+    '(-l --localnet)'{-l,--localnet}'[Generate addresses from interface config]' \
+    '(-f --file)'{-f,--file}'=[Read hostnames/addresses from file]:file:_files' \
+    '(-g --ignoredups)'{-g,--ignoredups}'[Do not display duplicate packets]' \
+    '(-q --quiet)'{-q,--quiet}'[Display minimal output]' \
+    '(-v --verbose)'{-v,--verbose}'[Display verbose progress messages]' \
+    '(-x --plain)'{-x,--plain}'[Suppress header and footer text]' \
+    '(-N --numeric)'{-N,--numeric}'[IP addresses only, no hostnames]' \
+    '(-r --retry)'{-r,--retry}'=[Set total number of attempts per host]:num:' \
+    '(-t --timeout)'{-t,--timeout}'=[Set initial per-host timeout in ms]:ms:' \
+    '*:target:'
+}
+
+_arp-scan "$@"

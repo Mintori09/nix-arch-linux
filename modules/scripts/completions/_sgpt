@@ -1,0 +1,31 @@
+#compdef sgpt
+
+zstyle ':completion:*:*:sgpt:*' prefix-needed false
+
+_sgpt() {
+  _arguments -s -S \
+    '--model=[Large language model to use]:model:' \
+    '--temperature=[Randomness (0.0-2.0)]:temp:' \
+    '--top-p=[Top-p sampling (0.0-1.0)]:top_p:' \
+    '(--md --no-md)'{--md,--no-md}'[Prettify markdown output]' \
+    '(--editor --no-editor)'{--editor,--no-editor}'[Open $EDITOR to provide prompt]' \
+    '(--cache --no-cache)'{--cache,--no-cache}'[Cache completion results]' \
+    '(-s --shell)'{-s,--shell}'[Generate and execute shell commands]' \
+    '(--interaction --no-interaction)'{--interaction,--no-interaction}'[Interactive mode for --shell]' \
+    '(-d --describe-shell)'{-d,--describe-shell}'[Describe a shell command]' \
+    '(-c --code)'{-c,--code}'[Generate only code]' \
+    '(--functions --no-functions)'{--functions,--no-functions}'[Allow function calls]' \
+    '--chat=[Follow conversation with id]:chat id:' \
+    '--repl=[Start REPL session]:chat id:' \
+    '--show-chat=[Show all messages from chat id]:chat id:' \
+    '--list-chats[List all existing chat ids]' \
+    '--role=[System role]:role:' \
+    '--create-role=[Create role]:role:' \
+    '--show-role=[Show role]:role:' \
+    '--list-roles[List roles]' \
+    '--version[Show version]' \
+    '--help[Show help]' \
+    '*:prompt:'
+}
+
+_sgpt "$@"

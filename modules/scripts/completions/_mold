@@ -1,0 +1,23 @@
+#compdef mold
+
+zstyle ':completion:*:*:mold:*' prefix-needed false
+
+_mold() {
+  _arguments -s \
+    '--run[Run a command with ld replaced by mold]' \
+    '(-o --output)'{-o,--output}'=[Set output filename]:file:_files' \
+    '(-L --library-path)'{-L,--library-path}'=[Add directory to library search path]:dir:_files -/' \
+    '(-l --library)'{-l,--library}'=[Search for library]:lib:' \
+    '--threads=[Use specified number of threads]:count:' \
+    '--no-threads[Do not use multi-threading]' \
+    '(-s --strip-all)'{-s,--strip-all}'[Strip .symtab section]' \
+    '(-S --strip-debug)'{-S,--strip-debug}'[Strip debug sections]' \
+    '(-r --relocatable)'{-r,--relocatable}'[Generate relocatable output]' \
+    '(-q --emit-relocs)'{-q,--emit-relocs}'[Leave relocation sections in output]' \
+    '--stats[Print linker statistics]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '*:file:_files'
+}
+
+_mold "$@"

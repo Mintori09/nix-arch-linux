@@ -1,0 +1,34 @@
+#compdef atool aunpack apack als acat adiff arepack
+
+zstyle ':completion:*:*:atool:*' prefix-needed false
+zstyle ':completion:*:*:aunpack:*' prefix-needed false
+zstyle ':completion:*:*:apack:*' prefix-needed false
+
+_atool() {
+  _arguments -s -S \
+    '(-l --list)'{-l,--list}'[List files in archive (als)]' \
+    '(-x --extract)'{-x,--extract}'[Extract files from archive (aunpack)]' \
+    '(-X --extract-to)'{-X,--extract-to}'=[Extract archive to directory]:dir:_files -/' \
+    '(-a --add)'{-a,--add}'[Create archive (apack)]' \
+    '(-c --cat)'{-c,--cat}'[Extract file to stdout (acat)]' \
+    '(-d --diff)'{-d,--diff}'[Generate diff between two archives (adiff)]' \
+    '(-r --repack)'{-r,--repack}'[Repack archives to another format (arepack)]' \
+    '(-e --each)'{-e,--each}'[Execute command for each file specified]' \
+    '(-F --format)'{-F,--format}'=[Override archive format]:format:(tar.gz tgz tar.bz2 tbz tar.xz txz tar.zst zip 7z rar tar)' \
+    '(-O --format-option)'{-O,--format-option}'=[Give specific options to archiver]:opt:' \
+    '(-D --subdir)'{-D,--subdir}'[Always create subdirectory when extracting]' \
+    '(-f --force)'{-f,--force}'[Allow overwriting local files]' \
+    '(-q --quiet)'{-q,--quiet}'[Decrease verbosity]' \
+    '(-v --verbose)'{-v,--verbose}'[Increase verbosity]' \
+    '(-V --verbosity)'{-V,--verbosity}'=[Specify verbosity (0, 1, 2)]:level:(0 1 2)' \
+    '(-p --page)'{-p,--page}'[Send output through pager]' \
+    '(-0 --null)'{-0,--null}'[Filenames from stdin are null-byte separated]' \
+    '(-E --explain)'{-E,--explain}'[Explain what is being done]' \
+    '(-S --simulate)'{-S,--simulate}'[Simulation mode (no filesystem changes)]' \
+    '(-o --option)'{-o,--option}'=[Override configuration option (KEY=VALUE)]:opt:' \
+    '--help[Display help and exit]' \
+    '--version[Output version information]' \
+    '*:file:_files'
+}
+
+_atool "$@"

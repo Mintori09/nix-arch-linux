@@ -1,0 +1,57 @@
+#compdef navi
+
+zstyle ':completion:*:*:navi:*' prefix-needed false
+
+_navi() {
+  local curcontext="$curcontext" state line ret=1
+  local -A opt_args
+
+  _arguments -s -S -C \
+    '(-p --path)'{-p,--path}'=[Colon-separated paths to .cheat files]:path:_files -/' \
+    '--print[Print snippet to stdout instead of executing]' \
+    '--best-match[Return the best match]' \
+    '--prevent-interpolation[Prevent variable interpolation]' \
+    '(-t --tldr)'{-t,--tldr}'=[Search for tldr cheatsheets]:query:' \
+    '(-c --cheatsh)'{-c,--cheatsh}'=[Search for cheat.sh cheatsheets]:query:' \
+    '(-q --query)'{-q,--query}'=[Pre-populate search query]:query:' \
+    '--fzf-overrides=[Overrides for fzf]:opts:' \
+    '--tag-rules=[Tag rules]:rules:' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:->subcmd' \
+    '*::arguments:->subargs' && ret=0
+
+  case "$state" in
+    subcmd)
+      local -a subcommands
+      subcommands=(
+        'fn:Call internal functions'
+        'repo:Manage cheatsheet repositories'
+        'widget:Output shell widget source code'
+        'info:Show info'
+        'help:Print help'
+      )
+      _describe -t subcommands 'navi command' subcommands && ret=0
+      ;;
+    subargs)
+      case "$words[1]" in
+        repo)
+          _arguments '1:action:(add browse)' '*:arg:' && ret=0
+          ;;
+        widget)
+          _arguments '1:shell:(bash zsh fish elvish)' && ret=0
+          ;;
+        info)
+          _arguments '1:item:(cheats-example cheats-path config-example config-path)' && ret=0
+          ;;
+        *)
+          _arguments '(-h --help)'{-h,--help}'[Print help]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_navi "$@"

@@ -1,0 +1,23 @@
+#compdef nixfmt
+
+zstyle ':completion:*:*:nixfmt:*' prefix-needed false
+
+_nixfmt() {
+  _arguments -s -S \
+    '(-w --width)'{-w,--width}'=[Maximum width in characters (default 100)]:width:' \
+    '--indent=[Number of spaces for indentation (default 2)]:indent:' \
+    '(-c --check)'{-c,--check}'[Check whether files are formatted]' \
+    '--follow-symlinks[Format target of symbolic links]' \
+    '(-m --mergetool)'{-m,--mergetool}'[Run in git mergetool mode]' \
+    '(-q --quiet)'{-q,--quiet}'[Do not report errors]' \
+    '(-s --strict)'{-s,--strict}'[Enable stricter formatting mode]' \
+    '(-v --verify)'{-v,--verify}'[Apply sanity checks on output]' \
+    '(-a --ast)'{-a,--ast}'[Pretty print internal AST]' \
+    '(-f --filename)'{-f,--filename}'=[Filename to display for stdin]:file:_files' \
+    '--ir[Pretty print internal IR]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-V --version)'{-V,--version}'[Show version]' \
+    '*:file:_files -g "*.nix"'
+}
+
+_nixfmt "$@"

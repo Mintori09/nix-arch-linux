@@ -1,0 +1,12 @@
+#compdef sleep-cycles
+
+zstyle ':completion:*:*:sleep-cycles:*' prefix-needed false
+
+_sleep-cycles() {
+  _arguments -s -S \
+    '(-t --time)'{-t,--time}'=[Time to calculate from (HH:MM)]:time (HH\:MM):' \
+    '(-m --mode)'{-m,--mode}'=[Calculation mode]:mode:(sleep wake)' \
+    '(-h --help)'{-h,--help}'[Show help]'
+}
+
+_sleep-cycles "$@"

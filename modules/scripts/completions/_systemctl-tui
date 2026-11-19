@@ -1,0 +1,15 @@
+#compdef systemctl-tui
+
+zstyle ':completion:*:*:systemctl-tui:*' prefix-needed false
+
+_systemctl-tui() {
+  _arguments -s -S \
+    '(-s --scope)'{-s,--scope}'=[Scope of services to display]:scope:(global user all)' \
+    '--no-log[Disable file logging]' \
+    '*'{-l,--limit-units}'=[Limit view to these unit files]:pattern:' \
+    '(-h --help)'{-h,--help}'[Print help]' \
+    '(-V --version)'{-V,--version}'[Print version]' \
+    '1:subcommand:((show-logs-path:"Show path to logs directory" help:"Print help"))'
+}
+
+_systemctl-tui "$@"
