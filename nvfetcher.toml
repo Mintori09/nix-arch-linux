@@ -87,3 +87,8 @@ fetch.url = "https://registry.npmjs.org/czg/-/czg-$ver.tgz"
 [helix]
 src.github = "gj1118/helix"
 fetch.url = "https://github.com/gj1118/helix/releases/download/$ver/helix-$ver-x86_64-linux.tar.xz"
+
+[rust-anything]
+src.github = "erkamyaman/rust-anything"
+src.prefix = "v"
+fetch.url = "https://github.com/erkamyaman/rust-anything/releases/download/v$ver/rust-anything-v$ver-x86_64-unknown-linux-gnu.tar.gz"

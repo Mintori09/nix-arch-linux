@@ -65,6 +65,11 @@ in
         subdir = "skills";
       };
 
+      rust-anything = {
+        path = inputs.rust-anything-skills.outPath;
+        subdir = "skills";
+      };
+
       ux-ui-agent-skills = {
         path = inputs.ux-ui-agent-skills.outPath;
       };
@@ -101,6 +106,7 @@ in
       "orca-cli"
       "orchestration"
       "orca-per-workspace-env"
+      "rust-anything"
     ];
 
     targets = {

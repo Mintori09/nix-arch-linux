@@ -239,6 +239,21 @@
     },
     "version": "0.16.4"
   },
+  "rust-anything": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "rust-anything",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-hqeW74CfBsjdDJ1TmgQia+4wOfB26jI8MHeMlv+9VG0=",
+      "type": "url",
+      "url": "https://github.com/erkamyaman/rust-anything/releases/download/v1.5.1/rust-anything-v1.5.1-x86_64-unknown-linux-gnu.tar.gz"
+    },
+    "version": "1.5.1"
+  },
   "sheprd": {
     "cargoLock": null,
     "date": null,

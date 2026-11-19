@@ -134,6 +134,14 @@
       sha256 = "sha256-MnH91m9Owy9aYoL4VjD4O5LpjU235AfMD1bZtUP2Ps0=";
     };
   };
+  rust-anything = {
+    pname = "rust-anything";
+    version = "1.5.1";
+    src = fetchurl {
+      url = "https://github.com/erkamyaman/rust-anything/releases/download/v1.5.1/rust-anything-v1.5.1-x86_64-unknown-linux-gnu.tar.gz";
+      sha256 = "sha256-hqeW74CfBsjdDJ1TmgQia+4wOfB26jI8MHeMlv+9VG0=";
+    };
+  };
   sheprd = {
     pname = "sheprd";
     version = "20261115.1";

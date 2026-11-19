@@ -203,4 +203,14 @@
     };
     enabled = false;
   };
+
+  rust-anything = {
+    local = {
+      argv = [
+        "${pkgs.rust-anything}/bin/rust-anything"
+        "mcp"
+      ];
+    };
+    enabled = true;
+  };
 }

@@ -17,6 +17,7 @@
       keyboard-rs = final.callPackage ./packages/keyboard-rs.nix { };
       vicinae = final.callPackage ./packages/vicinae.nix { };
       zalo = final.callPackage ./packages/zalo.nix { };
+      rust-anything = final.callPackage ./packages/rust-anything.nix { };
       hoppscotch = final.callPackage ./packages/hoppscotch.nix { };
       kmp-lsp = final.callPackage ./packages/kmp-lsp.nix { };
       caesium-clt = final.callPackage ./packages/caesium-clt.nix { };

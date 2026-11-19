@@ -214,11 +214,14 @@
     fmtron
     samply
     zalo
+    rust-anything
 
     # lsp
     vscode-langservers-extracted
     bash-language-server
-    csharp-ls
+    omnisharp-roslyn
+    csharpier
+    netcoredbg
     phpactor
   ];
 }

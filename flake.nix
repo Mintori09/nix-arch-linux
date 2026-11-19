@@ -91,6 +91,11 @@
       flake = false;
     };
 
+    rust-anything-skills = {
+      url = "github:erkamyaman/rust-anything";
+      flake = false;
+    };
+
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
