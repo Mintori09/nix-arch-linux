@@ -6,7 +6,7 @@ pkgs.stdenv.mkDerivation {
 
   src = pkgs.fetchurl {
     url = "https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz";
-    hash = "sha256-hwEKW6z3G3wBeSUjl8JWgZWRLL4Su8ma4IJoPLo+zYU=";
+    hash = "sha256-8ARq7bzIV0UOq//jePmnnDU7/K5S8et0lMhq/ByfeZA=";
   };
 
   sourceRoot = "nvim-linux-x86_64";

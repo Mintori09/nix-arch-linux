@@ -10,7 +10,7 @@ pkgs.stdenv.mkDerivation {
 
   src = pkgs.fetchurl {
     url = "https://github.com/sxyazi/yazi/releases/download/nightly/yazi-x86_64-unknown-linux-musl.zip";
-    hash = "sha256-FUWtiJ9o/1qgeawQFaFteH8VHWBv3qPj0meGBge7joI=";
+    hash = "sha256-oar5CIyKeWcxkSWNFoEtDlWPruryl2ZDRrF04OsQ3+4=";
   };
 
   nativeBuildInputs = [ pkgs.unzip ];

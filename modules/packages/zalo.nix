@@ -4,8 +4,8 @@ let
   pname = "zalo";
   version = "26.11.10";
   src = pkgs.fetchurl {
-    url = "https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/${version}/Zalo-${version}%2BZaDark-26.3-784f24f-x86_64.AppImage";
-    hash = "sha256-Tk0ySIFh2+p9YSiESqp/LotbqmjXolI0dnb5GOKSNkw=";
+    url = "https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/${version}/Zalo-${version}%2BZaDark-26.3-e080c70-x86_64.AppImage";
+    hash = "sha256-Vl8yi2QIXjth01Wg7ji2Q3481ix6TKBmMKMOx6cS+ko=";
   };
 
   contents = pkgs.runCommand "${pname}-${version}-extracted" { } ''
@@ -21,11 +21,12 @@ pkgs.appimageTools.wrapAppImage {
   inherit pname version;
   src = contents;
 
-  extraPkgs = pkgs: with pkgs; [
-    libopus
-    pulseaudio
-    python3
-  ];
+  extraPkgs =
+    pkgs: with pkgs; [
+      libopus
+      pulseaudio
+      python3
+    ];
 
   extraInstallCommands = ''
     install -m 444 -D ${contents}/zalo.desktop $out/share/applications/zalo.desktop
