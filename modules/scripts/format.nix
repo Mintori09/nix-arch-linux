@@ -41,7 +41,7 @@ let
   ++ optionalPkg "clang-tools"
   ++ optionalPkg "blade-formatter"
   ++ optionalPkg "google-java-format"
-  ++ optionalPkg "dotnet-sdk"
+  ++ optionalPkg "dotnet-sdk_10"
   ++ optionalPkg "sql-formatter"
   ++ optionalPkg "prisma"
   ++ optionalPkg "dockfmt"
@@ -62,6 +62,14 @@ let
     destination = "/share/zsh/site-functions/_format";
     text = builtins.readFile ./completions/_format;
   };
+
+  dotnetCompletion = pkgs.lib.hiPrio (
+    pkgs.writeTextFile {
+      name = "dotnet-zsh-completion";
+      destination = "/share/zsh/site-functions/_dotnet";
+      text = builtins.readFile ./completions/_dotnet;
+    }
+  );
 in
 {
   home.packages =
@@ -75,6 +83,8 @@ in
       '';
     }
     ++ formatterPackages
-    ++ [ formatCompletion ];
+    ++ [
+      formatCompletion
+      dotnetCompletion
+    ];
 }
-
