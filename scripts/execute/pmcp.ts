@@ -196,7 +196,7 @@ export function getProjectPaths(cwd = process.cwd()): ProjectConfigs {
   return {
     opencodeFile: join(cwd, "opencode.json"),
     claudeFile: join(cwd, ".mcp.json"),
-    antigravityFile: join(cwd, ".gemini/mcp_config.json"),
+    antigravityFile: join(cwd, ".agents/mcp_config.json"),
   };
 }
 
@@ -228,7 +228,7 @@ export function getActiveLocalServers(cwd = process.cwd()): string[] {
     } catch {}
   }
 
-  // Check .gemini/mcp_config.json
+  // Check .agents/mcp_config.json
   if (existsSync(paths.antigravityFile)) {
     try {
       const json = JSON.parse(readFileSync(paths.antigravityFile, "utf-8"));
@@ -353,7 +353,7 @@ export function applyConfigs(
     }
     if (agents.includes("antigravity")) {
       console.log(
-        `\n[.gemini/mcp_config.json]:\n${JSON.stringify({ mcpServers: antigravityData }, null, 2)}`,
+        `\n[.agents/mcp_config.json]:\n${JSON.stringify({ mcpServers: antigravityData }, null, 2)}`,
       );
     }
     return;
@@ -416,9 +416,9 @@ export function applyConfigs(
     }
   }
 
-  // Update .gemini/mcp_config.json (Antigravity)
+  // Update .agents/mcp_config.json (Antigravity)
   if (agents.includes("antigravity")) {
-    const dir = join(cwd, ".gemini");
+    const dir = join(cwd, ".agents");
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
@@ -432,13 +432,13 @@ export function applyConfigs(
       delete existing.mcpServers;
       if (Object.keys(existing).length === 0) {
         if (existsSync(paths.antigravityFile)) rmSync(paths.antigravityFile);
-        console.log("Removed .gemini/mcp_config.json");
+        console.log("Removed .agents/mcp_config.json");
       } else {
         writeFileSync(
           paths.antigravityFile,
           JSON.stringify(existing, null, 2) + "\n",
         );
-        console.log("Updated .gemini/mcp_config.json (cleared mcpServers)");
+        console.log("Updated .agents/mcp_config.json (cleared mcpServers)");
       }
     } else {
       existing.mcpServers = antigravityData;
@@ -446,7 +446,7 @@ export function applyConfigs(
         paths.antigravityFile,
         JSON.stringify(existing, null, 2) + "\n",
       );
-      console.log("Updated .gemini/mcp_config.json");
+      console.log("Updated .agents/mcp_config.json");
     }
   }
 }
@@ -482,7 +482,7 @@ export async function runInteractiveMenu(
     {
       id: "antigravity",
       label: "Antigravity",
-      file: ".gemini/mcp_config.json",
+      file: ".agents/mcp_config.json",
     },
   ];
   const selectedAgents = new Set<TargetAgent>(initialAgents);
@@ -733,9 +733,9 @@ function parseAgents(argVal?: string): TargetAgent[] {
       p === "opencode" ||
       p === "claude" ||
       p === "antigravity" ||
-      p === "gemini"
+      p === "agents"
     ) {
-      valid.push(p === "gemini" ? "antigravity" : (p as TargetAgent));
+      valid.push(p === "agents" ? "antigravity" : (p as TargetAgent));
     }
   }
   return valid.length > 0 ? valid : ["opencode", "claude", "antigravity"];
