@@ -38,6 +38,7 @@
     ./git-fzf.nix
     ./rust-script.nix
     ./cargo.nix
+    ./pmcp.nix
     ./extra-completions.nix
   ];
 }
