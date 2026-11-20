@@ -564,8 +564,95 @@ in
           _carapace_completer
         }
         compdef '_alias_carapace xh' xhs
-        compdef '_alias_carapace pnpm' pn pnpx pnx
+        compdef '_alias_carapace pnpm' pnpx pnx
         compdef '_alias_carapace yarn' yarnpkg
+
+        # pnpm / pn completion: carapace returns empty for `pnpm run` scripts,
+        # so read scripts from the nearest package.json and delegate the rest to carapace.
+        _pnpm_complete_scripts() {
+          local dir="''${1:-$PWD}"
+          dir="''${dir:A}"
+          local pkg_json=""
+          while true; do
+            if [[ -f "$dir/package.json" ]]; then
+              pkg_json="$dir/package.json"
+              break
+            fi
+            [[ "$dir" == "/" ]] && break
+            dir="''${dir:h}"
+          done
+          [[ -n "$pkg_json" ]] || return 1
+
+          local -a scripts
+          local key val
+          while IFS=$'\t' read -r key val; do
+            [[ -n "$key" ]] || continue
+            scripts+=("''${key//:/\\:}:$val")
+          done < <(${pkgs.jq}/bin/jq -r '.scripts // {} | to_entries[] | "\(.key)\t\(.value | gsub("[\\r\\n\\t]+"; " "))"' "$pkg_json" 2>/dev/null)
+
+          (( ''${#scripts[@]} > 0 )) && _describe -t scripts 'package scripts' scripts
+        }
+
+        _pnpm_completer() {
+          words[1]="pnpm"
+          local subcmd="" pkg_dir="$PWD" expect_val="" after_ddash=0
+          local i w
+          for (( i = 2; i < CURRENT; i++ )); do
+            w="''${words[i]}"
+            if (( after_ddash )); then
+              break
+            fi
+            if [[ -n "$expect_val" ]]; then
+              [[ "$expect_val" == "dir" ]] && pkg_dir="$w"
+              expect_val=""
+              continue
+            fi
+            case "$w" in
+              --)
+                after_ddash=1
+                ;;
+              -C|--dir|--prefix)
+                expect_val="dir"
+                ;;
+              -C=*|--dir=*|--prefix=*)
+                pkg_dir="''${w#*=}"
+                ;;
+              -F|--filter|--filter-prod|--loglevel|--reporter|--test-pattern|--changed-files-ignore-pattern|--workspace-packages|--resume-from|--workspace-concurrency|--pm-on-fail)
+                expect_val="other"
+                ;;
+              -*)
+                ;;
+              *)
+                [[ -z "$subcmd" ]] && subcmd="$w"
+                ;;
+            esac
+          done
+
+          if (( after_ddash )) || [[ -n "$expect_val" ]]; then
+            _carapace_completer
+            return
+          fi
+
+          case "$subcmd" in
+            run|run-script)
+              if [[ "''${words[CURRENT]}" == -* ]]; then
+                _carapace_completer
+              else
+                _pnpm_complete_scripts "$pkg_dir"
+              fi
+              ;;
+            "")
+              if [[ "''${words[CURRENT]}" != -* ]]; then
+                _pnpm_complete_scripts "$pkg_dir"
+              fi
+              _carapace_completer
+              ;;
+            *)
+              _carapace_completer
+              ;;
+          esac
+        }
+        compdef _pnpm_completer pnpm pn
 
         zstyle ':fzf-tab:complete:*:*' popup-pad 0 3
       '')
