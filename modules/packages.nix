@@ -215,6 +215,9 @@
     samply
     zalo
     rust-anything
+    zeron
+    obscura
+    camoufox
 
     # lsp
     vscode-langservers-extracted

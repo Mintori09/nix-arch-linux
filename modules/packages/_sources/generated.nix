@@ -22,6 +22,14 @@
       sha256 = "sha256-IVqens3lTRylcB7gKZ0JFqoKFTuOzWPKDoMsjv3KLNU=";
     };
   };
+  camoufox = {
+    pname = "camoufox";
+    version = "158.0.1-beta.41";
+    src = fetchurl {
+      url = "https://github.com/daijro/camoufox/releases/download/v158.0.1-beta.41/camoufox-158.0.1-beta.41-lin.x86_64.zip";
+      sha256 = "sha256-Py6x0EUfpY5F5D5V9eYYFWUGl5GuYMBXTwzrHwE0HDM=";
+    };
+  };
   czg = {
     pname = "czg";
     version = "1.14.0";
@@ -110,6 +118,14 @@
       sha256 = "sha256-c+LZaqfv1Az/wmAMHQF/c/sM5VRoOj86GPpfgSxcKw8=";
     };
   };
+  obscura = {
+    pname = "obscura";
+    version = "0.2.7";
+    src = fetchurl {
+      url = "https://github.com/h4ckf0r0day/obscura/releases/download/v0.2.7/obscura-x86_64-linux-stealth.tar.gz";
+      sha256 = "sha256-HWUUvqzvn+dWcfS/embTp7zu+b3jn4FW0cpKcB6x4hY=";
+    };
+  };
   obsidian = {
     pname = "obsidian";
     version = "1.15.1";
@@ -156,6 +172,14 @@
     src = fetchurl {
       url = "https://github.com/vicinaehq/vicinae/releases/download/v0.30.1/vicinae-linux-x86_64-v0.30.1.tar.gz";
       sha256 = "sha256-/E2/RirMJtz9zgbsW5tfYNTa7wyQJGL/wNN+x2zwBas=";
+    };
+  };
+  zeron = {
+    pname = "zeron";
+    version = "0.3.9";
+    src = fetchurl {
+      url = "https://github.com/zeronsh/zeron/releases/download/v0.3.9/zeron-0.3.9-linux-x86_64.tar.gz";
+      sha256 = "sha256-hczLFmXL7M6DchQ00hpPYci27aKI9sp+zdpXZYZLvl8=";
     };
   };
 }

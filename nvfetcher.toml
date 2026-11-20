@@ -92,3 +92,18 @@ fetch.url = "https://github.com/gj1118/helix/releases/download/$ver/helix-$ver-x
 src.github = "erkamyaman/rust-anything"
 src.prefix = "v"
 fetch.url = "https://github.com/erkamyaman/rust-anything/releases/download/v$ver/rust-anything-v$ver-x86_64-unknown-linux-gnu.tar.gz"
+
+[zeron]
+src.github = "zeronsh/zeron"
+src.prefix = "v"
+fetch.url = "https://github.com/zeronsh/zeron/releases/download/v$ver/zeron-$ver-linux-x86_64.tar.gz"
+
+[obscura]
+src.github = "h4ckf0r0day/obscura"
+src.prefix = "v"
+fetch.url = "https://github.com/h4ckf0r0day/obscura/releases/download/v$ver/obscura-x86_64-linux-stealth.tar.gz"
+
+[camoufox]
+src.github = "daijro/camoufox"
+src.prefix = "v"
+fetch.url = "https://github.com/daijro/camoufox/releases/download/v$ver/camoufox-$ver-lin.x86_64.zip"

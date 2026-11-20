@@ -29,6 +29,21 @@
     },
     "version": "1.5.0"
   },
+  "camoufox": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "camoufox",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-Py6x0EUfpY5F5D5V9eYYFWUGl5GuYMBXTwzrHwE0HDM=",
+      "type": "url",
+      "url": "https://github.com/daijro/camoufox/releases/download/v158.0.1-beta.41/camoufox-158.0.1-beta.41-lin.x86_64.zip"
+    },
+    "version": "158.0.1-beta.41"
+  },
   "czg": {
     "cargoLock": null,
     "date": null,
@@ -194,6 +209,21 @@
     },
     "version": "0.17.2"
   },
+  "obscura": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "obscura",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-HWUUvqzvn+dWcfS/embTp7zu+b3jn4FW0cpKcB6x4hY=",
+      "type": "url",
+      "url": "https://github.com/h4ckf0r0day/obscura/releases/download/v0.2.7/obscura-x86_64-linux-stealth.tar.gz"
+    },
+    "version": "0.2.7"
+  },
   "obsidian": {
     "cargoLock": null,
     "date": null,
@@ -283,5 +313,20 @@
       "url": "https://github.com/vicinaehq/vicinae/releases/download/v0.30.1/vicinae-linux-x86_64-v0.30.1.tar.gz"
     },
     "version": "0.30.1"
+  },
+  "zeron": {
+    "cargoLock": null,
+    "date": null,
+    "extract": null,
+    "name": "zeron",
+    "passthru": null,
+    "pinned": false,
+    "src": {
+      "name": null,
+      "sha256": "sha256-hczLFmXL7M6DchQ00hpPYci27aKI9sp+zdpXZYZLvl8=",
+      "type": "url",
+      "url": "https://github.com/zeronsh/zeron/releases/download/v0.3.9/zeron-0.3.9-linux-x86_64.tar.gz"
+    },
+    "version": "0.3.9"
   }
 }
