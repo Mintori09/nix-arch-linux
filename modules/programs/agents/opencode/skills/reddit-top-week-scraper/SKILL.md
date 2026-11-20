@@ -27,17 +27,21 @@ Mục tiêu là cào các bài top tuần của danh sách subreddit cho trướ
 
 Đọc danh sách `tracked_subreddits` từ file cache nếu có. Nếu chưa có hoặc cần thay đổi, hỏi người dùng để xác nhận danh sách subreddit cần cào.
 
-### 2. Mở Firefox có giao diện
+### 2. Mở Browser có giao diện hoặc chống bot
 
-Dùng `firefox-devtools` (không dùng headless, không dùng request trực tiếp vì Reddit chặn bot). Điều hướng tới một sub bất kỳ để tạo phiên duyệt hợp lệ, ví dụ `https://www.reddit.com/r/<sub>/top/?t=week`. Đợi trang tải xong trước khi thực thi script.
+- **Ưu tiên 1 (Nhanh & Tự động hoàn toàn):** Sử dụng **Camoufox** (qua `camoufox-playwright-mcp` hoặc `camoufox`) để mở phiên duyệt giả lập chống phát hiện bot của Reddit.
+- **Ưu tiên 2:** Sử dụng **Obscura** (`obscura mcp --stealth`) để fetch dữ liệu nếu Reddit không chặn TLS fingerprint.
+- **Fallback:** Dùng `firefox-devtools` (mở cửa sổ Firefox thực tế để tương tác thủ công). Điều hướng tới một sub bất kỳ để tạo phiên duyệt hợp lệ, ví dụ `https://www.reddit.com/r/<sub>/top/?t=week`. Đợi trang tải xong trước khi thực thi script.
 
 ### 3. Cào bài viết qua evaluate_script
 
 Chia nhỏ mỗi đợt 2 tới 3 sub để tránh cắt ngắn output và tránh bị rate-limit. Đặt khoảng nghỉ ngắn (1-2 giây) giữa các request:
 
 ```js
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const res = await fetch(`https://www.reddit.com/r/${s}/top.json?t=week&limit=15`);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const res = await fetch(
+  `https://www.reddit.com/r/${s}/top.json?t=week&limit=15`,
+);
 if (!res.ok) throw new Error(`HTTP ${res.status}`);
 const j = await res.json();
 ```
@@ -80,7 +84,7 @@ Mỗi sub lưu vào một file theo định dạng thư mục ngày `reddit_dige
 
 #### Tiêu chuẩn của một bản tóm tắt chất lượng cao:
 
-- **Nguyên tắc "So What?":** Không chỉ thuật lại nội dung bề mặt mà phải làm rõ: *Vấn đề cốt lõi là gì? Tại sao người đọc cần quan tâm? Nó ảnh hưởng hoặc phản ánh xu hướng gì trong thực tế?*
+- **Nguyên tắc "So What?":** Không chỉ thuật lại nội dung bề mặt mà phải làm rõ: _Vấn đề cốt lõi là gì? Tại sao người đọc cần quan tâm? Nó ảnh hưởng hoặc phản ánh xu hướng gì trong thực tế?_
 - **Tổng hợp (Synthesize) thay vì trích đoạn rời rạc:** Không dịch hay liệt kê từng comment riêng lẻ. Hãy gom nhóm các luồng dư luận chính (ví dụ: phe đồng tình chỉ ra ưu điểm gì, phe phản biện cảnh báo rủi ro gì, những đóng góp kinh nghiệm thực tế nổi bật từ người trong ngành).
 - **Độc lập ngữ cảnh (Self-contained):** Người đọc không cần bấm vào link Reddit vẫn hiểu trọn vẹn bối cảnh, luận điểm và diễn biến thảo luận. Link gốc chỉ đóng vai trò đối chiếu.
 - **Giữ nhịp điệu cộng đồng:** Phân biệt được sự đùa cợt/meme nội bộ với quan điểm nghiêm túc, làm nổi bật góc nhìn có chuyên môn sâu.

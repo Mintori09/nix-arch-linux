@@ -40,7 +40,10 @@ Plan (writing-plans) → Subagent per task → Review → Next task
 
 - `cheerio` for HTML parsing
 - `turndown` for HTML→Markdown conversion
-- `playwright` for SPA sites (available via tools if not in deps)
+- **Browser Automation (Ưu tiên theo 2 tầng):**
+  - **Tầng 1 (Nhanh & Nhẹ):** **Obscura MCP** (`mcp__obscura_browser_*`) hoặc binary `obscura fetch --stealth` / `obscura mcp`. Tốn ~30MB RAM, parse DOM/Markdown siêu tốc cho các trang SPA/JS render.
+  - **Tầng 2 (Bypass Bot/Cloudflare gắt gao):** **Camoufox** (qua `camoufox-playwright-mcp` hoặc Playwright trỏ đến executable `camoufox`). Giả lập hoàn hảo Gecko C++ chống Turnstile, Datadome, Akamai.
+  - **Fallback:** Playwright Chromium mặc định.
 - `node-html-parser` (lightweight alternative, sometimes present)
 - `epub-gen` for epub generation (only if you need epub output)
 
@@ -486,21 +489,36 @@ const BATCH_DELAY_MS = 2000;
 
 async function extractSeriesMeta(seriesUrl: string): Promise<NovelMeta> {
   const res = await fetch(seriesUrl, {
-    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    },
   });
   const $ = cheerio.load(await res.text());
 
-  const title = $("h1").first().text().trim() || $('meta[property="og:title"]').attr("content") || "Unknown";
-  const coverUrl = $('meta[property="og:image"]').attr("content") || $(".series-cover img").first().attr("src");
-  const description = $('meta[property="og:description"]').attr("content") || $(".summary").first().text().trim();
-  const author = $('meta[name="author"]').attr("content") || $(".author").first().text().trim();
+  const title =
+    $("h1").first().text().trim() ||
+    $('meta[property="og:title"]').attr("content") ||
+    "Unknown";
+  const coverUrl =
+    $('meta[property="og:image"]').attr("content") ||
+    $(".series-cover img").first().attr("src");
+  const description =
+    $('meta[property="og:description"]').attr("content") ||
+    $(".summary").first().text().trim();
+  const author =
+    $('meta[name="author"]').attr("content") ||
+    $(".author").first().text().trim();
 
   return { title, author, description, coverUrl };
 }
 
 async function fetchChapterUrls(seriesUrl: string): Promise<ChapterLink[]> {
   const res = await fetch(seriesUrl, {
-    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    },
   });
   const $ = cheerio.load(await res.text());
   const links: ChapterLink[] = [];
@@ -517,7 +535,10 @@ async function fetchChapterUrls(seriesUrl: string): Promise<ChapterLink[]> {
 
 async function scrapeChapter(url: string): Promise<ChapterContent | null> {
   const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36" },
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    },
   });
   if (!res.ok) return null;
   const $ = cheerio.load(await res.text());
@@ -529,7 +550,10 @@ async function scrapeChapter(url: string): Promise<ChapterContent | null> {
   const content = $("YOUR-CONTENT-SELECTOR").first();
   content.find("script, style, nav, button, svg, iframe, .sharedaddy").remove();
 
-  const turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
+  const turndown = new TurndownService({
+    headingStyle: "atx",
+    codeBlockStyle: "fenced",
+  });
   const body = turndown.turndown(content.html() || "").trim();
   if (!body) return null;
 
@@ -541,7 +565,9 @@ async function scrapeChapter(url: string): Promise<ChapterContent | null> {
 async function main() {
   const { seriesUrl, limit, start, force } = parseCliArgs();
   if (!seriesUrl) {
-    console.error("Usage: npx tsx <this-file>.ts <series-url> [--limit N] [--start N] [--force]");
+    console.error(
+      "Usage: npx tsx <this-file>.ts <series-url> [--limit N] [--start N] [--force]",
+    );
     process.exit(1);
   }
 
@@ -559,7 +585,9 @@ async function main() {
   await mkdir(outDir, { recursive: true });
 
   // 3. Download cover
-  const coverFile = meta.coverUrl ? await downloadCover(meta.coverUrl, outDir) : null;
+  const coverFile = meta.coverUrl
+    ? await downloadCover(meta.coverUrl, outDir)
+    : null;
   if (coverFile) console.log(`  Cover saved: ${coverFile}`);
 
   // 4. Fetch chapter list
@@ -600,7 +628,7 @@ async function main() {
         const md = `# ${content.title}\n\n${content.body}\n`;
         await writeFile(filepath, md, "utf8");
         return { success: true, num: ch.num, content, filename };
-      })
+      }),
     );
 
     for (const r of results) {
@@ -618,7 +646,10 @@ async function main() {
           console.log(`  [${val.num}] Saved: ${val.filename}`);
         }
       } else {
-        failed.push({ num: "unknown", reason: r.reason?.message || String(r.reason) });
+        failed.push({
+          num: "unknown",
+          reason: r.reason?.message || String(r.reason),
+        });
       }
     }
 
@@ -635,7 +666,9 @@ async function main() {
     await generateEpubFile(outDir, meta, downloaded, coverFile);
   }
 
-  console.log(`\nFinished: ${success} downloaded, ${skipped} skipped, ${failed.length} failed`);
+  console.log(
+    `\nFinished: ${success} downloaded, ${skipped} skipped, ${failed.length} failed`,
+  );
 }
 
 main().catch((err) => {
@@ -926,6 +959,7 @@ Before declaring done, confirm all items:
 
 If any check fails → **fix the issue** (update adapter and re-run) before declaring complete.
 Then ensure the adapter is registered in `lib/download.ts` and `justfile` so it can be run via:
+
 ```bash
 just run <url>
 ```

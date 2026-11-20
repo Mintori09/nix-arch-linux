@@ -39,7 +39,10 @@ Plan (writing-plans) → Subagent per task → Review → Next task
 **Key libs**:
 
 - `cheerio` for HTML parsing
-- `playwright` for SPA sites
+- **Browser Automation (Ưu tiên theo 2 tầng):**
+  - **Tầng 1 (Nhanh & Nhẹ):** **Obscura MCP** (`mcp__obscura_browser_*` hoặc `obscura fetch --stealth`) tối ưu RAM (~30MB), tải trang SPA nhanh.
+  - **Tầng 2 (Bypass Bot/Cloudflare/Akamai):** **Camoufox** (qua `camoufox-playwright-mcp` hoặc Playwright trỏ đến `camoufox`) để bẻ khóa các trang truyện có hệ thống chống bot gắt gao.
+  - **Fallback:** Playwright thông thường.
 - `archiver` or system `zip` for CBZ generation
 
 ---

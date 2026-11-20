@@ -183,7 +183,7 @@
         "--stdio"
       ];
     };
-    enabled = true;
+    enabled = false;
   };
 
   gns3 = {
@@ -211,6 +211,29 @@
         "mcp"
       ];
     };
-    enabled = true;
+    enabled = false;
+  };
+
+  obscura = {
+    local = {
+      argv = [
+        "${pkgs.obscura}/bin/obscura"
+        "mcp"
+        "--stealth"
+      ];
+    };
+    enabled = false;
+  };
+
+  camoufox = {
+    local = {
+      argv = [
+        "${pkgs.uv}/bin/uvx"
+        "camoufox-playwright-mcp"
+        "--headless"
+        "--caps=vision"
+      ];
+    };
+    enabled = false;
   };
 }

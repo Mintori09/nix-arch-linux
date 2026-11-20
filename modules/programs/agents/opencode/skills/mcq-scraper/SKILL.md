@@ -27,7 +27,10 @@ The core idea is **probe-first**: start with the simplest approach (SSR fetch), 
 **Key tools used inline:**
 
 - `fetch` + `cheerio` for SSR HTML parsing (import inline)
-- Playwright browser tools (`playwright_browser_*`) for SPA/click-through sites
+- **Browser Automation (Ưu tiên theo 2 tầng):**
+  - **Tầng 1 (Ưu tiên hàng đầu - Siêu nhẹ & Nhanh):** Dùng MCP tools của **Obscura** (`mcp__obscura_browser_*` hoặc `obscura mcp --stealth`) với RAM chỉ ~30MB, khởi động tức thì 85ms, lấy snapshot/DOM/markdown cực gọn.
+  - **Tầng 2 (Bypass Bot/Cloudflare/Phức tạp):** Dùng **Camoufox** (qua `camoufox-playwright-mcp` hoặc Playwright trỏ đến `camoufox`) để qua mặt Cloudflare Turnstile, Datadome, Akamai và Canvas/WebGL fingerprinting.
+  - **Fallback:** Playwright Chromium mặc định (`playwright_browser_*`).
 - Your own LLM capability for generating explanations
 
 When you need cheerio inline:
